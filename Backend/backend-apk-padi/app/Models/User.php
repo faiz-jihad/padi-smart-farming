@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\FarmerProfile;
+use App\Models\Farm;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -29,5 +31,10 @@ class User extends Authenticatable
     public function farmerProfile(): HasOne
     {
         return $this->hasOne(FarmerProfile::class);
+    }
+
+    public function farms(): HasMany
+    {
+        return $this->hasMany(Farm::class, 'farmer_user_id');
     }
 }
