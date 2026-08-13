@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('fertilizer_rules', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('variety_id')
+                ->constrained('rice_varieties')
+                ->cascadeOnDelete();
+
+            $table->string('phase', 50);
+
+            $table->string('nutrient', 50);
+
+            $table->decimal('kg_per_ha', 10, 2);
+
+            $table->string('source', 255);
+
+            $table->string('version', 50);
+
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('fertilizer_rules');
+    }
+};
