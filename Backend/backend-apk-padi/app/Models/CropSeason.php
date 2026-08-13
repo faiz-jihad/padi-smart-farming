@@ -31,4 +31,9 @@ class CropSeason extends Model
     {
         return $this->hasMany(FarmActivity::class);
     }
+
+    public function harvests(): HasMany
+    {
+        return $this->hasMany(Harvest::class);
+    }
 }
