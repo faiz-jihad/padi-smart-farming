@@ -13,6 +13,7 @@ use App\Http\Controllers\PplValidationController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\PurchaseContractController;
 use App\Http\Controllers\ContractPaymentController;
+use App\Http\Controllers\AlertSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -29,3 +30,4 @@ Route::get('/ppl-validations', [PplValidationController::class, 'index']);
 Route::get('/community-reports', [CommunityReportController::class, 'index']);
 Route::get('/purchase-contracts', [PurchaseContractController::class, 'index']);
 Route::get('/contract-payments', [ContractPaymentController::class, 'index']);
+Route::get('/alert-subscriptions', [AlertSubscriptionController::class, 'index']);
