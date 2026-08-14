@@ -14,6 +14,7 @@ use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\PurchaseContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\AlertSubscriptionController;
+use App\Http\Controllers\DeviceTokenController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -31,3 +32,4 @@ Route::get('/community-reports', [CommunityReportController::class, 'index']);
 Route::get('/purchase-contracts', [PurchaseContractController::class, 'index']);
 Route::get('/contract-payments', [ContractPaymentController::class, 'index']);
 Route::get('/alert-subscriptions', [AlertSubscriptionController::class, 'index']);
+Route::get('/device-tokens', [DeviceTokenController::class, 'index']);
