@@ -13,6 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\FarmerProfile;
 use App\Models\Farm;
+use App\Models\Notification;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -36,5 +37,10 @@ class User extends Authenticatable
     public function farms(): HasMany
     {
         return $this->hasMany(Farm::class, 'farmer_user_id');
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }
