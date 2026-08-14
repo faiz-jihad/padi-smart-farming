@@ -57,6 +57,6 @@ class MarketListing extends Model
 
     public function offers(): HasMany
     {
-        return $this->hasMany(MarketOffer::class);
+        return $this->hasMany(MarketOffer::class, 'listing_id');
     }
 }
