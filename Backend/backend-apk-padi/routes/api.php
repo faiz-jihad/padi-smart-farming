@@ -10,6 +10,7 @@ use App\Http\Controllers\MarketListingController;
 use App\Http\Controllers\ListingImageController;
 use App\Http\Controllers\MarketOfferController;
 use App\Http\Controllers\PplValidationController;
+use App\Http\Controllers\CommunityReportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -23,3 +24,4 @@ Route::get('/market-listings', [MarketListingController::class, 'index']);
 Route::get('/listing-images', [ListingImageController::class, 'index']);
 Route::get('/market-offers', [MarketOfferController::class, 'index']);
 Route::get('/ppl-validations', [PplValidationController::class, 'index']);
+Route::get('/community-reports', [CommunityReportController::class, 'index']);
