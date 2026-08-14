@@ -11,6 +11,7 @@ use App\Http\Controllers\ListingImageController;
 use App\Http\Controllers\MarketOfferController;
 use App\Http\Controllers\PplValidationController;
 use App\Http\Controllers\CommunityReportController;
+use App\Http\Controllers\PurchaseContractController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -25,3 +26,4 @@ Route::get('/listing-images', [ListingImageController::class, 'index']);
 Route::get('/market-offers', [MarketOfferController::class, 'index']);
 Route::get('/ppl-validations', [PplValidationController::class, 'index']);
 Route::get('/community-reports', [CommunityReportController::class, 'index']);
+Route::get('/purchase-contracts', [PurchaseContractController::class, 'index']);
