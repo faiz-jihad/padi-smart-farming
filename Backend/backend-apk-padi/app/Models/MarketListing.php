@@ -52,7 +52,7 @@ class MarketListing extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ListingImage::class);
+        return $this->hasMany(ListingImage::class, 'listing_id');
     }
 
     public function offers(): HasMany

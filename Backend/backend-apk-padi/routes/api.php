@@ -7,6 +7,7 @@ use App\Http\Controllers\FarmActivityController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MarketListingController;
+use App\Http\Controllers\ListingImageController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -17,3 +18,4 @@ Route::get('/farm-activities', [FarmActivityController::class, 'index']);
 Route::get('/harvests', [HarvestController::class, 'index']);
 Route::get('/notifications', [NotificationController::class, 'index']);
 Route::get('/market-listings', [MarketListingController::class, 'index']);
+Route::get('/listing-images', [ListingImageController::class, 'index']);
