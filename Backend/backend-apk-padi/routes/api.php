@@ -6,6 +6,7 @@ use App\Http\Controllers\CropSeasonController;
 use App\Http\Controllers\FarmActivityController;
 use App\Http\Controllers\HarvestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MarketListingController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -15,3 +16,4 @@ Route::get('/crop-seasons', [CropSeasonController::class, 'index']);
 Route::get('/farm-activities', [FarmActivityController::class, 'index']);
 Route::get('/harvests', [HarvestController::class, 'index']);
 Route::get('/notifications', [NotificationController::class, 'index']);
+Route::get('/market-listings', [MarketListingController::class, 'index']);
