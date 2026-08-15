@@ -2,29 +2,33 @@
 
 @section('content')
 
-<div class="space-y-6">
+<link rel="stylesheet" href="{{ asset('css/admin/dashboard.css') }}">
 
-    <div>
-        <p class="text-sm font-semibold text-padi-600">
-            Ringkasan Sistem
-        </p>
+<div class="dashboard-page">
 
-        <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Dashboard
-        </h1>
+    <div class="dashboard-header">
+        <div>
+            <p class="dashboard-eyebrow">
+                Ringkasan Sistem
+            </p>
 
-        <p class="mt-1 text-sm text-slate-500">
-            Pantau aktivitas dan kondisi ekosistem P.A.D.I.
-        </p>
+            <h1 class="dashboard-title">
+                Dashboard
+            </h1>
+
+            <p class="dashboard-description">
+                Pantau aktivitas dan kondisi ekosistem P.A.D.I.
+            </p>
+        </div>
     </div>
 
-    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-start justify-between">
+    <div class="dashboard-stats">
 
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-padi-100 text-padi-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="dashboard-stat-card">
+            <div class="stat-top">
+                <div class="stat-icon stat-icon-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -32,30 +36,29 @@
                     </svg>
                 </div>
 
-                <span class="rounded-full bg-padi-50 px-2.5 py-1 text-xs font-semibold text-padi-600">
+                <span class="stat-badge stat-badge-green">
                     Pengguna
                 </span>
-
             </div>
 
-            <p class="mt-5 text-sm text-slate-500">
+            <p class="stat-label">
                 Total Pengguna
             </p>
 
-            <p class="mt-1 text-3xl font-bold text-slate-900">
+            <p class="stat-value">
                 1.250
             </p>
 
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="stat-helper">
                 Seluruh akun terdaftar
             </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-start justify-between">
 
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-padi-100 text-padi-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="dashboard-stat-card">
+            <div class="stat-top">
+                <div class="stat-icon stat-icon-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22V8"/>
                         <path d="M5 12c0-3 2-5 7-5s7 2 7 5"/>
                         <path d="M5 12c0 4 3 7 7 7s7-3 7-7"/>
@@ -63,30 +66,29 @@
                     </svg>
                 </div>
 
-                <span class="rounded-full bg-padi-50 px-2.5 py-1 text-xs font-semibold text-padi-600">
+                <span class="stat-badge stat-badge-green">
                     Panen
                 </span>
-
             </div>
 
-            <p class="mt-5 text-sm text-slate-500">
+            <p class="stat-label">
                 Total Panen
             </p>
 
-            <p class="mt-1 text-3xl font-bold text-slate-900">
+            <p class="stat-value">
                 486
             </p>
 
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="stat-helper">
                 Data hasil panen tercatat
             </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-start justify-between">
 
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="dashboard-stat-card">
+            <div class="stat-top">
+                <div class="stat-icon stat-icon-orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 3v18"/>
                         <path d="M3 12h18"/>
                         <path d="m5 5 14 14"/>
@@ -94,30 +96,29 @@
                     </svg>
                 </div>
 
-                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
+                <span class="stat-badge stat-badge-orange">
                     Perlu dipantau
                 </span>
-
             </div>
 
-            <p class="mt-5 text-sm text-slate-500">
+            <p class="stat-label">
                 Laporan Penyakit
             </p>
 
-            <p class="mt-1 text-3xl font-bold text-slate-900">
+            <p class="stat-value">
                 127
             </p>
 
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="stat-helper">
                 Scan dan laporan komunitas
             </p>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-start justify-between">
 
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-padi-100 text-padi-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="dashboard-stat-card">
+            <div class="stat-top">
+                <div class="stat-icon stat-icon-green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 3h18v18H3z"/>
                         <path d="M7 7h10"/>
                         <path d="M7 11h10"/>
@@ -125,109 +126,107 @@
                     </svg>
                 </div>
 
-                <span class="rounded-full bg-padi-50 px-2.5 py-1 text-xs font-semibold text-padi-600">
+                <span class="stat-badge stat-badge-green">
                     Marketplace
                 </span>
-
             </div>
 
-            <p class="mt-5 text-sm text-slate-500">
+            <p class="stat-label">
                 Aktivitas Marketplace
             </p>
 
-            <p class="mt-1 text-3xl font-bold text-slate-900">
+            <p class="stat-value">
                 386
             </p>
 
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="stat-helper">
                 Listing dan penawaran
             </p>
         </div>
 
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-3">
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+    <div class="dashboard-main-grid">
 
-            <div class="flex items-start justify-between gap-4">
+        <div class="dashboard-panel activity-panel">
 
+            <div class="panel-header">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">
+                    <h2 class="panel-title">
                         Aktivitas Terbaru
                     </h2>
 
-                    <p class="mt-1 text-sm text-slate-500">
+                    <p class="panel-description">
                         Aktivitas terbaru pada platform P.A.D.I.
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    class="shrink-0 text-sm font-semibold text-padi-600 transition hover:text-padi-700"
-                >
+                <button type="button" class="panel-link">
                     Lihat semua
                 </button>
-
             </div>
 
-            <div class="mt-6 divide-y divide-slate-100">
 
-                <div class="flex items-center gap-4 py-4 first:pt-0">
+            <div class="activity-list">
 
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-padi-100 text-padi-600">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="activity-item">
+
+                    <div class="activity-icon activity-green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                         </svg>
                     </div>
 
-                    <div class="min-w-0 flex-1">
-                        <p class="text-sm font-semibold text-slate-800">
+                    <div class="activity-content">
+                        <p class="activity-title">
                             Pengguna baru terdaftar
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="activity-description">
                             Petani baru bergabung ke platform
                         </p>
                     </div>
 
-                    <span class="shrink-0 text-xs text-slate-400">
+                    <span class="activity-time">
                         5 menit lalu
                     </span>
 
                 </div>
 
-                <div class="flex items-center gap-4 py-4">
 
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="activity-item">
+
+                    <div class="activity-icon activity-orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
                             <path d="M12 8v4"/>
                             <path d="M12 16h.01"/>
                         </svg>
                     </div>
 
-                    <div class="min-w-0 flex-1">
-                        <p class="text-sm font-semibold text-slate-800">
+                    <div class="activity-content">
+                        <p class="activity-title">
                             Laporan penyakit membutuhkan validasi
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="activity-description">
                             Menunggu pemeriksaan dan validasi PPL
                         </p>
                     </div>
 
-                    <span class="shrink-0 text-xs text-slate-400">
+                    <span class="activity-time">
                         18 menit lalu
                     </span>
 
                 </div>
 
-                <div class="flex items-center gap-4 py-4">
 
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-padi-100 text-padi-600">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="activity-item">
+
+                    <div class="activity-icon activity-green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 3h18v18H3z"/>
                             <path d="M7 7h10"/>
                             <path d="M7 11h10"/>
@@ -235,43 +234,44 @@
                         </svg>
                     </div>
 
-                    <div class="min-w-0 flex-1">
-                        <p class="text-sm font-semibold text-slate-800">
+                    <div class="activity-content">
+                        <p class="activity-title">
                             Listing hasil panen baru
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="activity-description">
                             Petani menambahkan hasil panen ke marketplace
                         </p>
                     </div>
 
-                    <span class="shrink-0 text-xs text-slate-400">
+                    <span class="activity-time">
                         32 menit lalu
                     </span>
 
                 </div>
 
-                <div class="flex items-center gap-4 py-4 last:pb-0">
 
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-padi-100 text-padi-600">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="activity-item">
+
+                    <div class="activity-icon activity-green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 3v18"/>
                             <path d="M5 12c0-3 2-5 7-5s7 2 7 5"/>
                             <path d="M5 12c0 4 3 7 7 7s7-3 7-7"/>
                         </svg>
                     </div>
 
-                    <div class="min-w-0 flex-1">
-                        <p class="text-sm font-semibold text-slate-800">
+                    <div class="activity-content">
+                        <p class="activity-title">
                             Data panen berhasil dicatat
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="activity-description">
                             Data hasil panen masuk ke sistem
                         </p>
                     </div>
 
-                    <span class="shrink-0 text-xs text-slate-400">
+                    <span class="activity-time">
                         1 jam lalu
                     </span>
 
@@ -281,10 +281,11 @@
 
         </div>
 
-        <div class="rounded-2xl bg-padi-600 p-6 text-white shadow-sm">
 
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-padi-accent text-padi-800">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="warning-panel">
+
+            <div class="warning-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 3v18"/>
                     <path d="M3 12h18"/>
                     <path d="m5 5 14 14"/>
@@ -292,52 +293,52 @@
                 </svg>
             </div>
 
-            <h2 class="mt-6 text-lg font-bold">
+            <h2 class="warning-title">
                 Early Warning
             </h2>
 
-            <p class="mt-2 text-sm leading-6 text-padi-100">
+            <p class="warning-description">
                 Pantau peringatan penyakit dan kondisi wilayah berdasarkan laporan yang masuk dari sistem.
             </p>
 
-            <div class="mt-6 rounded-xl bg-padi-700 p-4">
 
-                <p class="text-xs text-padi-200">
+            <div class="warning-summary">
+
+                <p class="warning-label">
                     Peringatan aktif
                 </p>
 
-                <p class="mt-1 text-3xl font-bold">
+                <p class="warning-number">
                     8 wilayah
                 </p>
 
-                <p class="mt-1 text-xs text-padi-200">
+                <p class="warning-helper">
                     Membutuhkan pemantauan
                 </p>
 
             </div>
 
-            <div class="mt-4 rounded-xl border border-padi-500 bg-padi-600 p-4">
 
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-padi-100">
+            <div class="warning-risk">
+
+                <div class="risk-header">
+                    <span>
                         Risiko tinggi
                     </span>
 
-                    <span class="text-sm font-bold text-padi-accent">
+                    <strong>
                         3 wilayah
-                    </span>
+                    </strong>
                 </div>
 
-                <div class="mt-3 h-2 overflow-hidden rounded-full bg-padi-700">
-                    <div class="h-full w-3/5 rounded-full bg-padi-accent"></div>
+                <div class="risk-progress">
+                    <div class="risk-progress-value"></div>
                 </div>
 
             </div>
 
-            <button
-                type="button"
-                class="mt-5 w-full rounded-xl bg-padi-accent px-4 py-3 text-sm font-bold text-padi-800 transition hover:bg-yellow-300"
-            >
+
+            <button type="button" class="warning-button">
                 Lihat Peringatan
             </button>
 
@@ -345,178 +346,191 @@
 
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-2">
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="dashboard-bottom-grid">
 
-            <div class="flex items-start justify-between">
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
 
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">
+                    <h2 class="panel-title">
                         Tren Penyakit
                     </h2>
 
-                    <p class="mt-1 text-sm text-slate-500">
+                    <p class="panel-description">
                         Ringkasan laporan penyakit tanaman
                     </p>
                 </div>
 
-                <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+                <span class="panel-badge panel-badge-orange">
                     Bulan ini
                 </span>
 
             </div>
 
-            <div class="mt-6 space-y-5">
 
-                <div>
-                    <div class="mb-2 flex items-center justify-between text-sm">
-                        <span class="font-medium text-slate-700">
+            <div class="disease-list">
+
+                <div class="disease-item">
+
+                    <div class="disease-header">
+                        <span>
                             Hawar Daun Bakteri
                         </span>
 
-                        <span class="font-semibold text-slate-900">
+                        <strong>
                             42 laporan
-                        </span>
+                        </strong>
                     </div>
 
-                    <div class="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full w-[84%] rounded-full bg-padi-600"></div>
+                    <div class="disease-progress">
+                        <div class="disease-progress-value disease-84"></div>
                     </div>
+
                 </div>
 
-                <div>
-                    <div class="mb-2 flex items-center justify-between text-sm">
-                        <span class="font-medium text-slate-700">
+
+                <div class="disease-item">
+
+                    <div class="disease-header">
+                        <span>
                             Blast
                         </span>
 
-                        <span class="font-semibold text-slate-900">
+                        <strong>
                             31 laporan
-                        </span>
+                        </strong>
                     </div>
 
-                    <div class="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full w-[62%] rounded-full bg-padi-500"></div>
+                    <div class="disease-progress">
+                        <div class="disease-progress-value disease-62"></div>
                     </div>
+
                 </div>
 
-                <div>
-                    <div class="mb-2 flex items-center justify-between text-sm">
-                        <span class="font-medium text-slate-700">
+
+                <div class="disease-item">
+
+                    <div class="disease-header">
+                        <span>
                             Wereng
                         </span>
 
-                        <span class="font-semibold text-slate-900">
+                        <strong>
                             24 laporan
-                        </span>
+                        </strong>
                     </div>
 
-                    <div class="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full w-[48%] rounded-full bg-padi-500"></div>
+                    <div class="disease-progress">
+                        <div class="disease-progress-value disease-48"></div>
                     </div>
+
                 </div>
 
-                <div>
-                    <div class="mb-2 flex items-center justify-between text-sm">
-                        <span class="font-medium text-slate-700">
+
+                <div class="disease-item">
+
+                    <div class="disease-header">
+                        <span>
                             Tungro
                         </span>
 
-                        <span class="font-semibold text-slate-900">
+                        <strong>
                             17 laporan
-                        </span>
+                        </strong>
                     </div>
 
-                    <div class="h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full w-[34%] rounded-full bg-padi-400"></div>
+                    <div class="disease-progress">
+                        <div class="disease-progress-value disease-34"></div>
                     </div>
+
                 </div>
 
             </div>
 
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-            <div class="flex items-start justify-between">
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
 
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">
+                    <h2 class="panel-title">
                         Monitoring Marketplace
                     </h2>
 
-                    <p class="mt-1 text-sm text-slate-500">
+                    <p class="panel-description">
                         Ringkasan aktivitas pasar hasil panen
                     </p>
                 </div>
 
-                <span class="rounded-full bg-padi-50 px-3 py-1 text-xs font-semibold text-padi-600">
+                <span class="panel-badge panel-badge-green">
                     Aktif
                 </span>
 
             </div>
 
-            <div class="mt-6 grid grid-cols-2 gap-4">
 
-                <div class="rounded-xl bg-padi-50 p-4">
-                    <p class="text-xs text-slate-500">
+            <div class="marketplace-grid">
+
+                <div class="marketplace-card">
+                    <p>
                         Listing Aktif
                     </p>
 
-                    <p class="mt-1 text-2xl font-bold text-padi-700">
+                    <strong>
                         86
-                    </p>
+                    </strong>
                 </div>
 
-                <div class="rounded-xl bg-padi-50 p-4">
-                    <p class="text-xs text-slate-500">
+                <div class="marketplace-card">
+                    <p>
                         Penawaran
                     </p>
 
-                    <p class="mt-1 text-2xl font-bold text-padi-700">
+                    <strong>
                         143
-                    </p>
+                    </strong>
                 </div>
 
-                <div class="rounded-xl bg-padi-50 p-4">
-                    <p class="text-xs text-slate-500">
+                <div class="marketplace-card">
+                    <p>
                         Kontrak Berjalan
                     </p>
 
-                    <p class="mt-1 text-2xl font-bold text-padi-700">
+                    <strong>
                         27
-                    </p>
+                    </strong>
                 </div>
 
-                <div class="rounded-xl bg-padi-50 p-4">
-                    <p class="text-xs text-slate-500">
+                <div class="marketplace-card">
+                    <p>
                         Menunggu Moderasi
                     </p>
 
-                    <p class="mt-1 text-2xl font-bold text-amber-600">
+                    <strong class="marketplace-warning">
                         12
-                    </p>
+                    </strong>
                 </div>
 
             </div>
 
-            <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+
+            <div class="marketplace-footer">
 
                 <div>
-                    <p class="text-xs text-slate-500">
+                    <p>
                         Aktivitas marketplace
                     </p>
 
-                    <p class="mt-1 text-sm font-semibold text-slate-800">
+                    <strong>
                         Listing → Penawaran → Kontrak
-                    </p>
+                    </strong>
                 </div>
 
-                <button
-                    type="button"
-                    class="text-sm font-semibold text-padi-600 hover:text-padi-700"
-                >
+                <button type="button">
                     Kelola
                 </button>
 
@@ -526,66 +540,68 @@
 
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-        <div class="flex items-start justify-between">
+    <div class="dashboard-panel ai-panel">
+
+        <div class="panel-header">
 
             <div>
-                <h2 class="text-lg font-bold text-slate-900">
+                <h2 class="panel-title">
                     Monitoring AI
                 </h2>
 
-                <p class="mt-1 text-sm text-slate-500">
+                <p class="panel-description">
                     Ringkasan proses deteksi penyakit menggunakan AI
                 </p>
             </div>
 
-            <span class="rounded-full bg-padi-50 px-3 py-1 text-xs font-semibold text-padi-600">
+            <span class="panel-badge panel-badge-green">
                 Sistem AI
             </span>
 
         </div>
 
-        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs text-slate-500">
+        <div class="ai-grid">
+
+            <div class="ai-card">
+                <p>
                     Total Scan
                 </p>
 
-                <p class="mt-1 text-2xl font-bold text-slate-900">
+                <strong>
                     1.842
-                </p>
+                </strong>
             </div>
 
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs text-slate-500">
+            <div class="ai-card">
+                <p>
                     Scan Berhasil
                 </p>
 
-                <p class="mt-1 text-2xl font-bold text-padi-600">
+                <strong class="ai-success">
                     1.756
-                </p>
+                </strong>
             </div>
 
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs text-slate-500">
+            <div class="ai-card">
+                <p>
                     Perlu Validasi PPL
                 </p>
 
-                <p class="mt-1 text-2xl font-bold text-amber-600">
+                <strong class="ai-warning">
                     64
-                </p>
+                </strong>
             </div>
 
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs text-slate-500">
+            <div class="ai-card">
+                <p>
                     Gagal Diproses
                 </p>
 
-                <p class="mt-1 text-2xl font-bold text-red-600">
+                <strong class="ai-danger">
                     22
-                </p>
+                </strong>
             </div>
 
         </div>
