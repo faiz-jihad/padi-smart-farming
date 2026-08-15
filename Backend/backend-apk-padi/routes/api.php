@@ -20,6 +20,7 @@ use App\Http\Controllers\PartnerFavoriteController;
 use App\Http\Controllers\PplValidationController;
 use App\Http\Controllers\PurchaseContractController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\AdminBroadcastController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/farmers', [FarmerProfileController::class, 'index']);
@@ -39,6 +40,7 @@ Route::get('/alert-subscriptions', [AlertSubscriptionController::class, 'index']
 Route::get('/device-tokens', [DeviceTokenController::class, 'index']);
 Route::get('/partner-favorites', [PartnerFavoriteController::class, 'index']);
 Route::get('/audit-logs', [AuditLogController::class, 'index']);
+Route::get('/admin-broadcasts', [AdminBroadcastController::class, 'index']);
 
 Route::prefix('v1')->group(function (): void {
     Route::prefix('auth')->group(function (): void {
