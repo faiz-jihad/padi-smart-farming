@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\RiceVarietyResource;
 use App\Models\RiceVariety;
 
 class RiceVarietyController extends Controller
@@ -13,9 +14,6 @@ class RiceVarietyController extends Controller
             ->orderBy('name')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $varieties,
-        ]);
+        return RiceVarietyResource::collection($varieties);
     }
 }

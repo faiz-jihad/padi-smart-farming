@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\FertilizerRuleResource;
 use App\Models\FertilizerRule;
 
 class FertilizerRuleController extends Controller
@@ -12,9 +13,6 @@ class FertilizerRuleController extends Controller
             ->orderBy('phase')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $rules,
-        ]);
+        return FertilizerRuleResource::collection($rules);
     }
 }

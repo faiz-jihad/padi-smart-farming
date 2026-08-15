@@ -26,26 +26,6 @@ use App\Http\Controllers\WeatherSnapshotController;
 use App\Http\Controllers\FertilizerRuleController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/crop-seasons', [CropSeasonController::class, 'index']);
-Route::get('/farm-activities', [FarmActivityController::class, 'index']);
-Route::get('/harvests', [HarvestController::class, 'index']);
-Route::get('/notifications', [NotificationController::class, 'index']);
-Route::get('/market-listings', [MarketListingController::class, 'index']);
-Route::get('/listing-images', [ListingImageController::class, 'index']);
-Route::get('/market-offers', [MarketOfferController::class, 'index']);
-Route::get('/ppl-validations', [PplValidationController::class, 'index']);
-Route::get('/community-reports', [CommunityReportController::class, 'index']);
-Route::get('/purchase-contracts', [PurchaseContractController::class, 'index']);
-Route::get('/contract-payments', [ContractPaymentController::class, 'index']);
-Route::get('/alert-subscriptions', [AlertSubscriptionController::class, 'index']);
-Route::get('/device-tokens', [DeviceTokenController::class, 'index']);
-Route::get('/partner-favorites', [PartnerFavoriteController::class, 'index']);
-Route::get('/audit-logs', [AuditLogController::class, 'index']);
-Route::get('/admin-broadcasts', [AdminBroadcastController::class, 'index']);
-Route::get('/rice-varieties', [RiceVarietyController::class, 'index']);
-Route::get('/weather-snapshots', [WeatherSnapshotController::class, 'index']);
-Route::get('/fertilizer-rules', [FertilizerRuleController::class, 'index']);
-
 Route::prefix('v1')->group(function (): void {
     Route::prefix('auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
@@ -70,7 +50,31 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('farmers', [FarmerProfileController::class, 'index']);
 
+        Route::get('farm-activities', [FarmActivityController::class, 'index']);
+        Route::get('harvests', [HarvestController::class, 'index']);
+        Route::get('rice-varieties', [RiceVarietyController::class, 'index']);
+        Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
+        Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
+
         Route::get('crop-seasons', [CropSeasonController::class, 'index']);
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
+
+        Route::get('market-listings', [MarketListingController::class, 'index']);
+        Route::get('listing-images', [ListingImageController::class, 'index']);
+        Route::get('market-offers', [MarketOfferController::class, 'index']);
+        Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
+        Route::get('contract-payments', [ContractPaymentController::class, 'index']);
+
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::get('ppl-validations', [PplValidationController::class, 'index']);
+        Route::get('community-reports', [CommunityReportController::class, 'index']);
+        Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
+        Route::get('device-tokens', [DeviceTokenController::class, 'index']);
+        Route::get('partner-favorites', [PartnerFavoriteController::class, 'index']);
+        
+        Route::middleware('role:admin')->group(function (): void {
+            Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
+            Route::get('audit-logs', [AuditLogController::class, 'index']);
+        });
     });
 });

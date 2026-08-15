@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PplValidationResource;
 use App\Models\PplValidation;
 
 class PplValidationController extends Controller
@@ -10,9 +11,6 @@ class PplValidationController extends Controller
     {
         $validations = PplValidation::with('ppl')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $validations,
-        ]);
+        return PplValidationResource::collection($validations);
     }
 }

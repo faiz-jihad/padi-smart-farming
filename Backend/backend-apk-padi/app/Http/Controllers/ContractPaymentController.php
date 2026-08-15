@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ContractPaymentResource;
 use App\Models\ContractPayment;
 
 class ContractPaymentController extends Controller
@@ -10,9 +11,6 @@ class ContractPaymentController extends Controller
     {
         $payments = ContractPayment::with('contract')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $payments,
-        ]);
+        return ContractPaymentResource::collection($payments);
     }
 }

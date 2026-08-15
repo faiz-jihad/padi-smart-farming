@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AdminBroadcastResource;
 use App\Models\AdminBroadcast;
 
 class AdminBroadcastController extends Controller
@@ -12,9 +13,6 @@ class AdminBroadcastController extends Controller
             ->latest()
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $broadcasts,
-        ]);
+        return AdminBroadcastResource::collection($broadcasts);
     }
 }

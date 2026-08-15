@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\HarvestResource;
 use App\Models\Harvest;
 
 class HarvestController extends Controller
@@ -10,9 +11,6 @@ class HarvestController extends Controller
     {
         $harvests = Harvest::with('cropSeason')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $harvests,
-        ]);
+        return HarvestResource::collection($harvests);
     }
 }
