@@ -23,6 +23,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AdminBroadcastController;
 use App\Http\Controllers\RiceVarietyController;
 use App\Http\Controllers\WeatherSnapshotController;
+use App\Http\Controllers\FertilizerRuleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/farmers', [FarmerProfileController::class, 'index']);
@@ -45,6 +46,7 @@ Route::get('/audit-logs', [AuditLogController::class, 'index']);
 Route::get('/admin-broadcasts', [AdminBroadcastController::class, 'index']);
 Route::get('/rice-varieties', [RiceVarietyController::class, 'index']);
 Route::get('/weather-snapshots', [WeatherSnapshotController::class, 'index']);
+Route::get('/fertilizer-rules', [FertilizerRuleController::class, 'index']);
 
 Route::prefix('v1')->group(function (): void {
     Route::prefix('auth')->group(function (): void {
