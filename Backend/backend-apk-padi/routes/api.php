@@ -27,7 +27,6 @@ use App\Http\Controllers\FertilizerRuleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/farmers', [FarmerProfileController::class, 'index']);
-Route::get('/farms', [FarmController::class, 'index']);
 Route::get('/crop-seasons', [CropSeasonController::class, 'index']);
 Route::get('/farm-activities', [FarmActivityController::class, 'index']);
 Route::get('/harvests', [HarvestController::class, 'index']);
@@ -66,5 +65,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::patch('profile', [ProfileController::class, 'update']);
         Route::put('profile/password', [ProfileController::class, 'changePassword']);
+
+        Route::get('farms', [FarmController::class, 'index']);
+        Route::post('farms', [FarmController::class, 'store']);
     });
 });
