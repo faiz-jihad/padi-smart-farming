@@ -11,6 +11,7 @@ class FarmerProfile extends Model
         'user_id',
         'village',
         'district',
+        'regency',
         'province',
         'experience_years',
     ];
