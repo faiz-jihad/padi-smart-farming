@@ -68,5 +68,8 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('farms', [FarmController::class, 'index']);
         Route::post('farms', [FarmController::class, 'store']);
+
+        Route::get('crop-seasons', [CropSeasonController::class, 'index']);
+        Route::post('crop-seasons', [CropSeasonController::class, 'store']);
     });
 });
