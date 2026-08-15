@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\HarvestResource;
-use App\Models\Harvest;
+use App\Services\Api\ApiResourceIndexService;
 
 class HarvestController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $harvests = Harvest::with('cropSeason')->get();
-
-        return HarvestResource::collection($harvests);
+        return HarvestResource::collection($resources->harvests());
     }
 }

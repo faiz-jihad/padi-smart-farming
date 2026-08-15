@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\WeatherSnapshotResource;
-use App\Models\WeatherSnapshot;
+use App\Services\Api\ApiResourceIndexService;
 
 class WeatherSnapshotController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $snapshots = WeatherSnapshot::with('farm')
-            ->latest('observed_at')
-            ->get();
-
-        return WeatherSnapshotResource::collection($snapshots);
+        return WeatherSnapshotResource::collection($resources->weatherSnapshots());
     }
 }

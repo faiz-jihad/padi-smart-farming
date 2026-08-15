@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\NotificationResource;
-use App\Models\Notification;
+use App\Services\Api\ApiResourceIndexService;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $notifications = Notification::with('user')->get();
-
-        return NotificationResource::collection($notifications);
+        return NotificationResource::collection($resources->notifications());
     }
 }

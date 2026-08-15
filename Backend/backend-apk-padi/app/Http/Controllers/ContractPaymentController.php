@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ContractPaymentResource;
-use App\Models\ContractPayment;
+use App\Services\Api\ApiResourceIndexService;
 
 class ContractPaymentController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $payments = ContractPayment::with('contract')->get();
-
-        return ContractPaymentResource::collection($payments);
+        return ContractPaymentResource::collection($resources->contractPayments());
     }
 }

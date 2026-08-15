@@ -3,17 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PartnerFavoriteResource;
-use App\Models\PartnerFavorite;
+use App\Services\Api\ApiResourceIndexService;
 
 class PartnerFavoriteController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $favorites = PartnerFavorite::with([
-            'partner',
-            'listing',
-        ])->get();
-
-        return PartnerFavoriteResource::collection($favorites);
+        return PartnerFavoriteResource::collection($resources->partnerFavorites());
     }
 }

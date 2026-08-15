@@ -1,0 +1,22 @@
+{
+  "healthy": {
+    "name": "Healthy",
+    "description": "Daun padi tidak menunjukkan gejala utama penyakit yang didukung aplikasi."
+  },
+  "blast": {
+    "name": "Blast",
+    "description": "Penyakit bercak daun yang umum muncul pada padi dan perlu dipantau sejak awal."
+  },
+  "tungro": {
+    "name": "Tungro",
+    "description": "Penyakit virus pada padi yang berkaitan dengan vektor wereng hijau."
+  },
+  "bacterial_leaf_blight": {
+    "name": "Bacterial Leaf Blight",
+    "description": "Penyakit hawar daun bakteri yang dapat menyebabkan daun menguning dan mengering."
+  },
+  "unknown": {
+    "name": "Tidak Dapat Dipastikan",
+    "description": "Model belum memberikan class yang dapat dipetakan ke penyakit aplikasi."
+  }
+}

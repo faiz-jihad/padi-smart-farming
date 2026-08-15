@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\FertilizerRuleResource;
-use App\Models\FertilizerRule;
+use App\Services\Api\ApiResourceIndexService;
 
 class FertilizerRuleController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $rules = FertilizerRule::with('variety')
-            ->orderBy('phase')
-            ->get();
-
-        return FertilizerRuleResource::collection($rules);
+        return FertilizerRuleResource::collection($resources->fertilizerRules());
     }
 }

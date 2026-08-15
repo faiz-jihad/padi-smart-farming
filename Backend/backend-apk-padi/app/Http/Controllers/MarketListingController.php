@@ -3,21 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\MarketListingResource;
-use App\Models\MarketListing;
+use App\Services\Api\ApiResourceIndexService;
 
 class MarketListingController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $listings = MarketListing::with([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-            'offers',
-        ])->get();
-
-        return MarketListingResource::collection($listings);
+        return MarketListingResource::collection($resources->marketListings());
     }
 }

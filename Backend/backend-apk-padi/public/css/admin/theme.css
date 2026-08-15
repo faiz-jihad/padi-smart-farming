@@ -1,0 +1,118 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap");
+
+:root {
+    --admin-white: #ffffff;
+    --admin-green: #1b5e20;
+    --admin-green-soft: #e8f5e9;
+    --admin-green-line: #b7dfba;
+}
+
+.admin-body,
+.admin-auth,
+.admin-body *,
+.admin-auth * {
+    font-family: "Poppins", "Montserrat", sans-serif !important;
+}
+
+.admin-body,
+.admin-auth {
+    background: var(--admin-white) !important;
+    color: var(--admin-green) !important;
+}
+
+.admin-body *:not(button):not(.admin-button):not(input):not(select):not(textarea),
+.admin-auth *:not(button):not(.admin-auth__submit):not(input):not(select):not(textarea) {
+    background-image: none !important;
+}
+
+.admin-body *:not(svg):not(path),
+.admin-auth *:not(svg):not(path) {
+    color: var(--admin-green) !important;
+    border-color: var(--admin-green-line) !important;
+    box-shadow: none !important;
+}
+
+.admin-body a,
+.admin-body button,
+.admin-body input,
+.admin-body select,
+.admin-body textarea,
+.admin-auth a,
+.admin-auth button,
+.admin-auth input,
+.admin-auth select,
+.admin-auth textarea {
+    font-family: "Poppins", "Montserrat", sans-serif !important;
+}
+
+.admin-body button,
+.admin-body .admin-button,
+.admin-auth button,
+.admin-auth .admin-auth__submit {
+    background: var(--admin-green) !important;
+    color: var(--admin-white) !important;
+}
+
+.admin-body button *,
+.admin-auth button * {
+    color: var(--admin-white) !important;
+}
+
+.admin-body input,
+.admin-body select,
+.admin-body textarea,
+.admin-auth input,
+.admin-auth select,
+.admin-auth textarea,
+.admin-navbar,
+.admin-sidebar,
+.admin-card,
+.admin-table-wrap,
+.admin-auth__panel,
+.admin-navbar__notification-panel {
+    background: var(--admin-white) !important;
+}
+
+.admin-body input:focus,
+.admin-body select:focus,
+.admin-body textarea:focus,
+.admin-auth input:focus,
+.admin-auth select:focus,
+.admin-auth textarea:focus {
+    box-shadow: 0 0 0 4px rgba(27, 94, 32, 0.16) !important;
+}
+
+.admin-body .is-active,
+.admin-body .is-unread,
+.admin-body .admin-badge,
+.admin-body .admin-stat {
+    background: var(--admin-green-soft) !important;
+}
+
+.admin-body [class*="blue"],
+.admin-body [class*="orange"],
+.admin-body [class*="yellow"],
+.admin-body [class*="red"],
+.admin-body [class*="purple"],
+.admin-body [class*="warning"],
+.admin-body [class*="danger"],
+.admin-body [class*="error"],
+.admin-auth [class*="error"] {
+    background: var(--admin-green-soft) !important;
+    color: var(--admin-green) !important;
+}
+
+.admin-auth__visual,
+.admin-auth__visual::before {
+    background: var(--admin-green-soft) !important;
+}
+
+.admin-body svg,
+.admin-auth svg {
+    color: var(--admin-green) !important;
+}
+
+.admin-body button svg,
+.admin-auth button svg {
+    color: var(--admin-white) !important;
+}

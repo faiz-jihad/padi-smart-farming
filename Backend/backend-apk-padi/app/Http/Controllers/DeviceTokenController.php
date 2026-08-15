@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\DeviceTokenResource;
-use App\Models\DeviceToken;
+use App\Services\Api\ApiResourceIndexService;
 
 class DeviceTokenController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $tokens = DeviceToken::with('user')->get();
-
-        return DeviceTokenResource::collection($tokens);
+        return DeviceTokenResource::collection($resources->deviceTokens());
     }
 }

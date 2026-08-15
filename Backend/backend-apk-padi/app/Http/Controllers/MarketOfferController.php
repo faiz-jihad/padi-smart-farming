@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\MarketOfferResource;
-use App\Models\MarketOffer;
+use App\Services\Api\ApiResourceIndexService;
 
 class MarketOfferController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $offers = MarketOffer::with(['listing', 'partner'])->get();
-
-        return MarketOfferResource::collection($offers);
+        return MarketOfferResource::collection($resources->marketOffers());
     }
 }

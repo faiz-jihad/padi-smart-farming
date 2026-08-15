@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PplValidationResource;
-use App\Models\PplValidation;
+use App\Services\Api\ApiResourceIndexService;
 
 class PplValidationController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $validations = PplValidation::with('ppl')->get();
-
-        return PplValidationResource::collection($validations);
+        return PplValidationResource::collection($resources->pplValidations());
     }
 }

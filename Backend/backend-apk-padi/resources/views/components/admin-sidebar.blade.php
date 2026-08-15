@@ -1,5 +1,11 @@
 <link rel="stylesheet" href="{{ asset('css/admin/sidebar.css') }}">
 
+@php
+    $adminUser = auth()->user();
+    $adminName = $adminUser?->name ?? 'Admin P.A.D.I.';
+    $adminInitial = strtoupper(substr($adminName, 0, 1));
+@endphp
+
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
 <aside class="admin-sidebar">
@@ -222,13 +228,13 @@
         <div class="admin-sidebar__profile">
 
             <div class="admin-sidebar__avatar">
-                A
+                {{ $adminInitial }}
             </div>
 
             <div class="admin-sidebar__profile-content">
 
                 <p class="admin-sidebar__profile-name">
-                    Admin P.A.D.I.
+                    {{ $adminName }}
                 </p>
 
                 <p class="admin-sidebar__profile-role">

@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CommunityReportResource;
-use App\Models\CommunityReport;
+use App\Services\Api\ApiResourceIndexService;
 
 class CommunityReportController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $reports = CommunityReport::with('farmer')->get();
-
-        return CommunityReportResource::collection($reports);
+        return CommunityReportResource::collection($resources->communityReports());
     }
 }
