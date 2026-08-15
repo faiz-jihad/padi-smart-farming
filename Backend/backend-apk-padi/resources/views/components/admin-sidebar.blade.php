@@ -29,7 +29,7 @@
 
         <nav class="space-y-1">
 
-            <a href="#"
+            <a href="{{ route('admin.dashboard') }}"
                 class="flex items-center gap-3 rounded-xl bg-padi-500 px-3 py-2.5 text-sm font-semibold transition hover:bg-padi-400">
                 <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="m3 10 9-7 9 7" />
@@ -40,7 +40,7 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="#"
+            <a href="{{ route('admin.users.index') }}"
                 class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-padi-100 transition hover:bg-padi-500 hover:text-white">
                 <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
