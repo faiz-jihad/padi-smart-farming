@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Farm extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'farmer_user_id',
         'name',
