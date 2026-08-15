@@ -26,7 +26,6 @@ use App\Http\Controllers\WeatherSnapshotController;
 use App\Http\Controllers\FertilizerRuleController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/farmers', [FarmerProfileController::class, 'index']);
 Route::get('/crop-seasons', [CropSeasonController::class, 'index']);
 Route::get('/farm-activities', [FarmActivityController::class, 'index']);
 Route::get('/harvests', [HarvestController::class, 'index']);
@@ -68,6 +67,8 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('farms', [FarmController::class, 'index']);
         Route::post('farms', [FarmController::class, 'store']);
+
+        Route::get('farmers', [FarmerProfileController::class, 'index']);
 
         Route::get('crop-seasons', [CropSeasonController::class, 'index']);
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
