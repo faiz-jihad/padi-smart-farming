@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PurchaseContractResource;
 use App\Models\PurchaseContract;
 
 class PurchaseContractController extends Controller
@@ -15,9 +16,6 @@ class PurchaseContractController extends Controller
             'offer',
         ])->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $contracts,
-        ]);
+        return PurchaseContractResource::collection($contracts);
     }
 }

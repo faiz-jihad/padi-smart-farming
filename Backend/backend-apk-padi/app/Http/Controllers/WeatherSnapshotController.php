@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\WeatherSnapshotResource;
 use App\Models\WeatherSnapshot;
 
 class WeatherSnapshotController extends Controller
@@ -12,9 +13,6 @@ class WeatherSnapshotController extends Controller
             ->latest('observed_at')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $snapshots,
-        ]);
+        return WeatherSnapshotResource::collection($snapshots);
     }
 }

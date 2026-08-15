@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Harvest extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'crop_season_id',
         'harvest_date',

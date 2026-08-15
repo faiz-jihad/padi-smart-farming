@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DeviceTokenResource;
 use App\Models\DeviceToken;
 
 class DeviceTokenController extends Controller
@@ -10,9 +11,6 @@ class DeviceTokenController extends Controller
     {
         $tokens = DeviceToken::with('user')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $tokens,
-        ]);
+        return DeviceTokenResource::collection($tokens);
     }
 }

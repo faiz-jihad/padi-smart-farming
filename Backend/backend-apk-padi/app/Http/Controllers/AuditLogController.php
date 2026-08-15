@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AuditLogResource;
 use App\Models\AuditLog;
 
 class AuditLogController extends Controller
@@ -12,9 +13,6 @@ class AuditLogController extends Controller
             ->latest()
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $logs,
-        ]);
+        return AuditLogResource::collection($logs);
     }
 }

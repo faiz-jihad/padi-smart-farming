@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\MarketListingResource;
 use App\Models\MarketListing;
 
 class MarketListingController extends Controller
@@ -17,9 +18,6 @@ class MarketListingController extends Controller
             'offers',
         ])->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $listings,
-        ]);
+        return MarketListingResource::collection($listings);
     }
 }

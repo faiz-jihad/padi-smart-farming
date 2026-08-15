@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
 
 class NotificationController extends Controller
@@ -10,9 +11,6 @@ class NotificationController extends Controller
     {
         $notifications = Notification::with('user')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $notifications,
-        ]);
+        return NotificationResource::collection($notifications);
     }
 }

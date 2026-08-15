@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PartnerFavoriteResource;
 use App\Models\PartnerFavorite;
 
 class PartnerFavoriteController extends Controller
@@ -13,9 +14,6 @@ class PartnerFavoriteController extends Controller
             'listing',
         ])->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $favorites,
-        ]);
+        return PartnerFavoriteResource::collection($favorites);
     }
 }

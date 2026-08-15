@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CommunityReportResource;
 use App\Models\CommunityReport;
 
 class CommunityReportController extends Controller
@@ -10,9 +11,6 @@ class CommunityReportController extends Controller
     {
         $reports = CommunityReport::with('farmer')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $reports,
-        ]);
+        return CommunityReportResource::collection($reports);
     }
 }
