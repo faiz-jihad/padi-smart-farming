@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ApiResponse;
 use App\Http\Resources\AlertSubscriptionResource;
-use App\Services\AlertSubscriptionService;
+use App\Services\Api\ApiResourceIndexService;
 use Illuminate\Http\JsonResponse;
 
 class AlertSubscriptionController extends Controller
 {
-    public function index(
-        AlertSubscriptionService $service
-    ): JsonResponse {
-        $subscriptions = $service->getSubscriptions();
-
-        return ApiResponse::success(
-            'Data langganan peringatan berhasil diambil.',
-            [
-                'alert_subscriptions' => AlertSubscriptionResource::collection($subscriptions),
+    public function index(ApiResourceIndexService $resources): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Data langganan peringatan berhasil diambil.',
+            'data' => [
+                'alert_subscriptions' => AlertSubscriptionResource::collection($resources->alertSubscriptions()),
             ],
-        );
+        ]);
     }
 }

@@ -1,0 +1,11 @@
+services:
+  padi-ai-service:
+    build: .
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    volumes:
+      - ../AI/model_penyakit_padi_v2_finetuned.h5:/models/disease_model.h5:ro
+    environment:
+      MODEL_PATH: /models/disease_model.h5

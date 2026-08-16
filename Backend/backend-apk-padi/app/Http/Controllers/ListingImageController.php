@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ListingImageResource;
-use App\Services\ListingImageService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class ListingImageController extends Controller
 {
-    public function index(
-        ListingImageService $service
-    ): AnonymousResourceCollection {
-        $images = $service->getImages();
-
-        return ListingImageResource::collection($images);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return ListingImageResource::collection($resources->listingImages());
     }
 }

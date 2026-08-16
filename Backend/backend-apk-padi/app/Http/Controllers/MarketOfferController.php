@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\MarketOfferResource;
-use App\Services\MarketOfferService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class MarketOfferController extends Controller
 {
-    public function index(
-        MarketOfferService $service
-    ): AnonymousResourceCollection {
-        $offers = $service->getOffers();
-
-        return MarketOfferResource::collection($offers);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return MarketOfferResource::collection($resources->marketOffers());
     }
 }

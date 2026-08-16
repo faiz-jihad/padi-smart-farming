@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PplValidationResource;
-use App\Services\PplValidationService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class PplValidationController extends Controller
 {
-    public function index(
-        PplValidationService $service
-    ): AnonymousResourceCollection {
-        $validations = $service->getValidations();
-
-        return PplValidationResource::collection($validations);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return PplValidationResource::collection($resources->pplValidations());
     }
 }

@@ -25,6 +25,14 @@ dependencies:
   # Routing, redirect autentikasi, dan protected route
   go_router: ^17.5.0
 
+  # GIS, Peta dan Batas Polygon Wilayah
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
+
+  # GPS Geolocation & Permission
+  geolocator: ^14.0.3
+  permission_handler: ^12.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

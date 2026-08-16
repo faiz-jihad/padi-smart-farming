@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PurchaseContractResource;
-use App\Services\PurchaseContractService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class PurchaseContractController extends Controller
 {
-    public function index(
-        PurchaseContractService $service
-    ): AnonymousResourceCollection {
-        $contracts = $service->getContracts();
-
-        return PurchaseContractResource::collection($contracts);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return PurchaseContractResource::collection($resources->purchaseContracts());
     }
 }

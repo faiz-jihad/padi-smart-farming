@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\NotificationResource;
-use App\Services\NotificationService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class NotificationController extends Controller
 {
-    public function index(
-        NotificationService $service
-    ): AnonymousResourceCollection {
-        $notifications = $service->getNotifications();
-
-        return NotificationResource::collection($notifications);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return NotificationResource::collection($resources->notifications());
     }
 }

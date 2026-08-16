@@ -34,15 +34,15 @@ class AuthController extends Controller
         $result = $action->execute($request->validated(), $request->ip());
 
         return ApiResponse::success('Login berhasil.', [
-                'user' => UserResource::make($result['user']),
-                'token' => $result['token'],
+            'user' => UserResource::make($result['user']),
+            'token' => $result['token'],
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
         return ApiResponse::success('Data pengguna berhasil diambil.', [
-                'user' => UserResource::make($request->user()),
+            'user' => UserResource::make($request->user()),
         ]);
     }
 

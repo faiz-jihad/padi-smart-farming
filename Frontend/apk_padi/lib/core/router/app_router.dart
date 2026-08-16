@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:padi/core/network/api_client.dart';
 import 'package:padi/core/storage/token_storage.dart';
+import 'package:padi/features/admin/data/models/admin_overview.dart';
+import 'package:padi/features/admin/data/services/admin_api_service.dart';
+import 'package:padi/features/admin/presentation/screens/admin_overview_screen.dart';
 import 'package:padi/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:padi/features/auth/data/services/auth_api_service.dart';
 import 'package:padi/features/auth/domain/repositories/auth_repository.dart';
@@ -13,11 +16,16 @@ import 'package:padi/features/auth/presentation/screens/login_screen.dart';
 import 'package:padi/features/auth/presentation/screens/profile_screen.dart';
 import 'package:padi/features/auth/presentation/screens/register_screen.dart';
 import 'package:padi/features/auth/presentation/screens/splash_screen.dart';
+import 'package:padi/features/farm/presentation/screens/add_farm_screen.dart';
+import 'package:padi/features/farm/presentation/screens/farm_list_screen.dart';
+import 'package:padi/features/map/presentation/screens/planting_calendar_map_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
-final tokenStorageProvider = Provider<TokenStorage>((ref) => const SecureTokenStorage());
+final tokenStorageProvider = Provider<TokenStorage>(
+  (ref) => const SecureTokenStorage(),
+);
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(ref.read(tokenStorageProvider));
@@ -30,6 +38,28 @@ final authApiServiceProvider = Provider<AuthApiService>(
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepositoryImpl(ref.read(authApiServiceProvider)),
 );
+
+final adminApiServiceProvider = Provider<AdminApiService>(
+  (ref) => AdminApiService(ref.read(apiClientProvider)),
+);
+
+final adminOverviewProvider = FutureProvider.autoDispose<AdminOverview>(
+  (ref) => ref.read(adminApiServiceProvider).fetchOverview(),
+);
+
+final adminUsersProvider = FutureProvider.autoDispose<List<AdminUserPreview>>(
+  (ref) => ref.read(adminApiServiceProvider).fetchUsers(),
+);
+
+final adminBroadcastsProvider =
+    FutureProvider.autoDispose<List<AdminBroadcastPreview>>(
+      (ref) => ref.read(adminApiServiceProvider).fetchBroadcasts(),
+    );
+
+final adminAuditLogsProvider =
+    FutureProvider.autoDispose<List<AdminAuditLogPreview>>(
+      (ref) => ref.read(adminApiServiceProvider).fetchAuditLogs(),
+    );
 
 final authControllerProvider = ChangeNotifierProvider<AuthController>((ref) {
   final controller = AuthController(
@@ -47,17 +77,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: auth,
     routes: [
-      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-      GoRoute(path: '/profile/password', builder: (context, state) => const ChangePasswordScreen()),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminOverviewScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/password',
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      // Farm routes
+      GoRoute(
+        path: '/farms',
+        builder: (context, state) => const FarmListScreen(),
+      ),
+      GoRoute(
+        path: '/farms/add',
+        builder: (context, state) => const AddFarmScreen(),
+      ),
+      // GIS & Map routes
+      GoRoute(
+        path: '/map/calendar',
+        builder: (context, state) => const PlantingCalendarMapPage(),
+      ),
     ],
     redirect: (context, state) {
       final location = state.matchedLocation;
-      final isAuthRoute = location == '/login' || location == '/register' || location == '/forgot-password';
+      final isAuthRoute =
+          location == '/login' ||
+          location == '/register' ||
+          location == '/forgot-password';
 
       if (auth.isChecking) {
         return location == '/splash' ? null : '/splash';
@@ -65,6 +131,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (!auth.isAuthenticated) {
         return isAuthRoute ? null : '/login';
+      }
+
+      if (location == '/admin' && auth.state.user?.role != 'admin') {
+        return '/home';
       }
 
       if (location == '/splash' || isAuthRoute) {

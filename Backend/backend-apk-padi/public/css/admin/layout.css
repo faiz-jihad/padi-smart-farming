@@ -1,42 +1,37 @@
 .admin-body {
     min-height: 100vh;
     margin: 0;
-    background: #f5f9f6;
-    color: #1e293b;
+    overflow-x: hidden;
 }
 
 .admin-main {
-    width: calc(100% - 16rem);
+    width: calc(100% - var(--admin-sidebar-width));
     min-width: 0;
     min-height: 100vh;
-    margin-left: 16rem;
-    box-sizing: border-box;
+    margin-left: var(--admin-sidebar-width);
 }
 
 .admin-content {
-    width: 100%;
+    width: min(100%, 1600px);
     min-width: 0;
-    min-height: calc(100vh - 80px);
-    padding: 24px 32px 40px;
-    box-sizing: border-box;
+    min-height: calc(100vh - var(--admin-topbar-height));
+    margin: 0 auto;
+    padding: 32px;
 }
 
-@media (max-width: 768px) {
-
+@media (max-width: 1024px) {
     .admin-main {
         width: 100%;
         margin-left: 0;
     }
 
     .admin-content {
-        min-height: calc(100vh - 80px);
-        padding: 20px 16px 32px;
+        padding: 28px 24px 36px;
     }
 }
 
-@media (max-width: 480px) {
-
+@media (max-width: 640px) {
     .admin-content {
-        padding: 16px 14px 28px;
+        padding: 22px 16px 32px;
     }
 }

@@ -28,5 +28,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->assignRole(UserRole::Farmer->value);
+
+        $admin = User::factory()->create([
+            'name' => 'Admin P.A.D.I.',
+            'email' => 'admin@padi.test',
+            'phone' => '081234567891',
+            'role' => UserRole::Admin->value,
+            'status' => UserStatus::Active->value,
+        ]);
+
+        $admin->assignRole(UserRole::Admin->value);
     }
 }

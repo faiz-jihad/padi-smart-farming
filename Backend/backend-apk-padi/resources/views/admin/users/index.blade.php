@@ -1,474 +1,196 @@
 @extends('layouts.admin')
 
 @section('content')
+<link rel="stylesheet" href="{{ asset('css/admin/operational.css') }}">
 
-<link rel="stylesheet" href="{{ asset('css/admin/users.css') }}">
-
-<div class="users-page">
-
-    <div class="users-header">
-
-        <div class="users-header-content">
-            <p class="users-eyebrow">
-                Manajemen Admin
-            </p>
-
-            <h1 class="users-title">
-                Pengguna
-            </h1>
-
-            <p class="users-description">
-                Kelola pengguna yang terdaftar dalam sistem P.A.D.I.
-            </p>
+<div class="admin-page">
+    <div class="admin-page__header">
+        <div>
+            <p class="admin-page__eyebrow">Admin</p>
+            <h1 class="admin-page__title">Pengguna</h1>
+            <p class="admin-page__description">CRUD akun pengguna langsung ke tabel users. Admin bisa membuat, mencari, memperbarui, dan menghapus akun tanpa data statis.</p>
         </div>
 
-        <button type="button" class="users-add-button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14"/>
-                <path d="M5 12h14"/>
-            </svg>
-
-            <span>Tambah Pengguna</span>
-        </button>
-
+        <form method="GET" action="{{ route('admin.users.index') }}" class="admin-form--inline">
+            <input class="admin-input" type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, telepon">
+            <button class="admin-button" type="submit">Cari</button>
+        </form>
     </div>
 
+    @if(session('status'))
+        <div class="admin-alert">{{ session('status') }}</div>
+    @endif
 
-    <div class="users-stat-grid">
+    @if($errors->any())
+        <div class="admin-alert">{{ $errors->first() }}</div>
+    @endif
 
-        <div class="users-stat-card">
-
-            <div class="users-stat-content">
-
-                <p class="users-stat-label">
-                    Total Pengguna
-                </p>
-
-                <p class="users-stat-value">
-                    1.248
-                </p>
-
-                <p class="users-stat-description">
-                    Seluruh pengguna terdaftar
-                </p>
-
-            </div>
-
-            <div class="users-stat-icon users-stat-icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-
-        </div>
-
-
-        <div class="users-stat-card">
-
-            <div class="users-stat-content">
-
-                <p class="users-stat-label">
-                    Petani
-                </p>
-
-                <p class="users-stat-value">
-                    986
-                </p>
-
-                <p class="users-stat-description">
-                    Pengguna dengan role Petani
-                </p>
-
-            </div>
-
-            <div class="users-stat-icon users-stat-icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22V8"/>
-                    <path d="M5 12c0-3 2-5 7-5s7 2 7 5"/>
-                    <path d="M5 12c0 4 3 7 7 7s7-3 7-7"/>
-                    <path d="M12 8c-2-3-1-5 0-6 1 1 1 3 0 6Z"/>
-                </svg>
-            </div>
-
-        </div>
-
-
-        <div class="users-stat-card">
-
-            <div class="users-stat-content">
-
-                <p class="users-stat-label">
-                    PPL
-                </p>
-
-                <p class="users-stat-value">
-                    184
-                </p>
-
-                <p class="users-stat-description">
-                    Penyuluh Pertanian Lapangan
-                </p>
-
-            </div>
-
-            <div class="users-stat-icon users-stat-icon-yellow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-
-        </div>
-
-
-        <div class="users-stat-card">
-
-            <div class="users-stat-content">
-
-                <p class="users-stat-label">
-                    Mitra
-                </p>
-
-                <p class="users-stat-value">
-                    78
-                </p>
-
-                <p class="users-stat-description">
-                    Mitra terdaftar
-                </p>
-
-            </div>
-
-            <div class="users-stat-icon users-stat-icon-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-            </div>
-
-        </div>
-
+    <div class="admin-grid">
+        <div class="admin-stat"><span>Total</span><strong>{{ number_format($stats['total'], 0, ',', '.') }}</strong></div>
+        <div class="admin-stat"><span>Aktif</span><strong>{{ number_format($stats['active'], 0, ',', '.') }}</strong></div>
+        <div class="admin-stat"><span>Admin</span><strong>{{ number_format($stats['admins'], 0, ',', '.') }}</strong></div>
+        <div class="admin-stat"><span>Suspended</span><strong>{{ number_format($stats['suspended'], 0, ',', '.') }}</strong></div>
     </div>
 
-
-    <div class="users-table-card">
-
-        <div class="users-table-header">
-
-            <div class="users-table-heading">
-
-                <h2>
-                    Daftar Pengguna
-                </h2>
-
-                <p>
-                    Daftar pengguna yang terdaftar pada sistem P.A.D.I.
-                </p>
-
+    <section class="admin-card">
+        <div class="admin-card__header">
+            <div class="admin-card__title">
+                <span>Create</span>
+                <h2>Tambah Pengguna</h2>
             </div>
-
-
-            <div class="users-filters">
-
-                <div class="users-search">
-
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.3-4.3"/>
-                    </svg>
-
-                    <input
-                        type="text"
-                        placeholder="Cari pengguna..."
-                    >
-
-                </div>
-
-
-                <select>
-                    <option>Semua Role</option>
-                    <option>Petani</option>
-                    <option>PPL</option>
-                    <option>Mitra</option>
-                    <option>Admin</option>
-                </select>
-
-
-                <select>
-                    <option>Semua Status</option>
-                    <option>Aktif</option>
-                    <option>Menunggu</option>
-                    <option>Nonaktif</option>
-                </select>
-
-            </div>
-
         </div>
 
+        <form method="POST" action="{{ route('admin.users.store') }}" class="admin-form admin-form--compact-grid">
+            @csrf
 
-        <div class="users-table-wrapper">
+            <label class="admin-field">
+                <span>Nama</span>
+                <input class="admin-input" type="text" name="name" value="{{ old('name') }}" placeholder="Nama pengguna" required>
+            </label>
 
-            <table class="users-table">
+            <label class="admin-field">
+                <span>Email</span>
+                <input class="admin-input" type="email" name="email" value="{{ old('email') }}" placeholder="nama@email.com" required>
+            </label>
 
+            <label class="admin-field">
+                <span>Telepon</span>
+                <input class="admin-input" type="text" name="phone" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx" required>
+            </label>
+
+            <label class="admin-field">
+                <span>Password</span>
+                <input class="admin-input" type="password" name="password" placeholder="Minimal 8 karakter" required>
+            </label>
+
+            <label class="admin-field">
+                <span>Role</span>
+                <select class="admin-select" name="role" required>
+                    @foreach(['farmer' => 'Petani', 'ppl' => 'PPL', 'partner' => 'Partner', 'admin' => 'Admin'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('role', 'farmer') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <label class="admin-field">
+                <span>Status</span>
+                <select class="admin-select" name="status" required>
+                    @foreach(['active' => 'Aktif', 'inactive' => 'Tidak Aktif', 'suspended' => 'Suspended'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('status', 'active') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <label class="admin-field">
+                <span>Verifikasi</span>
+                <select class="admin-select" name="verification_status" required>
+                    @foreach(['pending' => 'Pending', 'verified' => 'Verified', 'rejected' => 'Rejected'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('verification_status', 'verified') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <div class="admin-form__actions">
+                <button class="admin-button" type="submit">Tambah Pengguna</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="admin-card">
+        <div class="admin-card__header">
+            <div class="admin-card__title">
+                <span>Read / Update / Delete</span>
+                <h2>Daftar Akun</h2>
+            </div>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table admin-table--users">
                 <thead>
                     <tr>
-                        <th>Pengguna</th>
+                        <th>Identitas</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Bergabung</th>
+                        <th>Verifikasi</th>
+                        <th>Password</th>
+                        <th>Login Terakhir</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
-
-
                 <tbody>
+                    @forelse($users as $user)
+                        <tr>
+                            <td>
+                                <form id="user-update-{{ $user->id }}" method="POST" action="{{ route('admin.users.update', $user) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                </form>
 
-                    <tr>
+                                <label class="admin-field admin-field--table">
+                                    <span>Nama</span>
+                                    <input class="admin-input" form="user-update-{{ $user->id }}" type="text" name="name" value="{{ $user->name }}" required>
+                                </label>
+                                <label class="admin-field admin-field--table">
+                                    <span>Email</span>
+                                    <input class="admin-input" form="user-update-{{ $user->id }}" type="email" name="email" value="{{ $user->email }}" required>
+                                </label>
+                                <label class="admin-field admin-field--table">
+                                    <span>Telepon</span>
+                                    <input class="admin-input" form="user-update-{{ $user->id }}" type="text" name="phone" value="{{ $user->phone }}" required>
+                                </label>
+                            </td>
+                            <td>
+                                <select class="admin-select" name="role" form="user-update-{{ $user->id }}">
+                                    @foreach(['farmer' => 'Petani', 'ppl' => 'PPL', 'partner' => 'Partner', 'admin' => 'Admin'] as $value => $label)
+                                        <option value="{{ $value }}" @selected($user->role === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <select class="admin-select" name="status" form="user-update-{{ $user->id }}">
+                                    @foreach(['active' => 'Aktif', 'inactive' => 'Tidak Aktif', 'suspended' => 'Suspended'] as $value => $label)
+                                        <option value="{{ $value }}" @selected($user->status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <select class="admin-select" name="verification_status" form="user-update-{{ $user->id }}">
+                                    @foreach(['pending' => 'Pending', 'verified' => 'Verified', 'rejected' => 'Rejected'] as $value => $label)
+                                        <option value="{{ $value }}" @selected($user->verification_status === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <input class="admin-input" form="user-update-{{ $user->id }}" type="password" name="password" placeholder="Kosongkan jika tetap">
+                            </td>
+                            <td>{{ $user->last_login_at?->format('d M Y H:i') ?? '-' }}</td>
+                            <td>
+                                <div class="admin-action-stack">
+                                    <button class="admin-button" type="submit" form="user-update-{{ $user->id }}">Simpan</button>
 
-                        <td>
-                            <div class="users-person">
-
-                                <div class="users-avatar users-avatar-green">
-                                    AS
+                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button
+                                            class="admin-button admin-button--light"
+                                            type="submit"
+                                            onclick="return confirm('Hapus pengguna {{ $user->name }}?')"
+                                            @disabled(auth()->id() === $user->id)
+                                        >
+                                            Hapus
+                                        </button>
+                                    </form>
                                 </div>
-
-                                <div class="users-person-info">
-                                    <p>
-                                        Ahmad Setiawan
-                                    </p>
-
-                                    <span>
-                                        ahmad@example.com
-                                    </span>
-                                </div>
-
-                            </div>
-                        </td>
-
-                        <td>
-                            <span class="users-role users-role-green">
-                                Petani
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-status users-status-active">
-                                <span></span>
-                                Aktif
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-date">
-                                12 Agustus 2026
-                            </span>
-                        </td>
-
-                        <td class="users-action-cell">
-                            <button type="button" class="users-detail-button">
-                                Detail
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <div class="users-person">
-
-                                <div class="users-avatar users-avatar-yellow">
-                                    BR
-                                </div>
-
-                                <div class="users-person-info">
-                                    <p>
-                                        Budi Raharjo
-                                    </p>
-
-                                    <span>
-                                        budi@example.com
-                                    </span>
-                                </div>
-
-                            </div>
-                        </td>
-
-                        <td>
-                            <span class="users-role users-role-yellow">
-                                PPL
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-status users-status-active">
-                                <span></span>
-                                Aktif
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-date">
-                                10 Agustus 2026
-                            </span>
-                        </td>
-
-                        <td class="users-action-cell">
-                            <button type="button" class="users-detail-button">
-                                Detail
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <div class="users-person">
-
-                                <div class="users-avatar users-avatar-blue">
-                                    CN
-                                </div>
-
-                                <div class="users-person-info">
-                                    <p>
-                                        Citra Nugraha
-                                    </p>
-
-                                    <span>
-                                        citra@example.com
-                                    </span>
-                                </div>
-
-                            </div>
-                        </td>
-
-                        <td>
-                            <span class="users-role users-role-blue">
-                                Mitra
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-status users-status-pending">
-                                <span></span>
-                                Menunggu
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-date">
-                                8 Agustus 2026
-                            </span>
-                        </td>
-
-                        <td class="users-action-cell">
-                            <button type="button" class="users-detail-button">
-                                Detail
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <div class="users-person">
-
-                                <div class="users-avatar users-avatar-purple">
-                                    DS
-                                </div>
-
-                                <div class="users-person-info">
-                                    <p>
-                                        Dedi Saputra
-                                    </p>
-
-                                    <span>
-                                        dedi@example.com
-                                    </span>
-                                </div>
-
-                            </div>
-                        </td>
-
-                        <td>
-                            <span class="users-role users-role-green">
-                                Petani
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-status users-status-inactive">
-                                <span></span>
-                                Nonaktif
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="users-date">
-                                5 Agustus 2026
-                            </span>
-                        </td>
-
-                        <td class="users-action-cell">
-                            <button type="button" class="users-detail-button">
-                                Detail
-                            </button>
-                        </td>
-
-                    </tr>
-
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="7" class="admin-empty">Belum ada pengguna di database.</td></tr>
+                    @endforelse
                 </tbody>
-
             </table>
-
         </div>
 
-
-        <div class="users-pagination">
-
-            <p>
-                Menampilkan
-                <strong>1–4</strong>
-                dari
-                <strong>1.248</strong>
-                pengguna
-            </p>
-
-
-            <div class="users-pagination-buttons">
-
-                <button type="button" class="users-page-button users-page-disabled">
-                    Sebelumnya
-                </button>
-
-                <button type="button" class="users-page-button users-page-active">
-                    1
-                </button>
-
-                <button type="button" class="users-page-button">
-                    2
-                </button>
-
-                <button type="button" class="users-page-button">
-                    Selanjutnya
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
+        <div class="admin-pagination">{{ $users->withQueryString()->links() }}</div>
+    </section>
 </div>
-
 @endsection

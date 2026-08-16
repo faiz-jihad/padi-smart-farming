@@ -35,8 +35,10 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'Akses awal autentikasi',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: padiMuted),
+                        'Predictive Agriculture & GIS',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: padiMuted),
                       ),
                     ],
                   ),
@@ -48,7 +50,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 26),
+            const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -67,13 +69,50 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  _InfoRow(label: 'Role', value: user?.roleLabel ?? user?.role ?? '-'),
-                  _InfoRow(label: 'Status', value: user?.statusLabel ?? user?.status ?? '-'),
+                  _InfoRow(
+                    label: 'Role',
+                    value: user?.roleLabel ?? user?.role ?? '-',
+                  ),
+                  _InfoRow(
+                    label: 'Status',
+                    value: user?.statusLabel ?? user?.status ?? '-',
+                  ),
                   _InfoRow(label: 'Email', value: user?.email ?? '-'),
                 ],
               ),
             ),
             const SizedBox(height: 18),
+
+            // Feature Buttons: Farm & Map
+            FilledButton.icon(
+              onPressed: () => context.push('/farms'),
+              icon: const Icon(Icons.landscape_rounded),
+              label: const Text('Lahan Pertanian Saya'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: () => context.push('/map/calendar'),
+              icon: const Icon(Icons.map_rounded),
+              label: const Text('Peta GIS & Kalender Tanam'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF0F766E),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            if (user?.role == 'admin') ...[
+              FilledButton.icon(
+                onPressed: () => context.go('/admin'),
+                icon: const Icon(Icons.admin_panel_settings_rounded),
+                label: const Text('Buka panel admin'),
+              ),
+              const SizedBox(height: 10),
+            ],
             FilledButton.icon(
               onPressed: () => context.go('/profile'),
               icon: const Icon(Icons.manage_accounts_rounded),
@@ -106,10 +145,22 @@ class _InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 72,
-            child: Text(label, style: const TextStyle(color: padiMuted, fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: padiMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(color: padiInk, fontWeight: FontWeight.w700)),
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: padiInk,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),

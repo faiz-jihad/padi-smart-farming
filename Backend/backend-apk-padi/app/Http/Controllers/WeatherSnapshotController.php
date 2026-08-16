@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\WeatherSnapshotResource;
-use App\Services\WeatherSnapshotService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Api\ApiResourceIndexService;
 
 class WeatherSnapshotController extends Controller
 {
-    public function index(
-        WeatherSnapshotService $service
-    ): AnonymousResourceCollection {
-        $snapshots = $service->getSnapshots();
-
-        return WeatherSnapshotResource::collection($snapshots);
+    public function index(ApiResourceIndexService $resources)
+    {
+        return WeatherSnapshotResource::collection($resources->weatherSnapshots());
     }
 }
