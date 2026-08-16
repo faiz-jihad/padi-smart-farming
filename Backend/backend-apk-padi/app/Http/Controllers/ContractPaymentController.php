@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ContractPaymentResource;
-use App\Models\ContractPayment;
+use App\Services\ContractPaymentService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ContractPaymentController extends Controller
 {
-    public function index()
-    {
-        $payments = ContractPayment::with('contract')->get();
+    public function index(
+        ContractPaymentService $service
+    ): AnonymousResourceCollection {
+        $payments = $service->getPayments();
 
         return ContractPaymentResource::collection($payments);
     }

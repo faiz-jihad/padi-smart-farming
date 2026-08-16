@@ -3,18 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PurchaseContractResource;
-use App\Models\PurchaseContract;
+use App\Services\PurchaseContractService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PurchaseContractController extends Controller
 {
-    public function index()
-    {
-        $contracts = PurchaseContract::with([
-            'listing',
-            'farmer',
-            'partner',
-            'offer',
-        ])->get();
+    public function index(
+        PurchaseContractService $service
+    ): AnonymousResourceCollection {
+        $contracts = $service->getContracts();
 
         return PurchaseContractResource::collection($contracts);
     }

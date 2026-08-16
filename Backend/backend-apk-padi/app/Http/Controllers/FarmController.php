@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Farm\Actions\CreateFarmAction;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\Farm\StoreFarmRequest;
 use App\Http\Resources\FarmResource;
-use App\Models\Farm;
+use App\Services\FarmService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FarmController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $farms = Farm::query()
-            ->where('farmer_user_id', $request->user()->id)
-            ->latest('id')
-            ->get();
+    public function index(
+        Request $request,
+        FarmService $service
+    ): JsonResponse {
+        $farms = $service->getFarms($request->user());
 
         return ApiResponse::success(
             'Data lahan berhasil diambil.',
@@ -29,9 +27,9 @@ class FarmController extends Controller
 
     public function store(
         StoreFarmRequest $request,
-        CreateFarmAction $action
+        FarmService $service
     ): JsonResponse {
-        $farm = $action->execute(
+        $farm = $service->createFarm(
             $request->user(),
             $request->validated()
         );
