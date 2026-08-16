@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DiseaseController;
 use App\Http\Controllers\Admin\EarlyWarningController;
 use App\Http\Controllers\Admin\MarketplaceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WeatherController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/admin');
@@ -32,7 +33,9 @@ Route::middleware(['auth', 'admin.web'])
             ->name('notifications.read');
 
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
         Route::get('/agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
 
@@ -52,4 +55,15 @@ Route::middleware(['auth', 'admin.web'])
         Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
 
         Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
+
+        // Weather Management Routes
+        Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');
+        Route::get('/weather/map', [WeatherController::class, 'map'])->name('weather.map');
+        Route::get('/weather/history', [WeatherController::class, 'history'])->name('weather.history');
+        Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->name('weather.refresh');
+        Route::post('/weather/export', [WeatherController::class, 'export'])->name('weather.export');
+        Route::get('/weather/settings', [WeatherController::class, 'settings'])->name('weather.settings');
+        Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
+        Route::post('/weather/test-connection', [WeatherController::class, 'testConnection'])->name('weather.test-connection');
+        Route::post('/weather/clear-cache', [WeatherController::class, 'clearCache'])->name('weather.clear-cache');
     });
