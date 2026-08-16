@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\AdminBroadcastResource;
-use App\Models\AdminBroadcast;
+use App\Services\AdminBroadcastService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminBroadcastController extends Controller
 {
-    public function index()
-    {
-        $broadcasts = AdminBroadcast::with('admin')
-            ->latest()
-            ->get();
+    public function index(
+        AdminBroadcastService $service
+    ): AnonymousResourceCollection {
+        $broadcasts = $service->getBroadcasts();
 
         return AdminBroadcastResource::collection($broadcasts);
     }

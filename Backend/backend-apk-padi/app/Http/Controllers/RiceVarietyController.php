@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\RiceVarietyResource;
-use App\Models\RiceVariety;
+use App\Services\RiceVarietyService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class RiceVarietyController extends Controller
 {
-    public function index()
-    {
-        $varieties = RiceVariety::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+    public function index(
+        RiceVarietyService $service
+    ): AnonymousResourceCollection {
+        $varieties = $service->getActiveVarieties();
 
         return RiceVarietyResource::collection($varieties);
     }

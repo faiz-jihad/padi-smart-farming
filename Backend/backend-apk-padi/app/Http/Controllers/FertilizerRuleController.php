@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\FertilizerRuleResource;
-use App\Models\FertilizerRule;
+use App\Services\FertilizerRuleService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FertilizerRuleController extends Controller
 {
-    public function index()
-    {
-        $rules = FertilizerRule::with('variety')
-            ->orderBy('phase')
-            ->get();
+    public function index(
+        FertilizerRuleService $service
+    ): AnonymousResourceCollection {
+        $rules = $service->getRules();
 
         return FertilizerRuleResource::collection($rules);
     }

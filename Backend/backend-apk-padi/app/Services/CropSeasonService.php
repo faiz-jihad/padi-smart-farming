@@ -1,16 +1,27 @@
 <?php
 
-namespace App\Domain\CropSeason\Actions;
+namespace App\Services;
 
 use App\Models\CropSeason;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
-class CreateCropSeasonAction
+class CropSeasonService
 {
+    public function getCropSeasons(User $user): Collection
+    {
+        return CropSeason::query()
+            ->whereHas('farm', function ($query) use ($user): void {
+                $query->where('farmer_user_id', $user->id);
+            })
+            ->latest('id')
+            ->get();
+    }
+
     /**
      * @param array<string, mixed> $data
      */
-    public function execute(User $user, array $data): CropSeason
+    public function createCropSeason(User $user, array $data): CropSeason
     {
         $farm = $user->farms()
             ->whereKey($data['farm_id'])

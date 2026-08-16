@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\DeviceTokenResource;
-use App\Models\DeviceToken;
+use App\Services\DeviceTokenService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class DeviceTokenController extends Controller
 {
-    public function index()
-    {
-        $tokens = DeviceToken::with('user')->get();
+    public function index(
+        DeviceTokenService $service
+    ): AnonymousResourceCollection {
+        $tokens = $service->getTokens();
 
         return DeviceTokenResource::collection($tokens);
     }

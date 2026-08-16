@@ -2,24 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\CropSeason\Actions\CreateCropSeasonAction;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\CropSeason\StoreCropSeasonRequest;
 use App\Http\Resources\CropSeasonResource;
-use App\Models\CropSeason;
+use App\Services\CropSeasonService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CropSeasonController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $cropSeasons = CropSeason::query()
-            ->whereHas('farm', function ($query) use ($request): void {
-                $query->where('farmer_user_id', $request->user()->id);
-            })
-            ->latest('id')
-            ->get();
+    public function index(
+        Request $request,
+        CropSeasonService $service
+    ): JsonResponse {
+        $cropSeasons = $service->getCropSeasons(
+            $request->user()
+        );
 
         return ApiResponse::success(
             'Data musim tanam berhasil diambil.',
@@ -31,9 +29,9 @@ class CropSeasonController extends Controller
 
     public function store(
         StoreCropSeasonRequest $request,
-        CreateCropSeasonAction $action
+        CropSeasonService $service
     ): JsonResponse {
-        $cropSeason = $action->execute(
+        $cropSeason = $service->createCropSeason(
             $request->user(),
             $request->validated()
         );

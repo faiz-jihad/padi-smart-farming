@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\HarvestResource;
-use App\Models\Harvest;
+use App\Services\HarvestService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class HarvestController extends Controller
 {
-    public function index()
-    {
-        $harvests = Harvest::with('cropSeason')->get();
+    public function index(
+        HarvestService $service
+    ): AnonymousResourceCollection {
+        $harvests = $service->getHarvests();
 
         return HarvestResource::collection($harvests);
     }
