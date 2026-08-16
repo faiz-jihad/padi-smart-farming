@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
 use App\Http\Controllers\Admin\EarlyWarningController;
 use App\Http\Controllers\Admin\MarketplaceController;
+use App\Http\Controllers\Admin\SoilController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WeatherController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'admin.web'])
         // Weather Management Routes
         Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');
         Route::get('/weather/map', [WeatherController::class, 'map'])->name('weather.map');
+        Route::get('/weather/inspect', [WeatherController::class, 'inspectLocation'])->name('weather.inspect');
         Route::get('/weather/history', [WeatherController::class, 'history'])->name('weather.history');
         Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->name('weather.refresh');
         Route::post('/weather/export', [WeatherController::class, 'export'])->name('weather.export');
@@ -66,4 +68,12 @@ Route::middleware(['auth', 'admin.web'])
         Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
         Route::post('/weather/test-connection', [WeatherController::class, 'testConnection'])->name('weather.test-connection');
         Route::post('/weather/clear-cache', [WeatherController::class, 'clearCache'])->name('weather.clear-cache');
+
+        // Soil Detection Routes
+        Route::get('/soil', [SoilController::class, 'index'])->name('soil.index');
+        Route::get('/soil/create', [SoilController::class, 'create'])->name('soil.create');
+        Route::post('/soil', [SoilController::class, 'store'])->name('soil.store');
+        Route::post('/soil/export', [SoilController::class, 'export'])->name('soil.export');
+        Route::get('/soil/{soil}', [SoilController::class, 'show'])->name('soil.show');
+        Route::delete('/soil/{soil}', [SoilController::class, 'destroy'])->name('soil.destroy');
     });

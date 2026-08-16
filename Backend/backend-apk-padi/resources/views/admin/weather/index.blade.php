@@ -15,7 +15,9 @@
                     @csrf
                     <button type="submit" class="admin-btn admin-btn--secondary">Bersihkan Cache</button>
                 </form>
-                <a href="{{ route('admin.weather.map') }}" class="admin-btn admin-btn--secondary">📍 Peta</a>
+                <a href="{{ route('admin.weather.map') }}" class="admin-btn admin-btn--secondary">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg> Peta
+                </a>
                 <a href="{{ route('admin.weather.history') }}" class="admin-btn admin-btn--secondary">Riwayat</a>
                 <a href="{{ route('admin.weather.settings') }}" class="admin-btn admin-btn--secondary">Pengaturan</a>
             </div>
@@ -23,13 +25,13 @@
 
         @if (session('status'))
             <div class="admin-alert admin-alert--success">
-                ✓ {{ session('status') }}
+                {{ session('status') }}
             </div>
         @endif
 
         @if (session('error'))
             <div class="admin-alert admin-alert--error">
-                ✕ {{ session('error') }}
+                {{ session('error') }}
             </div>
         @endif
 

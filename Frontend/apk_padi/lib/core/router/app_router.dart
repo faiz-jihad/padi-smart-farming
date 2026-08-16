@@ -16,6 +16,9 @@ import 'package:padi/features/auth/presentation/screens/login_screen.dart';
 import 'package:padi/features/auth/presentation/screens/profile_screen.dart';
 import 'package:padi/features/auth/presentation/screens/register_screen.dart';
 import 'package:padi/features/auth/presentation/screens/splash_screen.dart';
+import 'package:padi/features/farm/presentation/screens/add_farm_screen.dart';
+import 'package:padi/features/farm/presentation/screens/farm_list_screen.dart';
+import 'package:padi/features/map/presentation/screens/planting_calendar_map_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
@@ -99,6 +102,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/password',
         builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      // Farm routes
+      GoRoute(
+        path: '/farms',
+        builder: (context, state) => const FarmListScreen(),
+      ),
+      GoRoute(
+        path: '/farms/add',
+        builder: (context, state) => const AddFarmScreen(),
+      ),
+      // GIS & Map routes
+      GoRoute(
+        path: '/map/calendar',
+        builder: (context, state) => const PlantingCalendarMapPage(),
       ),
     ],
     redirect: (context, state) {

@@ -67,24 +67,24 @@ class AdminDashboardService
                 'icon' => 'farm',
             ],
             [
-                'label' => 'Laporan Komunitas',
+                'label' => 'Laporan Penyakit',
                 'value' => $this->count(CommunityReport::class, 'community_reports'),
-                'helper' => 'Laporan yang masuk dari pengguna',
-                'tone' => 'green',
+                'helper' => 'Laporan penyakit dari pengguna',
+                'tone' => 'orange',
                 'icon' => 'warning',
             ],
             [
-                'label' => 'Marketplace',
+                'label' => 'Listing Marketplace',
                 'value' => $this->count(MarketListing::class, 'market_listings'),
                 'helper' => 'Listing hasil panen',
-                'tone' => 'green',
+                'tone' => 'blue',
                 'icon' => 'market',
             ],
         ];
     }
 
     /**
-     * @return list<array{title: string, description: string, time: string, tone: string, icon: string}>
+     * @return list<array{title: string, actor: string, module: string, time: string, tone: string, icon: string}>
      */
     private function recentActivities(): array
     {
@@ -99,9 +99,10 @@ class AdminDashboardService
             ->get()
             ->map(fn (AuditLog $log): array => [
                 'title' => $this->activityTitle($log->action),
-                'description' => ($log->user?->name ?? 'Sistem').' menjalankan aksi pada '.class_basename((string) $log->entity_type),
+                'actor' => $log->user?->name ?? 'Sistem',
+                'module' => $this->moduleName((string) $log->entity_type),
                 'time' => $log->created_at?->diffForHumans() ?? '-',
-                'tone' => 'green',
+                'tone' => str_contains($log->action, 'broadcast') ? 'blue' : 'green',
                 'icon' => str_contains($log->action, 'broadcast') ? 'broadcast' : 'audit',
             ])
             ->values()
@@ -167,6 +168,17 @@ class AdminDashboardService
             'admin_broadcast_updated' => 'Broadcast diperbarui',
             'admin_broadcast_deleted' => 'Broadcast dihapus',
             default => str_replace('_', ' ', $action),
+        };
+    }
+
+    private function moduleName(string $entityType): string
+    {
+        return match (class_basename($entityType)) {
+            'AdminBroadcast' => 'Broadcast',
+            'CommunityReport', 'DiseaseScan' => 'Laporan Penyakit',
+            'MarketListing', 'MarketOffer' => 'Marketplace',
+            'User' => 'Pengguna',
+            default => class_basename($entityType) ?: 'Sistem',
         };
     }
 

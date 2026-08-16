@@ -1,118 +1,291 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap");
-
 :root {
+    --admin-primary: #166534;
+    --admin-primary-hover: #14532d;
+    --admin-primary-soft: #dcfce7;
+    --admin-page-bg: #f6fbf7;
+    --admin-surface: #ffffff;
+    --admin-surface-secondary: #f8fcf9;
+    --admin-text: #0f3d16;
+    --admin-text-secondary: #2f6b45;
+    --admin-text-muted: #5f8a6b;
+    --admin-border: #d6ead8;
+    --admin-border-strong: #a8cfae;
+    --admin-warning: #2f6b45;
+    --admin-danger: #14532d;
+    --admin-info: #166534;
     --admin-white: #ffffff;
-    --admin-green: #1b5e20;
-    --admin-green-soft: #e8f5e9;
-    --admin-green-line: #b7dfba;
+    --admin-green: var(--admin-primary);
+    --admin-green-soft: var(--admin-primary-soft);
+    --admin-green-line: var(--admin-border);
+    --admin-radius: 12px;
+    --admin-radius-sm: 10px;
+    --admin-shadow-sm: 0 1px 2px rgba(22, 101, 52, 0.06);
+    --admin-shadow-md: 0 18px 42px rgba(22, 101, 52, 0.12);
+    --admin-sidebar-width: 248px;
+    --admin-topbar-height: 68px;
+    --admin-font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .admin-body,
-.admin-auth,
 .admin-body *,
+.admin-auth,
 .admin-auth * {
-    font-family: "Poppins", "Montserrat", sans-serif !important;
+    box-sizing: border-box;
 }
 
-.admin-body,
-.admin-auth {
-    background: var(--admin-white) !important;
-    color: var(--admin-green) !important;
+.admin-body {
+    font-family: var(--admin-font);
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--admin-page-bg);
+    color: var(--admin-text);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }
 
-.admin-body *:not(button):not(.admin-button):not(input):not(select):not(textarea),
-.admin-auth *:not(button):not(.admin-auth__submit):not(input):not(select):not(textarea) {
-    background-image: none !important;
+.admin-body a {
+    color: inherit;
 }
 
-.admin-body *:not(svg):not(path),
-.admin-auth *:not(svg):not(path) {
-    color: var(--admin-green) !important;
-    border-color: var(--admin-green-line) !important;
+.admin-body button,
+.admin-body input,
+.admin-body select,
+.admin-body textarea {
+    font: inherit;
+}
+
+.admin-body :focus-visible {
+    outline: 3px solid rgba(22, 101, 52, 0.24);
+    outline-offset: 2px;
+}
+
+.admin-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   BUTTONS & CONTROLS DESIGN SYSTEM
+   ========================================================================== */
+
+.admin-btn,
+.admin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: var(--admin-font);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid #166534;
+    background-color: #166534;
+    color: #ffffff !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(22, 101, 52, 0.12);
+}
+
+.admin-btn:hover,
+.admin-button:hover {
+    background-color: #14532d;
+    border-color: #14532d;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.25);
+}
+
+.admin-btn:active,
+.admin-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(22, 101, 52, 0.12);
+}
+
+/* Secondary Button (White background with clear slate border) */
+.admin-btn--secondary,
+.admin-button--light {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.admin-btn--secondary:hover,
+.admin-button--light:hover {
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Outline Button */
+.admin-btn--outline {
+    background-color: transparent !important;
+    border: 1px solid #166534 !important;
+    color: #166534 !important;
     box-shadow: none !important;
 }
 
-.admin-body a,
-.admin-body button,
-.admin-body input,
-.admin-body select,
-.admin-body textarea,
-.admin-auth a,
-.admin-auth button,
-.admin-auth input,
-.admin-auth select,
-.admin-auth textarea {
-    font-family: "Poppins", "Montserrat", sans-serif !important;
+.admin-btn--outline:hover {
+    background-color: #f0fdf4 !important;
+    border-color: #15803d !important;
+    color: #14532d !important;
 }
 
-.admin-body button,
-.admin-body .admin-button,
-.admin-auth button,
-.admin-auth .admin-auth__submit {
-    background: var(--admin-green) !important;
-    color: var(--admin-white) !important;
+/* Danger Button */
+.admin-btn--danger,
+.admin-button--danger {
+    background-color: #dc2626 !important;
+    border: 1px solid #b91c1c !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(220, 38, 38, 0.15) !important;
 }
 
-.admin-body button *,
-.admin-auth button * {
-    color: var(--admin-white) !important;
+.admin-btn--danger:hover,
+.admin-button--danger:hover {
+    background-color: #b91c1c !important;
+    border-color: #991b1b !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
 }
 
-.admin-body input,
-.admin-body select,
-.admin-body textarea,
-.admin-auth input,
-.admin-auth select,
-.admin-auth textarea,
-.admin-navbar,
-.admin-sidebar,
-.admin-card,
-.admin-table-wrap,
-.admin-auth__panel,
-.admin-navbar__notification-panel {
-    background: var(--admin-white) !important;
+/* Success Button */
+.admin-btn--success {
+    background-color: #16a34a !important;
+    border: 1px solid #15803d !important;
+    color: #ffffff !important;
 }
 
-.admin-body input:focus,
-.admin-body select:focus,
-.admin-body textarea:focus,
-.admin-auth input:focus,
-.admin-auth select:focus,
-.admin-auth textarea:focus {
-    box-shadow: 0 0 0 4px rgba(27, 94, 32, 0.16) !important;
+.admin-btn--success:hover {
+    background-color: #15803d !important;
+    border-color: #166534 !important;
 }
 
-.admin-body .is-active,
-.admin-body .is-unread,
-.admin-body .admin-badge,
-.admin-body .admin-stat {
-    background: var(--admin-green-soft) !important;
+/* Warning Button */
+.admin-btn--warning {
+    background-color: #d97706 !important;
+    border: 1px solid #b45309 !important;
+    color: #ffffff !important;
 }
 
-.admin-body [class*="blue"],
-.admin-body [class*="orange"],
-.admin-body [class*="yellow"],
-.admin-body [class*="red"],
-.admin-body [class*="purple"],
-.admin-body [class*="warning"],
-.admin-body [class*="danger"],
-.admin-body [class*="error"],
-.admin-auth [class*="error"] {
-    background: var(--admin-green-soft) !important;
-    color: var(--admin-green) !important;
+.admin-btn--warning:hover {
+    background-color: #b45309 !important;
+    border-color: #92400e !important;
 }
 
-.admin-auth__visual,
-.admin-auth__visual::before {
-    background: var(--admin-green-soft) !important;
+/* Sizes */
+.admin-btn--sm,
+.admin-button--sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
 }
 
-.admin-body svg,
-.admin-auth svg {
-    color: var(--admin-green) !important;
+.admin-btn--lg,
+.admin-button--lg {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 10px;
 }
 
-.admin-body button svg,
-.admin-auth button svg {
-    color: var(--admin-white) !important;
+/* Inline Link Buttons */
+.admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #166534;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: transparent;
+}
+
+.admin-link:hover {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #14532d;
+}
+
+/* Inputs & Form Controls */
+.admin-input,
+.admin-select,
+.admin-textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #0f172a;
+    font-family: var(--admin-font);
+    font-size: 13px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus {
+    border-color: #166534;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.15);
+}
+
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* Alerts */
+.admin-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+}
+
+.admin-alert--success {
+    background-color: #dcfce7;
+    border: 1px solid #86efac;
+    border-left: 4px solid #16a34a;
+    color: #14532d;
+}
+
+.admin-alert--error {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #dc2626;
+    color: #7f1d1d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-body *,
+    .admin-body *::before,
+    .admin-body *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }

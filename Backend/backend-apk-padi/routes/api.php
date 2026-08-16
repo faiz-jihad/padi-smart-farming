@@ -4,7 +4,14 @@ use App\Http\Controllers\AlertSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\FarmController as ApiV1FarmController;
+use App\Http\Controllers\Api\V1\LocationController;
+use App\Http\Controllers\Api\V1\MapController;
+use App\Http\Controllers\Api\V1\PlantingCalendarController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\RegionController;
+use App\Http\Controllers\Api\V1\SoilDetectionController;
+use App\Http\Controllers\Api\V1\WeatherController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\CropSeasonController;
@@ -26,6 +33,29 @@ use App\Http\Controllers\WeatherSnapshotController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
+    // ─────────────────────────────────────────────
+    // Public Region, Location & Map GIS API
+    // ─────────────────────────────────────────────
+    Route::prefix('regions')->group(function (): void {
+        Route::get('provinces', [RegionController::class, 'provinces']);
+        Route::get('regencies', [RegionController::class, 'regencies']);
+        Route::get('districts', [RegionController::class, 'districts']);
+        Route::get('villages', [RegionController::class, 'villages']);
+        Route::get('search', [RegionController::class, 'search']);
+    });
+
+    Route::prefix('location')->group(function (): void {
+        Route::get('resolve', [LocationController::class, 'resolve']);
+    });
+
+    Route::prefix('maps')->group(function (): void {
+        Route::get('districts', [MapController::class, 'districts']);
+        Route::get('villages', [MapController::class, 'villages']);
+    });
+
+    // ─────────────────────────────────────────────
+    // Authentication
+    // ─────────────────────────────────────────────
     Route::prefix('auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
@@ -39,13 +69,25 @@ Route::prefix('v1')->group(function (): void {
         });
     });
 
+    // ─────────────────────────────────────────────
+    // Protected API Endpoints
+    // ─────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'account.active'])->group(function (): void {
         Route::get('profile', [ProfileController::class, 'show']);
         Route::patch('profile', [ProfileController::class, 'update']);
         Route::put('profile/password', [ProfileController::class, 'changePassword']);
 
-        Route::get('farms', [FarmController::class, 'index']);
-        Route::post('farms', [FarmController::class, 'store']);
+        // Farm CRUD (V1)
+        Route::get('farms', [ApiV1FarmController::class, 'index']);
+        Route::post('farms', [ApiV1FarmController::class, 'store']);
+        Route::get('farms/{farm}', [ApiV1FarmController::class, 'show']);
+        Route::put('farms/{farm}', [ApiV1FarmController::class, 'update']);
+        Route::delete('farms/{farm}', [ApiV1FarmController::class, 'destroy']);
+        Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm']);
+
+        // Planting Calendars
+        Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
+        Route::get('districts/{district}/planting-calendar', [PlantingCalendarController::class, 'byDistrict']);
 
         Route::get('farmers', [FarmerProfileController::class, 'index']);
 
@@ -54,6 +96,21 @@ Route::prefix('v1')->group(function (): void {
         Route::get('rice-varieties', [RiceVarietyController::class, 'index']);
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
         Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
+
+        // Weather API routes
+        Route::prefix('weather')->group(function (): void {
+            Route::post('current', [WeatherController::class, 'currentWeather']);
+            Route::post('forecast', [WeatherController::class, 'forecast']);
+            Route::get('history', [WeatherController::class, 'history']);
+            Route::post('city', [WeatherController::class, 'byCity']);
+        });
+
+        // Soil Detection API routes
+        Route::prefix('soil-detections')->group(function (): void {
+            Route::get('/', [SoilDetectionController::class, 'index']);
+            Route::post('/', [SoilDetectionController::class, 'store']);
+            Route::get('/{soilDetection}', [SoilDetectionController::class, 'show']);
+        });
 
         Route::get('crop-seasons', [CropSeasonController::class, 'index']);
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);

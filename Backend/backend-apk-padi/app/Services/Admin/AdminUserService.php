@@ -28,7 +28,25 @@ class AdminUserService
     }
 
     /**
-     * @param  array{role: string, status: string, verification_status: string}  $data
+     * @param  array{name: string, email: string, phone: string, password: string, role: string, status: string, verification_status: string}  $data
+     */
+    public function store(
+        array $data,
+        Request $request,
+        AdminAuditLogger $audit,
+        AdminNotificationService $notifications,
+    ): User {
+        $user = User::query()->create($data);
+        $user->syncRoles([$this->spatieRole($data['role'])]);
+
+        $audit->write('admin_user_created', $user, null, $this->auditValues($user), $request);
+        $notifications->notifyAdmins('Pengguna dibuat', "{$user->name} ditambahkan sebagai {$user->role}.");
+
+        return $user;
+    }
+
+    /**
+     * @param  array{name: string, email: string, phone: string, password?: string|null, role: string, status: string, verification_status: string}  $data
      */
     public function update(
         User $target,
@@ -42,7 +60,11 @@ class AdminUserService
             return false;
         }
 
-        $oldValues = $target->only(['role', 'status', 'verification_status']);
+        $oldValues = $this->auditValues($target);
+
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
 
         $target->update($data);
         $target->syncRoles([$this->spatieRole($data['role'])]);
@@ -51,10 +73,30 @@ class AdminUserService
             'admin_user_updated',
             $target,
             $oldValues,
-            $target->only(['role', 'status', 'verification_status']),
+            $this->auditValues($target),
             $request,
         );
         $notifications->notifyAdmins('Pengguna diperbarui', "{$target->name} diperbarui oleh {$actor->name}.");
+
+        return true;
+    }
+
+    public function destroy(
+        User $target,
+        User $actor,
+        Request $request,
+        AdminAuditLogger $audit,
+        AdminNotificationService $notifications,
+    ): bool {
+        if ($target->is($actor)) {
+            return false;
+        }
+
+        $oldValues = $this->auditValues($target);
+        $target->delete();
+
+        $audit->write('admin_user_deleted', User::class, $oldValues, null, $request, $target->id);
+        $notifications->notifyAdmins('Pengguna dihapus', "{$oldValues['name']} dihapus oleh {$actor->name}.");
 
         return true;
     }
@@ -77,5 +119,13 @@ class AdminUserService
             'partner' => UserRole::Buyer->value,
             default => $databaseRole,
         };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function auditValues(User $user): array
+    {
+        return $user->only(['id', 'name', 'email', 'phone', 'role', 'status', 'verification_status']);
     }
 }

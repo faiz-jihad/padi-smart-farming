@@ -228,6 +228,9 @@ class AdminOperationalFeaturesTest extends TestCase
 
         $this->actingAs($admin)
             ->patch(route('admin.users.update', $farmer), [
+                'name' => 'Petani Update Final',
+                'email' => $farmer->email,
+                'phone' => $farmer->phone,
                 'role' => 'partner',
                 'status' => 'active',
                 'verification_status' => 'verified',
@@ -260,6 +263,7 @@ class AdminOperationalFeaturesTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'id' => $farmer->id,
+            'name' => 'Petani Update Final',
             'role' => 'partner',
             'status' => 'active',
             'verification_status' => 'verified',
@@ -288,6 +292,69 @@ class AdminOperationalFeaturesTest extends TestCase
             ->assertOk()
             ->assertSee('admin_user_updated')
             ->assertSee('admin_broadcast_deleted');
+    }
+
+    public function test_admin_can_create_update_and_delete_users_from_blade_routes(): void
+    {
+        $admin = $this->adminUser();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'User CRUD Real',
+                'email' => 'crud-user@example.test',
+                'phone' => '081234567890',
+                'password' => 'password-crud',
+                'role' => 'farmer',
+                'status' => 'active',
+                'verification_status' => 'verified',
+            ])
+            ->assertRedirect();
+
+        $createdUser = User::query()->where('email', 'crud-user@example.test')->firstOrFail();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $createdUser->id,
+            'name' => 'User CRUD Real',
+            'phone' => '081234567890',
+            'role' => 'farmer',
+            'status' => 'active',
+            'verification_status' => 'verified',
+        ]);
+        $this->assertTrue($createdUser->hasRole(UserRole::Farmer->value));
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $createdUser), [
+                'name' => 'User CRUD Updated',
+                'email' => 'crud-updated@example.test',
+                'phone' => '081234567891',
+                'password' => '',
+                'role' => 'ppl',
+                'status' => 'inactive',
+                'verification_status' => 'pending',
+            ])
+            ->assertRedirect();
+
+        $createdUser->refresh();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $createdUser->id,
+            'name' => 'User CRUD Updated',
+            'email' => 'crud-updated@example.test',
+            'phone' => '081234567891',
+            'role' => 'ppl',
+            'status' => 'inactive',
+            'verification_status' => 'pending',
+        ]);
+        $this->assertTrue($createdUser->hasRole(UserRole::ExtensionOfficer->value));
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $createdUser))
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('users', ['id' => $createdUser->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'admin_user_created']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'admin_user_updated']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'admin_user_deleted']);
     }
 
     private function adminUser(): User

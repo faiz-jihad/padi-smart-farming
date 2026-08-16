@@ -86,8 +86,8 @@ class WeatherController extends Controller
     public function updateSettings(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'weather_provider' => 'required|string|in:openweathermap',
-            'weather_api_key' => 'sometimes|string|min:10',
+            'weather_provider' => 'required|string|in:openweathermap,agromonitoring',
+            'weather_api_key' => 'nullable|string|min:10',
         ]);
 
         try {
@@ -137,9 +137,38 @@ class WeatherController extends Controller
         return view('admin.weather.map', [
             'farms' => [
                 'data' => \App\Models\Farm::with('weatherSnapshots', 'farmer')
-                    ->select('id', 'name', 'latitude', 'longitude', 'farmer_id')
+                    ->select('id', 'name', 'latitude', 'longitude', 'farmer_user_id')
                     ->get(),
             ],
+        ]);
+    }
+
+    /**
+     * Inspect weather and geolocation soil metrics for any picked point on map
+     */
+    public function inspectLocation(Request $request)
+    {
+        $validated = $request->validate([
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+        ]);
+
+        $lat = (float) $validated['latitude'];
+        $lng = (float) $validated['longitude'];
+
+        $weather = $this->externalWeatherService->getCurrentWeather($lat, $lng);
+        $soil = $this->externalWeatherService->getSoilData($lat, $lng);
+
+        $parsedWeather = $weather['success'] ? $this->externalWeatherService->parseWeatherData($weather['data']) : null;
+
+        return response()->json([
+            'success' => true,
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'weather' => $parsedWeather,
+            'weather_raw' => $weather['data'] ?? null,
+            'soil' => $soil['success'] ? $soil['data'] : null,
+            'provider' => $weather['provider'] ?? 'agromonitoring',
         ]);
     }
 }

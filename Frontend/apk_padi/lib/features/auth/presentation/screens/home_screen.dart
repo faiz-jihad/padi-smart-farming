@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'Akses awal autentikasi',
+                        'Predictive Agriculture & GIS',
                         style: Theme.of(
                           context,
                         ).textTheme.bodyMedium?.copyWith(color: padiMuted),
@@ -50,7 +50,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 26),
+            const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -82,6 +82,29 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 18),
+
+            // Feature Buttons: Farm & Map
+            FilledButton.icon(
+              onPressed: () => context.push('/farms'),
+              icon: const Icon(Icons.landscape_rounded),
+              label: const Text('Lahan Pertanian Saya'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: () => context.push('/map/calendar'),
+              icon: const Icon(Icons.map_rounded),
+              label: const Text('Peta GIS & Kalender Tanam'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF0F766E),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+            const SizedBox(height: 14),
+
             if (user?.role == 'admin') ...[
               FilledButton.icon(
                 onPressed: () => context.go('/admin'),

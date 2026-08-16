@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Notification;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -23,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Carbon::setLocale('id');
+
         View::composer('components.admin-navbar', function ($view): void {
             $userId = Auth::id();
 

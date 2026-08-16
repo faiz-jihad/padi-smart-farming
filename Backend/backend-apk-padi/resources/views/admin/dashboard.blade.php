@@ -4,249 +4,209 @@
 
 <link rel="stylesheet" href="{{ asset('css/admin/dashboard.css') }}">
 
+@php
+    $metricLinks = [
+        'users' => route('admin.users.index'),
+        'farm' => route('admin.agriculture.index'),
+        'warning' => route('admin.disease.index'),
+        'market' => route('admin.marketplace.index'),
+    ];
+@endphp
+
 <div class="dashboard-page">
 
     @if(session('status'))
-        <div class="dashboard-alert">
+        <div class="dashboard-alert" role="status">
             {{ session('status') }}
         </div>
     @endif
 
-    <section class="dashboard-hero">
+    <header class="dashboard-header">
         <div>
-            <p class="dashboard-eyebrow">
-                Ringkasan Sistem
-            </p>
+            <nav class="dashboard-breadcrumb" aria-label="Breadcrumb">
+                <span>Admin</span>
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Dashboard</span>
+            </nav>
 
-            <h1 class="dashboard-title">
-                Dashboard Admin P.A.D.I.
-            </h1>
-
-            <p class="dashboard-description">
-                Pantau pengguna, aktivitas lahan, marketplace, broadcast, audit, dan notifikasi operasional dari satu tempat.
-            </p>
+            <h1>Dashboard</h1>
+            <p>Pantau kondisi operasional dan aktivitas terbaru P.A.D.I.</p>
         </div>
 
-        <div class="dashboard-hero-card">
-            <span class="dashboard-hero-label">
-                Notifikasi belum dibaca
-            </span>
-
-            <strong>
-                {{ $adminUnreadNotifications ?? 0 }}
-            </strong>
-
-            <p>
-                Sistem akan menampilkan notifikasi terbaru pada navbar dan panel dashboard.
-            </p>
+        <div class="dashboard-period" aria-label="Periode data">
+            <span>Data hari ini</span>
+            <strong>{{ now()->translatedFormat('d F Y') }}</strong>
         </div>
-    </section>
+    </header>
 
-    <section class="dashboard-stats">
+    <section class="dashboard-kpi-grid" aria-label="Ringkasan metrik operasional">
         @foreach($metrics as $metric)
-            <article class="dashboard-stat-card">
-                <div class="stat-top">
-                    <div class="stat-icon stat-icon-{{ $metric['tone'] }}">
-                        @include('admin.partials.metric-icon', ['icon' => $metric['icon']])
-                    </div>
-
-                    <span class="stat-badge stat-badge-{{ $metric['tone'] }}">
-                        {{ $metric['label'] }}
-                    </span>
-                </div>
-
-                <p class="stat-value">
-                    {{ number_format($metric['value'], 0, ',', '.') }}
-                </p>
-
-                <p class="stat-helper">
-                    {{ $metric['helper'] }}
-                </p>
-            </article>
+            @include('admin.partials.kpi-card', [
+                'metric' => $metric,
+                'href' => $metricLinks[$metric['icon']] ?? null,
+            ])
         @endforeach
     </section>
 
-    <section class="dashboard-grid dashboard-grid-main">
+    <section class="dashboard-overview">
 
-        <article class="dashboard-panel activity-panel">
-            <div class="panel-header">
+        <article class="dashboard-panel dashboard-panel--activity">
+            <div class="dashboard-panel__header">
                 <div>
-                    <h2 class="panel-title">
-                        Aktivitas Terbaru
-                    </h2>
-
-                    <p class="panel-description">
-                        Diambil dari audit log admin.
-                    </p>
+                    <h2>Aktivitas Terbaru</h2>
+                    <p>Jejak aksi operasional dari audit log admin.</p>
                 </div>
 
-                <a href="{{ route('admin.audit.index') }}" class="panel-link">
-                    Lihat audit
+                <a href="{{ route('admin.audit.index') }}" class="dashboard-panel__link">
+                    Lihat audit log
                 </a>
             </div>
 
-            <div class="activity-list">
+            <div class="dashboard-activity-list">
                 @forelse($recentActivities as $activity)
-                    <div class="activity-item">
-                        <div class="activity-icon activity-{{ $activity['tone'] }}">
+                    <div class="dashboard-activity-item">
+                        <span class="dashboard-activity-icon dashboard-tone-{{ $activity['tone'] }}" aria-hidden="true">
                             @include('admin.partials.metric-icon', ['icon' => $activity['icon']])
-                        </div>
-
-                        <div class="activity-content">
-                            <p class="activity-title">
-                                {{ $activity['title'] }}
-                            </p>
-
-                            <p class="activity-description">
-                                {{ $activity['description'] }}
-                            </p>
-                        </div>
-
-                        <span class="activity-time">
-                            {{ $activity['time'] }}
                         </span>
+
+                        <div class="dashboard-activity-main">
+                            <h3>{{ $activity['title'] }}</h3>
+                            <dl>
+                                <div>
+                                    <dt>Pelaku</dt>
+                                    <dd>{{ $activity['actor'] }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Modul</dt>
+                                    <dd>{{ $activity['module'] }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <time class="dashboard-activity-time">{{ $activity['time'] }}</time>
                     </div>
                 @empty
                     <div class="dashboard-empty">
-                        Belum ada aktivitas audit.
+                        <span class="dashboard-empty__icon" aria-hidden="true">
+                            @include('admin.partials.metric-icon', ['icon' => 'audit'])
+                        </span>
+                        <p>Belum ada aktivitas audit.</p>
                     </div>
                 @endforelse
             </div>
         </article>
 
-        <article class="dashboard-panel notification-panel">
-            <div class="panel-header">
+        <article class="dashboard-panel">
+            <div class="dashboard-panel__header">
                 <div>
-                    <h2 class="panel-title">
-                        Notifikasi Sistem
-                    </h2>
-
-                    <p class="panel-description">
-                        Pesan terbaru untuk admin.
-                    </p>
+                    <h2>Notifikasi Sistem</h2>
+                    <p>Pesan terbaru untuk administrator.</p>
                 </div>
 
-                @if(($adminUnreadNotifications ?? 0) > 0)
-                    <form method="POST" action="{{ route('admin.notifications.read') }}">
-                        @csrf
-                        <button type="submit" class="panel-action">
-                            Tandai dibaca
-                        </button>
-                    </form>
-                @endif
+                <span class="dashboard-panel__badge">
+                    {{ number_format($adminUnreadNotifications ?? 0, 0, ',', '.') }} belum dibaca
+                </span>
             </div>
 
-            <div class="notification-list">
+            <div class="dashboard-notification-list">
                 @forelse($systemNotifications as $notification)
-                    <div class="notification-item">
-                        <div class="notification-type">
+                    <div class="dashboard-notification-item">
+                        <span class="dashboard-notification-type" aria-hidden="true">
                             {{ strtoupper(substr($notification['type'], 0, 1)) }}
-                        </div>
+                        </span>
 
                         <div>
-                            <p>
-                                {{ $notification['title'] }}
-                            </p>
-
-                            <span>
-                                {{ $notification['body'] }}
-                            </span>
-
-                            <small>
-                                {{ $notification['time'] }}
-                            </small>
+                            <h3>{{ $notification['title'] }}</h3>
+                            <p>{{ $notification['body'] }}</p>
+                            <time>{{ $notification['time'] }}</time>
                         </div>
                     </div>
                 @empty
                     <div class="dashboard-empty">
-                        Belum ada notifikasi.
+                        <span class="dashboard-empty__icon" aria-hidden="true">
+                            @include('admin.partials.metric-icon', ['icon' => 'broadcast'])
+                        </span>
+                        <p>Belum ada notifikasi baru.</p>
                     </div>
                 @endforelse
             </div>
+
+            @if(($adminUnreadNotifications ?? 0) > 0)
+                <form method="POST" action="{{ route('admin.notifications.read') }}" class="dashboard-panel__footer-action">
+                    @csrf
+                    <button type="submit">Tandai semua dibaca</button>
+                </form>
+            @endif
         </article>
 
     </section>
 
-    <section class="dashboard-grid dashboard-grid-secondary">
+    <section class="dashboard-monitoring" aria-label="Monitoring operasional">
 
         <article class="dashboard-panel">
-            <div class="panel-header">
+            <div class="dashboard-panel__header">
                 <div>
-                    <h2 class="panel-title">
-                        Status Pengguna
-                    </h2>
-
-                    <p class="panel-description">
-                        Kondisi akun yang perlu dipantau admin.
-                    </p>
+                    <h2>Status Pengguna</h2>
+                    <p>Kondisi akun dan broadcast yang perlu dipantau.</p>
                 </div>
 
-                <a href="{{ route('admin.users.index') }}" class="panel-link">
-                    Kelola
+                <a href="{{ route('admin.users.index') }}" class="dashboard-panel__link">
+                    Kelola pengguna
                 </a>
             </div>
 
-            <div class="status-grid">
-                <div class="status-card">
-                    <span>Aktif</span>
-                    <strong>{{ number_format($userStats['active'], 0, ',', '.') }}</strong>
+            <dl class="dashboard-definition-grid">
+                <div>
+                    <dt>Aktif</dt>
+                    <dd>{{ number_format($userStats['active'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="status-card">
-                    <span>Tidak aktif</span>
-                    <strong>{{ number_format($userStats['inactive'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Tidak aktif</dt>
+                    <dd>{{ number_format($userStats['inactive'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="status-card status-card-warning">
-                    <span>Ditangguhkan</span>
-                    <strong>{{ number_format($userStats['suspended'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Ditangguhkan</dt>
+                    <dd>{{ number_format($userStats['suspended'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="status-card">
-                    <span>Broadcast</span>
-                    <strong>{{ number_format($userStats['broadcasts'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Broadcast</dt>
+                    <dd>{{ number_format($userStats['broadcasts'], 0, ',', '.') }}</dd>
                 </div>
-            </div>
+            </dl>
         </article>
 
         <article class="dashboard-panel">
-            <div class="panel-header">
+            <div class="dashboard-panel__header">
                 <div>
-                    <h2 class="panel-title">
-                        Marketplace
-                    </h2>
-
-                    <p class="panel-description">
-                        Listing, penawaran, dan kontrak pembelian.
-                    </p>
+                    <h2>Marketplace</h2>
+                    <p>Listing, penawaran, dan kontrak pembelian.</p>
                 </div>
 
-                <a href="{{ route('admin.marketplace.index') }}" class="panel-link">
-                    Lihat
+                <a href="{{ route('admin.marketplace.index') }}" class="dashboard-panel__link">
+                    Lihat marketplace
                 </a>
             </div>
 
-            <div class="marketplace-grid">
-                <div class="marketplace-card">
-                    <p>Listing aktif</p>
-                    <strong>{{ number_format($marketplaceStats['active_listings'], 0, ',', '.') }}</strong>
+            <dl class="dashboard-definition-grid">
+                <div>
+                    <dt>Listing aktif</dt>
+                    <dd>{{ number_format($marketplaceStats['active_listings'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="marketplace-card">
-                    <p>Penawaran</p>
-                    <strong>{{ number_format($marketplaceStats['offers'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Penawaran</dt>
+                    <dd>{{ number_format($marketplaceStats['offers'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="marketplace-card">
-                    <p>Kontrak aktif</p>
-                    <strong>{{ number_format($marketplaceStats['contracts'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Kontrak aktif</dt>
+                    <dd>{{ number_format($marketplaceStats['contracts'], 0, ',', '.') }}</dd>
                 </div>
-
-                <div class="marketplace-card marketplace-card-warning">
-                    <p>Draft/moderasi</p>
-                    <strong>{{ number_format($marketplaceStats['pending_moderation'], 0, ',', '.') }}</strong>
+                <div>
+                    <dt>Draft/moderasi</dt>
+                    <dd>{{ number_format($marketplaceStats['pending_moderation'], 0, ',', '.') }}</dd>
                 </div>
-            </div>
+            </dl>
         </article>
 
     </section>
