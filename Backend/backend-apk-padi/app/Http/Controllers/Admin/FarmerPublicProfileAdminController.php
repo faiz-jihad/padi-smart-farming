@@ -289,6 +289,7 @@ class FarmerPublicProfileAdminController extends Controller
     ): RedirectResponse {
         $publisher->restore($farmerProfile);
 
-        return back()->with('status', "Profil \"{$farmerProfile->business_name}\" dipulihkan ke Draft.");
+        return back()->with('status', "Profil \"{$farmerProfile->business_name}\" berhasil dipulihkan dan dipublikasikan kembali.");
     }
 }
+

@@ -52,14 +52,16 @@ class PublishFarmerProfileService
     }
 
     /**
-     * Restore a suspended profile to draft.
+     * Restore a suspended profile to published.
      */
     public function restore(FarmerPublicProfile $profile): void
     {
         $profile->update([
-            'website_status' => ProfileWebsiteStatus::Draft->value,
+            'website_status' => ProfileWebsiteStatus::Published->value,
+            'published_at'   => $profile->published_at ?? now(),
         ]);
     }
+
 
     /**
      * @throws RuntimeException if profile is not ready to publish.
