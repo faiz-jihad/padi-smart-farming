@@ -223,6 +223,19 @@
         </div>
 
         <div style="padding: 28px;">
+            <div style="background: #ffffff; border: 2px solid #81c784; padding: 20px 24px; border-radius: 14px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #1b5e20; letter-spacing: 0.05em;">JADWAL WAKTU & TANGGAL PENGAIRAN IRIGASI</span>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 4px 0 2px 0;">{{ $irrigation['exact_date_time'] }}</h3>
+                    <p style="margin: 0; font-size: 13px; color: #64748b;">Slot Waktu Direkomendasikan: <strong>{{ $irrigation['recommended_time_slot'] }}</strong></p>
+                </div>
+
+                <div style="background: #e8f5e9; padding: 10px 18px; border-radius: 10px; border: 1px solid #a7f3d0; text-align: right;">
+                    <span style="font-size: 11px; font-weight: 700; color: #1b5e20; display: block; text-transform: uppercase;">Kelembaban Tanah saat ini</span>
+                    <strong style="font-size: 20px; color: #1b5e20;">{{ number_format($soilDetection->moisture_percentage, 1) }}%</strong>
+                </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px;">
                 <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #c8e6c9;">
                     <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; display: block;">Waktu Pengairan Ideal</span>

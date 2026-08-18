@@ -223,18 +223,26 @@ class SoilDetectionService
      */
     public function calculateIrrigationSchedule(float $moisture, ?float $soilTemp = null): array
     {
+        $now = now();
+
         if ($moisture < 35.0) {
             $status = 'urgent';
             $statusLabel = 'Pengairan Urgen (Sangat Kering)';
-            $recommendedSlot = 'Pagi Hari (06:00 - 08:00 WIB)';
+            $recommendedSlot = 'Pagi Hari (06:00 - 08:00 WIB) / Sore (16:00 - 18:00 WIB)';
+            $exactDateTime = $now->hour < 12 
+                ? $now->translatedFormat('d F Y') . ', Jam 16:00 - 18:00 WIB'
+                : $now->copy()->addDay()->translatedFormat('d F Y') . ', Jam 06:00 - 08:00 WIB';
             $targetDepthCm = '5 - 7 cm';
             $waterVolumeM3Ha = '60 - 80 m3/ha';
-            $nextSchedule = 'Hari Ini (Segera Mungin)';
+            $nextSchedule = 'Hari Ini (Segera Mungkin)';
             $action = 'Segera alirkan air irigasi ke lahan padi untuk mencegah kekeringan zona perakaran. Hindari pengairan saat terik matahari siang.';
         } elseif ($moisture < 45.0) {
             $status = 'intermittent';
             $statusLabel = 'Pengairan Berkala (Agak Kering)';
             $recommendedSlot = 'Sore Hari (16:00 - 18:00 WIB)';
+            $exactDateTime = $now->hour < 16
+                ? $now->translatedFormat('d F Y') . ', Jam 16:00 - 18:00 WIB'
+                : $now->copy()->addDay()->translatedFormat('d F Y') . ', Jam 06:00 - 08:00 WIB';
             $targetDepthCm = '3 - 5 cm';
             $waterVolumeM3Ha = '40 - 50 m3/ha';
             $nextSchedule = 'Sore Ini atau Besok Pagi';
@@ -243,6 +251,7 @@ class SoilDetectionService
             $status = 'optimal';
             $statusLabel = 'Kelembaban Lembab Optimal';
             $recommendedSlot = 'Tunda Pengairan (Monitoring Cukup)';
+            $exactDateTime = $now->copy()->addDays(2)->translatedFormat('d F Y') . ', Jam 16:00 WIB';
             $targetDepthCm = '2 - 3 cm';
             $waterVolumeM3Ha = '0 - 20 m3/ha';
             $nextSchedule = '2 Hari Lagi (Jika Tidak Ada Hujan)';
@@ -251,6 +260,7 @@ class SoilDetectionService
             $status = 'drainage';
             $statusLabel = 'Jenuh / Tergenang Penuh';
             $recommendedSlot = 'Pembukaan Saluran Drainase (Segera)';
+            $exactDateTime = 'Segera Sekarang (' . $now->translatedFormat('d F Y, H:i') . ' WIB)';
             $targetDepthCm = 'Drainase / Pengeringan Lahan';
             $waterVolumeM3Ha = '0 m3/ha (Keluarkan Air)';
             $nextSchedule = 'Saat Kelembaban Kembali ke 60%';
@@ -262,6 +272,7 @@ class SoilDetectionService
             'status_label' => $statusLabel,
             'moisture_percentage' => $moisture,
             'soil_temp_celsius' => $soilTemp ?? 26.5,
+            'exact_date_time' => $exactDateTime,
             'recommended_time_slot' => $recommendedSlot,
             'target_water_depth' => $targetDepthCm,
             'water_volume' => $waterVolumeM3Ha,
