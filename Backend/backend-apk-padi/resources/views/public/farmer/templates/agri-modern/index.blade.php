@@ -118,7 +118,24 @@
             letter-spacing: -0.02em;
             margin: 0;
         }
+
+        .am-hero-image {
+            width: 360px;
+            height: 240px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--am-border);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 860px) {
+            .am-hero-image {
+                display: none;
+            }
+        }
     </style>
+
 </head>
 <body>
 
@@ -226,12 +243,13 @@
             </div>
 
             @if ($profile['cover_image_url'])
-                <div style="width:360px; height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; display:none;" class="md:block">
+                <div class="am-hero-image">
                     <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}" style="width:100%; height:100%; object-fit:cover;">
                 </div>
             @endif
         </div>
     </section>
+
 
     {{-- Metrics Strip --}}
     @if ($sections['show_productivity'] && $statistics)
