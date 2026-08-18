@@ -4,6 +4,7 @@ use App\Http\Controllers\AlertSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\FarmActivityController as ApiV1FarmActivityController;
 use App\Http\Controllers\Api\V1\FarmController as ApiV1FarmController;
 use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\MapController;
@@ -16,8 +17,6 @@ use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\CropSeasonController;
 use App\Http\Controllers\DeviceTokenController;
-use App\Http\Controllers\FarmActivityController;
-use App\Http\Controllers\FarmController;
 use App\Http\Controllers\FarmerProfileController;
 use App\Http\Controllers\FertilizerRuleController;
 use App\Http\Controllers\HarvestController;
@@ -120,7 +119,12 @@ Route::prefix('v1')->group(function (): void {
 
         // Farmer Profiles & Resources
         Route::get('farmers', [FarmerProfileController::class, 'index']);
-        Route::get('farm-activities', [FarmActivityController::class, 'index']);
+        // Farm Activities CRUD (V1)
+        Route::get('farm-activities', [ApiV1FarmActivityController::class, 'index']);
+        Route::post('farm-activities', [ApiV1FarmActivityController::class, 'store']);
+        Route::get('farm-activities/{farmActivity}', [ApiV1FarmActivityController::class, 'show']);
+        Route::patch('farm-activities/{farmActivity}', [ApiV1FarmActivityController::class, 'update']);
+        Route::delete('farm-activities/{farmActivity}', [ApiV1FarmActivityController::class, 'destroy']);
         Route::get('harvests', [HarvestController::class, 'index']);
         Route::get('rice-varieties', [RiceVarietyController::class, 'index']);
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
