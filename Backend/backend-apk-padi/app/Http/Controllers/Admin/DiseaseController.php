@@ -8,14 +8,15 @@ use App\Models\CommunityReport;
 use App\Services\Admin\AdminAuditLogger;
 use App\Services\Admin\AdminDiseaseService;
 use App\Services\Admin\AdminNotificationService;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DiseaseController extends Controller
 {
-    public function index(AdminDiseaseService $disease): View
+    public function index(Request $request, AdminDiseaseService $disease): View
     {
-        return view('admin.disease.index', $disease->indexData());
+        return view('admin.disease.index', $disease->indexData($request));
     }
 
     public function updateReport(

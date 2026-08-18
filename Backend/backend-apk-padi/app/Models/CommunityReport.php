@@ -30,4 +30,9 @@ class CommunityReport extends Model
     {
         return $this->belongsTo(User::class, 'farmer_id');
     }
+
+    public function scan(): BelongsTo
+    {
+        return $this->belongsTo(DiseaseScan::class, 'scan_id');
+    }
 }
