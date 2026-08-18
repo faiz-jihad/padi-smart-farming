@@ -129,8 +129,35 @@ class FarmerPublicProfile extends Model
         $scheme = app()->environment('production') ? 'https' : 'http';
         $base = config('domains.base', 'localhost');
 
-        return "{$scheme}://{$this->subdomain}.{$base}";
+        $port = '';
+        if (! app()->environment('production')) {
+            $currentPort = request()->getPort();
+            if ($currentPort && ! in_array((int) $currentPort, [80, 443], true)) {
+                $port = ":{$currentPort}";
+            } else {
+                $appPort = parse_url(config('app.url', ''), PHP_URL_PORT);
+                if ($appPort && ! in_array((int) $appPort, [80, 443], true)) {
+                    $port = ":{$appPort}";
+                }
+            }
+        }
+
+        return "{$scheme}://{$this->subdomain}.{$base}{$port}";
     }
+
+    /**
+     * Return direct path URL (fallback for local dev without wildcard hosts).
+     * e.g. http://127.0.0.1:8000/profile/udtanijaya
+     */
+    public function directUrl(): ?string
+    {
+        if (! $this->subdomain) {
+            return null;
+        }
+
+        return url("/profile/{$this->subdomain}");
+    }
+
 
     /**
      * Normalized WhatsApp link for CTA.

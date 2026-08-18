@@ -25,6 +25,11 @@ Route::domain('{subdomain}.' . config('domains.base', 'localhost'))
         Route::get('/', [FarmerPublicProfileController::class, 'show'])->name('show');
     });
 
+// ─── Public Direct Path Route (Local Dev / Fallback) ─────────────────────────
+Route::get('/profile/{subdomain}', [FarmerPublicProfileController::class, 'show'])
+    ->name('farmer.public.direct');
+
+
 // ─── Default Redirects (Apex domain only) ───────────────────────────────────
 Route::redirect('/', '/admin');
 Route::redirect('/login', '/admin/login')->name('login');

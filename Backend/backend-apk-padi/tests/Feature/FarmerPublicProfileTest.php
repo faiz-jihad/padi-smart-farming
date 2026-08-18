@@ -254,6 +254,28 @@ class FarmerPublicProfileTest extends TestCase
             ->assertSee('Terverifikasi P.A.D.I.');
     }
 
+    public function test_public_direct_path_serves_published_farmer_profile(): void
+    {
+        $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $template = ProfileTemplate::where('code', 'harvest-prestige')->first();
+
+        FarmerPublicProfile::create([
+            'farmer_id'           => $farmer->id,
+            'profile_template_id' => $template->id,
+            'business_name'       => 'Pak Joko Organik Farm',
+            'subdomain'           => 'pakjoko',
+            'website_status'      => ProfileWebsiteStatus::Published,
+            'verification_status' => ProfileVerificationStatus::Verified,
+        ]);
+
+        $response = $this->get('/profile/pakjoko');
+
+        $response->assertOk()
+            ->assertSee('Pak Joko Organik Farm')
+            ->assertSee('Terverifikasi P.A.D.I.');
+    }
+
+
     public function test_public_subdomain_returns_404_for_draft_or_nonexistent_profile(): void
     {
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
