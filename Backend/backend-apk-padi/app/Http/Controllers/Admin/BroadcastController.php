@@ -14,9 +14,9 @@ use Illuminate\View\View;
 
 class BroadcastController extends Controller
 {
-    public function index(AdminBroadcastService $broadcasts): View
+    public function index(Request $request, AdminBroadcastService $broadcasts): View
     {
-        return view('admin.broadcast.index', $broadcasts->indexData());
+        return view('admin.broadcast.index', $broadcasts->indexData($request));
     }
 
     public function store(

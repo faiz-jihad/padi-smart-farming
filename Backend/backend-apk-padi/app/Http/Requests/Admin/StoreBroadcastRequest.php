@@ -21,6 +21,7 @@ class StoreBroadcastRequest extends FormRequest
             'title' => ['required', 'string', 'max:150'],
             'message' => ['required', 'string', 'max:5000'],
             'type' => ['required', Rule::in(['info', 'warning', 'announcement', 'system'])],
+            'target_role' => ['nullable', Rule::in(['all', 'farmer', 'partner'])],
             'status' => ['required', Rule::in(['draft', 'published', 'expired'])],
             'expires_at' => ['nullable', 'date'],
         ];

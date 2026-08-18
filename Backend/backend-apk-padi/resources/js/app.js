@@ -1,4 +1,8 @@
 import './echo';
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+Alpine.start();
+
 
 const adminMeta = document.querySelector('meta[name="admin-user-id"]');
 const notificationList = document.getElementById('adminNotificationList');

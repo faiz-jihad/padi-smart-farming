@@ -54,6 +54,12 @@ class User extends Authenticatable
         return $this->hasOne(FarmerProfile::class);
     }
 
+    public function publicProfile(): HasOne
+    {
+        return $this->hasOne(FarmerPublicProfile::class, 'farmer_id');
+    }
+
+
     public function farms(): HasMany
     {
         return $this->hasMany(Farm::class, 'farmer_user_id');

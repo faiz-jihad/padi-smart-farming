@@ -7,15 +7,29 @@ use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
 use App\Http\Controllers\Admin\EarlyWarningController;
+use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
 use App\Http\Controllers\Admin\MarketplaceController;
 use App\Http\Controllers\Admin\SoilController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WeatherController;
+use App\Http\Controllers\Farmer\AuthController as FarmerAuthController;
+use App\Http\Controllers\Farmer\ProfileWebsiteController;
+use App\Http\Controllers\Public\FarmerPublicProfileController;
 use Illuminate\Support\Facades\Route;
 
+// ─── Public Subdomain Routes ─────────────────────────────────────────────────
+// Must be matched first so {subdomain}.domain/ is resolved before apex '/' routes
+Route::domain('{subdomain}.' . config('domains.base', 'localhost'))
+    ->name('farmer.public.')
+    ->group(function (): void {
+        Route::get('/', [FarmerPublicProfileController::class, 'show'])->name('show');
+    });
+
+// ─── Default Redirects (Apex domain only) ───────────────────────────────────
 Route::redirect('/', '/admin');
 Route::redirect('/login', '/admin/login')->name('login');
 
+// ─── Admin Auth ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
     Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
     Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
@@ -25,6 +39,7 @@ Route::post('/admin/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('admin.logout');
 
+// ─── Admin Panel ─────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'admin.web'])
     ->prefix('admin')
     ->name('admin.')
@@ -93,4 +108,54 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/knowledge/{article}/edit', [\App\Http\Controllers\Admin\KnowledgeController::class, 'edit'])->name('knowledge.edit');
         Route::patch('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'update'])->name('knowledge.update');
         Route::delete('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'destroy'])->name('knowledge.destroy');
+
+        // Farmer Public Profile Management (Admin)
+        Route::get('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'index'])->name('farmer-profiles.index');
+        Route::post('/farmer-profiles/{farmerProfile}/verify', [FarmerPublicProfileAdminController::class, 'verify'])->name('farmer-profiles.verify');
+        Route::post('/farmer-profiles/{farmerProfile}/reject', [FarmerPublicProfileAdminController::class, 'reject'])->name('farmer-profiles.reject');
+        Route::post('/farmer-profiles/{farmerProfile}/suspend', [FarmerPublicProfileAdminController::class, 'suspend'])->name('farmer-profiles.suspend');
+        Route::post('/farmer-profiles/{farmerProfile}/restore', [FarmerPublicProfileAdminController::class, 'restore'])->name('farmer-profiles.restore');
     });
+
+// ─── Farmer Panel Auth ───────────────────────────────────────────────────────
+Route::middleware('guest:farmer')->group(function (): void {
+    Route::get('/farmer/login', [FarmerAuthController::class, 'showLogin'])->name('farmer.login');
+    Route::post('/farmer/login', [FarmerAuthController::class, 'login'])->name('farmer.login.submit');
+});
+
+Route::post('/farmer/logout', [FarmerAuthController::class, 'logout'])
+    ->middleware('auth:farmer')
+    ->name('farmer.logout');
+
+// ─── Farmer Panel — Website Management ───────────────────────────────────────
+Route::middleware(['auth:farmer', 'farmer.web'])
+    ->prefix('farmer')
+    ->name('farmer.')
+    ->group(function (): void {
+        // "Website Saya" dashboard
+        Route::get('/website', [ProfileWebsiteController::class, 'index'])->name('website.index');
+
+        // Edit profile details
+        Route::get('/website/edit', [ProfileWebsiteController::class, 'edit'])->name('website.edit');
+        Route::post('/website/edit', [ProfileWebsiteController::class, 'update'])->name('website.update');
+
+        // Privacy / section controls
+        Route::get('/website/sections', [ProfileWebsiteController::class, 'sections'])->name('website.sections');
+        Route::post('/website/sections', [ProfileWebsiteController::class, 'updateSections'])->name('website.sections.update');
+
+        // Template selection
+        Route::get('/website/template', [ProfileWebsiteController::class, 'template'])->name('website.template');
+        Route::post('/website/template', [ProfileWebsiteController::class, 'selectTemplate'])->name('website.template.select');
+
+        // Subdomain
+        Route::get('/website/subdomain/check', [ProfileWebsiteController::class, 'checkSubdomain'])->name('website.subdomain.check');
+        Route::post('/website/subdomain', [ProfileWebsiteController::class, 'updateSubdomain'])->name('website.subdomain.update');
+
+        // Preview (authenticated only)
+        Route::get('/website/preview', [ProfileWebsiteController::class, 'preview'])->name('website.preview');
+
+        // Publish / Unpublish
+        Route::post('/website/publish', [ProfileWebsiteController::class, 'publish'])->name('website.publish');
+        Route::post('/website/unpublish', [ProfileWebsiteController::class, 'unpublish'])->name('website.unpublish');
+    });
+

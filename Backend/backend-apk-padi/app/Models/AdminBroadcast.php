@@ -12,6 +12,7 @@ class AdminBroadcast extends Model
         'title',
         'message',
         'type',
+        'target_role',
         'status',
         'published_at',
         'expires_at',

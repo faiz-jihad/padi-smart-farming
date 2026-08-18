@@ -166,6 +166,21 @@
 
             </a>
 
+            <a href="{{ route('admin.farmer-profiles.index') }}"
+                class="admin-sidebar__link {{ request()->routeIs('admin.farmer-profiles.*') ? 'is-active' : '' }}">
+
+                <svg class="admin-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M20 21a8 8 0 0 0-16 0"/>
+                    <path d="m16.5 2.5 5 5"/>
+                    <path d="m16.5 7.5 5-5"/>
+                </svg>
+
+                <span>Profil Publik Petani</span>
+
+            </a>
+
         </nav>
 
         <p class="admin-sidebar__section-title admin-sidebar__section-title--system">
