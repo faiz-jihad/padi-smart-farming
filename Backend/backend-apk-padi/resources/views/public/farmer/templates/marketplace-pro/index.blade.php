@@ -165,19 +165,35 @@
     <main style="max-width:1200px; margin:0 auto; padding:36px 24px;" class="space-y-10">
 
         {{-- Supplier Hero Banner --}}
-        <div id="hero" style="background:#ffffff; border:1px solid var(--mp-border); border-radius:18px; padding:32px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+        <div id="hero" style="background:#ffffff; border:1px solid var(--mp-border); border-radius:18px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+            @if ($profile['cover_image_url'])
+                <div style="height:180px; width:100%; position:relative; overflow:hidden; background:#0f172a;">
+                    <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}" style="width:100%; height:100%; object-fit:cover; opacity:0.85;">
+                </div>
+            @endif
+
+            <div style="padding:28px 32px 32px; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:20px; position:relative;">
                 <div style="max-width:720px;">
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                        @if ($profile['is_verified'])
-                            <span style="display:inline-flex; align-items:center; gap:4px; background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:4px 10px; border-radius:9999px; border:1px solid #86efac;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                                Pemasok Terverifikasi
-                            </span>
+                    <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px; flex-wrap:wrap; {{ $profile['cover_image_url'] ? 'margin-top:-50px;' : '' }}">
+                        @if ($profile['logo_url'])
+                            <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}" style="width:68px; height:68px; border-radius:16px; object-fit:cover; border:3px solid #ffffff; box-shadow:0 6px 16px rgba(0,0,0,0.12); background:#ffffff;">
+                        @else
+                            <div style="width:68px; height:68px; border-radius:16px; background:#166534; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:26px; border:3px solid #ffffff; box-shadow:0 6px 16px rgba(0,0,0,0.12);">
+                                {{ substr($profile['business_name'], 0, 1) }}
+                            </div>
                         @endif
-                        <span style="font-size:12px; color:#64748b;">ID Entitas: #{{ str_pad((string) $profile['id'], 5, '0', STR_PAD_LEFT) }}</span>
+
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            @if ($profile['is_verified'])
+                                <span style="display:inline-flex; align-items:center; gap:4px; background:#dcfce7; color:#166534; font-size:11px; font-weight:700; padding:4px 10px; border-radius:9999px; border:1px solid #86efac;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    Pemasok Terverifikasi
+                                </span>
+                            @endif
+                            <span style="font-size:12px; color:#64748b;">ID Entitas: #{{ str_pad((string) $profile['id'], 5, '0', STR_PAD_LEFT) }}</span>
+                        </div>
                     </div>
 
                     <h1 style="font-size:28px; font-weight:900; color:#0f172a; margin:0 0 8px 0; letter-spacing:-0.02em;">
@@ -207,6 +223,7 @@
                 @endif
             </div>
         </div>
+
 
         {{-- Marketplace Catalog --}}
         @if ($sections['show_products'] && count($products) > 0)

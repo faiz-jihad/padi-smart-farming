@@ -189,32 +189,43 @@
     <section id="hero" class="am-hero">
         <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr auto; gap:40px; align-items:center;">
             <div style="max-width:760px;">
-                {{-- Badges --}}
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
-                    @if ($profile['is_verified'])
-                        <span style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; padding:4px 12px; border-radius:9999px; border:1px solid #86efac;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                                <path d="m9 12 2 2 4-4"/>
-                            </svg>
-                            Terverifikasi P.A.D.I.
-                        </span>
+                {{-- Badges & Logo --}}
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+                    @if ($profile['logo_url'])
+                        <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}" style="width:58px; height:58px; border-radius:14px; object-fit:cover; border:1px solid #cbd5e1; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                    @else
+                        <div style="width:58px; height:58px; border-radius:14px; background:#166534; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:24px; box-shadow:0 4px 12px rgba(22,101,52,0.2);">
+                            {{ substr($profile['business_name'], 0, 1) }}
+                        </div>
                     @endif
 
-                    @if ($sections['show_location'] && !empty($location['address']))
-                        <span style="display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; color:#475569; font-size:12px; font-weight:600; padding:4px 12px; border-radius:9999px; border:1px solid #e2e8f0;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/>
-                                <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            {{ $location['address'] }}
-                        </span>
-                    @endif
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        @if ($profile['is_verified'])
+                            <span style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; padding:4px 12px; border-radius:9999px; border:1px solid #86efac;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+                                    <path d="m9 12 2 2 4-4"/>
+                                </svg>
+                                Terverifikasi P.A.D.I.
+                            </span>
+                        @endif
+
+                        @if ($sections['show_location'] && !empty($location['address']))
+                            <span style="display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; color:#475569; font-size:12px; font-weight:600; padding:4px 12px; border-radius:9999px; border:1px solid #e2e8f0;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {{ $location['address'] }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
 
                 <h1 style="font-size:clamp(28px, 4.5vw, 44px); font-weight:900; color:#0f172a; letter-spacing:-0.03em; line-height:1.2; margin:0 0 12px 0;">
                     {{ $profile['business_name'] }}
                 </h1>
+
 
                 @if ($profile['headline'])
                     <p style="font-size:17px; font-weight:500; color:#475569; margin:0 0 20px 0;">

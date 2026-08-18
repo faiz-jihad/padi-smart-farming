@@ -65,8 +65,10 @@ class ProfileWebsiteController extends Controller
                 Storage::disk('public')->delete($profile->logo_path);
             }
             $data['logo_path'] = $request->file('logo')->store('farmer-profiles/logos', 'public');
-            unset($data['logo']);
+        } else {
+            unset($data['logo_path']);
         }
+        unset($data['logo']);
 
         // Handle cover image upload
         if ($request->hasFile('cover_image')) {
@@ -74,8 +76,11 @@ class ProfileWebsiteController extends Controller
                 Storage::disk('public')->delete($profile->cover_image_path);
             }
             $data['cover_image_path'] = $request->file('cover_image')->store('farmer-profiles/covers', 'public');
-            unset($data['cover_image']);
+        } else {
+            unset($data['cover_image_path']);
         }
+        unset($data['cover_image']);
+
 
         // Normalize WhatsApp
         if (! empty($data['whatsapp'])) {
