@@ -20,10 +20,15 @@ class Farm extends Model
         'area_ha',
         'latitude',
         'longitude',
+        'boundary_coordinates',
         'irrigation_type',
         'irrigation_notes',
         'soil_type',
         'status',
+    ];
+
+    protected $casts = [
+        'boundary_coordinates' => 'array',
     ];
 
     public function farmer(): BelongsTo

@@ -39,6 +39,9 @@ Route::middleware(['auth', 'admin.web'])
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
         Route::get('/agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
+        Route::post('/agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
+        Route::patch('/agriculture/{farm}', [AgricultureController::class, 'update'])->name('agriculture.update');
+        Route::delete('/agriculture/{farm}', [AgricultureController::class, 'destroy'])->name('agriculture.destroy');
 
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
@@ -63,6 +66,7 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/weather/inspect', [WeatherController::class, 'inspectLocation'])->name('weather.inspect');
         Route::get('/weather/history', [WeatherController::class, 'history'])->name('weather.history');
         Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->name('weather.refresh');
+        Route::post('/weather/refresh-all', [WeatherController::class, 'refreshAll'])->name('weather.refresh-all');
         Route::post('/weather/export', [WeatherController::class, 'export'])->name('weather.export');
         Route::get('/weather/settings', [WeatherController::class, 'settings'])->name('weather.settings');
         Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');

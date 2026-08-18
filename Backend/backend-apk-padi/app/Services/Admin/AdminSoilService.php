@@ -19,12 +19,26 @@ class AdminSoilService
      */
     public function indexData(Request $request): array
     {
+        $search = trim((string) $request->input('search', ''));
         $farmId = $request->input('farm_id');
         $status = $request->input('status');
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
         $query = SoilDetection::with(['farm.farmer', 'creator']);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('sample_code', 'like', "%{$search}%")
+                    ->orWhere('soil_type', 'like', "%{$search}%")
+                    ->orWhereHas('farm', function ($fq) use ($search): void {
+                        $fq->where('name', 'like', "%{$search}%")
+                            ->orWhereHas('farmer', function ($u) use ($search): void {
+                                $u->where('name', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
 
         if ($farmId) {
             $query->where('farm_id', $farmId);
@@ -58,6 +72,7 @@ class AdminSoilService
             'farms' => Farm::orderBy('name')->get(),
             'stats' => $stats,
             'filters' => [
+                'search' => $search,
                 'farm_id' => $farmId,
                 'status' => $status,
                 'from_date' => $fromDate,

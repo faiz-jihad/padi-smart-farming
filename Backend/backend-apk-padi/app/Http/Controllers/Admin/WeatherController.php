@@ -45,10 +45,24 @@ class WeatherController extends Controller
             $result = $this->weatherService->refreshWeatherData($validated['farm_id']);
 
             if ($result) {
-                return back()->with('status', 'Data cuaca berhasil diperbarui');
+                return back()->with('status', 'Data cuaca berhasil diperbarui.');
             }
 
-            return back()->with('error', 'Gagal memperbarui data cuaca');
+            return back()->with('error', 'Gagal memperbarui data cuaca.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Refresh weather data for all farms
+     */
+    public function refreshAll(Request $request): RedirectResponse
+    {
+        try {
+            $count = $this->weatherService->refreshAllFarmsWeatherData();
+
+            return back()->with('status', "Data cuaca untuk {$count} lahan berhasil diperbarui.");
         } catch (\Exception $e) {
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
@@ -76,7 +90,7 @@ class WeatherController extends Controller
     {
         return view('admin.weather.settings', [
             'provider' => config('services.weather.provider'),
-            'weatherApiKey' => config('services.weather.api_key') ? '***' : 'Not set',
+            'weatherApiKey' => config('services.weather.api_key') ? '***' : 'Belum diatur',
         ]);
     }
 
@@ -92,7 +106,8 @@ class WeatherController extends Controller
 
         try {
             $this->weatherService->updateSettings($validated);
-            return back()->with('status', 'Pengaturan cuaca berhasil diperbarui');
+
+            return back()->with('status', 'Pengaturan cuaca berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memperbarui pengaturan: ' . $e->getMessage());
         }
@@ -123,7 +138,8 @@ class WeatherController extends Controller
     {
         try {
             $this->externalWeatherService->clearCache();
-            return back()->with('status', 'Cache cuaca berhasil dihapus');
+
+            return back()->with('status', 'Cache cuaca berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus cache: ' . $e->getMessage());
         }
@@ -137,7 +153,7 @@ class WeatherController extends Controller
         return view('admin.weather.map', [
             'farms' => [
                 'data' => \App\Models\Farm::with('weatherSnapshots', 'farmer')
-                    ->select('id', 'name', 'latitude', 'longitude', 'farmer_user_id')
+                    ->select('id', 'name', 'latitude', 'longitude', 'boundary_coordinates', 'area_ha', 'farmer_user_id')
                     ->get(),
             ],
         ]);
@@ -168,7 +184,7 @@ class WeatherController extends Controller
             'weather' => $parsedWeather,
             'weather_raw' => $weather['data'] ?? null,
             'soil' => $soil['success'] ? $soil['data'] : null,
-            'provider' => $weather['provider'] ?? 'agromonitoring',
+            'provider' => $weather['provider'] ?? 'system_sensor',
         ]);
     }
 }

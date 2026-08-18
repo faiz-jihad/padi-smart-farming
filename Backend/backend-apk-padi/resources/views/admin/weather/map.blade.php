@@ -67,6 +67,10 @@
             </div>
             <div class="weather-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 1rem 1.25rem;">
                 <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 22px; height: 16px; background: rgba(16, 185, 129, 0.35); border: 2px solid #10b981; border-radius: 4px;"></div>
+                    <span>Batas Polygon Area Lahan</span>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
                     <div class="legend-icon" style="background-color: #10b981; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
@@ -135,6 +139,28 @@
             };
 
             farmsData.data.forEach(farm => {
+                let boundaryPoints = [];
+                if (farm.boundary_coordinates) {
+                    if (typeof farm.boundary_coordinates === 'string') {
+                        try { boundaryPoints = JSON.parse(farm.boundary_coordinates); } catch(e) {}
+                    } else if (Array.isArray(farm.boundary_coordinates)) {
+                        boundaryPoints = farm.boundary_coordinates;
+                    }
+                }
+
+                // Render polygon boundary shape on map if 3+ points exist
+                if (boundaryPoints && boundaryPoints.length >= 3) {
+                    const polygonLatLngs = boundaryPoints.map(p => [parseFloat(p.lat), parseFloat(p.lng)]);
+                    const polygon = L.polygon(polygonLatLngs, {
+                        color: '#10b981',
+                        weight: 2.5,
+                        fillColor: '#10b981',
+                        fillOpacity: 0.35
+                    }).addTo(map);
+
+                    polygon.bindTooltip(`Batas Polygon: ${farm.name} (${farm.area_ha || 0} ha)`, { sticky: true });
+                }
+
                 if (farm.latitude && farm.longitude) {
                     const latestWeather = farm.weather_snapshots && farm.weather_snapshots.length > 0 ? farm.weather_snapshots[0] : null;
                     let condition = 'loading';

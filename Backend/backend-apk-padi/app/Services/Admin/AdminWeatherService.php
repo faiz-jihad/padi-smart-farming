@@ -16,32 +16,65 @@ class AdminWeatherService
 
     /**
      * Get data for weather dashboard
+     *
+     * @return array<string, mixed>
      */
     public function indexData(Request $request): array
     {
-        $farms = Farm::with('weatherSnapshots')
-            ->paginate(15);
+        $search = trim((string) $request->query('search', ''));
 
-        $latestSnapshots = WeatherSnapshot::latest('observed_at')
+        $farmsQuery = Farm::query()
+            ->with(['farmer', 'weatherSnapshots' => function ($q): void {
+                $q->latest('observed_at');
+            }])
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('farmer', function ($fq) use ($search): void {
+                        $fq->where('name', 'like', "%{$search}%");
+                    });
+            });
+
+        $farms = $farmsQuery->latest('id')->paginate(12);
+
+        // Auto-initialize weather data for farms that do not have any snapshots yet
+        foreach ($farms as $farm) {
+            if ($farm->weatherSnapshots->isEmpty()) {
+                $this->refreshWeatherData($farm->id);
+                $farm->load(['weatherSnapshots' => function ($q): void {
+                    $q->latest('observed_at');
+                }]);
+            }
+        }
+
+        $latestSnapshots = WeatherSnapshot::query()
+            ->with('farm.farmer')
+            ->latest('observed_at')
             ->limit(10)
             ->get();
 
         $stats = [
-            'total_farms' => Farm::count(),
-            'farms_with_weather' => WeatherSnapshot::distinct('farm_id')->count('farm_id'),
-            'total_snapshots' => WeatherSnapshot::count(),
-            'expired_snapshots' => WeatherSnapshot::where('expires_at', '<', now())->count(),
+            'total_farms' => Farm::query()->count(),
+            'farms_with_weather' => WeatherSnapshot::query()->distinct('farm_id')->count('farm_id'),
+            'total_snapshots' => WeatherSnapshot::query()->count(),
+            'expired_snapshots' => WeatherSnapshot::query()->where('expires_at', '<', now())->count(),
         ];
 
         return [
+            'title' => 'Manajemen Cuaca',
             'farms' => $farms,
             'latestSnapshots' => $latestSnapshots,
             'stats' => $stats,
+            'filters' => [
+                'search' => $search,
+            ],
+            'farmsForMap' => Farm::query()->with('farmer')->get(['id', 'name', 'latitude', 'longitude', 'boundary_coordinates', 'area_ha', 'farmer_user_id']),
         ];
     }
 
     /**
      * Get historical weather data
+     *
+     * @return array<string, mixed>
      */
     public function historyData(Request $request): array
     {
@@ -49,7 +82,7 @@ class AdminWeatherService
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $query = WeatherSnapshot::query();
+        $query = WeatherSnapshot::query()->with('farm.farmer');
 
         if ($farmId) {
             $query->where('farm_id', $farmId);
@@ -67,7 +100,7 @@ class AdminWeatherService
 
         return [
             'snapshots' => $snapshots,
-            'farms' => Farm::all(),
+            'farms' => Farm::all(['id', 'name']),
             'filters' => [
                 'farm_id' => $farmId,
                 'from_date' => $fromDate,
@@ -84,13 +117,16 @@ class AdminWeatherService
         $farm = Farm::findOrFail($farmId);
 
         try {
+            $lat = $farm->latitude ? (float) $farm->latitude : -7.250000;
+            $lng = $farm->longitude ? (float) $farm->longitude : 112.750000;
+
             $weatherData = $this->weatherService->getCurrentWeather(
-                $farm->latitude,
-                $farm->longitude,
+                $lat,
+                $lng,
                 ['force_refresh' => true]
             );
 
-            if (!$weatherData['success']) {
+            if (! $weatherData['success']) {
                 return false;
             }
 
@@ -100,7 +136,7 @@ class AdminWeatherService
                     'observed_at' => now(),
                 ],
                 [
-                    'provider' => $weatherData['provider'],
+                    'provider' => $weatherData['provider'] ?? 'system_sensor',
                     'payload_json' => $weatherData['data'],
                     'expires_at' => now()->addHours(1),
                 ]
@@ -114,11 +150,27 @@ class AdminWeatherService
     }
 
     /**
+     * Refresh weather data for all farms
+     */
+    public function refreshAllFarmsWeatherData(): int
+    {
+        $farms = Farm::query()->get();
+        $count = 0;
+        foreach ($farms as $farm) {
+            if ($this->refreshWeatherData($farm->id)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Export weather data
      */
     public function exportWeatherData(array $filters)
     {
-        $query = WeatherSnapshot::query();
+        $query = WeatherSnapshot::query()->with('farm');
 
         if (isset($filters['farm_id'])) {
             $query->where('farm_id', $filters['farm_id']);
@@ -139,21 +191,22 @@ class AdminWeatherService
         }
 
         // CSV format
-        $csv = "Farm ID,Provider,Observed At,Temperature,Humidity,Weather,Wind Speed,Expires At\n";
+        $csv = "Farm ID,Farm Name,Provider,Observed At,Temperature,Humidity,Weather,Wind Speed,Expires At\n";
 
         foreach ($data as $snapshot) {
             $payload = $snapshot->payload_json;
             $csv .= sprintf(
-                '%d,%s,%s,%s,%s,%s,%s,%s',
+                '"%d","%s","%s","%s","%s","%s","%s","%s","%s"',
                 $snapshot->farm_id,
+                $snapshot->farm?->name ?? 'N/A',
                 $snapshot->provider,
                 $snapshot->observed_at,
                 $payload['main']['temp'] ?? 'N/A',
                 $payload['main']['humidity'] ?? 'N/A',
-                $payload['weather'][0]['main'] ?? 'N/A',
+                $payload['weather'][0]['description'] ?? 'N/A',
                 $payload['wind']['speed'] ?? 'N/A',
                 $snapshot->expires_at
-            ) . "\n";
+            )."\n";
         }
 
         return response($csv, 200, [
@@ -162,17 +215,12 @@ class AdminWeatherService
         ]);
     }
 
-    /**
-     * Update weather settings
-     */
     public function updateSettings(array $settings): bool
     {
         try {
-            // Store settings in cache or config
             Cache::put('weather.provider', $settings['weather_provider'], now()->addMonth());
 
             if (isset($settings['weather_api_key'])) {
-                // In production, this should be stored securely
                 Cache::put('weather.api_key', $settings['weather_api_key'], now()->addMonth());
             }
 
@@ -183,14 +231,10 @@ class AdminWeatherService
         }
     }
 
-    /**
-     * Test weather API connection
-     */
     public function testWeatherConnection(): array
     {
         try {
-            // Try to get weather for a test location (e.g., Jakarta)
-            $result = $this->weatherService->getWeatherByCity('Jakarta');
+            $result = $this->weatherService->getWeatherByCity('Surabaya');
 
             if ($result['success']) {
                 return [
@@ -210,23 +254,5 @@ class AdminWeatherService
                 'message' => $e->getMessage(),
             ];
         }
-    }
-
-    /**
-     * Get weather statistics
-     */
-    public function getWeatherStats(): array
-    {
-        return [
-            'total_snapshots' => WeatherSnapshot::count(),
-            'latest_snapshot' => WeatherSnapshot::latest('observed_at')->first(),
-            'farms_with_data' => WeatherSnapshot::distinct('farm_id')->count('farm_id'),
-            'providers_used' => WeatherSnapshot::distinct('provider')->pluck('provider')->toArray(),
-            'expired_count' => WeatherSnapshot::where('expires_at', '<', now())->count(),
-            'expiring_soon' => WeatherSnapshot::whereBetween('expires_at', [
-                now(),
-                now()->addHours(1)
-            ])->count(),
-        ];
     }
 }

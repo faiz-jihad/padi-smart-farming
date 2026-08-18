@@ -1,189 +1,298 @@
 @extends('layouts.admin')
 
 @section('content')
-    <link rel="stylesheet" href="{{ asset('css/admin/operational.css') }}">
+<link rel="stylesheet" href="{{ asset('css/admin/soil.css') }}">
 
-    <div class="admin-page">
-        <div class="admin-page__header">
+<div class="soil-page">
+    {{-- Breadcrumb --}}
+    <nav class="soil-breadcrumb" aria-label="Breadcrumb">
+        <span>Admin</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="soil-breadcrumb-current">Deteksi & Analisis Tanah</span>
+    </nav>
+
+    {{-- Page Header --}}
+    <div class="soil-header">
+        <div class="soil-header-content">
+            <h1 class="soil-title">Deteksi & Analisis Kualitas Tanah</h1>
+            <p class="soil-description">Pantau data parameter hara tanah (N, P, K, pH, kelembaban) dan evaluasi pemupukan lahan pertanian secara akurat.</p>
+        </div>
+
+        <div class="soil-header-actions">
+            <a href="{{ route('admin.soil.create') }}" class="btn-soil-action btn-soil-primary">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Tambah Sampel Tanah</span>
+            </a>
+
+            <a href="{{ route('admin.weather.index') }}" class="btn-soil-action">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a2.5 2.5 0 002.5-2.5V7a2 2 0 00-2-2h-2c-.6 0-1.1-.3-1.4-.8l-1.2-2M15 21a6 6 0 100-12 6 6 0 000 12z" />
+                </svg>
+                <span>Data Cuaca</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- Status Alerts --}}
+    @if(session('status'))
+        <div class="soil-alert soil-alert-success" id="alert-status">
+            <span>{{ session('status') }}</span>
+            <button type="button" class="soil-alert-close" onclick="document.getElementById('alert-status').remove()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="soil-alert soil-alert-danger" id="alert-error">
+            <span>{{ session('error') }}</span>
+            <button type="button" class="soil-alert-close" onclick="document.getElementById('alert-error').remove()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    @endif
+
+    {{-- Stat KPI Cards --}}
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Total Sampel Tanah</p>
+                <h3 class="stat-number">{{ number_format($stats['total_samples'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Pengujian terdaftar</p>
+            </div>
+            <div class="stat-icon stat-icon-green">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.6 15.12a2 2 0 00-1.144.12l-1.344.603V19a2 2 0 002 2h14a2 2 0 002-2v-3.033l-.628-.539z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Rata-Rata pH Tanah</p>
+                <h3 class="stat-number">{{ number_format($stats['avg_ph'], 2, ',', '.') }}</h3>
+                <p class="stat-description">Tingkat keasaman lahan</p>
+            </div>
+            <div class="stat-icon stat-icon-emerald">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Kondisi Optimal</p>
+                <h3 class="stat-number">{{ number_format($stats['optimal_count'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Subur & seimbang</p>
+            </div>
+            <div class="stat-icon stat-icon-amber">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Perlu Penanganan</p>
+                <h3 class="stat-number">{{ number_format($stats['critical_count'] + $stats['needs_fertilizer_count'] + $stats['warning_count'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Kurang hara / Kritis</p>
+            </div>
+            <div class="stat-icon stat-icon-red">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Data Table Card --}}
+    <section class="data-card">
+        <div class="data-header">
             <div>
-                <p class="admin-page__eyebrow">Admin</p>
-                <h1 class="admin-page__title">Deteksi & Analisis Tanah</h1>
-                <p class="admin-page__description">Pantau kualitas hara tanah (N, P, K, pH) dan rekomendasi pemupukan lahan pertanian.</p>
+                <h2>Riwayat Hasil Analisis Tanah</h2>
+                <p>Menampilkan {{ $detections->firstItem() ?? 0 }} - {{ $detections->lastItem() ?? 0 }} dari {{ $detections->total() }} sampel terdaftar</p>
             </div>
-            <div class="admin-page__actions">
-                <a href="{{ route('admin.soil.create') }}" class="admin-btn">+ Tambah Sampel Tanah</a>
-                <a href="{{ route('admin.weather.index') }}" class="admin-btn admin-btn--secondary">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> Data Cuaca
-                </a>
-            </div>
-        </div>
 
-        @if (session('status'))
-            <div class="admin-alert admin-alert--success">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="admin-alert admin-alert--error">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <div class="admin-grid">
-            <div class="admin-stat">
-                <span>Total Sampel Tanah</span>
-                <strong>{{ number_format($stats['total_samples'], 0, ',', '.') }}</strong>
-            </div>
-            <div class="admin-stat">
-                <span>Rata-Rata pH Tanah</span>
-                <strong>{{ number_format($stats['avg_ph'], 2, ',', '.') }}</strong>
-            </div>
-            <div class="admin-stat">
-                <span>Kondisi Optimal</span>
-                <strong style="color: #16a34a;">{{ number_format($stats['optimal_count'], 0, ',', '.') }}</strong>
-            </div>
-            <div class="admin-stat">
-                <span>Kondisi Kritis / Kurang Hara</span>
-                <strong style="color: #dc2626;">{{ number_format($stats['critical_count'] + $stats['needs_fertilizer_count'], 0, ',', '.') }}</strong>
-            </div>
-        </div>
-
-        <section class="admin-card">
-            <div class="admin-card__header">
-                <div class="admin-card__title">
-                    <span>Filter & Pencarian</span>
-                    <h2>Riwayat Hasil Analisis Tanah</h2>
-                </div>
-            </div>
-            <form method="GET" action="{{ route('admin.soil.index') }}" class="admin-form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                <div>
-                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Lahan</label>
-                    <select name="farm_id" class="admin-input">
-                        <option value="">Semua Lahan</option>
-                        @foreach ($farms as $farm)
-                            <option value="{{ $farm->id }}" @if ($filters['farm_id'] == $farm->id) selected @endif>
-                                {{ $farm->name }} ({{ $farm->farmer?->name ?? 'Tanpa Petani' }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Status</label>
-                    <select name="status" class="admin-input">
-                        <option value="">Semua Status</option>
-                        <option value="optimal" @if ($filters['status'] === 'optimal') selected @endif>Optimal</option>
-                        <option value="needs_fertilizer" @if ($filters['status'] === 'needs_fertilizer') selected @endif>Butuh Pupuk</option>
-                        <option value="warning" @if ($filters['status'] === 'warning') selected @endif>Peringatan</option>
-                        <option value="critical" @if ($filters['status'] === 'critical') selected @endif>Kritis</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Dari Tanggal</label>
-                    <input type="date" name="from_date" value="{{ $filters['from_date'] }}" class="admin-input">
-                </div>
-                <div>
-                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem; display: block;">Hingga Tanggal</label>
-                    <input type="date" name="to_date" value="{{ $filters['to_date'] }}" class="admin-input">
-                </div>
-                <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
-                    <button type="submit" class="admin-btn" style="flex: 1;">Filter</button>
-                    <a href="{{ route('admin.soil.index') }}" class="admin-btn admin-btn--secondary">Reset</a>
-                </div>
-            </form>
-
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem; gap: 0.5rem;">
-                <form action="{{ route('admin.soil.export') }}" method="POST" style="display: inline;">
+            <div class="export-group">
+                <form action="{{ route('admin.soil.export') }}" method="POST" style="display:inline;">
                     @csrf
                     <input type="hidden" name="farm_id" value="{{ $filters['farm_id'] }}">
                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                     <input type="hidden" name="format" value="csv">
-                    <button type="submit" class="admin-btn admin-btn--secondary">Export CSV</button>
+                    <button type="submit" class="btn-export">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Export CSV</span>
+                    </button>
                 </form>
-                <form action="{{ route('admin.soil.export') }}" method="POST" style="display: inline;">
+
+                <form action="{{ route('admin.soil.export') }}" method="POST" style="display:inline;">
                     @csrf
                     <input type="hidden" name="farm_id" value="{{ $filters['farm_id'] }}">
                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                     <input type="hidden" name="format" value="json">
-                    <button type="submit" class="admin-btn admin-btn--secondary">Export JSON</button>
+                    <button type="submit" class="btn-export">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Export JSON</span>
+                    </button>
                 </form>
             </div>
+        </div>
 
-            <div class="admin-table-wrap">
-                <table class="admin-table">
-                    <thead>
+        {{-- Filter Bar --}}
+        <div class="filter-wrapper">
+            <form method="GET" action="{{ route('admin.soil.index') }}" class="filter-form">
+                <div class="search-box">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari kode sampel, nama lahan, atau petani...">
+                </div>
+
+                <select name="farm_id" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Lahan</option>
+                    @foreach ($farms as $farm)
+                        <option value="{{ $farm->id }}" @selected($filters['farm_id'] == $farm->id)>
+                            {{ $farm->name }} ({{ $farm->farmer?->name ?? 'Tanpa Petani' }})
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="optimal" @selected($filters['status'] === 'optimal')>Optimal</option>
+                    <option value="needs_fertilizer" @selected($filters['status'] === 'needs_fertilizer')>Butuh Pupuk</option>
+                    <option value="warning" @selected($filters['status'] === 'warning')>Peringatan</option>
+                    <option value="critical" @selected($filters['status'] === 'critical')>Kritis</option>
+                </select>
+
+                <input type="date" name="from_date" value="{{ $filters['from_date'] ?? '' }}" class="filter-date" title="Dari Tanggal">
+                <input type="date" name="to_date" value="{{ $filters['to_date'] ?? '' }}" class="filter-date" title="Hingga Tanggal">
+
+                <button type="submit" class="btn-filter-submit">Filter</button>
+                @if(($filters['search'] ?? '') || ($filters['farm_id'] ?? '') || ($filters['status'] ?? '') || ($filters['from_date'] ?? '') || ($filters['to_date'] ?? ''))
+                    <a href="{{ route('admin.soil.index') }}" class="btn-filter-reset">Reset</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kode Sampel & Jenis</th>
+                        <th>Lahan & Petani</th>
+                        <th>pH Level</th>
+                        <th>Kandungan N - P - K</th>
+                        <th>Kelembaban</th>
+                        <th>Skor Kesehatan</th>
+                        <th>Status Evaluasi</th>
+                        <th>Tanggal Uji</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($detections as $soil)
+                        @php
+                            $phClass = $soil->ph_level < 5.5 ? 'ph-critical' : ($soil->ph_level > 7.5 ? 'ph-warning' : 'ph-optimal');
+                            $scoreColor = $soil->soil_health_score >= 80 ? '#059669' : ($soil->soil_health_score >= 60 ? '#2563eb' : ($soil->soil_health_score >= 45 ? '#d97706' : '#dc2626'));
+                        @endphp
                         <tr>
-                            <th>Kode Sampel</th>
-                            <th>Lahan & Petani</th>
-                            <th>pH</th>
-                            <th>N - P - K (ppm)</th>
-                            <th>Kelembaban</th>
-                            <th>Skor Kesehatan</th>
-                            <th>Status</th>
-                            <th>Tanggal Uji</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($detections as $soil)
-                            <tr>
-                                <td>
-                                    <strong>{{ $soil->sample_code }}</strong><br>
-                                    <small class="admin-text--muted">{{ ucfirst($soil->soil_type) }}</small>
-                                </td>
-                                <td>
-                                    <strong>{{ $soil->farm?->name ?? '-' }}</strong><br>
-                                    <small>{{ $soil->farm?->farmer?->name ?? '-' }}</small>
-                                </td>
-                                <td>
-                                    <span style="font-weight: 700; color: {{ $soil->ph_level < 5.5 ? '#dc2626' : ($soil->ph_level > 7.5 ? '#d97706' : '#16a34a') }};">
-                                        {{ number_format($soil->ph_level, 1) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <small>N: {{ number_format($soil->nitrogen_ppm, 0) }} | P: {{ number_format($soil->phosphorus_ppm, 0) }} | K: {{ number_format($soil->potassium_ppm, 0) }}</small>
-                                </td>
-                                <td>{{ number_format($soil->moisture_percentage, 1) }}%</td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <div style="flex: 1; background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden; width: 60px;">
-                                            <div style="width: {{ $soil->soil_health_score }}%; background: {{ $soil->soil_health_score >= 80 ? '#16a34a' : ($soil->soil_health_score >= 60 ? '#3b82f6' : ($soil->soil_health_score >= 45 ? '#f59e0b' : '#dc2626')) }}; height: 100%;"></div>
-                                        </div>
-                                        <strong>{{ $soil->soil_health_score }}</strong>
+                            <td class="sample-cell">
+                                <p>{{ $soil->sample_code }}</p>
+                                <span>Jenis: {{ ucfirst($soil->soil_type) }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ $soil->farm?->name ?? '-' }}</strong><br>
+                                <span style="font-size:12px; color:#64748b;">Pemilik: {{ $soil->farm?->farmer?->name ?? '-' }}</span>
+                            </td>
+                            <td>
+                                <span class="ph-badge {{ $phClass }}">
+                                    {{ number_format($soil->ph_level, 1) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="npk-pill">
+                                    <span>N: {{ number_format($soil->nitrogen_ppm, 0) }}</span>
+                                    <span>P: {{ number_format($soil->phosphorus_ppm, 0) }}</span>
+                                    <span>K: {{ number_format($soil->potassium_ppm, 0) }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-weight:600; color:#334155;">{{ number_format($soil->moisture_percentage, 1) }}%</span>
+                            </td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <div class="health-progress-bar">
+                                        <div class="health-progress-fill" style="width: {{ $soil->soil_health_score }}%; background: {{ $scoreColor }};"></div>
                                     </div>
-                                </td>
-                                <td>
-                                    @if ($soil->soil_status === 'optimal')
-                                        <span class="admin-badge" style="background: #dcfce7; color: #15803d;">Optimal</span>
-                                    @elseif ($soil->soil_status === 'needs_fertilizer')
-                                        <span class="admin-badge" style="background: #dbeafe; color: #1d4ed8;">Butuh Pupuk</span>
-                                    @elseif ($soil->soil_status === 'warning')
-                                        <span class="admin-badge" style="background: #fef3c7; color: #b45309;">Peringatan</span>
-                                    @else
-                                        <span class="admin-badge admin-badge--error">Kritis</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <small>{{ $soil->tested_at->format('d M Y H:i') }}</small>
-                                </td>
-                                <td>
-                                    <a href="{{ route('admin.soil.show', $soil) }}" class="admin-link">Detail</a>
-                                    <form action="{{ route('admin.soil.destroy', $soil) }}" method="POST" style="display: inline; margin-left: 0.5rem;" onsubmit="return confirm('Yakin ingin menghapus sampel tanah ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="admin-link" style="color: #dc2626;">Hapus</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="admin-empty">Belum ada data sampel deteksi tanah. Klik tombol "+ Tambah Sampel Tanah" untuk memulai.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    <span style="font-weight:800; font-size:13px; color: {{ $scoreColor }};">{{ $soil->soil_health_score }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if ($soil->soil_status === 'optimal')
+                                    <span class="soil-status-badge status-optimal">Optimal</span>
+                                @elseif ($soil->soil_status === 'needs_fertilizer')
+                                    <span class="soil-status-badge status-fertilizer">Butuh Pupuk</span>
+                                @elseif ($soil->soil_status === 'warning')
+                                    <span class="soil-status-badge status-warning">Peringatan</span>
+                                @else
+                                    <span class="soil-status-badge status-critical">Kritis</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span style="font-size:13px; color:#64748b;">{{ $soil->tested_at->format('d M Y H:i') }}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{{ route('admin.soil.show', $soil) }}" class="btn-action-view">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Detail
+                                </a>
+
+                                <form action="{{ route('admin.soil.destroy', $soil) }}" method="POST" style="display:inline; margin-left:4px;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus sampel tanah {{ $soil->sample_code }}?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-action-delete">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="soil-empty">
+                                Belum ada data sampel deteksi tanah terdaftar.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($detections->hasPages())
+            <div class="pagination-wrapper">
+                {{ $detections->withQueryString()->links() }}
             </div>
-            <div class="admin-pagination">{{ $detections->withQueryString()->links() }}</div>
-        </section>
-    </div>
+        @endif
+    </section>
+</div>
 @endsection

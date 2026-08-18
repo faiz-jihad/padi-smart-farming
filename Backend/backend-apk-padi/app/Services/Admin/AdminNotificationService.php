@@ -8,6 +8,7 @@ use App\Events\AdminNotificationCreated;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class AdminNotificationService
 {
@@ -29,7 +30,11 @@ class AdminNotificationService
                     'body' => $body,
                 ]);
 
-                event(new AdminNotificationCreated($notification));
+                try {
+                    event(new AdminNotificationCreated($notification));
+                } catch (Throwable $e) {
+                    report($e);
+                }
             });
     }
 }
