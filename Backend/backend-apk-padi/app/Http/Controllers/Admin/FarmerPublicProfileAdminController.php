@@ -233,19 +233,30 @@ class FarmerPublicProfileAdminController extends Controller
 
     public function destroy(FarmerPublicProfile $farmerProfile): RedirectResponse
     {
-        if ($farmerProfile->logo_path) {
-            Storage::disk('public')->delete($farmerProfile->logo_path);
-        }
-        if ($farmerProfile->cover_image_path) {
-            Storage::disk('public')->delete($farmerProfile->cover_image_path);
-        }
-
         $name = $farmerProfile->business_name;
-        $farmerProfile->delete();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($farmerProfile) {
+            foreach ($farmerProfile->gallery as $item) {
+                if ($item->image_path) {
+                    Storage::disk('public')->delete($item->image_path);
+                }
+                $item->delete();
+            }
+
+            if ($farmerProfile->logo_path) {
+                Storage::disk('public')->delete($farmerProfile->logo_path);
+            }
+            if ($farmerProfile->cover_image_path) {
+                Storage::disk('public')->delete($farmerProfile->cover_image_path);
+            }
+
+            $farmerProfile->delete();
+        });
 
         return redirect()->route('admin.farmer-profiles.index')
             ->with('status', "Profil publik \"{$name}\" berhasil dihapus.");
     }
+
 
     // ─── Status Actions ────────────────────────────────────────────────────
 

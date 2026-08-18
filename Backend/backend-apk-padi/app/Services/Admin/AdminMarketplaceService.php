@@ -74,21 +74,26 @@ class AdminMarketplaceService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): void {
-        $oldValues = $listing->only(['status', 'published_at', 'sales_link', 'image_url']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($listing, $data, $request, $audit, $notifications) {
+            $oldValues = $listing->only(['status', 'published_at', 'sales_link', 'image_url']);
 
-        if (isset($data['status']) && $data['status'] === 'published' && $listing->published_at === null) {
-            $data['published_at'] = now();
-        }
+            if (isset($data['status']) && $data['status'] === 'published' && $listing->published_at === null) {
+                $data['published_at'] = now();
+            }
 
-        $listing->update($data);
+            $listing->update($data);
 
-        $audit->write('admin_listing_updated', $listing, $oldValues, $listing->only(['status', 'published_at']), $request);
-        $notifications->notifyAdmins('Listing marketplace diperbarui', "{$listing->commodity} menjadi {$listing->status}.");
+            $audit->write('admin_listing_updated', $listing, $oldValues, $listing->only(['status', 'published_at']), $request);
+            $notifications->notifyAdmins('Listing marketplace diperbarui', "{$listing->commodity} menjadi {$listing->status}.");
+        });
     }
 
     public function deleteListing(MarketListing $listing): void
     {
-        $listing->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($listing) {
+            $listing->images()->delete();
+            $listing->delete();
+        });
     }
 
     public function updateOffer(
@@ -98,10 +103,13 @@ class AdminMarketplaceService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): void {
-        $oldValues = $offer->only(['status']);
-        $offer->update($data);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($offer, $data, $request, $audit, $notifications) {
+            $oldValues = $offer->only(['status']);
+            $offer->update($data);
 
-        $audit->write('admin_offer_updated', $offer, $oldValues, $offer->only(['status']), $request);
-        $notifications->notifyAdmins('Penawaran marketplace diperbarui', "Offer #{$offer->id} menjadi {$offer->status}.");
+            $audit->write('admin_offer_updated', $offer, $oldValues, $offer->only(['status']), $request);
+            $notifications->notifyAdmins('Penawaran marketplace diperbarui', "Offer #{$offer->id} menjadi {$offer->status}.");
+        });
     }
 }
+

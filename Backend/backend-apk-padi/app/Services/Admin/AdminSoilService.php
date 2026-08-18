@@ -103,24 +103,28 @@ class AdminSoilService
      */
     public function deleteSoilDetection(SoilDetection $soilDetection, ?int $actorId = null): bool
     {
-        $sampleCode = $soilDetection->sample_code;
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($soilDetection, $actorId) {
+            $sampleCode = $soilDetection->sample_code;
+            $detectionId = $soilDetection->id;
 
-        $soilDetection->delete();
+            $soilDetection->delete();
 
-        if ($actorId) {
-            AuditLog::create([
-                'user_id' => $actorId,
-                'action' => 'delete_soil_detection',
-                'target_type' => SoilDetection::class,
-                'target_id' => $soilDetection->id,
-                'payload_json' => [
-                    'sample_code' => $sampleCode,
-                ],
-            ]);
-        }
+            if ($actorId) {
+                AuditLog::create([
+                    'user_id' => $actorId,
+                    'action' => 'delete_soil_detection',
+                    'target_type' => SoilDetection::class,
+                    'target_id' => $detectionId,
+                    'payload_json' => [
+                        'sample_code' => $sampleCode,
+                    ],
+                ]);
+            }
 
-        return true;
+            return true;
+        });
     }
+
 
     /**
      * Export soil detections to CSV or JSON
