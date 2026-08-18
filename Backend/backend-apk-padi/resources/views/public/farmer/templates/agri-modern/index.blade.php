@@ -1,721 +1,1232 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ $profile['headline'] ?? 'Profil Usaha Pertanian dan Distribusi Beras' }} — {{ $profile['business_name'] }}">
+    <meta name="description"
+        content="{{ $profile['headline'] ?? 'Profil Usaha Pertanian dan Distribusi Beras' }} — {{ $profile['business_name'] }}">
     <meta name="robots" content="{{ $isPreview ? 'noindex, nofollow' : 'index, follow' }}">
-
     <title>{{ $profile['business_name'] }} &mdash; Profil Usaha Pertanian</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Font & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         :root {
-            --brand-green: #166534;
-            --brand-green-dark: #14532d;
-            --brand-green-subtle: #f0fdf4;
-            --brand-dark: #0f172a;
-            --brand-slate: #334155;
-            --brand-muted: #64748b;
-            --brand-border: #e2e8f0;
-            --brand-bg: #f8fafc;
-            --brand-white: #ffffff;
+            --primary: #1a5c3a;
+            --primary-dark: #0f3d26;
+            --primary-light: #e8f5ed;
+            --accent: #c8a951;
+            --accent-light: #f5edd7;
+            --dark: #1a1a1a;
+            --gray-800: #2d3748;
+            --gray-600: #4a5568;
+            --gray-400: #a0aec0;
+            --gray-200: #e2e8f0;
+            --gray-100: #f7fafc;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
         }
 
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-            background-color: var(--brand-bg);
-            color: var(--brand-dark);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--white);
+            color: var(--gray-800);
+            line-height: 1.7;
             -webkit-font-smoothing: antialiased;
         }
 
-        .site-container {
-            max-width: 1180px;
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 20px;
         }
 
-        /* Top utility bar */
-        .top-utility-bar {
-            background-color: var(--brand-dark);
-            color: #94a3b8;
+        /* ===== TOP BAR ===== */
+        .topbar {
+            background: var(--primary-dark);
+            color: rgba(255, 255, 255, 0.9);
             font-size: 12px;
             padding: 8px 0;
-            border-bottom: 1px solid #1e293b;
+            letter-spacing: 0.3px;
         }
 
-        /* Navigation */
-        .main-header {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--brand-border);
-            position: sticky;
-            top: 0;
-            z-index: 90;
+        .topbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .nav-inner {
-            height: 72px;
+        .topbar-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+            gap: 6px;
         }
 
-        .brand-logo-wrap {
+        .topbar-item i {
+            color: var(--accent);
+            font-size: 13px;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background: var(--white);
+            border-bottom: 2px solid var(--gray-100);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: var(--shadow-md);
+            border-bottom-color: var(--gray-200);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 76px;
+        }
+
+        .brand {
             display: flex;
             align-items: center;
             gap: 14px;
             text-decoration: none;
-            color: var(--brand-dark);
         }
 
-        .brand-logo-img {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid var(--brand-border);
-            flex-shrink: 0;
-        }
-
-        .brand-logo-fallback {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            background-color: var(--brand-green);
-            color: #ffffff;
-            font-weight: 800;
-            font-size: 18px;
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 2px solid var(--primary-light);
+            background: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 800;
+            font-size: 22px;
+            color: white;
             flex-shrink: 0;
         }
 
-        .brand-text-name {
-            font-size: 17px;
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-size: 18px;
             font-weight: 800;
-            color: var(--brand-dark);
-            letter-spacing: -0.02em;
+            color: var(--dark);
+            letter-spacing: -0.5px;
             line-height: 1.2;
-            margin: 0;
         }
 
-        .brand-text-sub {
-            font-size: 12px;
-            color: var(--brand-muted);
-            font-weight: 500;
-            margin: 2px 0 0;
+        .brand-tag {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .nav-links {
+        .nav-menu {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 28px;
+            list-style: none;
         }
 
-        .nav-link-item {
-            color: var(--brand-slate);
-            font-size: 13px;
+        .nav-link {
+            color: var(--gray-600);
+            font-size: 14px;
             font-weight: 600;
             text-decoration: none;
-            transition: color 0.15s ease;
+            transition: color 0.2s;
+            position: relative;
+            padding: 4px 0;
         }
 
-        .nav-link-item:hover {
-            color: var(--brand-green);
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
         }
 
-        /* Buttons */
-        .btn-green {
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            background-color: var(--brand-green);
-            color: #ffffff !important;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            border: 1px solid var(--brand-green);
-            transition: all 0.15s ease;
-            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .btn-green:hover {
-            background-color: var(--brand-green-dark);
-            border-color: var(--brand-green-dark);
+        .nav-cta:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 92, 58, 0.3);
         }
 
-        .btn-whatsapp {
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, #f8faf9 0%, #edf2ef 100%);
+            padding: 60px 0;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(200, 169, 81, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero .container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .hero-badge {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            background-color: #16a34a;
-            color: #ffffff !important;
+            background: rgba(26, 92, 58, 0.1);
+            color: var(--primary);
             font-size: 13px;
             font-weight: 700;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(26, 92, 58, 0.2);
         }
 
-        .btn-whatsapp:hover {
-            background-color: #15803d;
+        .hero-badge i {
+            font-size: 12px;
+        }
+
+        .hero-title {
+            font-family: 'Lora', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .hero-description {
+            font-size: 15px;
+            color: var(--gray-600);
+            line-height: 1.8;
+            margin-bottom: 28px;
+            max-width: 540px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 92, 58, 0.25);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: var(--dark);
+        }
+
+        .btn-accent:hover {
+            background: #b8983d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(200, 169, 81, 0.3);
         }
 
         .btn-outline {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background-color: #ffffff;
-            color: var(--brand-dark) !important;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            border: 1px solid #cbd5e1;
-            transition: all 0.15s ease;
+            background: transparent;
+            color: var(--gray-800);
+            border: 2px solid var(--gray-200);
         }
 
         .btn-outline:hover {
-            background-color: #f1f5f9;
-            border-color: #94a3b8;
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
         }
 
-        /* Hero Banner */
-        .hero-section {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--brand-border);
-            padding: 48px 0;
-        }
-
-        .hero-layout {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        @media (max-width: 900px) {
-            .hero-layout {
-                grid-template-columns: 1fr;
-                gap: 28px;
-            }
-        }
-
-        .hero-banner-image {
-            width: 100%;
-            height: 320px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--brand-border);
+        .hero-image-wrapper {
             position: relative;
-        }
-
-        .hero-banner-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Product Cards */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .product-card {
-            background: #ffffff;
-            border: 1px solid var(--brand-border);
-            border-radius: 12px;
+            border-radius: var(--radius-lg);
             overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border: 4px solid white;
+        }
+
+        .hero-image-wrapper img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+            padding: 30px 20px 15px;
+            color: white;
+        }
+
+        .hero-image-overlay span {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== STATS ===== */
+        .stats-section {
+            background: var(--white);
+            padding: 40px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--gray-100);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .stat-card:hover {
+            background: var(--white);
+            border-color: var(--gray-200);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-
-        .product-card:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-            transform: translateY(-2px);
-        }
-
-        .product-image-box {
-            height: 200px;
-            background: #f1f5f9;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .product-image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .product-body {
-            padding: 20px;
-        }
-
-        .product-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--brand-dark);
-            margin: 0 0 6px 0;
-            line-height: 1.3;
-        }
-
-        .product-price {
+            align-items: center;
+            justify-content: center;
             font-size: 20px;
-            font-weight: 900;
-            color: var(--brand-green);
-            margin-bottom: 10px;
+            margin: 0 auto 12px;
         }
 
-        .product-price small {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--brand-muted);
-        }
-
-        .product-description {
-            font-size: 13px;
-            color: var(--brand-muted);
-            line-height: 1.6;
-            margin: 0;
-        }
-
-        .product-footer {
-            padding: 0 20px 20px;
-        }
-
-        /* Specification table */
-        .data-table-card {
-            background: #ffffff;
-            border: 1px solid var(--brand-border);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        .data-table th {
-            padding: 12px 18px;
-            background: var(--brand-dark);
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .data-table td {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            color: var(--brand-slate);
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Section Titles */
-        .section-header {
-            margin-bottom: 24px;
-        }
-
-        .section-tag {
-            font-size: 11px;
+        .stat-value {
+            font-size: 28px;
             font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--brand-green);
+            color: var(--dark);
+            line-height: 1;
             margin-bottom: 4px;
         }
 
-        .section-title {
-            font-size: 22px;
-            font-weight: 900;
-            color: var(--brand-dark);
-            letter-spacing: -0.02em;
-            margin: 0;
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 600;
         }
 
-        /* Contact Box */
-        .contact-box {
-            background-color: #ffffff;
-            border: 1px solid var(--brand-border);
-            border-radius: 14px;
-            padding: 36px;
+        /* ===== SECTION HEADER ===== */
+        .section {
+            padding: 60px 0;
+        }
+
+        .section-alt {
+            background: var(--gray-100);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        .section-divider {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 16px auto 0;
+            border-radius: 2px;
+        }
+
+        /* ===== PRODUCT CARDS ===== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .product-image {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            background: var(--gray-100);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 50px;
+            letter-spacing: 0.5px;
+        }
+
+        .product-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .product-price span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-400);
+        }
+
+        .product-desc {
+            font-size: 13px;
+            color: var(--gray-600);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .product-action {
+            display: flex;
+            gap: 10px;
+        }
+
+        .product-action .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrapper {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        th {
+            padding: 16px 18px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        tbody tr:hover {
+            background: var(--gray-100);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .quality-a {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .quality-b {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* ===== GALLERY ===== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            box-shadow: var(--shadow-lg);
+            transform: scale(1.02);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 30px 16px 12px;
+        }
+
+        /* ===== CONTACT ===== */
+        .contact-section {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1a3a2a 100%);
+            color: white;
+            padding: 60px 0;
+        }
+
+        .contact-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
+            padding: 50px;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .contact-title {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .contact-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .contact-actions .btn {
+            padding: 14px 28px;
+            font-size: 15px;
+        }
+
+        .btn-wa {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-wa:hover {
+            background: #1eb955;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 24px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .contact-info i {
+            color: var(--accent);
+            margin-right: 6px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--dark);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 40px 0;
+            font-size: 13px;
+        }
+
+        .footer .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .hero .container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .hero-image-wrapper img {
+                height: 300px;
+            }
+
+            .nav-menu {
+                gap: 16px;
+            }
+
+            .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .container {
+                height: auto;
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 26px;
+            }
+
+            .contact-card {
+                padding: 30px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    {{-- Preview Bar --}}
+    {{-- Preview Mode Banner --}}
     @if ($isPreview)
-        <div style="background-color:#166534; color:#ffffff; padding:10px 16px; font-size:13px; font-weight:700; text-align:center; position:sticky; top:0; z-index:999; display:flex; align-items:center; justify-content:center; gap:16px;">
-            <span>Mode Preview Publikasi &mdash; Tampilan resmi website usaha tani</span>
-            <a href="{{ route('farmer.website.index') }}" style="background:#ffffff; color:#166534; padding:4px 12px; border-radius:6px; font-size:12px; text-decoration:none; font-weight:700;">
-                Kembali ke Panel
+        <div
+            style="background: #c8a951; color: #1a1a1a; padding: 12px 20px; font-size: 13px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+            <span><i class="fas fa-eye"></i>&nbsp; Mode Preview - Ini adalah tampilan publik website usaha Anda</span>
+            <a href="{{ route('farmer.website.index') }}"
+                style="background: #1a1a1a; color: #c8a951; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-weight: 700; transition: all 0.3s;">
+                <i class="fas fa-arrow-left"></i>&nbsp; Kembali ke Dashboard
             </a>
         </div>
     @endif
 
-    {{-- Utility Bar --}}
-    <div class="top-utility-bar">
-        <div class="site-container" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-            <div style="display:flex; align-items:center; gap:16px;">
-                <span>Profil Resmi Usaha Tani Terverifikasi</span>
-                @if ($sections['show_location'] && !empty($location['address']))
-                    <span>&bull;</span>
-                    <span>Wilayah: {{ $location['address'] }}</span>
-                @endif
+    {{-- Top Bar --}}
+    <div class="topbar">
+        <div class="container">
+            <div class="topbar-item">
+                <i class="fas fa-certificate"></i>
+                <span>Profil Usaha Tani Terverifikasi</span>
             </div>
+            @if ($sections['show_location'] && !empty($location['address']))
+                <div class="topbar-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ $location['address'] }}</span>
+                </div>
+            @endif
             @if ($sections['show_contact'] && !empty($contact['public_phone']))
-                <div>
-                    <span>Layanan Pelanggan: <strong>{{ $contact['public_phone'] }}</strong></span>
+                <div class="topbar-item">
+                    <i class="fas fa-headset"></i>
+                    <span>Layanan: {{ $contact['public_phone'] }}</span>
                 </div>
             @endif
         </div>
     </div>
 
-    {{-- Main Navbar --}}
-    <header class="main-header">
-        <div class="site-container">
-            <div class="nav-inner">
-                <a href="#hero" class="brand-logo-wrap">
-                    @if ($profile['logo_url'])
-                        <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}" class="brand-logo-img">
-                    @else
-                        <div class="brand-logo-fallback">
-                            {{ substr($profile['business_name'], 0, 1) }}
-                        </div>
-                    @endif
-                    <div>
-                        <h2 class="brand-text-name">{{ $profile['business_name'] }}</h2>
-                        <p class="brand-text-sub">Usaha Pertanian & Pasokan Padi</p>
+    {{-- Navigation --}}
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="brand">
+                @if ($profile['logo_url'])
+                    <div class="brand-logo">
+                        <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}">
                     </div>
-                </a>
+                @else
+                    <div class="brand-logo">
+                        {{ strtoupper(substr($profile['business_name'], 0, 1)) }}
+                    </div>
+                @endif
+                <div class="brand-text">
+                    <span class="brand-name">{{ $profile['business_name'] }}</span>
+                    <span class="brand-tag">Distributor Hasil Tani</span>
+                </div>
+            </a>
 
-                <nav class="nav-links">
-                    @if ($sections['show_products'] && count($products) > 0)
-                        <a href="#katalog" class="nav-link-item">Katalog Hasil Panen</a>
-                    @endif
-                    @if ($sections['show_harvests'] && count($harvests) > 0)
-                        <a href="#riwayat" class="nav-link-item">Rekam Panen</a>
-                    @endif
-                    @if ($sections['show_gallery'] && count($gallery) > 0)
-                        <a href="#galeri" class="nav-link-item">Dokumentasi Lahan</a>
-                    @endif
-                    @if ($sections['show_contact'] && $contact)
-                        <a href="#kontak" class="btn-green" style="padding:8px 16px;">
-                            Hubungi Usaha
+            <ul class="nav-menu">
+                @if ($sections['show_products'] && count($products) > 0)
+                    <li><a href="#produk" class="nav-link">Produk</a></li>
+                @endif
+                @if ($sections['show_harvests'] && count($harvests) > 0)
+                    <li><a href="#panen" class="nav-link">Data Panen</a></li>
+                @endif
+                @if ($sections['show_gallery'] && count($gallery) > 0)
+                    <li><a href="#galeri" class="nav-link">Galeri</a></li>
+                @endif
+                @if ($sections['show_contact'] && $contact)
+                    <li><a href="#kontak" class="nav-cta">Konsultasi Gratis</a></li>
+                @endif
+            </ul>
+        </div>
+    </nav>
+
+    {{-- Hero --}}
+    <section class="hero">
+        <div class="container">
+            <div>
+                @if ($profile['is_verified'])
+                    <div class="hero-badge">
+                        <i class="fas fa-shield-alt"></i> Terverifikasi Resmi
+                    </div>
+                @endif
+
+                <h1 class="hero-title">{{ $profile['business_name'] }}</h1>
+
+                @if ($profile['headline'])
+                    <p class="hero-subtitle">{{ $profile['headline'] }}</p>
+                @endif
+
+                <p class="hero-description">
+                    {{ $profile['description'] ?? 'Menyediakan hasil pertanian berkualitas premium langsung dari lahan terpercaya. Fokus pada transparansi proses dan kepuasan pelanggan jangka panjang.' }}
+                </p>
+
+                <div class="hero-actions">
+                    @if ($sections['show_contact'] && !empty($contact['whatsapp']))
+                        <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn btn-wa">
+                            <i class="fab fa-whatsapp"></i> Chat via WhatsApp
                         </a>
                     @endif
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    {{-- Hero Section --}}
-    <section id="hero" class="hero-section">
-        <div class="site-container">
-            <div class="hero-layout">
-                <div>
-                    @if ($profile['is_verified'])
-                        <div style="display:inline-flex; align-items:center; gap:6px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; padding:4px 10px; border-radius:6px; margin-bottom:14px; border:1px solid #86efac;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                                <path d="m9 12 2 2 4-4"/>
-                            </svg>
-                            Terverifikasi P.A.D.I.
-                        </div>
+                    @if ($sections['show_products'] && count($products) > 0)
+                        <a href="#produk" class="btn btn-outline">
+                            <i class="fas fa-box"></i> Lihat Katalog
+                        </a>
                     @endif
-
-
-                    <h1 style="font-size:clamp(28px, 4vw, 40px); font-weight:900; color:#0f172a; letter-spacing:-0.03em; line-height:1.2; margin:0 0 12px 0;">
-                        {{ $profile['business_name'] }}
-                    </h1>
-
-                    @if ($profile['headline'])
-                        <p style="font-size:16px; font-weight:600; color:#166534; margin:0 0 14px 0;">
-                            {{ $profile['headline'] }}
-                        </p>
-                    @endif
-
-                    @if ($profile['description'])
-                        <p style="font-size:14px; color:#475569; line-height:1.7; margin:0 0 24px 0;">
-                            {{ $profile['description'] }}
-                        </p>
-                    @else
-                        <p style="font-size:14px; color:#475569; line-height:1.7; margin:0 0 24px 0;">
-                            Kami mengelola budidaya lahan pertanian padi secara terstruktur dan terstandar, menyediakan pasokan gabah dan beras berkualitas tinggi langsung dari sumber panen untuk kebutuhan distributor, pengecer, maupun konsumen langsung.
-                        </p>
-                    @endif
-
-                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        @if ($sections['show_contact'] && !empty($contact['whatsapp']))
-                            <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn-whatsapp">
-                                Pesan Langsung via WhatsApp
-                            </a>
-                        @endif
-                        @if ($sections['show_products'] && count($products) > 0)
-                            <a href="#katalog" class="btn-outline">
-                                Lihat Daftar Produk
-                            </a>
-                        @endif
-                    </div>
                 </div>
+            </div>
 
-                {{-- Hero Banner Image --}}
-                <div class="hero-banner-image">
-                    <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}">
+            <div class="hero-image-wrapper">
+                <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}">
+                <div class="hero-image-overlay">
+                    <span><i class="fas fa-leaf"></i>&nbsp; Hasil Pertanian Berkualitas</span>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- Capacity Summary Strip --}}
+    {{-- Statistics --}}
     @if ($sections['show_productivity'] && $statistics)
-        <div style="background:#ffffff; border-bottom:1px solid var(--brand-border); padding:24px 0;">
-            <div class="site-container">
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
-                    <div style="background:#f8fafc; border:1px solid var(--brand-border); border-radius:10px; padding:16px 20px;">
-                        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Total Luas Lahan</div>
-                        <div style="font-size:24px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['total_area_ha'] }} Ha</div>
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-ruler-combined"></i></div>
+                        <div class="stat-value">{{ $statistics['total_area_ha'] }} <small style="font-size:14px;">Ha</small>
+                        </div>
+                        <div class="stat-label">Total Luas Lahan</div>
                     </div>
-                    <div style="background:#f8fafc; border:1px solid var(--brand-border); border-radius:10px; padding:16px 20px;">
-                        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Pengalaman Budidaya</div>
-                        <div style="font-size:24px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['total_seasons'] }} Musim Tanam</div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="stat-value">{{ $statistics['total_seasons'] }}</div>
+                        <div class="stat-label">Musim Tanam</div>
                     </div>
                     @if ($statistics['latest_productivity'])
-                        <div style="background:#f8fafc; border:1px solid var(--brand-border); border-radius:10px; padding:16px 20px;">
-                            <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Rata-Rata Produktivitas</div>
-                            <div style="font-size:24px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['latest_productivity'] }} Ton / Ha</div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-value">{{ $statistics['latest_productivity'] }} <small
+                                    style="font-size:14px;">t/ha</small></div>
+                            <div class="stat-label">Produktivitas</div>
                         </div>
                     @endif
-                    <div style="background:#f8fafc; border:1px solid var(--brand-border); border-radius:10px; padding:16px 20px;">
-                        <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Kapasitas Pasokan</div>
-                        <div style="font-size:18px; font-weight:800; color:#0f172a; margin:8px 0 0;">Siap Kirim Rutin</div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Siap Distribusi</div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     @endif
 
-    {{-- Main Content Sections --}}
-    <main class="site-container" style="padding-top:48px; padding-bottom:64px;" class="space-y-16">
-
-        {{-- Section: Products --}}
+    <main>
+        {{-- Products --}}
         @if ($sections['show_products'] && count($products) > 0)
-            <section id="katalog" style="margin-bottom:56px;">
-                <div class="section-header" style="display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-                    <div>
-                        <div class="section-tag">Katalog Komoditas</div>
-                        <h2 class="section-title">Hasil Panen & Komoditas Siap Pasok</h2>
+            <section class="section" id="produk">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Katalog</span>
+                        <h2 class="section-title">Hasil Pertanian Unggulan</h2>
+                        <div class="section-divider"></div>
                     </div>
-                    <span style="font-size:12px; font-weight:700; color:#166534; background:#dcfce7; padding:4px 12px; border-radius:6px;">
-                        {{ count($products) }} Jenis Komoditas
-                    </span>
-                </div>
 
-                <div class="product-grid">
-                    @foreach ($products as $product)
-                        <div class="product-card">
-                            <div>
-                                <div class="product-image-box">
+                    <div class="products-grid">
+                        @foreach ($products as $product)
+                            <div class="product-card">
+                                <div class="product-image">
                                     <img src="{{ $product['image_url'] }}" alt="{{ $product['commodity'] }}">
-                                    <div style="position:absolute; top:10px; right:10px; background:#0f172a; color:#ffffff; font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px;">
-                                        Tersedia: {{ $product['quantity'] }} {{ $product['unit'] }}
-                                    </div>
+                                    <div class="product-badge">Stok: {{ $product['quantity'] }} {{ $product['unit'] }}</div>
                                 </div>
-
-                                <div class="product-body">
-                                    <h3 class="product-title">{{ $product['commodity'] }}</h3>
-                                    
+                                <div class="product-content">
+                                    <h3 class="product-name">{{ $product['commodity'] }}</h3>
                                     @if ($product['price_per_unit'])
                                         <div class="product-price">
-                                            Rp{{ number_format($product['price_per_unit'], 0, ',', '.') }}
-                                            <small>/ {{ $product['unit'] }}</small>
+                                            Rp {{ number_format($product['price_per_unit'], 0, ',', '.') }}
+                                            <span>/ {{ $product['unit'] }}</span>
                                         </div>
                                     @endif
-
                                     @if ($product['description'])
-                                        <p class="product-description">{{ $product['description'] }}</p>
+                                        <p class="product-desc">{{ $product['description'] }}</p>
                                     @endif
+                                    <div class="product-action">
+                                        @if ($product['sales_link'])
+                                            <a href="{{ $product['sales_link'] }}" target="_blank" rel="nofollow"
+                                                class="btn btn-primary">
+                                                <i class="fas fa-shopping-cart"></i> Pesan
+                                            </a>
+                                        @elseif ($sections['show_contact'] && !empty($contact['whatsapp']))
+                                            @php
+                                                $waMsg = urlencode("Halo {$profile['business_name']}, saya tertarik dengan produk {$product['commodity']}. Mohon info detail dan ketersediaan.");
+                                                $waUrl = $contact['whatsapp'] . (str_contains($contact['whatsapp'], '?') ? '&' : '?') . "text={$waMsg}";
+                                            @endphp
+                                            <a href="{{ $waUrl }}" target="_blank" class="btn btn-primary">
+                                                <i class="fab fa-whatsapp"></i> Tanya Produk
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="product-footer">
-                                @if ($product['sales_link'])
-                                    <a href="{{ $product['sales_link'] }}" target="_blank" rel="nofollow noopener" class="btn-green" style="width:100%;">
-                                        Pesan Komoditas Ini
-                                    </a>
-                                @elseif ($sections['show_contact'] && !empty($contact['whatsapp']))
-                                    @php
-                                        $waMsg = urlencode("Halo {$profile['business_name']}, saya berminat memesan {$product['commodity']}. Mohon informasi stok dan pengirimannya.");
-                                        $waUrl = $contact['whatsapp'] . (str_contains($contact['whatsapp'], '?') ? '&' : '?') . "text={$waMsg}";
-                                    @endphp
-                                    <a href="{{ $waUrl }}" target="_blank" class="btn-whatsapp" style="width:100%;">
-                                        Tanya Ketersediaan via WA
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
-        @endif
-
-        {{-- Section: Harvest Log --}}
-        @if ($sections['show_harvests'] && count($harvests) > 0)
-            <section id="riwayat" style="margin-bottom:56px;">
-                <div class="section-header">
-                    <div class="section-tag">Transparansi Produksi</div>
-                    <h2 class="section-title">Rekam Jejak Hasil Panen</h2>
-                </div>
-
-                <div class="data-table-card">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Periode Panen</th>
-                                    <th>Lahan Sawah</th>
-                                    <th>Varietas Padi</th>
-                                    <th style="text-align:right;">Volume Panen</th>
-                                    <th style="text-align:center;">Grade Kualitas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($harvests as $harvest)
-                                    <tr>
-                                        <td style="font-weight:700; color:#0f172a;">{{ \Carbon\Carbon::parse($harvest['harvest_date'])->translatedFormat('F Y') }}</td>
-                                        <td>{{ $harvest['farm_name'] ?? 'Lahan Utama' }}</td>
-                                        <td style="font-weight:600; color:#166534;">{{ $harvest['variety_name'] ?? 'Varietas Unggul' }}</td>
-                                        <td style="text-align:right; font-weight:800; color:#0f172a;">{{ number_format($harvest['quantity'], 1, ',', '.') }} {{ $harvest['unit'] }}</td>
-                                        <td style="text-align:center;">
-                                            <span style="font-size:11px; font-weight:800; padding:3px 10px; border-radius:6px; background:#dcfce7; color:#166534;">
-                                                {{ $harvest['quality_grade'] ?? 'Grade A' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        @endforeach
                     </div>
                 </div>
             </section>
         @endif
 
-        {{-- Section: Gallery --}}
-        @if ($sections['show_gallery'] && count($gallery) > 0)
-            <section id="galeri" style="margin-bottom:56px;">
-                <div class="section-header">
-                    <div class="section-tag">Dokumentasi Lapangan</div>
-                    <h2 class="section-title">Galeri Sawah & Pengeringan Gabah</h2>
-                </div>
+        {{-- Harvest Data --}}
+        @if ($sections['show_harvests'] && count($harvests) > 0)
+            <section class="section section-alt" id="panen">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Transparansi</span>
+                        <h2 class="section-title">Rekam Data Panen</h2>
+                        <div class="section-divider"></div>
+                    </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px;">
-                    @foreach ($gallery as $item)
-                        @php
-                            $imgSrc = is_array($item) ? $item['image_url'] : asset('storage/' . $item->image_path);
-                            $cap = is_array($item) ? ($item['caption'] ?? null) : ($item->caption ?? null);
-                        @endphp
-                        <div style="background:#ffffff; border:1px solid var(--brand-border); border-radius:10px; overflow:hidden; aspect-ratio:4/3; position:relative;">
-                            <img src="{{ $imgSrc }}" alt="{{ $cap ?? 'Galeri' }}" style="width:100%; height:100%; object-fit:cover;">
-                            @if ($cap)
-                                <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(15,23,42,0.85); color:#ffffff; font-size:11px; font-weight:600; padding:8px 12px;">
-                                    {{ $cap }}
-                                </div>
-                            @endif
+                    <div class="table-wrapper">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar"></i>&nbsp; Periode</th>
+                                        <th><i class="fas fa-map"></i>&nbsp; Lahan</th>
+                                        <th><i class="fas fa-seedling"></i>&nbsp; Varietas</th>
+                                        <th style="text-align:right;"><i class="fas fa-weight"></i>&nbsp; Volume</th>
+                                        <th style="text-align:center;"><i class="fas fa-award"></i>&nbsp; Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($harvests as $harvest)
+                                        <tr>
+                                            <td style="font-weight:600; color:var(--dark);">
+                                                {{ \Carbon\Carbon::parse($harvest['harvest_date'])->translatedFormat('F Y') }}
+                                            </td>
+                                            <td>{{ $harvest['farm_name'] ?? 'Lahan Utama' }}</td>
+                                            <td style="color:var(--primary); font-weight:600;">
+                                                {{ $harvest['variety_name'] ?? 'Varietas Unggul' }}
+                                            </td>
+                                            <td style="text-align:right; font-weight:700;">
+                                                {{ number_format($harvest['quantity'], 1, ',', '.') }} {{ $harvest['unit'] }}
+                                            </td>
+                                            <td style="text-align:center;">
+                                                @php
+                                                    $grade = $harvest['quality_grade'] ?? 'A';
+                                                    $gradeClass = ($grade == 'A' || $grade == 'Premium') ? 'quality-a' : 'quality-b';
+                                                @endphp
+                                                <span class="quality-badge {{ $gradeClass }}">{{ $grade }}</span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    @endforeach
+                    </div>
                 </div>
             </section>
         @endif
 
-        {{-- Section: Contact & Order Information --}}
+        {{-- Gallery --}}
+        @if ($sections['show_gallery'] && count($gallery) > 0)
+            <section class="section" id="galeri">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Dokumentasi</span>
+                        <h2 class="section-title">Galeri Lapangan</h2>
+                        <div class="section-divider"></div>
+                    </div>
+
+                    <div class="gallery-grid">
+                        @foreach ($gallery as $item)
+                            @php
+                                $imgSrc = is_array($item) ? $item['image_url'] : asset('storage/' . $item->image_path);
+                                $cap = is_array($item) ? ($item['caption'] ?? '') : ($item->caption ?? '');
+                            @endphp
+                            <div class="gallery-item">
+                                <img src="{{ $imgSrc }}" alt="{{ $cap ?: 'Galeri Usaha Tani' }}" loading="lazy">
+                                @if ($cap)
+                                    <div class="gallery-caption">{{ $cap }}</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
+        {{-- Contact --}}
         @if ($sections['show_contact'] && $contact)
-            <section id="kontak">
-                <div class="contact-box">
-                    <div style="max-width:680px; margin:0 auto; text-align:center;">
-                        <div class="section-tag">Hubungi Kami</div>
-                        <h2 style="font-size:24px; font-weight:900; color:#0f172a; margin:0 0 10px 0;">
-                            Pemesanan Komoditas & Kerja Sama Pasokan
-                        </h2>
-                        <p style="font-size:14px; color:#64748b; line-height:1.6; margin:0 0 28px 0;">
-                            Silakan hubungi kami langsung untuk informasi ketersediaan stok gabah/beras, negosiasi harga partai besar, atau permintaan sampel.
+            <section class="contact-section" id="kontak">
+                <div class="container">
+                    <div class="contact-card">
+                        <span class="section-label" style="color:var(--accent); display:block; margin-bottom:10px;">
+                            <i class="fas fa-envelope"></i>&nbsp; Hubungi Kami
+                        </span>
+                        <h2 class="contact-title">Konsultasi & Pemesanan</h2>
+                        <p class="contact-desc">
+                            Dapatkan hasil pertanian berkualitas premium dengan harga kompetitif. Tim kami siap membantu
+                            kebutuhan Anda.
                         </p>
 
-                        <div style="display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
+                        <div class="contact-actions">
                             @if (!empty($contact['whatsapp']))
-                                <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn-whatsapp" style="padding:12px 24px; font-size:14px;">
-                                    WhatsApp Langsung
+                                <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn btn-wa">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp Business
                                 </a>
                             @endif
                             @if (!empty($contact['public_phone']))
-                                <a href="tel:{{ $contact['public_phone'] }}" class="btn-outline" style="padding:12px 24px; font-size:14px;">
-                                    Telepon: {{ $contact['public_phone'] }}
+                                <a href="tel:{{ $contact['public_phone'] }}" class="btn btn-outline">
+                                    <i class="fas fa-phone"></i> {{ $contact['public_phone'] }}
                                 </a>
                             @endif
                             @if (!empty($contact['public_email']))
-                                <a href="mailto:{{ $contact['public_email'] }}" class="btn-outline" style="padding:12px 24px; font-size:14px;">
-                                    Kirim Email
+                                <a href="mailto:{{ $contact['public_email'] }}" class="btn btn-outline">
+                                    <i class="fas fa-at"></i> Email
                                 </a>
                             @endif
                         </div>
 
-                        @if ($sections['show_location'] && !empty($location['address']))
-                            <div style="font-size:13px; color:#64748b; border-top:1px solid var(--brand-border); padding-top:18px;">
-                                📍 <strong>Alamat Usaha:</strong> {{ $location['address'] }}
-                            </div>
-                        @endif
+                        <div class="contact-info">
+                            @if ($sections['show_location'] && !empty($location['address']))
+                                <span><i class="fas fa-location-dot"></i> {{ $location['address'] }}</span>
+                            @endif
+                            <span><i class="fas fa-clock"></i> Buka Setiap Hari 06:00-20:00</span>
+                        </div>
                     </div>
                 </div>
             </section>
         @endif
-
     </main>
 
     {{-- Footer --}}
-    <footer style="background-color:#0f172a; border-top:1px solid #1e293b; color:#94a3b8; font-size:12px; padding:32px 0; text-align:center;">
-        <div class="site-container">
-            <div style="margin-bottom:8px; font-weight:700; color:#ffffff; font-size:14px;">
-                {{ $profile['business_name'] }}
+    <footer class="footer">
+        <div class="container">
+            <div>
+                <div class="footer-brand">{{ $profile['business_name'] }}</div>
+                <div style="color: rgba(255,255,255,0.5); font-size:12px;">
+                    Profil Usaha Pertanian Terverifikasi • Ekosistem P.A.D.I.
+                </div>
             </div>
-            <p style="margin:0; color:#64748b;">
-                Halaman profil usaha pertanian resmi yang terdaftar pada ekosistem P.A.D.I.
-            </p>
-            <div style="margin-top:12px; font-size:11px; color:#475569;">
-                &copy; {{ date('Y') }} {{ $profile['business_name'] }}. Seluruh hak cipta dilindungi.
+            <div class="footer-links">
+                <a href="#produk">Produk</a>
+                <a href="#panen">Data Panen</a>
+                <a href="#galeri">Galeri</a>
+                <a href="#kontak">Kontak</a>
+            </div>
+            <div style="color: rgba(255,255,255,0.4); font-size:12px;">
+                &copy; {{ date('Y') }} {{ $profile['business_name'] }}. All rights reserved.
             </div>
         </div>
     </footer>
 
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+
 </body>
+
 </html>
