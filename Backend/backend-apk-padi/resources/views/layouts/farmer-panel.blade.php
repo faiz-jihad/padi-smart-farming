@@ -8,7 +8,12 @@
 
     <title>{{ $title ?? 'Website Saya' }} - P.A.D.I.</title>
 
+    <link rel="icon" type="image/png" href="{{ asset('images/padi-logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/padi-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/padi-logo.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="{{ asset('js/pwa-notification-sw.js') }}"></script>
 </head>
 
 <body class="min-h-screen bg-white font-sans antialiased" style="color: #0f172a;">

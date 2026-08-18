@@ -71,14 +71,20 @@
                         <span><span data-admin-notification-count>{{ $adminUnreadNotifications ?? 0 }}</span> belum dibaca</span>
                     </div>
 
-                    @if(($adminUnreadNotifications ?? 0) > 0)
-                        <form method="POST" action="{{ route('admin.notifications.read') }}">
-                            @csrf
-                            <button type="submit">
-                                Tandai dibaca
-                            </button>
-                        </form>
-                    @endif
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button type="button" onclick="window.PadiPush && window.PadiPush.requestPermission()" class="admin-btn--secondary" style="padding:3px 8px; font-size:11px; border-radius:6px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; cursor:pointer;" title="Aktifkan Notifikasi di Perangkat Ini">
+                            <i class="fas fa-bell"></i> Hubungkan SW
+                        </button>
+
+                        @if(($adminUnreadNotifications ?? 0) > 0)
+                            <form method="POST" action="{{ route('admin.notifications.read') }}">
+                                @csrf
+                                <button type="submit">
+                                    Tandai dibaca
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
 
                 <div id="adminNotificationList" class="admin-navbar__notification-list">

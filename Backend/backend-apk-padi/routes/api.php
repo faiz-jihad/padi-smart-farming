@@ -157,10 +157,14 @@ Route::prefix('v1')->group(function (): void {
 
         // System Services & Notifications
         Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/send-push', [NotificationController::class, 'sendPush']);
+        Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::get('ppl-validations', [PplValidationController::class, 'index']);
         Route::get('community-reports', [CommunityReportController::class, 'index']);
         Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
         Route::get('device-tokens', [DeviceTokenController::class, 'index']);
+        Route::post('device-tokens', [DeviceTokenController::class, 'store']);
+        Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
         Route::get('partner-favorites', [PartnerFavoriteController::class, 'index']);
 
         // Admin Management Endpoint

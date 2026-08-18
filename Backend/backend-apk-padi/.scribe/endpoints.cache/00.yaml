@@ -32,7 +32,7 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-18T06:52:50+00:00"}'
+        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-18T09:50:48+00:00"}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
@@ -543,7 +543,7 @@ endpoints:
         name: account_type
         description: ''
         required: true
-        example: farmer
+        example: buyer
         type: string
         enumValues:
           - farmer
@@ -567,7 +567,7 @@ endpoints:
       email: zbailey@example.net
       phone: iyvdljnikhwaykcm
       password: architecto
-      account_type: farmer
+      account_type: buyer
       device_name: 'n'
     fileParameters: []
     responses: []
@@ -1194,7 +1194,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: fallow
+        example: inactive
         type: string
         enumValues:
           - active
@@ -1215,7 +1215,7 @@ endpoints:
       district_id: 16
       village_id: 16
       soil_type: 'n'
-      status: fallow
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
@@ -1436,7 +1436,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: fallow
+        example: inactive
         type: string
         enumValues:
           - active
@@ -1457,7 +1457,7 @@ endpoints:
       district_id: 16
       village_id: 16
       soil_type: 'n'
-      status: fallow
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
@@ -1632,7 +1632,7 @@ endpoints:
         name: season
         description: ''
         required: false
-        example: transition
+        example: rainy
         type: string
         enumValues:
           - rainy
@@ -1671,7 +1671,7 @@ endpoints:
       regency_id: 16
       district_id: 16
       village_id: 16
-      season: transition
+      season: rainy
       year: 22
       status: draft
     fileParameters: []
@@ -1781,7 +1781,7 @@ endpoints:
         name: planned_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T06:52:52'
+        example: '2026-08-18T09:50:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1800,7 +1800,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       farm_id: 16
-      planned_date: '2026-08-18T06:52:52'
+      planned_date: '2026-08-18T09:50:53'
       variety_id: 16
     fileParameters: []
     responses: []
@@ -2204,7 +2204,7 @@ endpoints:
         name: force_refresh
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -2214,7 +2214,7 @@ endpoints:
       farm_id: 16
       units: imperial
       lang: ngzmiy
-      force_refresh: false
+      force_refresh: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -2261,7 +2261,7 @@ endpoints:
         name: units
         description: ''
         required: false
-        example: imperial
+        example: metric
         type: string
         enumValues:
           - metric
@@ -2285,7 +2285,7 @@ endpoints:
         name: force_refresh
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -2293,9 +2293,9 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       farm_id: 16
-      units: imperial
+      units: metric
       lang: ngzmiy
-      force_refresh: true
+      force_refresh: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -2485,7 +2485,7 @@ endpoints:
         name: units
         description: ''
         required: false
-        example: imperial
+        example: metric
         type: string
         enumValues:
           - metric
@@ -2506,7 +2506,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       city: b
-      units: imperial
+      units: metric
       lang: ngzmiy
     fileParameters: []
     responses: []
@@ -2706,7 +2706,7 @@ endpoints:
         name: soil_type
         description: ''
         required: true
-        example: clay
+        example: latosol
         type: string
         enumValues:
           - alluvial
@@ -2723,7 +2723,7 @@ endpoints:
         name: tested_at
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-18T06:52:52'
+        example: '2026-08-18T09:50:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2745,7 +2745,7 @@ endpoints:
         name: sync_agromonitoring
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -2761,10 +2761,10 @@ endpoints:
       moisture_percentage: 8
       organic_matter_percentage: 1
       soil_temp_celsius: 1
-      soil_type: clay
-      tested_at: '2026-08-18T06:52:52'
+      soil_type: latosol
+      tested_at: '2026-08-18T09:50:53'
       notes: l
-      sync_agromonitoring: false
+      sync_agromonitoring: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -3018,7 +3018,7 @@ endpoints:
         name: planned_planting_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T06:52:52'
+        example: '2026-08-18T09:50:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3029,7 +3029,7 @@ endpoints:
         name: planting_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T06:52:52'
+        example: '2026-08-18T09:50:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3040,7 +3040,7 @@ endpoints:
         name: estimated_harvest_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T06:52:52'
+        example: '2026-08-18T09:50:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3051,7 +3051,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: completed
+        example: cancelled
         type: string
         enumValues:
           - planned
@@ -3064,10 +3064,10 @@ endpoints:
     cleanBodyParameters:
       farm_id: 16
       variety_id: 16
-      planned_planting_date: '2026-08-18T06:52:52'
-      planting_date: '2026-08-18T06:52:52'
-      estimated_harvest_date: '2026-08-18T06:52:52'
-      status: completed
+      planned_planting_date: '2026-08-18T09:50:54'
+      planting_date: '2026-08-18T09:50:54'
+      estimated_harvest_date: '2026-08-18T09:50:54'
+      status: cancelled
     fileParameters: []
     responses: []
     responseFields: []

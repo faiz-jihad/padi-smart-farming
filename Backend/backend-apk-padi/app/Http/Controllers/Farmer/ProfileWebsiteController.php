@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Farmer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farmer\UpdatePublicProfileRequest;
 use App\Http\Requests\Farmer\UpdateProfileSectionsRequest;
+use App\Models\FarmerProfileGallery;
 use App\Models\FarmerPublicProfile;
 use App\Models\ProfileTemplate;
+use App\Services\Admin\AdminNotificationService;
 use App\Services\Public\FarmerPublicProfileDataService;
 use App\Services\Public\PublishFarmerProfileService;
 use App\Services\Public\SubdomainAvailabilityService;
@@ -38,7 +40,7 @@ class ProfileWebsiteController extends Controller
     public function edit(): View
     {
         $farmer = Auth::guard('farmer')->user();
-        $profile = $farmer->publicProfile()->with('template')->firstOrNew([
+        $profile = $farmer->publicProfile()->with(['template', 'gallery'])->firstOrNew([
             'farmer_id' => $farmer->id,
         ]);
 
@@ -47,8 +49,10 @@ class ProfileWebsiteController extends Controller
         }
 
         return view('farmer.website.edit', [
-            'farmer'  => $farmer,
-            'profile' => $profile,
+            'farmer'    => $farmer,
+            'profile'   => $profile,
+            'gallery'   => $profile->gallery ?? collect(),
+            'templates' => ProfileTemplate::active()->orderBy('sort_order')->get(),
         ]);
     }
 
@@ -99,6 +103,15 @@ class ProfileWebsiteController extends Controller
         }
 
         $profile->save();
+
+        // Dispatch notification
+        $notifications = app(AdminNotificationService::class);
+        $notifications->notifyUser(
+            $farmer->id,
+            '💾 Pengaturan Website Disimpan',
+            "Pembaruan profil website usaha tani \"{$profile->business_name}\" berhasil disimpan.",
+            'system'
+        );
 
         return redirect()->route('farmer.website.index')
             ->with('status', 'Profil website berhasil disimpan.');
@@ -261,6 +274,21 @@ class ProfileWebsiteController extends Controller
 
         try {
             $publisher->publish($profile);
+
+            $notifications = app(AdminNotificationService::class);
+            $notifications->notifyUser(
+                $farmer->id,
+                '🚀 Website Anda Berhasil Dipublikasikan!',
+                "Website usaha tani \"{$profile->business_name}\" sekarang telah aktif dan dapat diakses publik di {$profile->publicUrl()}.",
+                'system',
+                ['url' => $profile->publicUrl()]
+            );
+
+            $notifications->notifyAdmins(
+                'Website Petani Baru Dipublikasikan',
+                "Petani \"{$profile->business_name}\" ({$profile->subdomain}) baru saja mempublikasikan websitenya.",
+                'system'
+            );
         } catch (RuntimeException $e) {
             return back()->withErrors(['publish' => $e->getMessage()]);
         }
@@ -278,7 +306,66 @@ class ProfileWebsiteController extends Controller
 
         $publisher->unpublish($profile);
 
+        $notifications = app(AdminNotificationService::class);
+        $notifications->notifyUser(
+            $farmer->id,
+            '⏸️ Website Dinonaktifkan',
+            "Website publik \"{$profile->business_name}\" telah dinonaktifkan dan kembali berstatus draft.",
+            'system'
+        );
+
         return redirect()->route('farmer.website.index')
             ->with('status', 'Website berhasil dinonaktifkan.');
+    }
+
+    // ─── Gallery Photos Management ─────────────────────────────────────────
+
+    public function storeGallery(Request $request): RedirectResponse
+    {
+        $farmer = Auth::guard('farmer')->user();
+        $profile = $farmer->publicProfile()->first();
+
+        abort_if(! $profile, 404);
+
+        $request->validate([
+            'image'   => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'caption' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $path = $request->file('image')->store('farmer-profiles/gallery', 'public');
+
+        $profile->gallery()->create([
+            'image_path' => $path,
+            'caption'    => $request->input('caption'),
+            'sort_order' => ($profile->gallery()->max('sort_order') ?? 0) + 1,
+            'status'     => 'published',
+        ]);
+
+        $notifications = app(AdminNotificationService::class);
+        $notifications->notifyUser(
+            $farmer->id,
+            '📸 Foto Galeri Berhasil Diunggah',
+            "Foto kegiatan baru telah ditambahkan ke galeri website Anda.",
+            'gallery',
+            ['url' => $profile->publicUrl()]
+        );
+
+        return back()->with('status', 'Foto dokumentasi berhasil ditambahkan ke galeri.');
+    }
+
+    public function destroyGallery(FarmerProfileGallery $gallery): RedirectResponse
+    {
+        $farmer = Auth::guard('farmer')->user();
+        $profile = $farmer->publicProfile()->first();
+
+        abort_if(! $profile || $gallery->farmer_public_profile_id !== $profile->id, 403);
+
+        if ($gallery->image_path) {
+            Storage::disk('public')->delete($gallery->image_path);
+        }
+
+        $gallery->delete();
+
+        return back()->with('status', 'Foto galeri berhasil dihapus.');
     }
 }

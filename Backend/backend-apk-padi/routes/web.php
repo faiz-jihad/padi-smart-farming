@@ -125,6 +125,11 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/farmer-profiles/{farmerProfile:subdomain}/reject', [FarmerPublicProfileAdminController::class, 'reject'])->name('farmer-profiles.reject');
         Route::post('/farmer-profiles/{farmerProfile:subdomain}/suspend', [FarmerPublicProfileAdminController::class, 'suspend'])->name('farmer-profiles.suspend');
         Route::post('/farmer-profiles/{farmerProfile:subdomain}/restore', [FarmerPublicProfileAdminController::class, 'restore'])->name('farmer-profiles.restore');
+        Route::post('/farmer-profiles/{farmerProfile:subdomain}/listings', [FarmerPublicProfileAdminController::class, 'storeListing'])->name('farmer-profiles.listings.store');
+        Route::patch('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'updateListing'])->name('farmer-profiles.listings.update');
+        Route::delete('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'destroyListing'])->name('farmer-profiles.listings.destroy');
+        Route::post('/farmer-profiles/{farmerProfile:subdomain}/gallery', [FarmerPublicProfileAdminController::class, 'storeGallery'])->name('farmer-profiles.gallery.store');
+        Route::delete('/farmer-profiles/{farmerProfile:subdomain}/gallery/{gallery}', [FarmerPublicProfileAdminController::class, 'destroyGallery'])->name('farmer-profiles.gallery.destroy');
     });
 
 
@@ -150,6 +155,10 @@ Route::middleware(['auth:farmer', 'farmer.web'])
         // Edit profile details
         Route::get('/website/edit', [ProfileWebsiteController::class, 'edit'])->name('website.edit');
         Route::post('/website/edit', [ProfileWebsiteController::class, 'update'])->name('website.update');
+
+        // Gallery routes
+        Route::post('/website/gallery', [ProfileWebsiteController::class, 'storeGallery'])->name('website.gallery.store');
+        Route::delete('/website/gallery/{gallery}', [ProfileWebsiteController::class, 'destroyGallery'])->name('website.gallery.destroy');
 
         // Privacy / section controls
         Route::get('/website/sections', [ProfileWebsiteController::class, 'sections'])->name('website.sections');

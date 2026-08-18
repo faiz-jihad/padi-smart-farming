@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CropSeason;
+use App\Models\FarmerProfileGallery;
 use App\Models\FarmerPublicProfile;
+use App\Models\MarketListing;
 use App\Models\ProfileTemplate;
 use App\Models\User;
+use App\Services\Admin\AdminMarketplaceService;
+use App\Services\Admin\AdminNotificationService;
 use App\Services\Public\PublishFarmerProfileService;
 use App\Services\Public\SubdomainAvailabilityService;
 use Illuminate\Http\RedirectResponse;
@@ -152,12 +157,20 @@ class FarmerPublicProfileAdminController extends Controller
 
     public function edit(FarmerPublicProfile $farmerProfile): View
     {
-        $farmerProfile->load(['farmer', 'template']);
+        $farmerProfile->load(['farmer.farms', 'template', 'gallery']);
         $templates = ProfileTemplate::active()->orderBy('sort_order')->get();
+        $listings = MarketListing::where('farmer_id', $farmerProfile->farmer_id)
+            ->with('images')
+            ->latest()
+            ->get();
+        $farms = $farmerProfile->farmer?->farms ?? collect();
 
         return view('admin.farmer-profiles.edit', [
             'profile'   => $farmerProfile,
             'templates' => $templates,
+            'listings'  => $listings,
+            'farms'     => $farms,
+            'gallery'   => $farmerProfile->gallery ?? collect(),
             'settings'  => $farmerProfile->resolvedSectionSettings(),
         ]);
     }
@@ -268,16 +281,41 @@ class FarmerPublicProfileAdminController extends Controller
 
     // ─── Status Actions ────────────────────────────────────────────────────
 
-    public function verify(FarmerPublicProfile $farmerProfile): RedirectResponse
+    public function verify(FarmerPublicProfile $farmerProfile, AdminNotificationService $notifications): RedirectResponse
     {
         $farmerProfile->update(['verification_status' => 'verified']);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '✅ Profil Website Anda Terverifikasi!',
+                "Selamat, profil usaha tani \"{$farmerProfile->business_name}\" telah resmi diverifikasi oleh Administrator P.A.D.I.",
+                'verification',
+                ['url' => $farmerProfile->publicUrl()]
+            );
+        }
+
+        $notifications->notifyAdmins(
+            'Profil Petani Diverifikasi',
+            "Administrator memverifikasi profil \"{$farmerProfile->business_name}\" ({$farmerProfile->subdomain}).",
+            'verification'
+        );
 
         return back()->with('status', "Profil \"{$farmerProfile->business_name}\" berhasil diverifikasi.");
     }
 
-    public function reject(Request $request, FarmerPublicProfile $farmerProfile): RedirectResponse
+    public function reject(Request $request, FarmerPublicProfile $farmerProfile, AdminNotificationService $notifications): RedirectResponse
     {
         $farmerProfile->update(['verification_status' => 'rejected']);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '⚠️ Pengajuan Verifikasi Profil Belum Disetujui',
+                "Pengajuan verifikasi untuk \"{$farmerProfile->business_name}\" belum disetujui. Silakan lengkapi data profil dan kontak Anda.",
+                'verification'
+            );
+        }
 
         return back()->with('status', "Profil \"{$farmerProfile->business_name}\" ditolak.");
     }
@@ -285,8 +323,18 @@ class FarmerPublicProfileAdminController extends Controller
     public function suspend(
         FarmerPublicProfile $farmerProfile,
         PublishFarmerProfileService $publisher,
+        AdminNotificationService $notifications
     ): RedirectResponse {
         $publisher->suspend($farmerProfile);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '⛔ Website Usaha Tani Ditangguhkan',
+                "Website publik \"{$farmerProfile->business_name}\" saat ini ditangguhkan oleh Administrator.",
+                'system'
+            );
+        }
 
         return back()->with('status', "Profil \"{$farmerProfile->business_name}\" ditangguhkan.");
     }
@@ -294,10 +342,169 @@ class FarmerPublicProfileAdminController extends Controller
     public function restore(
         FarmerPublicProfile $farmerProfile,
         PublishFarmerProfileService $publisher,
+        AdminNotificationService $notifications
     ): RedirectResponse {
         $publisher->restore($farmerProfile);
 
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '🌟 Website Usaha Tani Kembali Aktif',
+                "Website publik \"{$farmerProfile->business_name}\" telah dipulihkan dan dapat diakses kembali oleh publik.",
+                'system',
+                ['url' => $farmerProfile->publicUrl()]
+            );
+        }
+
         return back()->with('status', "Profil \"{$farmerProfile->business_name}\" berhasil dipulihkan dan dipublikasikan kembali.");
+    }
+
+    // ─── Direct Product/Listing Management for Farmer ────────────────────────
+
+    public function storeListing(
+        Request $request,
+        FarmerPublicProfile $farmerProfile,
+        AdminMarketplaceService $marketplace,
+        AdminNotificationService $notifications
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'farm_id'        => 'required|integer|exists:farms,id',
+            'commodity'      => 'required|string|max:100',
+            'quantity'       => 'required|numeric|min:0.1',
+            'unit'           => 'required|string|max:20',
+            'price_per_unit' => 'required|numeric|min:0',
+            'description'    => 'nullable|string',
+            'sales_link'     => 'nullable|url|max:1000',
+            'image_url'      => 'nullable|url|max:1000',
+            'status'         => 'required|string|in:draft,published,closed,rejected,expired',
+        ]);
+
+        $validated['farmer_id'] = $farmerProfile->farmer_id;
+
+        // Auto assign crop season
+        $cropSeason = CropSeason::where('farm_id', $validated['farm_id'])->latest('id')->first();
+        $validated['crop_season_id'] = $cropSeason?->id ?? CropSeason::firstOrCreate([
+            'farm_id'     => $validated['farm_id'],
+            'season_name' => 'MT2 2026',
+        ], [
+            'start_date' => now()->startOfMonth(),
+            'end_date'   => now()->addMonths(4),
+            'status'     => 'active',
+        ])->id;
+
+        $listing = $marketplace->storeListing($validated);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '📦 Produk Baru Ditambahkan ke Etalase',
+                "Produk \"{$listing->commodity}\" berhasil didaftarkan dan siap dipesan.",
+                'marketplace',
+                ['url' => $farmerProfile->publicUrl()]
+            );
+        }
+
+        return back()->with('status', "Produk \"{$listing->commodity}\" berhasil ditambahkan ke etalase.");
+    }
+
+    public function updateListing(
+        Request $request,
+        FarmerPublicProfile $farmerProfile,
+        MarketListing $listing,
+        AdminMarketplaceService $marketplace,
+        AdminNotificationService $notifications
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'commodity'      => 'required|string|max:100',
+            'quantity'       => 'required|numeric|min:0.1',
+            'unit'           => 'required|string|max:20',
+            'price_per_unit' => 'required|numeric|min:0',
+            'description'    => 'nullable|string',
+            'sales_link'     => 'nullable|url|max:1000',
+            'image_url'      => 'nullable|url|max:1000',
+            'status'         => 'required|string|in:draft,published,closed,rejected,expired',
+        ]);
+
+        $marketplace->updateListing($listing, $validated);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '✏️ Informasi Produk Diperbarui',
+                "Detail dan harga untuk \"{$listing->commodity}\" telah diperbarui.",
+                'marketplace'
+            );
+        }
+
+        return back()->with('status', "Produk \"{$listing->commodity}\" berhasil diperbarui.");
+    }
+
+    public function destroyListing(
+        FarmerPublicProfile $farmerProfile,
+        MarketListing $listing,
+        AdminMarketplaceService $marketplace,
+        AdminNotificationService $notifications
+    ): RedirectResponse {
+        $name = $listing->commodity;
+        $marketplace->deleteListing($listing);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '🗑️ Produk Dihapus dari Etalase',
+                "Produk \"{$name}\" telah dihapus dari daftar katalog.",
+                'marketplace'
+            );
+        }
+
+        return back()->with('status', "Produk \"{$name}\" berhasil dihapus dari etalase.");
+    }
+
+    // ─── Direct Gallery Photos Management for Farmer ─────────────────────────
+
+    public function storeGallery(
+        Request $request,
+        FarmerPublicProfile $farmerProfile,
+        AdminNotificationService $notifications
+    ): RedirectResponse {
+        $request->validate([
+            'image'   => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'caption' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $path = $request->file('image')->store('farmer-profiles/gallery', 'public');
+
+        $farmerProfile->gallery()->create([
+            'image_path' => $path,
+            'caption'    => $request->input('caption'),
+            'sort_order' => ($farmerProfile->gallery()->max('sort_order') ?? 0) + 1,
+            'status'     => 'published',
+        ]);
+
+        if ($farmerProfile->farmer_id) {
+            $notifications->notifyUser(
+                $farmerProfile->farmer_id,
+                '📸 Foto Dokumentasi Ditambahkan',
+                "Foto baru berhasil diunggah ke galeri website \"{$farmerProfile->business_name}\".",
+                'gallery',
+                ['url' => $farmerProfile->publicUrl()]
+            );
+        }
+
+        return back()->with('status', 'Foto dokumentasi galeri berhasil ditambahkan.');
+    }
+
+    public function destroyGallery(
+        FarmerPublicProfile $farmerProfile,
+        FarmerProfileGallery $gallery
+    ): RedirectResponse {
+        if ($gallery->image_path) {
+            Storage::disk('public')->delete($gallery->image_path);
+        }
+
+        $gallery->delete();
+
+        return back()->with('status', 'Foto galeri berhasil dihapus.');
     }
 }
 

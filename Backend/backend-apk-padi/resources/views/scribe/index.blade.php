@@ -338,7 +338,7 @@ access-control-allow-origin: *
     &quot;status&quot;: &quot;ok&quot;,
     &quot;system&quot;: &quot;P.A.D.I. Smart Farming API&quot;,
     &quot;version&quot;: &quot;1.0.0&quot;,
-    &quot;timestamp&quot;: &quot;2026-08-18T06:52:50+00:00&quot;
+    &quot;timestamp&quot;: &quot;2026-08-18T09:50:48+00:00&quot;
 }</code>
  </pre>
     </span>
@@ -1700,7 +1700,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"email\": \"zbailey@example.net\",
     \"phone\": \"iyvdljnikhwaykcm\",
     \"password\": \"architecto\",
-    \"account_type\": \"farmer\",
+    \"account_type\": \"buyer\",
     \"device_name\": \"n\"
 }"
 </code></pre></div>
@@ -1721,7 +1721,7 @@ let body = {
     "email": "zbailey@example.net",
     "phone": "iyvdljnikhwaykcm",
     "password": "architecto",
-    "account_type": "farmer",
+    "account_type": "buyer",
     "device_name": "n"
 };
 
@@ -1862,10 +1862,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="account_type"                data-endpoint="POSTapi-v1-auth-register"
-               value="farmer"
+               value="buyer"
                data-component="body">
     <br>
-<p>Example: <code>farmer</code></p>
+<p>Example: <code>buyer</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>farmer</code></li> <li><code>buyer</code></li></ul>
         </div>
@@ -3261,7 +3261,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"fallow\"
+    \"status\": \"inactive\"
 }"
 </code></pre></div>
 
@@ -3288,7 +3288,7 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "fallow"
+    "status": "inactive"
 };
 
 fetch(url, {
@@ -3512,10 +3512,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-farms"
-               value="fallow"
+               value="inactive"
                data-component="body">
     <br>
-<p>Example: <code>fallow</code></p>
+<p>Example: <code>inactive</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -3690,7 +3690,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"fallow\"
+    \"status\": \"inactive\"
 }"
 </code></pre></div>
 
@@ -3717,7 +3717,7 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "fallow"
+    "status": "inactive"
 };
 
 fetch(url, {
@@ -3954,10 +3954,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="fallow"
+               value="inactive"
                data-component="body">
     <br>
-<p>Example: <code>fallow</code></p>
+<p>Example: <code>inactive</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -4249,7 +4249,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
-    \"season\": \"transition\",
+    \"season\": \"rainy\",
     \"year\": 22,
     \"status\": \"draft\"
 }"
@@ -4271,7 +4271,7 @@ let body = {
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
-    "season": "transition",
+    "season": "rainy",
     "year": 22,
     "status": "draft"
 };
@@ -4430,10 +4430,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="season"                data-endpoint="GETapi-v1-planting-calendars"
-               value="transition"
+               value="rainy"
                data-component="body">
     <br>
-<p>Example: <code>transition</code></p>
+<p>Example: <code>rainy</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
         </div>
@@ -4624,7 +4624,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"planned_date\": \"2026-08-18T06:52:52\",
+    \"planned_date\": \"2026-08-18T09:50:53\",
     \"variety_id\": 16
 }"
 </code></pre></div>
@@ -4642,7 +4642,7 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "planned_date": "2026-08-18T06:52:52",
+    "planned_date": "2026-08-18T09:50:53",
     "variety_id": 16
 };
 
@@ -4747,10 +4747,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_date"                data-endpoint="POSTapi-v1-planting-calendar-recommend-planting-window"
-               value="2026-08-18T06:52:52"
+               value="2026-08-18T09:50:53"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T06:52:52</code></p>
+<p>Must be a valid date. Example: <code>2026-08-18T09:50:53</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>variety_id</code></b>&nbsp;&nbsp;
@@ -5823,7 +5823,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"farm_id\": 16,
     \"units\": \"imperial\",
     \"lang\": \"ngzmiy\",
-    \"force_refresh\": false
+    \"force_refresh\": true
 }"
 </code></pre></div>
 
@@ -5842,7 +5842,7 @@ let body = {
     "farm_id": 16,
     "units": "imperial",
     "lang": "ngzmiy",
-    "force_refresh": false
+    "force_refresh": true
 };
 
 fetch(url, {
@@ -5985,7 +5985,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
         </form>
 
@@ -6007,9 +6007,9 @@ Must be one of:
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"units\": \"imperial\",
+    \"units\": \"metric\",
     \"lang\": \"ngzmiy\",
-    \"force_refresh\": true
+    \"force_refresh\": false
 }"
 </code></pre></div>
 
@@ -6026,9 +6026,9 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "units": "imperial",
+    "units": "metric",
     "lang": "ngzmiy",
-    "force_refresh": true
+    "force_refresh": false
 };
 
 fetch(url, {
@@ -6132,10 +6132,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="units"                data-endpoint="POSTapi-v1-weather-forecast"
-               value="imperial"
+               value="metric"
                data-component="body">
     <br>
-<p>Example: <code>imperial</code></p>
+<p>Example: <code>metric</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>metric</code></li> <li><code>imperial</code></li></ul>
         </div>
@@ -6171,7 +6171,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
         </form>
 
@@ -6530,7 +6530,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"city\": \"b\",
-    \"units\": \"imperial\",
+    \"units\": \"metric\",
     \"lang\": \"ngzmiy\"
 }"
 </code></pre></div>
@@ -6548,7 +6548,7 @@ const headers = {
 
 let body = {
     "city": "b",
-    "units": "imperial",
+    "units": "metric",
     "lang": "ngzmiy"
 };
 
@@ -6653,10 +6653,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="units"                data-endpoint="POSTapi-v1-weather-city"
-               value="imperial"
+               value="metric"
                data-component="body">
     <br>
-<p>Example: <code>imperial</code></p>
+<p>Example: <code>metric</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>metric</code></li> <li><code>imperial</code></li></ul>
         </div>
@@ -6863,10 +6863,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"moisture_percentage\": 8,
     \"organic_matter_percentage\": 1,
     \"soil_temp_celsius\": 1,
-    \"soil_type\": \"clay\",
-    \"tested_at\": \"2026-08-18T06:52:52\",
+    \"soil_type\": \"latosol\",
+    \"tested_at\": \"2026-08-18T09:50:53\",
     \"notes\": \"l\",
-    \"sync_agromonitoring\": false
+    \"sync_agromonitoring\": true
 }"
 </code></pre></div>
 
@@ -6891,10 +6891,10 @@ let body = {
     "moisture_percentage": 8,
     "organic_matter_percentage": 1,
     "soil_temp_celsius": 1,
-    "soil_type": "clay",
-    "tested_at": "2026-08-18T06:52:52",
+    "soil_type": "latosol",
+    "tested_at": "2026-08-18T09:50:53",
     "notes": "l",
-    "sync_agromonitoring": false
+    "sync_agromonitoring": true
 };
 
 fetch(url, {
@@ -7094,10 +7094,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="soil_type"                data-endpoint="POSTapi-v1-soil-detections"
-               value="clay"
+               value="latosol"
                data-component="body">
     <br>
-<p>Example: <code>clay</code></p>
+<p>Example: <code>latosol</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>alluvial</code></li> <li><code>clay</code></li> <li><code>loam</code></li> <li><code>sandy_loam</code></li> <li><code>peat</code></li> <li><code>latosol</code></li></ul>
         </div>
@@ -7108,10 +7108,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="tested_at"                data-endpoint="POSTapi-v1-soil-detections"
-               value="2026-08-18T06:52:52"
+               value="2026-08-18T09:50:53"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T06:52:52</code></p>
+<p>Must be a valid date. Example: <code>2026-08-18T09:50:53</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -7145,7 +7145,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
         </form>
 
@@ -7727,10 +7727,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"farm_id\": 16,
     \"variety_id\": 16,
-    \"planned_planting_date\": \"2026-08-18T06:52:52\",
-    \"planting_date\": \"2026-08-18T06:52:52\",
-    \"estimated_harvest_date\": \"2026-08-18T06:52:52\",
-    \"status\": \"completed\"
+    \"planned_planting_date\": \"2026-08-18T09:50:54\",
+    \"planting_date\": \"2026-08-18T09:50:54\",
+    \"estimated_harvest_date\": \"2026-08-18T09:50:54\",
+    \"status\": \"cancelled\"
 }"
 </code></pre></div>
 
@@ -7748,10 +7748,10 @@ const headers = {
 let body = {
     "farm_id": 16,
     "variety_id": 16,
-    "planned_planting_date": "2026-08-18T06:52:52",
-    "planting_date": "2026-08-18T06:52:52",
-    "estimated_harvest_date": "2026-08-18T06:52:52",
-    "status": "completed"
+    "planned_planting_date": "2026-08-18T09:50:54",
+    "planting_date": "2026-08-18T09:50:54",
+    "estimated_harvest_date": "2026-08-18T09:50:54",
+    "status": "cancelled"
 };
 
 fetch(url, {
@@ -7867,10 +7867,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T06:52:52"
+               value="2026-08-18T09:50:54"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T06:52:52</code></p>
+<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_date</code></b>&nbsp;&nbsp;
@@ -7879,10 +7879,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T06:52:52"
+               value="2026-08-18T09:50:54"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T06:52:52</code></p>
+<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>estimated_harvest_date</code></b>&nbsp;&nbsp;
@@ -7891,10 +7891,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="estimated_harvest_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T06:52:52"
+               value="2026-08-18T09:50:54"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T06:52:52</code></p>
+<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -7903,10 +7903,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="completed"
+               value="cancelled"
                data-component="body">
     <br>
-<p>Example: <code>completed</code></p>
+<p>Example: <code>cancelled</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>planned</code></li> <li><code>active</code></li> <li><code>completed</code></li> <li><code>cancelled</code></li></ul>
         </div>
