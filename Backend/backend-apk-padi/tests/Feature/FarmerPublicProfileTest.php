@@ -397,8 +397,10 @@ class FarmerPublicProfileTest extends TestCase
         ]);
 
         // Delete
+        $profile->refresh();
         $deleteResponse = $this->actingAs($admin)
             ->delete(route('admin.farmer-profiles.destroy', $profile));
+
 
         $deleteResponse->assertRedirect(route('admin.farmer-profiles.index'));
         $this->assertDatabaseMissing('farmer_public_profiles', [
