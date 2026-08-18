@@ -10,6 +10,28 @@ use Illuminate\Support\Collection;
 
 class FarmerPublicProfileDataService
 {
+    public const DEFAULT_COVER_URL = 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1600&q=80';
+    public const DEFAULT_PRODUCT_URL = 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80';
+
+    public const DEFAULT_GALLERY = [
+        [
+            'image_url' => 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&q=80',
+            'caption'   => 'Hamparan Sawah Padi Produktif',
+        ],
+        [
+            'image_url' => 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80',
+            'caption'   => 'Kualitas Gabah & Bulir Padi Unggul',
+        ],
+        [
+            'image_url' => 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80',
+            'caption'   => 'Inspeksi & Pemeliharaan Tanaman Padi',
+        ],
+        [
+            'image_url' => 'https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=800&q=80',
+            'caption'   => 'Masa Pematangan Menjelang Panen',
+        ],
+    ];
+
     /**
      * Build the full public data payload for a published farmer profile.
      * Only includes sections the farmer has opted-in to show.
@@ -21,7 +43,6 @@ class FarmerPublicProfileDataService
      */
     public function buildPublicData(FarmerPublicProfile $profile): array
     {
-        $farmer = $profile->farmer;
         $sections = $profile->resolvedSectionSettings();
 
         return [
@@ -29,7 +50,7 @@ class FarmerPublicProfileDataService
             'statistics' => $sections['show_productivity'] ? $this->buildStatistics($profile) : null,
             'products'   => $sections['show_products'] ? $this->buildProducts($profile) : collect(),
             'harvests'   => $sections['show_harvests'] ? $this->buildHarvestHistory($profile) : collect(),
-            'gallery'    => $sections['show_gallery'] ? $profile->gallery : collect(),
+            'gallery'    => $sections['show_gallery'] ? $this->buildGallery($profile) : collect(),
             'location'   => $sections['show_location'] ? $this->buildPublicLocation($profile) : null,
             'contact'    => $sections['show_contact'] ? $this->buildContactData($profile) : null,
             'sections'   => $sections,
@@ -43,13 +64,17 @@ class FarmerPublicProfileDataService
      */
     private function buildProfileData(FarmerPublicProfile $profile): array
     {
+        $coverUrl = $profile->cover_image_path
+            ? asset('storage/' . $profile->cover_image_path)
+            : self::DEFAULT_COVER_URL;
+
         return [
             'id'                  => $profile->id,
             'business_name'       => $profile->business_name,
             'headline'            => $profile->headline,
             'description'         => $profile->description,
             'logo_url'            => $profile->logo_path ? asset('storage/' . $profile->logo_path) : null,
-            'cover_image_url'     => $profile->cover_image_path ? asset('storage/' . $profile->cover_image_path) : null,
+            'cover_image_url'     => $coverUrl,
             'instagram_url'       => $profile->instagram_url,
             'facebook_url'        => $profile->facebook_url,
             'website_status'      => $profile->website_status,
@@ -57,8 +82,26 @@ class FarmerPublicProfileDataService
             'is_verified'         => $profile->isVerified(),
             'published_at'        => $profile->published_at,
             'public_url'          => $profile->publicUrl(),
+            'direct_url'          => $profile->directUrl(),
             'template_code'       => $profile->template?->code,
         ];
+    }
+
+    /**
+     * Gallery collection with fallback to curated high-res farm photos.
+     */
+    private function buildGallery(FarmerPublicProfile $profile): Collection
+    {
+        $gallery = $profile->gallery;
+
+        if ($gallery->isNotEmpty()) {
+            return $gallery->map(fn ($item) => [
+                'image_url' => asset('storage/' . $item->image_path),
+                'caption'   => $item->caption,
+            ]);
+        }
+
+        return collect(self::DEFAULT_GALLERY);
     }
 
     /**
@@ -159,6 +202,10 @@ class FarmerPublicProfileDataService
             ->get()
             ->map(function (MarketListing $listing) {
                 // Explicit whitelist — never serialize full model
+                $imageUrl = $listing->image_url
+                    ?? $listing->images->first()?->image_url
+                    ?? self::DEFAULT_PRODUCT_URL;
+
                 return [
                     'id'             => $listing->id,
                     'commodity'      => $listing->commodity,
@@ -167,8 +214,7 @@ class FarmerPublicProfileDataService
                     'price_per_unit' => $listing->price_per_unit,
                     'description'    => $listing->description,
                     'sales_link'     => $listing->sales_link,
-                    'image_url'      => $listing->image_url
-                        ?? $listing->images->first()?->image_url,
+                    'image_url'      => $imageUrl,
                     'published_at'   => $listing->published_at,
                 ];
             });

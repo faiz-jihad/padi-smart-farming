@@ -504,16 +504,21 @@
 
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px;">
                     @foreach ($gallery as $item)
+                        @php
+                            $imgSrc = is_array($item) ? $item['image_url'] : asset('storage/' . $item->image_path);
+                            $cap = is_array($item) ? ($item['caption'] ?? null) : ($item->caption ?? null);
+                        @endphp
                         <div class="hp-card" style="padding:0; position:relative; aspect-ratio:4/3; overflow:hidden;">
-                            <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->caption ?? 'Galeri' }}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            @if ($item->caption)
+                            <img src="{{ $imgSrc }}" alt="{{ $cap ?? 'Galeri' }}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            @if ($cap)
                                 <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(15,23,42,0.9), transparent); color:#ffffff; font-size:12px; font-weight:600; padding:16px 14px 10px;">
-                                    {{ $item->caption }}
+                                    {{ $cap }}
                                 </div>
                             @endif
                         </div>
                     @endforeach
                 </div>
+
             </section>
         @endif
 

@@ -306,6 +306,30 @@
             </section>
         @endif
 
+        {{-- Gallery --}}
+        @if ($sections['show_gallery'] && count($gallery) > 0)
+            <section style="margin-top:40px;">
+                <h2 style="font-size:20px; font-weight:800; color:#0f172a; margin:0 0 16px 0;">Dokumentasi Lahan & Fasilitas</h2>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px;">
+                    @foreach ($gallery as $item)
+                        @php
+                            $imgSrc = is_array($item) ? $item['image_url'] : asset('storage/' . $item->image_path);
+                            $cap = is_array($item) ? ($item['caption'] ?? null) : ($item->caption ?? null);
+                        @endphp
+                        <div style="background:#ffffff; border:1px solid var(--mp-border); border-radius:12px; overflow:hidden; aspect-ratio:4/3; position:relative;">
+                            <img src="{{ $imgSrc }}" alt="{{ $cap ?? 'Galeri' }}" style="width:100%; height:100%; object-fit:cover;">
+                            @if ($cap)
+                                <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(15,23,42,0.85); color:#ffffff; font-size:11px; padding:8px 12px;">
+                                    {{ $cap }}
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+
         {{-- Contact Card --}}
         @if ($sections['show_contact'] && $contact)
             <section style="background:#0f172a; border-radius:18px; padding:36px; color:#ffffff; text-align:center;">
