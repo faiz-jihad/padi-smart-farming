@@ -1,30 +1,43 @@
 @extends('layouts.admin')
 
+@section('content')
+<link rel="stylesheet" href="{{ asset('css/admin/farmer-profile.css') }}">
+
 @php
-    $title = 'Tambah Profil Publik Petani';
     $baseDomain = config('domains.base', 'localhost');
 @endphp
 
-@section('content')
+<div class="fp-page">
+    {{-- Breadcrumb --}}
+    <nav class="fp-breadcrumb" aria-label="Breadcrumb">
+        <span>Admin</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <a href="{{ route('admin.farmer-profiles.index') }}" style="color:#64748b; text-decoration:none;">Profil Publik Petani</a>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="fp-breadcrumb-current">Tambah Profil Publik Baru</span>
+    </nav>
 
-<div class="space-y-6 max-w-4xl">
-
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
+    {{-- Page Header --}}
+    <div class="fp-header">
         <div>
-            <h1 class="text-2xl font-bold text-[#0f172a]">Tambah Profil Publik Petani</h1>
-            <p class="text-slate-500 text-sm mt-1">Buat website company profile untuk petani langsung dari panel admin.</p>
+            <h1 class="fp-title">Tambah Profil Publik Petani</h1>
+            <p class="fp-description">Publikasikan profil usaha tani, etalase panen, dan digital identity resmi petani di bawah domain P.A.D.I.</p>
         </div>
-        <a href="{{ route('admin.farmer-profiles.index') }}"
-            class="text-sm text-slate-600 hover:text-[#0f172a] border border-gray-200 px-4 py-2 rounded-lg transition-colors">
-            Kembali
+
+        <a href="{{ route('admin.farmer-profiles.index') }}" class="admin-btn admin-btn--secondary">
+            Batal / Kembali
         </a>
     </div>
 
+    {{-- Error Alert --}}
     @if ($errors->any())
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-            <p class="text-sm font-semibold text-red-800 mb-1">Terdapat kesalahan pengisian:</p>
-            <ul class="list-disc list-inside text-xs text-red-700 space-y-0.5">
+        <div class="admin-alert admin-alert--error" role="alert">
+            <p style="font-weight:700; margin:0 0 4px 0;">Mohon periksa kembali form berikut:</p>
+            <ul style="margin:0; padding-left:20px; font-size:12px;">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -32,185 +45,232 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.farmer-profiles.store') }}" enctype="multipart/form-data" class="space-y-6">
+    <form method="POST" action="{{ route('admin.farmer-profiles.store') }}" enctype="multipart/form-data">
         @csrf
 
-        {{-- Section 1: Farmer Account & Basic Info --}}
-        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
-            <h2 class="font-bold text-[#0f172a] text-base border-b border-gray-100 pb-3">1. Akun Petani & Informasi Usaha</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
+        {{-- Section 1: Akun & Domain Subdomain --}}
+        <div class="fp-card">
+            <div class="fp-card-header">
+                <div class="fp-card-step">1</div>
                 <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="farmer_id">
-                        Pilih Petani <span class="text-red-500">*</span>
+                    <h2 class="fp-card-title">Akun Petani & Subdomain Website</h2>
+                    <p class="fp-card-subtitle">Pilih petani pemilik usaha dan tentukan alamat subdomain website publiknya.</p>
+                </div>
+            </div>
+
+            <div class="fp-grid-2">
+                {{-- Pilih Petani --}}
+                <div class="fp-field">
+                    <label class="fp-label" for="farmer_id">
+                        Pilih Akun Petani <span class="fp-required">*</span>
                     </label>
-                    <select name="farmer_id" id="farmer_id" required
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
+                    <select name="farmer_id" id="farmer_id" class="admin-select" required>
                         <option value="">-- Pilih Akun Petani --</option>
                         @foreach ($farmers as $farmer)
                             <option value="{{ $farmer->id }}" {{ old('farmer_id', $selectedFarmerId) == $farmer->id ? 'selected' : '' }}>
-                                {{ $farmer->name }} ({{ $farmer->email }} | {{ $farmer->phone }})
+                                {{ $farmer->name }} &mdash; {{ $farmer->email }} ({{ $farmer->phone ?? 'Tanpa No HP' }})
                             </option>
                         @endforeach
                     </select>
+                    <p class="fp-hint">Hanya menampilkan petani aktif yang belum memiliki website publik.</p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="profile_template_id">
-                        Template Website <span class="text-red-500">*</span>
+                {{-- Template Pilihan --}}
+                <div class="fp-field">
+                    <label class="fp-label" for="profile_template_id">
+                        Template Website <span class="fp-required">*</span>
                     </label>
-                    <select name="profile_template_id" id="profile_template_id" required
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
+                    <select name="profile_template_id" id="profile_template_id" class="admin-select" required>
                         @foreach ($templates as $tpl)
                             <option value="{{ $tpl->id }}" {{ old('profile_template_id') == $tpl->id ? 'selected' : '' }}>
-                                {{ $tpl->name }}
+                                {{ $tpl->name }} &mdash; {{ Str::limit($tpl->description, 50) }}
                             </option>
                         @endforeach
                     </select>
+                    <p class="fp-hint">Semua template resmi dirancang responsif dan konsisten.</p>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="subdomain">
-                        Subdomain Website <span class="text-red-500">*</span>
+                {{-- Subdomain --}}
+                <div class="fp-field fp-full">
+                    <label class="fp-label" for="subdomain">
+                        Alamat Subdomain Website <span class="fp-required">*</span>
                     </label>
-                    <div class="flex items-stretch max-w-md">
+                    <div class="fp-input-subdomain">
                         <input type="text" name="subdomain" id="subdomain"
                             value="{{ old('subdomain') }}"
                             required maxlength="40"
-                            class="flex-1 border border-r-0 border-gray-200 rounded-l-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                            placeholder="pakjoko">
-                        <span class="inline-flex items-center px-4 text-sm text-slate-500 bg-gray-50 border border-l-0 border-gray-200 rounded-r-lg">
-                            .{{ $baseDomain }}
-                        </span>
+                            class="admin-input"
+                            placeholder="contoh: pakjoko atau tanimaju">
+                        <span class="fp-subdomain-suffix">.{{ $baseDomain }}</span>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1">3–40 karakter huruf kecil, angka, dan tanda hubung (-).</p>
+                    <p class="fp-hint">Hanya huruf kecil, angka, dan tanda hubung (-). Contoh: <code>pakjoko</code> akan menjadi <code>pakjoko.{{ $baseDomain }}</code>.</p>
                 </div>
+            </div>
+        </div>
 
+        {{-- Section 2: Identitas Usaha Tani --}}
+        <div class="fp-card">
+            <div class="fp-card-header">
+                <div class="fp-card-step">2</div>
                 <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="business_name">
-                        Nama Usaha Tani <span class="text-red-500">*</span>
+                    <h2 class="fp-card-title">Identitas & Profil Usaha Tani</h2>
+                    <p class="fp-card-subtitle">Nama resmi kelompok tani, slogan pemikat, dan narasi pengalaman bertani.</p>
+                </div>
+            </div>
+
+            <div class="fp-grid-2">
+                <div class="fp-field">
+                    <label class="fp-label" for="business_name">
+                        Nama Usaha Tani <span class="fp-required">*</span>
                     </label>
                     <input type="text" name="business_name" id="business_name"
                         value="{{ old('business_name') }}"
                         required maxlength="150"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
+                        class="admin-input"
                         placeholder="Contoh: UD Tani Makmur Jaya">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="headline">
-                        Tagline / Slogan
+                <div class="fp-field">
+                    <label class="fp-label" for="headline">
+                        Tagline / Slogan Usaha
                     </label>
                     <input type="text" name="headline" id="headline"
                         value="{{ old('headline') }}"
                         maxlength="255"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="Contoh: Beras Organik Berkualitas Premium">
+                        class="admin-input"
+                        placeholder="Contoh: Produsen Beras Organik Kualitas Premium">
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="description">
-                        Deskripsi Profil Usaha
+                <div class="fp-field fp-full">
+                    <label class="fp-label" for="description">
+                        Deskripsi & Narasi Usaha
                     </label>
-                    <textarea name="description" id="description" rows="3" maxlength="3000"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20] resize-none"
-                        placeholder="Ceritakan tentang profil dan keunggulan usaha tani...">{{ old('description') }}</textarea>
+                    <textarea name="description" id="description" rows="4" maxlength="3000"
+                        class="admin-textarea"
+                        placeholder="Ceritakan sejarah usaha, luasan lahan garapan, varietas unggulan padi yang dibudidayakan, dan komitmen mutu kepada calon pembeli...">{{ old('description') }}</textarea>
                 </div>
-
             </div>
         </div>
 
-        {{-- Section 2: Media & Contact --}}
-        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
-            <h2 class="font-bold text-[#0f172a] text-base border-b border-gray-100 pb-3">2. Foto & Kontak Publik</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
+        {{-- Section 3: Media & Foto --}}
+        <div class="fp-card">
+            <div class="fp-card-header">
+                <div class="fp-card-step">3</div>
                 <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1">Logo Usaha</label>
-                    <input type="file" name="logo" accept="image/*"
-                        class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#1b5e20]/10 file:text-[#1b5e20]">
-                    <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG, WebP (maks 2MB).</p>
+                    <h2 class="fp-card-title">Foto Logo & Banner Cover</h2>
+                    <p class="fp-card-subtitle">Unggah identitas visual untuk mempercantik halaman depan website publik.</p>
+                </div>
+            </div>
+
+            <div class="fp-grid-2">
+                <div class="fp-field">
+                    <label class="fp-label">Logo Usaha Tani</label>
+                    <div class="fp-upload-box">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.75" style="margin:0 auto 8px;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="10" r="3"/>
+                            <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
+                        </svg>
+                        <input type="file" name="logo" id="logo" accept="image/png,image/jpeg,image/webp" class="admin-input" style="padding:6px; font-size:12px;">
+                        <p class="fp-hint">Format PNG, JPG, WebP. Maks 2MB. Rasio 1:1 disarankan.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1">Foto Cover / Banner</label>
-                    <input type="file" name="cover_image" accept="image/*"
-                        class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#1b5e20]/10 file:text-[#1b5e20]">
-                    <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG, WebP (maks 4MB).</p>
+                <div class="fp-field">
+                    <label class="fp-label">Foto Cover / Banner Halaman</label>
+                    <div class="fp-upload-box">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.75" style="margin:0 auto 8px;">
+                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                            <circle cx="9" cy="9" r="2"/>
+                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                        </svg>
+                        <input type="file" name="cover_image" id="cover_image" accept="image/png,image/jpeg,image/webp" class="admin-input" style="padding:6px; font-size:12px;">
+                        <p class="fp-hint">Format PNG, JPG, WebP. Maks 4MB. Rasio 16:9 disarankan.</p>
+                    </div>
                 </div>
+            </div>
+        </div>
 
+        {{-- Section 4: Kontak & Lokasi Publik --}}
+        <div class="fp-card">
+            <div class="fp-card-header">
+                <div class="fp-card-step">4</div>
                 <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="whatsapp">WhatsApp</label>
+                    <h2 class="fp-card-title">Kontak & Media Sosial Publik</h2>
+                    <p class="fp-card-subtitle">Saluran komunikasi yang dapat dihubungi langsung oleh calon pembeli hasil panen.</p>
+                </div>
+            </div>
+
+            <div class="fp-grid-2">
+                <div class="fp-field">
+                    <label class="fp-label" for="whatsapp">Nomor WhatsApp Resmi</label>
                     <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="08123456789">
+                        class="admin-input" placeholder="Contoh: 081234567890">
+                    <p class="fp-hint">Akan dihubungkan langsung ke tombol CTA WhatsApp.</p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="public_phone">Telepon</label>
+                <div class="fp-field">
+                    <label class="fp-label" for="public_phone">Nomor Telepon Kantor / Rumah</label>
                     <input type="text" name="public_phone" id="public_phone" value="{{ old('public_phone') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="021-xxxxxxx">
+                        class="admin-input" placeholder="Contoh: 0231-123456">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="public_email">Email Publik</label>
+                <div class="fp-field">
+                    <label class="fp-label" for="public_email">Email Korespondensi Publik</label>
                     <input type="email" name="public_email" id="public_email" value="{{ old('public_email') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="kontak@tani.com">
+                        class="admin-input" placeholder="kontak@tanimaju.id">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="public_address">Lokasi Umum</label>
+                <div class="fp-field">
+                    <label class="fp-label" for="public_address">Lokasi Umum Usaha</label>
                     <input type="text" name="public_address" id="public_address" value="{{ old('public_address') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="Kec. Kandanghaur, Kab. Indramayu">
+                        class="admin-input" placeholder="Contoh: Kec. Kandanghaur, Kab. Indramayu, Jawa Barat">
+                    <p class="fp-hint">Cukup sebutkan kecamatan & kabupaten untuk menjaga privasi.</p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="instagram_url">Link Instagram</label>
+                <div class="fp-field">
+                    <label class="fp-label" for="instagram_url">Tautan Instagram</label>
                     <input type="url" name="instagram_url" id="instagram_url" value="{{ old('instagram_url') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="https://instagram.com/akun">
+                        class="admin-input" placeholder="https://instagram.com/tanimakmur">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="facebook_url">Link Facebook</label>
+                <div class="fp-field">
+                    <label class="fp-label" for="facebook_url">Tautan Facebook Page</label>
                     <input type="url" name="facebook_url" id="facebook_url" value="{{ old('facebook_url') }}"
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]"
-                        placeholder="https://facebook.com/akun">
+                        class="admin-input" placeholder="https://facebook.com/tanimakmur">
                 </div>
-
             </div>
         </div>
 
-        {{-- Section 3: Privacy & Status --}}
-        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
-            <h2 class="font-bold text-[#0f172a] text-base border-b border-gray-100 pb-3">3. Status & Kontrol Privasi</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+        {{-- Section 5: Status & Kontrol Privasi --}}
+        <div class="fp-card">
+            <div class="fp-card-header">
+                <div class="fp-card-step">5</div>
                 <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="website_status">
-                        Status Website <span class="text-red-500">*</span>
+                    <h2 class="fp-card-title">Status Publikasi & Kontrol Privasi</h2>
+                    <p class="fp-card-subtitle">Pilih status tayang website dan tentukan bagian data yang diizinkan tampil di publik.</p>
+                </div>
+            </div>
+
+            <div class="fp-grid-2" style="margin-bottom:24px;">
+                <div class="fp-field">
+                    <label class="fp-label" for="website_status">
+                        Status Website <span class="fp-required">*</span>
                     </label>
-                    <select name="website_status" id="website_status" required
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
+                    <select name="website_status" id="website_status" class="admin-select" required>
                         <option value="published" {{ old('website_status', 'published') === 'published' ? 'selected' : '' }}>Tayang (Published)</option>
-                        <option value="draft" {{ old('website_status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="draft" {{ old('website_status') === 'draft' ? 'selected' : '' }}>Draft (Disimpan Sementara)</option>
                         <option value="review" {{ old('website_status') === 'review' ? 'selected' : '' }}>Menunggu Review</option>
-                        <option value="suspended" {{ old('website_status') === 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
+                        <option value="suspended" {{ old('website_status') === 'suspended' ? 'selected' : '' }}>Ditangguhkan (Suspended)</option>
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-[#0f172a] mb-1" for="verification_status">
-                        Status Verifikasi <span class="text-red-500">*</span>
+                <div class="fp-field">
+                    <label class="fp-label" for="verification_status">
+                        Status Verifikasi P.A.D.I. <span class="fp-required">*</span>
                     </label>
-                    <select name="verification_status" id="verification_status" required
-                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
-                        <option value="verified" {{ old('verification_status', 'verified') === 'verified' ? 'selected' : '' }}>Terverifikasi P.A.D.I.</option>
+                    <select name="verification_status" id="verification_status" class="admin-select" required>
+                        <option value="verified" {{ old('verification_status', 'verified') === 'verified' ? 'selected' : '' }}>Terverifikasi P.A.D.I. (Badge Centang)</option>
                         <option value="unverified" {{ old('verification_status') === 'unverified' ? 'selected' : '' }}>Belum Diverifikasi</option>
                         <option value="rejected" {{ old('verification_status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
                     </select>
@@ -218,34 +278,46 @@
             </div>
 
             <div>
-                <p class="text-sm font-semibold text-[#0f172a] mb-3">Tampilkan Bagian pada Website Publik:</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <label class="fp-label" style="margin-bottom:12px;">Pilihan Visibilitas Bagian Publik:</label>
+                <div class="fp-toggle-grid">
+                    @php
+                        $sectionDescriptions = [
+                            'show_products'       => 'Daftar listing hasil panen aktif di Marketplace',
+                            'show_location'       => 'Nama wilayah kecamatan dan kabupaten',
+                            'show_gallery'        => 'Koleksi foto galeri dokumentasi tani',
+                            'show_contact'        => 'Nomor WhatsApp, telepon, dan email publik',
+                            'show_harvests'       => 'Rekam jejak musim dan varietas panen',
+                            'show_productivity'   => 'Statistik total luas lahan dan produktivitas ton/ha',
+                            'show_fields'         => 'Data umum lahan (tanpa koordinat GPS)',
+                            'show_active_variety' => 'Varietas padi yang sedang dalam masa tanam aktif',
+                        ];
+                    @endphp
+
                     @foreach ($defaults as $secKey => $secDefault)
-                        <label class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors">
+                        <label class="fp-toggle-item">
                             <input type="checkbox" name="section_settings[{{ $secKey }}]" value="1"
-                                {{ old("section_settings.{$secKey}", $secDefault ? '1' : '0') == '1' ? 'checked' : '' }}
-                                class="accent-[#1b5e20] rounded">
-                            <span class="font-medium text-slate-700">{{ ucwords(str_replace('_', ' ', str_replace('show_', '', $secKey))) }}</span>
+                                {{ old("section_settings.{$secKey}", $secDefault ? '1' : '0') == '1' ? 'checked' : '' }}>
+                            <div>
+                                <div class="fp-toggle-label">{{ ucwords(str_replace('_', ' ', str_replace('show_', '', $secKey))) }}</div>
+                                <div class="fp-toggle-desc">{{ $sectionDescriptions[$secKey] ?? 'Visibilitas bagian data ini.' }}</div>
+                            </div>
                         </label>
                     @endforeach
                 </div>
             </div>
         </div>
 
-        {{-- Submit --}}
-        <div class="flex items-center justify-end gap-3">
-            <a href="{{ route('admin.farmer-profiles.index') }}"
-                class="px-5 py-2.5 text-sm font-semibold text-slate-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+        {{-- Form Actions --}}
+        <div class="fp-actions">
+            <a href="{{ route('admin.farmer-profiles.index') }}" class="admin-btn admin-btn--secondary">
                 Batal
             </a>
-            <button type="submit"
-                class="px-6 py-2.5 text-sm font-semibold text-white bg-[#1b5e20] hover:bg-[#145218] rounded-xl transition-all shadow-sm">
-                Simpan & Buat Website
+            <button type="submit" class="admin-btn">
+                Simpan & Buat Website Publik
             </button>
         </div>
 
     </form>
-
 </div>
 
 @endsection

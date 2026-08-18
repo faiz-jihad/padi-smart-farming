@@ -1,37 +1,42 @@
 @extends('layouts.admin')
 
+@section('content')
+<link rel="stylesheet" href="{{ asset('css/admin/farmer-profile.css') }}">
+
 @php
-    $title = 'Profil Publik Petani';
     $statusColors = [
-        'draft'     => 'bg-slate-100 text-slate-600',
-        'review'    => 'bg-amber-100 text-amber-700',
-        'published' => 'bg-green-100 text-green-700',
-        'suspended' => 'bg-red-100 text-red-700',
+        'draft'     => 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;',
+        'review'    => 'background:#fef3c7; color:#92400e; border:1px solid #fde68a;',
+        'published' => 'background:#dcfce7; color:#166534; border:1px solid #86efac;',
+        'suspended' => 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;',
     ];
     $verifyColors = [
-        'unverified' => 'bg-slate-100 text-slate-500',
-        'verified'   => 'bg-green-100 text-green-700',
-        'rejected'   => 'bg-red-100 text-red-700',
+        'unverified' => 'background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;',
+        'verified'   => 'background:#dcfce7; color:#166534; border:1px solid #86efac;',
+        'rejected'   => 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;',
     ];
 @endphp
 
-@section('content')
-
-<div class="space-y-6">
+<div class="fp-page">
+    {{-- Breadcrumb --}}
+    <nav class="fp-breadcrumb" aria-label="Breadcrumb">
+        <span>Admin</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="fp-breadcrumb-current">Profil Publik Petani</span>
+    </nav>
 
     {{-- Header with Create Action --}}
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="fp-header">
         <div>
-            <h1 class="text-2xl font-bold text-[#0f172a]">Profil Publik Petani</h1>
-            <p class="text-slate-500 text-sm mt-1">Monitor, buat, verifikasi, dan kelola website publik seluruh petani.</p>
+            <h1 class="fp-title">Profil Publik Petani</h1>
+            <p class="fp-description">Monitor, verifikasi, buat, dan kelola website publik seluruh kelompok & usaha tani di bawah domain P.A.D.I.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-sm text-slate-500 hidden sm:block">
-                {{ $profiles->total() }} profil terdaftar
-            </span>
-            <a href="{{ route('admin.farmer-profiles.create') }}"
-                class="inline-flex items-center gap-2 bg-[#1b5e20] hover:bg-[#145218] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+
+        <div style="display:flex; align-items:center; gap:12px;">
+            <a href="{{ route('admin.farmer-profiles.create') }}" class="admin-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
@@ -41,145 +46,151 @@
     </div>
 
     {{-- Filters --}}
-    <form method="GET" action="{{ route('admin.farmer-profiles.index') }}" class="flex flex-wrap gap-3">
-        <input type="text" name="search" value="{{ request('search') }}"
-            placeholder="Cari nama usaha / subdomain / petani..."
-            class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20] min-w-[240px]">
-        <select name="status" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
-            <option value="">Semua Status</option>
-            <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-            <option value="review" {{ request('status') === 'review' ? 'selected' : '' }}>Menunggu Review</option>
-            <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Tayang</option>
-            <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
-        </select>
-        <select name="verification" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b5e20]">
-            <option value="">Semua Verifikasi</option>
-            <option value="unverified" {{ request('verification') === 'unverified' ? 'selected' : '' }}>Belum Diverifikasi</option>
-            <option value="verified" {{ request('verification') === 'verified' ? 'selected' : '' }}>Terverifikasi</option>
-            <option value="rejected" {{ request('verification') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-        </select>
-        <button type="submit" class="bg-[#1b5e20] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#145218] transition-all">Filter</button>
-        @if (request()->hasAny(['search', 'status', 'verification']))
-            <a href="{{ route('admin.farmer-profiles.index') }}" class="text-sm text-slate-500 hover:text-[#0f172a] px-4 py-2 border border-gray-200 rounded-lg transition-colors">Reset</a>
-        @endif
-    </form>
+    <div class="fp-card" style="padding:16px 20px; margin-bottom:20px;">
+        <form method="GET" action="{{ route('admin.farmer-profiles.index') }}" style="display:flex; flex-wrap:wrap; align-items:center; gap:12px;">
+            <div style="flex:1; min-width:240px;">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="Cari nama usaha / subdomain / petani..."
+                    class="admin-input">
+            </div>
 
-    {{-- Flash --}}
+            <div style="min-width:160px;">
+                <select name="status" class="admin-select">
+                    <option value="">Semua Status Website</option>
+                    <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Tayang (Published)</option>
+                    <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="review" {{ request('status') === 'review' ? 'selected' : '' }}>Menunggu Review</option>
+                    <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Ditangguhkan</option>
+                </select>
+            </div>
+
+            <div style="min-width:160px;">
+                <select name="verification" class="admin-select">
+                    <option value="">Semua Verifikasi</option>
+                    <option value="verified" {{ request('verification') === 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                    <option value="unverified" {{ request('verification') === 'unverified' ? 'selected' : '' }}>Belum Diverifikasi</option>
+                    <option value="rejected" {{ request('verification') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                </select>
+            </div>
+
+            <button type="submit" class="admin-btn">Filter</button>
+            @if (request()->hasAny(['search', 'status', 'verification']))
+                <a href="{{ route('admin.farmer-profiles.index') }}" class="admin-btn admin-btn--secondary">Reset</a>
+            @endif
+        </form>
+    </div>
+
+    {{-- Flash Status --}}
     @if (session('status'))
-        <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">{{ session('status') }}</div>
+        <div class="admin-alert admin-alert--success" role="alert">
+            {{ session('status') }}
+        </div>
     @endif
 
-    {{-- Table --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    {{-- Table Card --}}
+    <div class="fp-card" style="padding:0; overflow:hidden;">
         @if ($profiles->isEmpty())
-            <div class="text-center py-20 text-slate-400">
-                <svg class="w-12 h-12 mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+            <div style="text-align:center; padding:60px 20px; color:#64748b;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 12px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                    <path d="M2 12h20"/>
                 </svg>
-                <p class="text-sm font-medium">Belum ada profil publik petani.</p>
-                <a href="{{ route('admin.farmer-profiles.create') }}" class="inline-block mt-3 text-xs font-semibold text-[#1b5e20] underline">
-                    + Buat Profil Publik Pertama
+                <p style="font-size:14px; font-weight:700; color:#334155; margin:0 0 4px;">Belum ada profil publik petani</p>
+                <p style="font-size:12px; margin:0 0 16px;">Klik tombol di bawah untuk membuat website company profile pertama petani.</p>
+                <a href="{{ route('admin.farmer-profiles.create') }}" class="admin-btn">
+                    + Tambah Profil Publik Baru
                 </a>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-[#0f172a] text-white">
-                        <tr>
-                            <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide">Petani / Usaha</th>
-                            <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide">Subdomain</th>
-                            <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide">Template</th>
-                            <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide">Status Website</th>
-                            <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide">Verifikasi</th>
-                            <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide">Aksi</th>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                    <thead>
+                        <tr style="background:#0f172a; color:#ffffff;">
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Usaha / Petani</th>
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Subdomain Website</th>
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Template</th>
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:center;">Status</th>
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:center;">Verifikasi</th>
+                            <th style="padding:14px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:right;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50">
+                    <tbody style="border-top:1px solid #e2e8f0;">
                         @foreach ($profiles as $profile)
-                            <tr class="hover:bg-[#1b5e20]/5 transition-colors">
-                                <td class="px-5 py-4">
-                                    <p class="font-semibold text-[#0f172a]">{{ $profile->business_name }}</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">{{ $profile->farmer?->name }} ({{ $profile->farmer?->phone ?? '-' }})</p>
+                            <tr style="border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                                <td style="padding:16px 20px;">
+                                    <div style="font-weight:700; color:#0f172a; font-size:14px;">{{ $profile->business_name }}</div>
+                                    <div style="font-size:12px; color:#64748b; margin-top:2px;">{{ $profile->farmer?->name }} &bull; {{ $profile->farmer?->phone ?? 'Tanpa HP' }}</div>
                                 </td>
-                                <td class="px-5 py-4">
+                                <td style="padding:16px 20px;">
                                     @if ($profile->subdomain)
                                         <a href="{{ $profile->publicUrl() }}" target="_blank"
-                                            class="text-[#1b5e20] text-xs font-medium hover:underline inline-flex items-center gap-1">
+                                            style="color:#166534; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
                                             {{ $profile->subdomain }}.{{ config('domains.base') }}
-                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                                                 <polyline points="15 3 21 3 21 9"/>
                                             </svg>
                                         </a>
                                     @else
-                                        <span class="text-slate-300 text-xs">Belum dipilih</span>
+                                        <span style="color:#94a3b8; font-size:12px;">Belum dipilih</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-4 text-xs text-slate-500">
+                                <td style="padding:16px 20px; color:#334155; font-weight:600;">
                                     {{ $profile->template?->name ?? '—' }}
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $statusColors[$profile->website_status?->value] ?? 'bg-slate-100 text-slate-500' }}">
+                                <td style="padding:16px 20px; text-align:center;">
+                                    <span style="display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; {{ $statusColors[$profile->website_status?->value] ?? '' }}">
                                         {{ $profile->website_status?->label() ?? '-' }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-4 text-center">
-                                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $verifyColors[$profile->verification_status?->value] ?? 'bg-slate-100 text-slate-500' }}">
+                                <td style="padding:16px 20px; text-align:center;">
+                                    <span style="display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; {{ $verifyColors[$profile->verification_status?->value] ?? '' }}">
                                         {{ $profile->verification_status?->label() ?? '-' }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center justify-end gap-2">
-
+                                <td style="padding:16px 20px; text-align:right;">
+                                    <div style="display:inline-flex; align-items:center; gap:6px;">
                                         {{-- Edit Button --}}
-                                        <a href="{{ route('admin.farmer-profiles.edit', $profile) }}"
-                                            class="text-xs font-semibold text-slate-700 hover:text-[#1b5e20] border border-gray-200 hover:border-[#1b5e20] px-2.5 py-1.5 rounded-lg transition-all">
+                                        <a href="{{ route('admin.farmer-profiles.edit', $profile) }}" class="admin-btn admin-btn--secondary admin-btn--sm">
                                             Edit
                                         </a>
 
+                                        {{-- Verify Button --}}
                                         @if ($profile->verification_status?->value === 'unverified')
-                                            <form method="POST" action="{{ route('admin.farmer-profiles.verify', $profile) }}">
+                                            <form method="POST" action="{{ route('admin.farmer-profiles.verify', $profile) }}" style="margin:0;">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-green-700 hover:text-green-900 border border-green-200 hover:border-green-400 px-2.5 py-1.5 rounded-lg transition-all">
+                                                <button type="submit" class="admin-btn admin-btn--success admin-btn--sm">
                                                     Verifikasi
-                                                </button>
-                                            </form>
-                                            <form method="POST" action="{{ route('admin.farmer-profiles.reject', $profile) }}">
-                                                @csrf
-                                                <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-all"
-                                                    onclick="return confirm('Tolak verifikasi profil ini?')">
-                                                    Tolak
                                                 </button>
                                             </form>
                                         @endif
 
+                                        {{-- Suspend / Restore --}}
                                         @if ($profile->website_status?->value === 'published')
-                                            <form method="POST" action="{{ route('admin.farmer-profiles.suspend', $profile) }}">
+                                            <form method="POST" action="{{ route('admin.farmer-profiles.suspend', $profile) }}" style="margin:0;">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-amber-700 hover:text-amber-900 border border-amber-200 hover:border-amber-400 px-2.5 py-1.5 rounded-lg transition-all"
-                                                    onclick="return confirm('Tangguhkan website petani ini?')">
+                                                <button type="submit" class="admin-btn admin-btn--warning admin-btn--sm" onclick="return confirm('Tangguhkan website ini?')">
                                                     Suspend
                                                 </button>
                                             </form>
                                         @elseif ($profile->website_status?->value === 'suspended')
-                                            <form method="POST" action="{{ route('admin.farmer-profiles.restore', $profile) }}">
+                                            <form method="POST" action="{{ route('admin.farmer-profiles.restore', $profile) }}" style="margin:0;">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-[#1b5e20] hover:text-[#145218] border border-green-200 hover:border-[#1b5e20] px-2.5 py-1.5 rounded-lg transition-all">
+                                                <button type="submit" class="admin-btn admin-btn--success admin-btn--sm">
                                                     Pulihkan
                                                 </button>
                                             </form>
                                         @endif
 
                                         {{-- Delete Button --}}
-                                        <form method="POST" action="{{ route('admin.farmer-profiles.destroy', $profile) }}">
+                                        <form method="POST" action="{{ route('admin.farmer-profiles.destroy', $profile) }}" style="margin:0;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-all"
-                                                onclick="return confirm('Hapus profil website ini secara permanen?')">
+                                            <button type="submit" class="admin-btn admin-btn--danger admin-btn--sm" onclick="return confirm('Hapus profil website ini secara permanen?')">
                                                 Hapus
                                             </button>
                                         </form>
-
                                     </div>
                                 </td>
                             </tr>
@@ -189,13 +200,11 @@
             </div>
 
             @if ($profiles->hasPages())
-                <div class="px-5 py-4 border-t border-gray-50">
+                <div style="padding:16px 20px; border-top:1px solid #e2e8f0;">
                     {{ $profiles->links() }}
                 </div>
             @endif
         @endif
     </div>
-
 </div>
-
 @endsection
