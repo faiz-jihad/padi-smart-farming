@@ -206,10 +206,67 @@ class SoilDetectionService
             ];
         }
 
+        $irrigationSchedule = $this->calculateIrrigationSchedule($moisture);
+
         return [
             'score' => $score,
             'status' => $status,
             'recommendations' => $recommendations,
+            'irrigation_schedule' => $irrigationSchedule,
+        ];
+    }
+
+    /**
+     * Calculate Indonesian PADI Irrigation Schedule based on soil moisture and soil temp
+     *
+     * @return array<string, mixed>
+     */
+    public function calculateIrrigationSchedule(float $moisture, ?float $soilTemp = null): array
+    {
+        if ($moisture < 35.0) {
+            $status = 'urgent';
+            $statusLabel = 'Pengairan Urgen (Sangat Kering)';
+            $recommendedSlot = 'Pagi Hari (06:00 - 08:00 WIB)';
+            $targetDepthCm = '5 - 7 cm';
+            $waterVolumeM3Ha = '60 - 80 m3/ha';
+            $nextSchedule = 'Hari Ini (Segera Mungin)';
+            $action = 'Segera alirkan air irigasi ke lahan padi untuk mencegah kekeringan zona perakaran. Hindari pengairan saat terik matahari siang.';
+        } elseif ($moisture < 45.0) {
+            $status = 'intermittent';
+            $statusLabel = 'Pengairan Berkala (Agak Kering)';
+            $recommendedSlot = 'Sore Hari (16:00 - 18:00 WIB)';
+            $targetDepthCm = '3 - 5 cm';
+            $waterVolumeM3Ha = '40 - 50 m3/ha';
+            $nextSchedule = 'Sore Ini atau Besok Pagi';
+            $action = 'Lakukan pengairan berselang (intermittent irrigation) secara bertahap untuk menjaga kelembaban optimal tanpa menggenangi berlebihan.';
+        } elseif ($moisture <= 80.0) {
+            $status = 'optimal';
+            $statusLabel = 'Kelembaban Lembab Optimal';
+            $recommendedSlot = 'Tunda Pengairan (Monitoring Cukup)';
+            $targetDepthCm = '2 - 3 cm';
+            $waterVolumeM3Ha = '0 - 20 m3/ha';
+            $nextSchedule = '2 Hari Lagi (Jika Tidak Ada Hujan)';
+            $action = 'Kondisi air & kelembaban tanah optimal untuk tanaman padi. Pertahankan ketinggian air 2-3 cm dan periksa drainase secara berkala.';
+        } else {
+            $status = 'drainage';
+            $statusLabel = 'Jenuh / Tergenang Penuh';
+            $recommendedSlot = 'Pembukaan Saluran Drainase (Segera)';
+            $targetDepthCm = 'Drainase / Pengeringan Lahan';
+            $waterVolumeM3Ha = '0 m3/ha (Keluarkan Air)';
+            $nextSchedule = 'Saat Kelembaban Kembali ke 60%';
+            $action = 'Lahan tergenang penuh (>80%). Buka pintu drainase pembuangan air agar terjadi sirkulasi oksigen di akar padi dan mencegah pembusukan batang.';
+        }
+
+        return [
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'moisture_percentage' => $moisture,
+            'soil_temp_celsius' => $soilTemp ?? 26.5,
+            'recommended_time_slot' => $recommendedSlot,
+            'target_water_depth' => $targetDepthCm,
+            'water_volume' => $waterVolumeM3Ha,
+            'next_schedule' => $nextSchedule,
+            'action_recommendation' => $action,
         ];
     }
 }

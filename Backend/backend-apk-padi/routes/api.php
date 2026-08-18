@@ -129,11 +129,13 @@ Route::prefix('v1')->group(function (): void {
             Route::post('city', [WeatherController::class, 'byCity']);
         });
 
-        // Soil Detection AI Service API
+        // Soil Detection AI & Irrigation Schedule API
         Route::prefix('soil-detections')->group(function (): void {
             Route::get('/', [SoilDetectionController::class, 'index']);
             Route::post('/', [SoilDetectionController::class, 'store']);
+            Route::get('fetch-api-data', [SoilDetectionController::class, 'fetchApiData']);
             Route::get('/{soilDetection}', [SoilDetectionController::class, 'show']);
+            Route::get('/{soilDetection}/irrigation-schedule', [SoilDetectionController::class, 'irrigationSchedule']);
         });
 
         // Crop Seasons

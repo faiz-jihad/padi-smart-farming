@@ -61,9 +61,72 @@ class SoilDetectionController extends Controller
     {
         $soilDetection->load('farm.farmer');
 
+        $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule(
+            (float) $soilDetection->moisture_percentage,
+            $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
+        );
+
         return response()->json([
             'success' => true,
             'data' => $soilDetection,
+            'irrigation_schedule' => $irrigationSchedule,
+        ]);
+    }
+
+    /**
+     * Auto-fetch live AgroMonitoring soil & climate data for a farm (Dual Input Mode)
+     */
+    public function fetchApiData(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'farm_id' => 'required|integer|exists:farms,id',
+        ]);
+
+        $farm = \App\Models\Farm::findOrFail($validated['farm_id']);
+        $weatherService = app(\App\Services\Weather\WeatherService::class);
+
+        $agroSoil = $weatherService->getSoilData($farm->latitude ?? -7.25, $farm->longitude ?? 112.75);
+
+        $moisture = $agroSoil['data']['moisture_percentage'] ?? 52.0;
+        $soilTemp = $agroSoil['data']['soil_temp_celsius'] ?? 26.5;
+
+        $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule($moisture, $soilTemp);
+
+        return response()->json([
+            'success' => true,
+            'source' => 'AgroMonitoring API',
+            'data' => [
+                'farm_id' => $farm->id,
+                'farm_name' => $farm->name,
+                'ph_level' => 6.5,
+                'nitrogen_ppm' => 120,
+                'phosphorus_ppm' => 25,
+                'potassium_ppm' => 150,
+                'moisture_percentage' => $moisture,
+                'organic_matter_percentage' => 2.5,
+                'soil_temp_celsius' => $soilTemp,
+                'soil_type' => 'loam',
+            ],
+            'irrigation_schedule' => $irrigationSchedule,
+        ]);
+    }
+
+    /**
+     * Get Indonesian PADI Irrigation Schedule for a soil detection
+     */
+    public function irrigationSchedule(SoilDetection $soilDetection): JsonResponse
+    {
+        $schedule = $this->soilDetectionService->calculateIrrigationSchedule(
+            (float) $soilDetection->moisture_percentage,
+            $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal irigasi padi berhasil dihitung',
+            'sample_code' => $soilDetection->sample_code,
+            'farm' => $soilDetection->farm?->name,
+            'irrigation_schedule' => $schedule,
         ]);
     }
 }

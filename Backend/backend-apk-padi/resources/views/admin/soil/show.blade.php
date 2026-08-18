@@ -200,7 +200,65 @@
         </div>
     </div>
 
-    {{-- Rekomendasi Agronomi --}}
+    {{-- DEDICATED SECTION: JADWAL & REKOMENDASI PENGAIRAN IRIGASI PADI --}}
+    @php
+        $soilService = app(\App\Services\Soil\SoilDetectionService::class);
+        $irrigation = $soilService->calculateIrrigationSchedule(
+            (float) $soilDetection->moisture_percentage,
+            $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
+        );
+        $irrStatusClass = $irrigation['status'] === 'urgent' ? 'status-critical' : ($irrigation['status'] === 'intermittent' ? 'status-warning' : ($irrigation['status'] === 'optimal' ? 'status-optimal' : 'status-fertilizer'));
+    @endphp
+
+    <section class="data-card" style="border: 2px solid #a7f3d0; background: #f0fdf4; margin-bottom: 32px;">
+        <div class="data-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9;">
+            <div>
+                <h2 style="color: #1b5e20; font-size: 20px;">Jadwal & Rekomendasi Pengairan Irigasi Padi</h2>
+                <p style="color: #2e7d32;">Kalkulasi rekomendasi waktu pengairan, kedalaman air, dan volume irigasi sesuai kelembaban tanah</p>
+            </div>
+
+            <span class="soil-status-badge {{ $irrStatusClass }}" style="font-size:13px; padding:6px 14px;">
+                {{ $irrigation['status_label'] }}
+            </span>
+        </div>
+
+        <div style="padding: 28px;">
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #c8e6c9;">
+                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; display: block;">Waktu Pengairan Ideal</span>
+                    <strong style="font-size: 15px; color: #0f172a; display: block; margin-top: 4px;">{{ $irrigation['recommended_time_slot'] }}</strong>
+                    <span style="font-size: 11px; color: #166534;">Meminimalkan penguapan matahari</span>
+                </div>
+
+                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #c8e6c9;">
+                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; display: block;">Target Kedalaman Air</span>
+                    <strong style="font-size: 15px; color: #0f172a; display: block; margin-top: 4px;">{{ $irrigation['target_water_depth'] }}</strong>
+                    <span style="font-size: 11px; color: #166534;">Ketinggian genangan di sawah</span>
+                </div>
+
+                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #c8e6c9;">
+                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; display: block;">Estimasi Volume Air</span>
+                    <strong style="font-size: 15px; color: #0f172a; display: block; margin-top: 4px;">{{ $irrigation['water_volume'] }}</strong>
+                    <span style="font-size: 11px; color: #166534;">Kebutuhan pasokan air per ha</span>
+                </div>
+
+                <div style="background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #c8e6c9;">
+                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; display: block;">Estimasi Irigasi Berikutnya</span>
+                    <strong style="font-size: 15px; color: #0f172a; display: block; margin-top: 4px;">{{ $irrigation['next_schedule'] }}</strong>
+                    <span style="font-size: 11px; color: #166534;">Berdasarkan evaluasi kelembaban</span>
+                </div>
+            </div>
+
+            <div style="background: #ffffff; border-left: 5px solid #1b5e20; padding: 16px 20px; border-radius: 10px; border: 1px solid #c8e6c9; border-left-width: 5px;">
+                <span style="font-weight: 700; font-size: 14px; color: #0f172a; display: block; margin-bottom: 4px;">Petunjuk Tindakan Irigasi:</span>
+                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.6;">
+                    {{ $irrigation['action_recommendation'] }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    {{-- Rekomendasi Agronomi Pemupukan --}}
     <section class="data-card">
         <div class="data-header">
             <div>
