@@ -208,7 +208,7 @@
                     @forelse($detections as $soil)
                         @php
                             $phClass = $soil->ph_level < 5.5 ? 'ph-critical' : ($soil->ph_level > 7.5 ? 'ph-warning' : 'ph-optimal');
-                            $scoreColor = $soil->soil_health_score >= 80 ? '#059669' : ($soil->soil_health_score >= 60 ? '#2563eb' : ($soil->soil_health_score >= 45 ? '#d97706' : '#dc2626'));
+                            $scoreColor = '#166534';
                         @endphp
                         <tr>
                             <td class="sample-cell">

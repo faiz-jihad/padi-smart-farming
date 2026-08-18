@@ -22,12 +22,21 @@
             <p class="pertanian-description">Pantau data lahan pertanian, titik polygon geospatial lokasi, dan sistem irigasi secara real-time.</p>
         </div>
 
-        <button type="button" class="btn-add-land" onclick="openCreateFarmModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span>Tambah Lahan</span>
-        </button>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ route('admin.knowledge.index') }}" class="btn-add-land" style="background:#e8f5e9; color:#1b5e20; border-color:#81c784;">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span>Pusat Pengetahuan Pertanian</span>
+            </a>
+
+            <button type="button" class="btn-add-land" onclick="openCreateFarmModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <span>Tambah Lahan</span>
+            </button>
+        </div>
     </div>
 
     {{-- Status Alerts --}}
@@ -107,6 +116,114 @@
             </div>
         </div>
     </div>
+
+    {{-- INTERACTIVE PLANTING TIME ADVISOR CALCULATOR --}}
+    <section class="data-card" style="border: 2px solid #a7f3d0; background: #f0fdf4; margin-bottom: 28px;">
+        <div class="data-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9;">
+            <div>
+                <h2 style="color: #1b5e20; font-size: 18px;">Kalkulator & Rekomendasi Waktu Tanam Ideal</h2>
+                <p style="color: #2e7d32;">Hitung jendela waktu tanam terbaik, estimasi tanggal panen, dan 4 fase siklus pertumbuhan padi berdasarkan BMKG</p>
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; align-items:end; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="advisor_farm_id">Pilih Lahan Pertanian</label>
+                    <select id="advisor_farm_id" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;">
+                        @foreach($farms as $f)
+                            <option value="{{ $f->id }}">{{ $f->name }} ({{ $f->area_ha }} Ha)</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="advisor_planned_date">Rencana Tanggal Tanam</label>
+                    <input type="date" id="advisor_planned_date" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;" value="{{ date('Y-m-d', strtotime('+7 days')) }}">
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="advisor_variety_id">Varietas Padi</label>
+                    <select id="advisor_variety_id" style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;">
+                        <option value="1">Inpari 32 HDB (115 Hari)</option>
+                        <option value="2">Ciherang (116 Hari)</option>
+                        <option value="3">Inpari 42 Agritan GSR (112 Hari)</option>
+                        <option value="4">Mekongga (118 Hari)</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn-filter-submit" style="background:#1b5e20; border-color:#1b5e20; padding:10px 20px;" onclick="calculatePlantingRecommendation()">
+                    Hitung Saran Waktu Tanam
+                </button>
+            </div>
+
+            {{-- Recommendation Result Display --}}
+            <div id="advisor-result-box" style="background:#ffffff; border:1px solid #c8e6c9; border-radius:12px; padding:20px; display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid #f1f5f9; padding-bottom:16px; margin-bottom:16px;">
+                    <div>
+                        <span style="font-size:11px; font-weight:700; color:#166534; text-transform:uppercase;">Rekomendasi Jendela Waktu Tanam Ideal</span>
+                        <h3 id="res-window-label" style="font-size:22px; font-weight:800; color:#0f172a; margin:4px 0 0 0;">01 Nov - 15 Nov 2026</h3>
+                    </div>
+
+                    <div style="text-align:right;">
+                        <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Estimasi Tanggal Panen Presisi</span>
+                        <strong id="res-harvest-date" style="font-size:18px; color:#1b5e20; display:block; margin-top:2px;">10 Maret 2027</strong>
+                    </div>
+                </div>
+
+                <h4 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">Milestone Siklus Pertumbuhan & Tindakan Lapangan:</h4>
+                <div id="res-milestones-grid" style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:12px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function calculatePlantingRecommendation() {
+            const farmId = document.getElementById('advisor_farm_id').value;
+            const plannedDate = document.getElementById('advisor_planned_date').value;
+            const varietyId = document.getElementById('advisor_variety_id').value;
+
+            fetch('/api/v1/planting-calendar/recommend-planting-window', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    farm_id: farmId,
+                    planned_date: plannedDate,
+                    variety_id: varietyId
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById('res-window-label').innerText = d.recommended_planting_window.label;
+                    document.getElementById('res-harvest-date').innerText = d.estimated_harvest_date;
+
+                    const grid = document.getElementById('res-milestones-grid');
+                    grid.innerHTML = '';
+
+                    d.milestones.forEach(m => {
+                        grid.innerHTML += `
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:10px;">
+                                <span style="font-size:10px; font-weight:700; color:#166534; text-transform:uppercase;">${m.day_range}</span>
+                                <strong style="font-size:13px; color:#0f172a; display:block; margin:2px 0;">${m.phase}</strong>
+                                <span style="font-size:11px; color:#64748b; display:block; margin-bottom:6px;">${m.start_date} - ${m.end_date}</span>
+                                <p style="font-size:11px; color:#334155; margin:0; line-height:1.4;">${m.action}</p>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('advisor-result-box').style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        }
+    </script>
 
     {{-- Lahan Terdaftar Card --}}
     <section class="data-card">

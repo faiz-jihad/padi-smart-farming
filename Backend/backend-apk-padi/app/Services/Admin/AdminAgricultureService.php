@@ -36,6 +36,11 @@ class AdminAgricultureService
                 $query->where('irrigation_type', $irrigation);
             });
 
+        $cropSeasonService = app(\App\Services\Agriculture\CropSeasonService::class);
+        if (CropSeason::query()->count() === 0) {
+            $cropSeasonService->autoGenerateAllFarmsCropSeasons();
+        }
+
         return [
             'title' => 'Pertanian',
             'farms' => $farmsQuery->latest('id')->paginate(12),
@@ -68,6 +73,7 @@ class AdminAgricultureService
         }
 
         $farm = Farm::query()->create($data);
+        app(\App\Services\Agriculture\CropSeasonService::class)->autoGenerateCropSeasonsForFarm($farm);
 
         $audit->write('admin_farm_created', $farm, null, $farm->toArray(), $request);
         $notifications->notifyAdmins('Lahan dibuat', "Lahan {$farm->name} ditambahkan ke sistem.");

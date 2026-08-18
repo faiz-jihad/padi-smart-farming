@@ -330,7 +330,15 @@
                     @forelse($latestSnapshots as $snapshot)
                         @php
                             $isExpired = $snapshot->expires_at ? $snapshot->expires_at->isPast() : true;
-                            $expiresIn = $snapshot->expires_at ? $snapshot->expires_at->diffInMinutes(now()) : 0;
+                            $expiresInMinutes = $snapshot->expires_at ? (int) round(abs($snapshot->expires_at->diffInMinutes(now()))) : 0;
+                            $providerMap = [
+                                'system_sensor' => 'Sensor IoT PADI',
+                                'openweathermap' => 'OpenWeatherMap',
+                                'agromonitoring' => 'AgroMonitoring',
+                                'bmkg' => 'BMKG Official',
+                                'bmkg_official' => 'BMKG Official',
+                            ];
+                            $displayProvider = $providerMap[strtolower($snapshot->provider)] ?? ucwords(str_replace('_', ' ', $snapshot->provider));
                         @endphp
                         <tr>
                             <td>
@@ -338,7 +346,7 @@
                                 <small style="color:#64748b;">Pemilik: {{ $snapshot->farm?->farmer?->name ?? '-' }}</small>
                             </td>
                             <td>
-                                <span class="provider-badge">{{ ucfirst($snapshot->provider) }}</span>
+                                <span class="provider-badge">{{ $displayProvider }}</span>
                             </td>
                             <td>
                                 <span style="font-size:13px; color:#334155;">{{ $snapshot->observed_at ? $snapshot->observed_at->format('d M Y H:i') : '-' }}</span>
@@ -347,7 +355,7 @@
                                 @if($isExpired)
                                     <span style="font-size:12px; color:#dc2626; font-weight:600;">Kadaluarsa</span>
                                 @else
-                                    <span style="font-size:13px; color:#059669; font-weight:600;">{{ abs($expiresIn) }} menit lagi</span>
+                                    <span style="font-size:13px; color:#059669; font-weight:600;">{{ $expiresInMinutes }} menit lagi</span>
                                 @endif
                             </td>
                             <td>

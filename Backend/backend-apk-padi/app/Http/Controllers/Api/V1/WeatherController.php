@@ -165,4 +165,39 @@ class WeatherController extends Controller
             'data' => $parsed,
         ]);
     }
+
+    /**
+     * Get official BMKG 3-7 days weather forecast for Indonesia
+     */
+    public function bmkgForecast(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'farm_id' => 'nullable|integer|exists:farms,id',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'days' => 'nullable|integer|min:1|max:7',
+        ]);
+
+        $lat = -7.250000;
+        $lng = 112.750000;
+
+        if (! empty($validated['farm_id'])) {
+            $farm = Farm::findOrFail($validated['farm_id']);
+            $lat = (float) $farm->latitude;
+            $lng = (float) $farm->longitude;
+        } elseif (isset($validated['latitude']) && isset($validated['longitude'])) {
+            $lat = (float) $validated['latitude'];
+            $lng = (float) $validated['longitude'];
+        }
+
+        $days = $validated['days'] ?? 7;
+        $bmkgData = $this->weatherService->getBMKGForecast($lat, $lng, $days);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Prakiraan cuaca resmi BMKG RI berhasil diambil',
+            'provider' => 'BMKG (Badan Meteorologi, Klimatologi, dan Geofisika RI)',
+            'data' => $bmkgData['data'],
+        ]);
+    }
 }

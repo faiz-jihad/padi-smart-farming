@@ -100,7 +100,7 @@ class WeatherController extends Controller
     public function updateSettings(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'weather_provider' => 'required|string|in:openweathermap,agromonitoring',
+            'weather_provider' => 'required|string|in:openweathermap,agromonitoring,bmkg',
             'weather_api_key' => 'nullable|string|min:10',
         ]);
 

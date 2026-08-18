@@ -505,13 +505,13 @@ tr:hover td {
 }
 
 .status-optimal {
-    background: #ecfdf5;
-    color: #059669;
+    background: #e8f5e9;
+    color: #1b5e20;
 }
 
 .status-fertilizer {
-    background: #eff6ff;
-    color: #2563eb;
+    background: #e8f5e9;
+    color: #1b5e20;
 }
 
 .status-warning {

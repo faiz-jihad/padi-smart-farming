@@ -99,6 +99,9 @@
                         <option value="agromonitoring" @selected($provider === 'agromonitoring')>
                             AgroMonitoring (Cuaca Pertanian & Sensor Kelembaban Tanah)
                         </option>
+                        <option value="bmkg" @selected($provider === 'bmkg')>
+                            BMKG Official Indonesia (Prakiraan Cuaca Resmi BMKG RI)
+                        </option>
                     </select>
                     <p style="font-size:12px; color:#64748b; margin:6px 0 0 0;">Provider yang aktif menentukan sumber data observasi cuaca dan sensor tanah.</p>
                 </div>

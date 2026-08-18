@@ -38,5 +38,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->assignRole(UserRole::Admin->value);
+
+        $this->call(CropSeasonSeeder::class);
     }
 }

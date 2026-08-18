@@ -55,20 +55,24 @@ class SoilDetectionController extends Controller
     }
 
     /**
-     * Get detail of a specific soil detection
+     * Get detail of a specific soil detection (by sample_code or id)
      */
-    public function show(SoilDetection $soilDetection): JsonResponse
+    public function show(string $soilDetection): JsonResponse
     {
-        $soilDetection->load('farm.farmer');
+        $model = SoilDetection::where('sample_code', $soilDetection)
+            ->orWhere('id', $soilDetection)
+            ->firstOrFail();
+
+        $model->load('farm.farmer');
 
         $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule(
-            (float) $soilDetection->moisture_percentage,
-            $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
+            (float) $model->moisture_percentage,
+            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null
         );
 
         return response()->json([
             'success' => true,
-            'data' => $soilDetection,
+            'data' => $model,
             'irrigation_schedule' => $irrigationSchedule,
         ]);
     }
@@ -114,18 +118,22 @@ class SoilDetectionController extends Controller
     /**
      * Get Indonesian PADI Irrigation Schedule for a soil detection
      */
-    public function irrigationSchedule(SoilDetection $soilDetection): JsonResponse
+    public function irrigationSchedule(string $soilDetection): JsonResponse
     {
+        $model = SoilDetection::where('sample_code', $soilDetection)
+            ->orWhere('id', $soilDetection)
+            ->firstOrFail();
+
         $schedule = $this->soilDetectionService->calculateIrrigationSchedule(
-            (float) $soilDetection->moisture_percentage,
-            $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
+            (float) $model->moisture_percentage,
+            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null
         );
 
         return response()->json([
             'success' => true,
             'message' => 'Jadwal irigasi padi berhasil dihitung',
-            'sample_code' => $soilDetection->sample_code,
-            'farm' => $soilDetection->farm?->name,
+            'sample_code' => $model->sample_code,
+            'farm' => $model->farm?->name,
             'irrigation_schedule' => $schedule,
         ]);
     }

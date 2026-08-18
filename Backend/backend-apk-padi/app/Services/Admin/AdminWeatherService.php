@@ -97,10 +97,12 @@ class AdminWeatherService
         }
 
         $snapshots = $query->latest('observed_at')->paginate(20);
+        $selectedFarm = $farmId ? Farm::with('farmer')->find($farmId) : null;
 
         return [
             'snapshots' => $snapshots,
-            'farms' => Farm::all(['id', 'name']),
+            'selectedFarm' => $selectedFarm,
+            'farms' => Farm::with('farmer')->orderBy('name')->get(),
             'filters' => [
                 'farm_id' => $farmId,
                 'from_date' => $fromDate,

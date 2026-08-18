@@ -50,7 +50,11 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/early-warning', [EarlyWarningController::class, 'store'])->name('early-warning.store');
 
         Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
+        Route::get('/marketplace/create', [MarketplaceController::class, 'create'])->name('marketplace.create');
+        Route::post('/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
+        Route::get('/marketplace/{listing}/edit', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
         Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
+        Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
         Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
 
         Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
@@ -80,4 +84,13 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/soil/export', [SoilController::class, 'export'])->name('soil.export');
         Route::get('/soil/{soil}', [SoilController::class, 'show'])->name('soil.show');
         Route::delete('/soil/{soil}', [SoilController::class, 'destroy'])->name('soil.destroy');
+
+        // Knowledge Base Routes
+        Route::get('/knowledge', [\App\Http\Controllers\Admin\KnowledgeController::class, 'index'])->name('knowledge.index');
+        Route::get('/knowledge/create', [\App\Http\Controllers\Admin\KnowledgeController::class, 'create'])->name('knowledge.create');
+        Route::post('/knowledge', [\App\Http\Controllers\Admin\KnowledgeController::class, 'store'])->name('knowledge.store');
+        Route::get('/knowledge/{slug}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'show'])->name('knowledge.show');
+        Route::get('/knowledge/{article}/edit', [\App\Http\Controllers\Admin\KnowledgeController::class, 'edit'])->name('knowledge.edit');
+        Route::patch('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'update'])->name('knowledge.update');
+        Route::delete('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'destroy'])->name('knowledge.destroy');
     });

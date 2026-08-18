@@ -57,12 +57,12 @@
         </div>
     @endif
 
-    {{-- Overall Health Header Card --}}
-    <section style="background: linear-gradient(135deg, #1b5e20 0%, #0f172a 100%); color: #ffffff; border-radius: 20px; padding: 28px 32px; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px;">
+    {{-- Overall Health Header Card (SOLID GREEN, WHITE, BLACK ONLY) --}}
+    <section style="background: #1b5e20; color: #ffffff; border-radius: 16px; padding: 24px 28px; margin-bottom: 28px; border: 1px solid #14532d;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
             <div>
-                <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #a7f3d0;">Hasil Evaluasi Kualitas Tanah</span>
-                <h2 style="font-size: 24px; margin: 4px 0 8px 0; font-weight: 800; color: #ffffff;">
+                <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #a7f3d0;">HASIL EVALUASI KUALITAS TANAH</span>
+                <h2 style="font-size: 22px; margin: 4px 0 6px 0; font-weight: 800; color: #ffffff;">
                     @if ($soilDetection->soil_status === 'optimal')
                         Kondisi Tanah Subur & Optimal Untuk Tanaman Padi
                     @elseif ($soilDetection->soil_status === 'needs_fertilizer')
@@ -73,34 +73,34 @@
                         Kondisi Tanah Kritis — Membutuhkan Penanganan Segera
                     @endif
                 </h2>
-                <p style="margin: 0; color: #cbd5e1; font-size: 14px;">
-                    Jenis Tanah: <strong style="color: #60a5fa;">{{ ucfirst($soilDetection->soil_type) }}</strong> | 
-                    Suhu Tanah: <strong>{{ $soilDetection->soil_temp_celsius ? number_format($soilDetection->soil_temp_celsius, 1) . ' °C' : 'Data AgroMonitoring' }}</strong> | 
-                    Dianalisis Oleh: <strong>{{ $soilDetection->creator?->name ?? 'Sistem AI P.A.D.I' }}</strong>
+                <p style="margin: 0; color: #e2e8f0; font-size: 13px;">
+                    Jenis Tanah: <strong style="color: #ffffff;">{{ ucfirst($soilDetection->soil_type) }}</strong> | 
+                    Suhu Tanah: <strong style="color: #ffffff;">{{ $soilDetection->soil_temp_celsius ? number_format($soilDetection->soil_temp_celsius, 1) . ' °C' : 'Data AgroMonitoring' }}</strong> | 
+                    Dianalisis Oleh: <strong style="color: #ffffff;">{{ $soilDetection->creator?->name ?? 'Sistem AI P.A.D.I' }}</strong>
                 </p>
             </div>
 
-            <div style="background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px); padding: 16px 28px; border-radius: 16px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <span style="display: block; font-size: 11px; color: #a7f3d0; text-transform: uppercase; font-weight:700; letter-spacing:0.05em;">Skor Kesehatan Tanah</span>
-                <span style="font-size: 38px; font-weight: 800; color: {{ $soilDetection->soil_health_score >= 80 ? '#4ade80' : ($soilDetection->soil_health_score >= 60 ? '#60a5fa' : ($soilDetection->soil_health_score >= 45 ? '#fbbf24' : '#f87171')) }}; line-height: 1;">
-                    {{ $soilDetection->soil_health_score }}<small style="font-size: 18px; color: #94a3b8;">/100</small>
+            <div style="background: #ffffff; padding: 14px 24px; border-radius: 12px; text-align: center; border: 1px solid #166534;">
+                <span style="display: block; font-size: 11px; color: #1b5e20; text-transform: uppercase; font-weight:800;">Skor Kesehatan Tanah</span>
+                <span style="font-size: 36px; font-weight: 800; color: #1b5e20; line-height: 1;">
+                    {{ $soilDetection->soil_health_score }}<small style="font-size: 16px; color: #64748b;">/100</small>
                 </span>
             </div>
         </div>
     </section>
 
-    {{-- Parameter Metric Cards Grid --}}
+    {{-- Parameter Metric Cards Grid (HIJAU, PUTIH, HITAM ONLY) --}}
     <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 32px;">
         {{-- pH Level --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Derajat Keasaman (pH)</span>
-                <span class="ph-badge {{ $soilDetection->ph_level < 5.5 ? 'ph-critical' : ($soilDetection->ph_level > 7.5 ? 'ph-warning' : 'ph-optimal') }}">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Derajat Keasaman (pH)</span>
+                <span class="ph-badge ph-optimal" style="background:#e8f5e9; color:#1b5e20; font-weight:800;">
                     {{ number_format($soilDetection->ph_level, 1) }}
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, max(10, ($soilDetection->ph_level / 14) * 100)) }}%; background: {{ $soilDetection->ph_level < 5.5 ? '#dc2626' : ($soilDetection->ph_level > 7.5 ? '#d97706' : '#059669') }}; height:100%;"></div>
+                <div style="width: {{ min(100, max(10, ($soilDetection->ph_level / 14) * 100)) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Asam (&lt; 5.5)</span>
@@ -112,13 +112,13 @@
         {{-- Nitrogen (N) --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Nitrogen (N)</span>
-                <span style="font-size:16px; font-weight:800; color: {{ $soilDetection->nitrogen_ppm < 100 ? '#d97706' : '#059669' }};">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Nitrogen (N)</span>
+                <span style="font-size:16px; font-weight:800; color: #166534;">
                     {{ number_format($soilDetection->nitrogen_ppm, 0) }} <small style="font-size:12px; color:#64748b;">ppm</small>
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, ($soilDetection->nitrogen_ppm / 250) * 100) }}%; background: #2563eb; height:100%;"></div>
+                <div style="width: {{ min(100, ($soilDetection->nitrogen_ppm / 250) * 100) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Rendah (&lt;100)</span>
@@ -130,13 +130,13 @@
         {{-- Fosfor (P) --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Fosfor (P)</span>
-                <span style="font-size:16px; font-weight:800; color: {{ $soilDetection->phosphorus_ppm < 15 ? '#d97706' : '#059669' }};">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Fosfor (P)</span>
+                <span style="font-size:16px; font-weight:800; color: #166534;">
                     {{ number_format($soilDetection->phosphorus_ppm, 0) }} <small style="font-size:12px; color:#64748b;">ppm</small>
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, ($soilDetection->phosphorus_ppm / 50) * 100) }}%; background: #059669; height:100%;"></div>
+                <div style="width: {{ min(100, ($soilDetection->phosphorus_ppm / 50) * 100) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Rendah (&lt;15)</span>
@@ -148,13 +148,13 @@
         {{-- Kalium (K) --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Kalium (K)</span>
-                <span style="font-size:16px; font-weight:800; color: {{ $soilDetection->potassium_ppm < 120 ? '#d97706' : '#059669' }};">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Kalium (K)</span>
+                <span style="font-size:16px; font-weight:800; color: #166534;">
                     {{ number_format($soilDetection->potassium_ppm, 0) }} <small style="font-size:12px; color:#64748b;">ppm</small>
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, ($soilDetection->potassium_ppm / 300) * 100) }}%; background: #9333ea; height:100%;"></div>
+                <div style="width: {{ min(100, ($soilDetection->potassium_ppm / 300) * 100) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Rendah (&lt;120)</span>
@@ -166,13 +166,13 @@
         {{-- Kelembaban Tanah --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Kelembaban Tanah</span>
-                <span style="font-size:16px; font-weight:800; color: #0284c7;">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Kelembaban Tanah</span>
+                <span style="font-size:16px; font-weight:800; color: #166534;">
                     {{ number_format($soilDetection->moisture_percentage, 1) }}%
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, $soilDetection->moisture_percentage) }}%; background: #0284c7; height:100%;"></div>
+                <div style="width: {{ min(100, $soilDetection->moisture_percentage) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Kering (&lt;35%)</span>
@@ -184,13 +184,13 @@
         {{-- Bahan Organik --}}
         <div class="data-card" style="margin-bottom:0; padding:20px 24px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase;">Bahan Organik</span>
-                <span style="font-size:16px; font-weight:800; color: {{ $soilDetection->organic_matter_percentage < 2.0 ? '#d97706' : '#059669' }};">
+                <span style="font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase;">Bahan Organik</span>
+                <span style="font-size:16px; font-weight:800; color: #166534;">
                     {{ number_format($soilDetection->organic_matter_percentage, 1) }}%
                 </span>
             </div>
             <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden; margin-bottom:8px;">
-                <div style="width: {{ min(100, ($soilDetection->organic_matter_percentage / 5) * 100) }}%; background: #854d0e; height:100%;"></div>
+                <div style="width: {{ min(100, ($soilDetection->organic_matter_percentage / 5) * 100) }}%; background: #166534; height:100%;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
                 <span>Rendah (&lt;2.0%)</span>
@@ -207,17 +207,16 @@
             (float) $soilDetection->moisture_percentage,
             $soilDetection->soil_temp_celsius ? (float) $soilDetection->soil_temp_celsius : null
         );
-        $irrStatusClass = $irrigation['status'] === 'urgent' ? 'status-critical' : ($irrigation['status'] === 'intermittent' ? 'status-warning' : ($irrigation['status'] === 'optimal' ? 'status-optimal' : 'status-fertilizer'));
     @endphp
 
-    <section class="data-card" style="border: 2px solid #a7f3d0; background: #f0fdf4; margin-bottom: 32px;">
-        <div class="data-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9;">
+    <section class="data-card" style="border: 2px solid #81c784; background: #ffffff; margin-bottom: 32px;">
+        <div class="data-header" style="background: #f0fdf4; border-bottom: 1px solid #c8e6c9;">
             <div>
                 <h2 style="color: #1b5e20; font-size: 20px;">Jadwal & Rekomendasi Pengairan Irigasi Padi</h2>
-                <p style="color: #2e7d32;">Kalkulasi rekomendasi waktu pengairan, kedalaman air, dan volume irigasi sesuai kelembaban tanah</p>
+                <p style="color: #166534;">Kalkulasi rekomendasi waktu pengairan, kedalaman air, dan volume irigasi sesuai kelembaban tanah</p>
             </div>
 
-            <span class="soil-status-badge {{ $irrStatusClass }}" style="font-size:13px; padding:6px 14px;">
+            <span class="soil-status-badge status-optimal" style="font-size:13px; padding:6px 14px; background:#1b5e20; color:#ffffff;">
                 {{ $irrigation['status_label'] }}
             </span>
         </div>
@@ -282,15 +281,10 @@
 
         <div style="padding: 24px; display:flex; flex-direction:column; gap:14px;">
             @forelse($soilDetection->recommendations_json ?? [] as $rec)
-                @php
-                    $recLevel = $rec['level'] ?? 'info';
-                    $borderColor = $recLevel === 'critical' ? '#dc2626' : ($recLevel === 'warning' ? '#d97706' : '#059669');
-                    $bgColor = $recLevel === 'critical' ? '#fef2f2' : ($recLevel === 'warning' ? '#fffbeb' : '#ecfdf5');
-                @endphp
-                <div style="padding: 16px 20px; border-radius: 12px; border-left: 5px solid {{ $borderColor }}; background: {{ $bgColor }};">
+                <div style="padding: 16px 20px; border-radius: 12px; border-left: 5px solid #1b5e20; background: #f0fdf4; border: 1px solid #c8e6c9; border-left-width: 5px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <strong style="font-size: 15px; color: #0f172a;">{{ $rec['title'] ?? 'Rekomendasi Agronomi' }}</strong>
-                        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.06); color:#334155;">{{ $rec['category'] ?? 'Agronomi' }}</span>
+                        <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #e8f5e9; color:#1b5e20;">{{ $rec['category'] ?? 'Agronomi' }}</span>
                     </div>
                     <p style="margin: 0; color: #334155; font-size: 14px; line-height: 1.5;">
                         {{ $rec['action'] ?? '' }}
@@ -328,15 +322,15 @@
                 </div>
 
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #ffffff; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <span style="font-size: 12px; color: #64748b; display: block;">Suhu Udara</span>
                         <strong style="font-size: 16px; color: #0f172a;">{{ $temp }} °C</strong>
                     </div>
-                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #ffffff; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <span style="font-size: 12px; color: #64748b; display: block;">Kelembaban Udara</span>
                         <strong style="font-size: 16px; color: #0f172a;">{{ $humidity }}%</strong>
                     </div>
-                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #ffffff; padding: 12px 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
                         <span style="font-size: 12px; color: #64748b; display: block;">Kecepatan Angin</span>
                         <strong style="font-size: 16px; color: #0f172a;">{{ $wind }} m/s</strong>
                     </div>

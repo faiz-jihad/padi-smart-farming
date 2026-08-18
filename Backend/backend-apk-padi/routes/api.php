@@ -109,9 +109,14 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('farms/{farm}', [ApiV1FarmController::class, 'destroy']);
         Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm']);
 
-        // Planting Calendars & Recommendations
+        // Planting Calendars & Best Planting Time Advisor API
         Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
         Route::get('districts/{district}/planting-calendar', [PlantingCalendarController::class, 'byDistrict']);
+        Route::post('planting-calendar/recommend-planting-window', [PlantingCalendarController::class, 'recommendPlantingWindow']);
+
+        // Knowledge Base API
+        Route::get('knowledge-base', [\App\Http\Controllers\Api\V1\KnowledgeController::class, 'index']);
+        Route::get('knowledge-base/{slug}', [\App\Http\Controllers\Api\V1\KnowledgeController::class, 'show']);
 
         // Farmer Profiles & Resources
         Route::get('farmers', [FarmerProfileController::class, 'index']);
@@ -121,10 +126,11 @@ Route::prefix('v1')->group(function (): void {
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
         Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
 
-        // Weather Service API
+        // Weather Service API (OpenWeather, AgroMonitoring & BMKG)
         Route::prefix('weather')->group(function (): void {
             Route::post('current', [WeatherController::class, 'currentWeather']);
             Route::post('forecast', [WeatherController::class, 'forecast']);
+            Route::post('bmkg-forecast', [WeatherController::class, 'bmkgForecast']);
             Route::get('history', [WeatherController::class, 'history']);
             Route::post('city', [WeatherController::class, 'byCity']);
         });

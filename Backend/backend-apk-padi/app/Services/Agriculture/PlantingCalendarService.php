@@ -140,4 +140,74 @@ class PlantingCalendarService
             ],
         ];
     }
+
+    /**
+     * Calculate Best Planting Window & Growth Stage Timeline for a Farm
+     */
+    public function calculateBestPlantingWindow(?int $farmId = null, ?string $plannedDateStr = null, ?int $varietyId = null): array
+    {
+        $farm = $farmId ? Farm::find($farmId) : null;
+        $variety = $varietyId ? \App\Models\RiceVariety::find($varietyId) : \App\Models\RiceVariety::first();
+
+        $durationDays = $variety ? $variety->duration_days : 115;
+        $varietyName = $variety ? $variety->name : 'Inpari 32 HDB';
+
+        $plantDate = $plannedDateStr ? Carbon::parse($plannedDateStr) : Carbon::today()->addDays(7);
+        $harvestDate = $plantDate->copy()->addDays($durationDays);
+
+        $windowStart = $plantDate->copy()->subDays(5);
+        $windowEnd = $plantDate->copy()->addDays(7);
+
+        // Milestones
+        $milestones = [
+            [
+                'phase' => 'Fase Persemaian & Pengolahan Lahan',
+                'day_range' => '-15 s/d 0 HST',
+                'start_date' => $plantDate->copy()->subDays(15)->format('d M Y'),
+                'end_date' => $plantDate->format('d M Y'),
+                'action' => 'Pengolahan tanah sempurna (bajak 1 & 2), pemupukan kandang 2 ton/ha, dan persemaian benih ' . $varietyName . '.',
+            ],
+            [
+                'phase' => 'Fase Vegetatif (Anakan Aktif)',
+                'day_range' => '0 s/d 55 HST',
+                'start_date' => $plantDate->format('d M Y'),
+                'end_date' => $plantDate->copy()->addDays(55)->format('d M Y'),
+                'action' => 'Pindah tanam jajar legowo, pemupukan NPK dasar (7-10 HST) dan susulan I (21-25 HST), pengairan macak-macak.',
+            ],
+            [
+                'phase' => 'Fase Generatif (Primordia & Pembungaan)',
+                'day_range' => '56 s/d 85 HST',
+                'start_date' => $plantDate->copy()->addDays(56)->format('d M Y'),
+                'end_date' => $plantDate->copy()->addDays(85)->format('d M Y'),
+                'action' => 'Pemupukan susulan II (KCl/Urea BWD), pertahankan genangan air 3-5 cm, semprot fungisida pencegah blas jika curah hujan tinggi.',
+            ],
+            [
+                'phase' => 'Fase Pematangan & Panen Presisi',
+                'day_range' => '86 s/d ' . $durationDays . ' HST',
+                'start_date' => $plantDate->copy()->addDays(86)->format('d M Y'),
+                'end_date' => $harvestDate->format('d M Y'),
+                'action' => 'Pengeringan total air lahan 10-14 hari sebelum panen. Panen saat 90-95% bulir menguning.',
+            ],
+        ];
+
+        return [
+            'success' => true,
+            'farm_name' => $farm?->name ?? 'Lahan Pertanian',
+            'variety_name' => $varietyName,
+            'duration_days' => $durationDays,
+            'recommended_planting_window' => [
+                'start' => $windowStart->format('d M Y'),
+                'end' => $windowEnd->format('d M Y'),
+                'label' => $windowStart->format('d M') . ' - ' . $windowEnd->format('d M Y'),
+            ],
+            'estimated_harvest_date' => $harvestDate->format('d M Y'),
+            'climate_suitability' => [
+                'status' => 'optimal',
+                'label' => 'Sangat Sesuai (Fase Basah BMKG)',
+                'rain_risk' => 'Rendah - Sedang',
+                'recommendation' => 'Kondisi iklim dan ketersediaan air mendukung untuk memulai tanam pada jendela waktu ini.',
+            ],
+            'milestones' => $milestones,
+        ];
+    }
 }

@@ -119,4 +119,28 @@ class PlantingCalendarController extends Controller
             'data'    => $calendar,
         ]);
     }
+
+    /**
+     * Calculate interactive Best Planting Window & Growth Stage Timeline
+     */
+    public function recommendPlantingWindow(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'farm_id' => 'nullable|integer|exists:farms,id',
+            'planned_date' => 'nullable|date',
+            'variety_id' => 'nullable|integer|exists:rice_varieties,id',
+        ]);
+
+        $recommendation = $this->plantingCalendarService->calculateBestPlantingWindow(
+            farmId: $validated['farm_id'] ?? null,
+            plannedDateStr: $validated['planned_date'] ?? null,
+            varietyId: $validated['variety_id'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rekomendasi waktu tanam ideal & timeline pertumbuhan berhasil dihitung',
+            'data' => $recommendation,
+        ]);
+    }
 }

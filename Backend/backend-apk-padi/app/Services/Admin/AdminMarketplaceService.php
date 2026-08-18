@@ -2,8 +2,10 @@
 
 namespace App\Services\Admin;
 
+use App\Models\Farm;
 use App\Models\MarketListing;
 use App\Models\MarketOffer;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminMarketplaceService
@@ -11,12 +13,34 @@ class AdminMarketplaceService
     /**
      * @return array<string, mixed>
      */
-    public function indexData(): array
+    public function indexData(Request $request): array
     {
+        $status = $request->query('status');
+        $search = $request->query('search');
+
+        $query = MarketListing::query()->with(['farmer', 'farm', 'images']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('commodity', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $listings = $query->latest('id')->paginate(10);
+
         return [
             'title' => 'Marketplace',
-            'listings' => MarketListing::query()->with(['farmer', 'farm', 'offers'])->latest('id')->paginate(10),
+            'listings' => $listings,
             'offers' => MarketOffer::query()->with(['partner', 'listing'])->latest('id')->limit(10)->get(),
+            'filters' => [
+                'status' => $status,
+                'search' => $search,
+            ],
             'stats' => [
                 'listings' => MarketListing::query()->count(),
                 'published' => MarketListing::query()->where('status', 'published')->count(),
@@ -26,9 +50,23 @@ class AdminMarketplaceService
         ];
     }
 
-    /**
-     * @param  array{status: string}  $data
-     */
+    public function createData(): array
+    {
+        return [
+            'farmers' => User::where('role', 'farmer')->orderBy('name')->get(),
+            'farms' => Farm::with('farmer')->orderBy('name')->get(),
+        ];
+    }
+
+    public function storeListing(array $validated): MarketListing
+    {
+        if (($validated['status'] ?? '') === 'published') {
+            $validated['published_at'] = now();
+        }
+
+        return MarketListing::create($validated);
+    }
+
     public function updateListing(
         MarketListing $listing,
         array $data,
@@ -36,9 +74,9 @@ class AdminMarketplaceService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): void {
-        $oldValues = $listing->only(['status', 'published_at']);
+        $oldValues = $listing->only(['status', 'published_at', 'sales_link', 'image_url']);
 
-        if ($data['status'] === 'published' && $listing->published_at === null) {
+        if (isset($data['status']) && $data['status'] === 'published' && $listing->published_at === null) {
             $data['published_at'] = now();
         }
 
@@ -48,9 +86,11 @@ class AdminMarketplaceService
         $notifications->notifyAdmins('Listing marketplace diperbarui', "{$listing->commodity} menjadi {$listing->status}.");
     }
 
-    /**
-     * @param  array{status: string}  $data
-     */
+    public function deleteListing(MarketListing $listing): void
+    {
+        $listing->delete();
+    }
+
     public function updateOffer(
         MarketOffer $offer,
         array $data,

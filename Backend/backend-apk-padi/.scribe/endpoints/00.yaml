@@ -30,7 +30,7 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-18T03:25:42+00:00"}'
+        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-18T04:46:10+00:00"}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
@@ -541,7 +541,7 @@ endpoints:
         name: account_type
         description: ''
         required: true
-        example: farmer
+        example: buyer
         type: string
         enumValues:
           - farmer
@@ -565,7 +565,7 @@ endpoints:
       email: zbailey@example.net
       phone: iyvdljnikhwaykcm
       password: architecto
-      account_type: farmer
+      account_type: buyer
       device_name: 'n'
     fileParameters: []
     responses: []
@@ -1630,7 +1630,7 @@ endpoints:
         name: season
         description: ''
         required: false
-        example: dry
+        example: rainy
         type: string
         enumValues:
           - rainy
@@ -1669,7 +1669,7 @@ endpoints:
       regency_id: 16
       district_id: 16
       village_id: 16
-      season: dry
+      season: rainy
       year: 22
       status: inactive
     fileParameters: []
@@ -1720,6 +1720,165 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       district_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/planting-calendar/recommend-planting-window
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Calculate interactive Best Planting Window & Growth Stage Timeline'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      farm_id:
+        custom: []
+        name: farm_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      planned_date:
+        custom: []
+        name: planned_date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-08-18T04:46:11'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      variety_id:
+        custom: []
+        name: variety_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      farm_id: 16
+      planned_date: '2026-08-18T04:46:11'
+      variety_id: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/knowledge-base
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/knowledge-base/{slug}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      slug:
+        custom: []
+        name: slug
+        description: 'The slug of the knowledge base.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      slug: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -2145,6 +2304,85 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - POST
+    uri: api/v1/weather/bmkg-forecast
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get official BMKG 3-7 days weather forecast for Indonesia'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      farm_id:
+        custom: []
+        name: farm_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      latitude:
+        custom: []
+        name: latitude
+        description: ''
+        required: false
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      longitude:
+        custom: []
+        name: longitude
+        description: ''
+        required: false
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      days:
+        custom: []
+        name: days
+        description: 'Must be at least 1. Must not be greater than 7.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      farm_id: 16
+      latitude: 4326.41688
+      longitude: 4326.41688
+      days: 1
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - GET
     uri: api/v1/weather/history
     metadata:
@@ -2466,7 +2704,7 @@ endpoints:
         name: soil_type
         description: ''
         required: true
-        example: alluvial
+        example: loam
         type: string
         enumValues:
           - alluvial
@@ -2483,7 +2721,7 @@ endpoints:
         name: tested_at
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-18T03:25:44'
+        example: '2026-08-18T04:46:12'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2521,8 +2759,8 @@ endpoints:
       moisture_percentage: 8
       organic_matter_percentage: 1
       soil_temp_celsius: 1
-      soil_type: alluvial
-      tested_at: '2026-08-18T03:25:44'
+      soil_type: loam
+      tested_at: '2026-08-18T04:46:12'
       notes: l
       sync_agromonitoring: false
     fileParameters: []
@@ -2536,25 +2774,29 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/soil-detections/{soilDetection_id}'
+    uri: api/v1/soil-detections/fetch-api-data
     metadata:
       custom: []
       groupName: Endpoints
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get detail of a specific soil detection'
+      title: 'Auto-fetch live AgroMonitoring soil & climate data for a farm (Dual Input Mode)'
       description: ''
       authenticated: false
       deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      soilDetection_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      farm_id:
         custom: []
-        name: soilDetection_id
-        description: 'The ID of the soilDetection.'
+        name: farm_id
+        description: 'Must match an existing stored value.'
         required: true
         example: 16
         type: integer
@@ -2562,8 +2804,108 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+    cleanBodyParameters:
+      farm_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/soil-detections/{soilDetection}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get detail of a specific soil detection (by sample_code or id)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      soilDetection:
+        custom: []
+        name: soilDetection
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
     cleanUrlParameters:
-      soilDetection_id: 16
+      soilDetection: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/soil-detections/{soilDetection}/irrigation-schedule'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Indonesian PADI Irrigation Schedule for a soil detection'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      soilDetection:
+        custom: []
+        name: soilDetection
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      soilDetection: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -2674,7 +3016,7 @@ endpoints:
         name: planned_planting_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T03:25:45'
+        example: '2026-08-18T04:46:12'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2685,7 +3027,7 @@ endpoints:
         name: planting_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T03:25:45'
+        example: '2026-08-18T04:46:12'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2696,7 +3038,7 @@ endpoints:
         name: estimated_harvest_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-18T03:25:45'
+        example: '2026-08-18T04:46:12'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2707,7 +3049,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: planned
+        example: cancelled
         type: string
         enumValues:
           - planned
@@ -2720,10 +3062,10 @@ endpoints:
     cleanBodyParameters:
       farm_id: 16
       variety_id: 16
-      planned_planting_date: '2026-08-18T03:25:45'
-      planting_date: '2026-08-18T03:25:45'
-      estimated_harvest_date: '2026-08-18T03:25:45'
-      status: planned
+      planned_planting_date: '2026-08-18T04:46:12'
+      planting_date: '2026-08-18T04:46:12'
+      estimated_harvest_date: '2026-08-18T04:46:12'
+      status: cancelled
     fileParameters: []
     responses: []
     responseFields: []
