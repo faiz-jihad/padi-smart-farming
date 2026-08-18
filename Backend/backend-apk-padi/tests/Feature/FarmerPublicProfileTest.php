@@ -335,7 +335,18 @@ class FarmerPublicProfileTest extends TestCase
             'id'             => $profile->id,
             'website_status' => ProfileWebsiteStatus::Suspended->value,
         ]);
+
+        // Admin restores
+        $restoreResponse = $this->actingAs($admin)
+            ->post(route('admin.farmer-profiles.restore', $profile));
+
+        $restoreResponse->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('farmer_public_profiles', [
+            'id'             => $profile->id,
+            'website_status' => ProfileWebsiteStatus::Published->value,
+        ]);
     }
+
 
     public function test_admin_can_create_farmer_public_profile_directly(): void
     {
@@ -397,8 +408,10 @@ class FarmerPublicProfileTest extends TestCase
         ]);
 
         // Delete
+        $profile->refresh();
         $deleteResponse = $this->actingAs($admin)
             ->delete(route('admin.farmer-profiles.destroy', $profile));
+
 
         $deleteResponse->assertRedirect(route('admin.farmer-profiles.index'));
         $this->assertDatabaseMissing('farmer_public_profiles', [

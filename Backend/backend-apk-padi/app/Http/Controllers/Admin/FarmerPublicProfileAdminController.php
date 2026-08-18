@@ -129,18 +129,20 @@ class FarmerPublicProfileAdminController extends Controller
         // Uploads
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('farmer-profiles/logos', 'public');
-            unset($data['logo']);
         }
+        unset($data['logo']);
+
         if ($request->hasFile('cover_image')) {
             $data['cover_image_path'] = $request->file('cover_image')->store('farmer-profiles/covers', 'public');
-            unset($data['cover_image']);
         }
+        unset($data['cover_image']);
 
         if ($data['website_status'] === 'published') {
             $data['published_at'] = now();
         }
 
         $profile = FarmerPublicProfile::create($data);
+
 
         return redirect()->route('admin.farmer-profiles.index')
             ->with('status', "Profil publik untuk \"{$profile->business_name}\" ({$profile->subdomain}) berhasil dibuat.");
@@ -211,15 +213,20 @@ class FarmerPublicProfileAdminController extends Controller
                 Storage::disk('public')->delete($farmerProfile->logo_path);
             }
             $data['logo_path'] = $request->file('logo')->store('farmer-profiles/logos', 'public');
-            unset($data['logo']);
+        } else {
+            unset($data['logo_path']);
         }
+        unset($data['logo']);
+
         if ($request->hasFile('cover_image')) {
             if ($farmerProfile->cover_image_path) {
                 Storage::disk('public')->delete($farmerProfile->cover_image_path);
             }
             $data['cover_image_path'] = $request->file('cover_image')->store('farmer-profiles/covers', 'public');
-            unset($data['cover_image']);
+        } else {
+            unset($data['cover_image_path']);
         }
+        unset($data['cover_image']);
 
         if ($data['website_status'] === 'published' && ! $farmerProfile->published_at) {
             $data['published_at'] = now();
@@ -227,25 +234,37 @@ class FarmerPublicProfileAdminController extends Controller
 
         $farmerProfile->update($data);
 
+
         return redirect()->route('admin.farmer-profiles.index')
             ->with('status', "Profil \"{$farmerProfile->business_name}\" berhasil diperbarui.");
     }
 
     public function destroy(FarmerPublicProfile $farmerProfile): RedirectResponse
     {
-        if ($farmerProfile->logo_path) {
-            Storage::disk('public')->delete($farmerProfile->logo_path);
-        }
-        if ($farmerProfile->cover_image_path) {
-            Storage::disk('public')->delete($farmerProfile->cover_image_path);
-        }
-
         $name = $farmerProfile->business_name;
-        $farmerProfile->delete();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($farmerProfile) {
+            foreach ($farmerProfile->gallery as $item) {
+                if ($item->image_path) {
+                    Storage::disk('public')->delete($item->image_path);
+                }
+                $item->delete();
+            }
+
+            if ($farmerProfile->logo_path) {
+                Storage::disk('public')->delete($farmerProfile->logo_path);
+            }
+            if ($farmerProfile->cover_image_path) {
+                Storage::disk('public')->delete($farmerProfile->cover_image_path);
+            }
+
+            $farmerProfile->delete();
+        });
 
         return redirect()->route('admin.farmer-profiles.index')
             ->with('status', "Profil publik \"{$name}\" berhasil dihapus.");
     }
+
 
     // ─── Status Actions ────────────────────────────────────────────────────
 
@@ -278,6 +297,7 @@ class FarmerPublicProfileAdminController extends Controller
     ): RedirectResponse {
         $publisher->restore($farmerProfile);
 
-        return back()->with('status', "Profil \"{$farmerProfile->business_name}\" dipulihkan ke Draft.");
+        return back()->with('status', "Profil \"{$farmerProfile->business_name}\" berhasil dipulihkan dan dipublikasikan kembali.");
     }
 }
+

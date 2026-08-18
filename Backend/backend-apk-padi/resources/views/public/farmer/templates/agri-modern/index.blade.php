@@ -1,423 +1,1232 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ $profile['headline'] ?? $profile['business_name'] }} — Agritech & Smart Farming Profile by P.A.D.I.">
+    <meta name="description"
+        content="{{ $profile['headline'] ?? 'Profil Usaha Pertanian dan Distribusi Beras' }} — {{ $profile['business_name'] }}">
     <meta name="robots" content="{{ $isPreview ? 'noindex, nofollow' : 'index, follow' }}">
-
-    <title>{{ $profile['business_name'] }} {{ $isPreview ? '(Preview Mode)' : '' }} &mdash; P.A.D.I.</title>
+    <title>{{ $profile['business_name'] }} &mdash; Profil Usaha Pertanian</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Font & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         :root {
-            --am-dark: #0f172a;
-            --am-green: #166534;
-            --am-green-light: #dcfce7;
-            --am-green-accent: #22c55e;
-            --am-surface: #ffffff;
-            --am-bg: #f8fafc;
-            --am-border: #e2e8f0;
-            --am-text: #0f172a;
-            --am-muted: #64748b;
+            --primary: #1a5c3a;
+            --primary-dark: #0f3d26;
+            --primary-light: #e8f5ed;
+            --accent: #c8a951;
+            --accent-light: #f5edd7;
+            --dark: #1a1a1a;
+            --gray-800: #2d3748;
+            --gray-600: #4a5568;
+            --gray-400: #a0aec0;
+            --gray-200: #e2e8f0;
+            --gray-100: #f7fafc;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-            background-color: var(--am-bg);
-            color: var(--am-text);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--white);
+            color: var(--gray-800);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .am-navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--am-border);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            background: var(--primary-dark);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            padding: 8px 0;
+            letter-spacing: 0.3px;
+        }
+
+        .topbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .topbar-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topbar-item i {
+            color: var(--accent);
+            font-size: 13px;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background: var(--white);
+            border-bottom: 2px solid var(--gray-100);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
 
-        .am-hero {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--am-border);
-            padding: 64px 24px;
+        .navbar.scrolled {
+            box-shadow: var(--shadow-md);
+            border-bottom-color: var(--gray-200);
         }
 
-        .am-card {
-            background: #ffffff;
-            border: 1px solid var(--am-border);
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            transition: all 0.25s ease;
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 76px;
         }
 
-        .am-card:hover {
-            border-color: #cbd5e1;
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
         }
 
-        .am-btn-primary {
-            display: inline-flex;
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 2px solid var(--primary-light);
+            background: var(--primary);
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            background-color: var(--am-green);
-            color: #ffffff !important;
-            font-weight: 700;
-            font-size: 14px;
-            padding: 11px 22px;
-            border-radius: 10px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border: 1px solid var(--am-green);
+            font-weight: 800;
+            font-size: 22px;
+            color: white;
+            flex-shrink: 0;
         }
 
-        .am-btn-primary:hover {
-            background-color: #14532d;
-            border-color: #14532d;
-            transform: translateY(-1px);
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .am-btn-whatsapp {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background-color: #16a34a;
-            color: #ffffff !important;
-            font-weight: 700;
-            font-size: 14px;
-            padding: 11px 22px;
-            border-radius: 10px;
-            text-decoration: none;
-            transition: all 0.2s ease;
+        .brand-text {
+            display: flex;
+            flex-direction: column;
         }
 
-        .am-btn-whatsapp:hover {
-            background-color: #15803d;
-            transform: translateY(-1px);
+        .brand-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+            line-height: 1.2;
         }
 
-        .am-tag {
+        .brand-tag {
             font-size: 11px;
-            font-weight: 800;
+            color: var(--primary);
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--am-green);
-            margin-bottom: 6px;
+            letter-spacing: 1px;
         }
 
-        .am-title {
-            font-size: 24px;
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+            position: relative;
+            padding: 4px 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 92, 58, 0.3);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, #f8faf9 0%, #edf2ef 100%);
+            padding: 60px 0;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(200, 169, 81, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero .container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(26, 92, 58, 0.1);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(26, 92, 58, 0.2);
+        }
+
+        .hero-badge i {
+            font-size: 12px;
+        }
+
+        .hero-title {
+            font-family: 'Lora', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .hero-description {
+            font-size: 15px;
+            color: var(--gray-600);
+            line-height: 1.8;
+            margin-bottom: 28px;
+            max-width: 540px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 92, 58, 0.25);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: var(--dark);
+        }
+
+        .btn-accent:hover {
+            background: #b8983d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(200, 169, 81, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--gray-800);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .hero-image-wrapper {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border: 4px solid white;
+        }
+
+        .hero-image-wrapper img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+            padding: 30px 20px 15px;
+            color: white;
+        }
+
+        .hero-image-overlay span {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== STATS ===== */
+        .stats-section {
+            background: var(--white);
+            padding: 40px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--gray-100);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .stat-card:hover {
+            background: var(--white);
+            border-color: var(--gray-200);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin: 0 auto 12px;
+        }
+
+        .stat-value {
+            font-size: 28px;
             font-weight: 800;
-            color: var(--am-dark);
-            letter-spacing: -0.02em;
-            margin: 0;
+            color: var(--dark);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section {
+            padding: 60px 0;
+        }
+
+        .section-alt {
+            background: var(--gray-100);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        .section-divider {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 16px auto 0;
+            border-radius: 2px;
+        }
+
+        /* ===== PRODUCT CARDS ===== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .product-image {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            background: var(--gray-100);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 50px;
+            letter-spacing: 0.5px;
+        }
+
+        .product-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .product-price span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-400);
+        }
+
+        .product-desc {
+            font-size: 13px;
+            color: var(--gray-600);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .product-action {
+            display: flex;
+            gap: 10px;
+        }
+
+        .product-action .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrapper {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        th {
+            padding: 16px 18px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        tbody tr:hover {
+            background: var(--gray-100);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .quality-a {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .quality-b {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* ===== GALLERY ===== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            box-shadow: var(--shadow-lg);
+            transform: scale(1.02);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 30px 16px 12px;
+        }
+
+        /* ===== CONTACT ===== */
+        .contact-section {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1a3a2a 100%);
+            color: white;
+            padding: 60px 0;
+        }
+
+        .contact-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
+            padding: 50px;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .contact-title {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .contact-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .contact-actions .btn {
+            padding: 14px 28px;
+            font-size: 15px;
+        }
+
+        .btn-wa {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-wa:hover {
+            background: #1eb955;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 24px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .contact-info i {
+            color: var(--accent);
+            margin-right: 6px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--dark);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 40px 0;
+            font-size: 13px;
+        }
+
+        .footer .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .hero .container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .hero-image-wrapper img {
+                height: 300px;
+            }
+
+            .nav-menu {
+                gap: 16px;
+            }
+
+            .nav-link {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .container {
+                height: auto;
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 26px;
+            }
+
+            .contact-card {
+                padding: 30px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    {{-- Preview Bar --}}
+    {{-- Preview Mode Banner --}}
     @if ($isPreview)
-        <div style="background-color:#166534; color:#ffffff; padding:10px 16px; font-size:13px; font-weight:700; text-align:center; position:sticky; top:0; z-index:999; display:flex; align-items:center; justify-content:center; gap:16px;">
-            <span>Mode Preview Publikasi &mdash; Tampilan resmi profil usaha tani Anda</span>
-            <a href="{{ route('farmer.website.index') }}" style="background:#ffffff; color:#166534; padding:4px 12px; border-radius:6px; font-size:12px; text-decoration:none; font-weight:700;">
-                Kembali ke Panel
+        <div
+            style="background: #c8a951; color: #1a1a1a; padding: 12px 20px; font-size: 13px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+            <span><i class="fas fa-eye"></i>&nbsp; Mode Preview - Ini adalah tampilan publik website usaha Anda</span>
+            <a href="{{ route('farmer.website.index') }}"
+                style="background: #1a1a1a; color: #c8a951; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-weight: 700; transition: all 0.3s;">
+                <i class="fas fa-arrow-left"></i>&nbsp; Kembali ke Dashboard
             </a>
         </div>
     @endif
 
-    {{-- Top Navbar --}}
-    <header class="am-navbar" style="top:{{ $isPreview ? '41px' : '0' }};">
-        <div style="max-width:1200px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; justify-content:space-between;">
-            <a href="#hero" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-                @if ($profile['logo_url'])
-                    <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}" style="width:36px; height:36px; border-radius:10px; object-fit:cover; border:1px solid #cbd5e1;">
-                @else
-                    <div style="width:36px; height:36px; border-radius:10px; background:#166534; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;">
-                        {{ substr($profile['business_name'], 0, 1) }}
-                    </div>
-                @endif
-                <div>
-                    <div style="font-weight:800; font-size:15px; color:#0f172a; letter-spacing:-0.01em;">{{ $profile['business_name'] }}</div>
-                    <div style="font-size:11px; color:#64748b;">Mitra Pertanian Digital</div>
-                </div>
-            </a>
-
-            <nav style="display:flex; align-items:center; gap:20px;">
-                @if ($sections['show_products'] && count($products) > 0)
-                    <a href="#katalog" style="color:#475569; font-size:13px; font-weight:600; text-decoration:none;">Katalog</a>
-                @endif
-                @if ($sections['show_harvests'] && count($harvests) > 0)
-                    <a href="#riwayat" style="color:#475569; font-size:13px; font-weight:600; text-decoration:none;">Rekam Panen</a>
-                @endif
-                @if ($sections['show_gallery'] && count($gallery) > 0)
-                    <a href="#dokumentasi" style="color:#475569; font-size:13px; font-weight:600; text-decoration:none;">Dokumentasi</a>
-                @endif
-                @if ($sections['show_contact'] && $contact)
-                    <a href="#kontak" class="am-btn-primary" style="padding:8px 16px; font-size:12px;">
-                        Hubungi
-                    </a>
-                @endif
-            </nav>
-        </div>
-    </header>
-
-    {{-- Hero Section --}}
-    <section id="hero" class="am-hero">
-        <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr auto; gap:40px; align-items:center;">
-            <div style="max-width:760px;">
-                {{-- Badges --}}
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
-                    @if ($profile['is_verified'])
-                        <span style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; padding:4px 12px; border-radius:9999px; border:1px solid #86efac;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                                <path d="m9 12 2 2 4-4"/>
-                            </svg>
-                            Terverifikasi P.A.D.I.
-                        </span>
-                    @endif
-
-                    @if ($sections['show_location'] && !empty($location['address']))
-                        <span style="display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; color:#475569; font-size:12px; font-weight:600; padding:4px 12px; border-radius:9999px; border:1px solid #e2e8f0;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/>
-                                <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            {{ $location['address'] }}
-                        </span>
-                    @endif
-                </div>
-
-                <h1 style="font-size:clamp(28px, 4.5vw, 44px); font-weight:900; color:#0f172a; letter-spacing:-0.03em; line-height:1.2; margin:0 0 12px 0;">
-                    {{ $profile['business_name'] }}
-                </h1>
-
-                @if ($profile['headline'])
-                    <p style="font-size:17px; font-weight:500; color:#475569; margin:0 0 20px 0;">
-                        {{ $profile['headline'] }}
-                    </p>
-                @endif
-
-                @if ($profile['description'])
-                    <p style="font-size:14px; color:#64748b; line-height:1.8; margin:0 0 28px 0;">
-                        {{ $profile['description'] }}
-                    </p>
-                @endif
-
-                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                    @if ($sections['show_contact'] && !empty($contact['whatsapp']))
-                        <a href="{{ $contact['whatsapp'] }}" target="_blank" class="am-btn-whatsapp">
-                            Hubungi via WhatsApp
-                        </a>
-                    @endif
-                    @if ($sections['show_products'] && count($products) > 0)
-                        <a href="#katalog" class="am-btn-primary" style="background:#0f172a; border-color:#0f172a;">
-                            Lihat Katalog Hasil Panen
-                        </a>
-                    @endif
-                </div>
+    {{-- Top Bar --}}
+    <div class="topbar">
+        <div class="container">
+            <div class="topbar-item">
+                <i class="fas fa-certificate"></i>
+                <span>Profil Usaha Tani Terverifikasi</span>
             </div>
-
-            @if ($profile['cover_image_url'])
-                <div style="width:360px; height:240px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; display:none;" class="md:block">
-                    <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}" style="width:100%; height:100%; object-fit:cover;">
+            @if ($sections['show_location'] && !empty($location['address']))
+                <div class="topbar-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ $location['address'] }}</span>
+                </div>
+            @endif
+            @if ($sections['show_contact'] && !empty($contact['public_phone']))
+                <div class="topbar-item">
+                    <i class="fas fa-headset"></i>
+                    <span>Layanan: {{ $contact['public_phone'] }}</span>
                 </div>
             @endif
         </div>
-    </section>
+    </div>
 
-    {{-- Metrics Strip --}}
-    @if ($sections['show_productivity'] && $statistics)
-        <div style="background:#ffffff; border-bottom:1px solid #e2e8f0; padding:24px;">
-            <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-                <div class="am-card" style="padding:18px; text-align:center;">
-                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:#64748b;">Luas Lahan Terdata</div>
-                    <div style="font-size:28px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['total_area_ha'] }} Ha</div>
+    {{-- Navigation --}}
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="brand">
+                @if ($profile['logo_url'])
+                    <div class="brand-logo">
+                        <img src="{{ $profile['logo_url'] }}" alt="{{ $profile['business_name'] }}">
+                    </div>
+                @else
+                    <div class="brand-logo">
+                        {{ strtoupper(substr($profile['business_name'], 0, 1)) }}
+                    </div>
+                @endif
+                <div class="brand-text">
+                    <span class="brand-name">{{ $profile['business_name'] }}</span>
+                    <span class="brand-tag">Distributor Hasil Tani</span>
                 </div>
+            </a>
 
-                <div class="am-card" style="padding:18px; text-align:center;">
-                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:#64748b;">Musim Budidaya</div>
-                    <div style="font-size:28px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['total_seasons'] }} Musim</div>
-                </div>
+            <ul class="nav-menu">
+                @if ($sections['show_products'] && count($products) > 0)
+                    <li><a href="#produk" class="nav-link">Produk</a></li>
+                @endif
+                @if ($sections['show_harvests'] && count($harvests) > 0)
+                    <li><a href="#panen" class="nav-link">Data Panen</a></li>
+                @endif
+                @if ($sections['show_gallery'] && count($gallery) > 0)
+                    <li><a href="#galeri" class="nav-link">Galeri</a></li>
+                @endif
+                @if ($sections['show_contact'] && $contact)
+                    <li><a href="#kontak" class="nav-cta">Konsultasi Gratis</a></li>
+                @endif
+            </ul>
+        </div>
+    </nav>
 
-                @if ($statistics['latest_productivity'])
-                    <div class="am-card" style="padding:18px; text-align:center;">
-                        <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:#64748b;">Produktivitas Terakhir</div>
-                        <div style="font-size:28px; font-weight:900; color:#166534; margin:4px 0 0;">{{ $statistics['latest_productivity'] }} Ton/Ha</div>
+    {{-- Hero --}}
+    <section class="hero">
+        <div class="container">
+            <div>
+                @if ($profile['is_verified'])
+                    <div class="hero-badge">
+                        <i class="fas fa-shield-alt"></i> Terverifikasi Resmi
                     </div>
                 @endif
 
-                <div class="am-card" style="padding:18px; text-align:center;">
-                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:#64748b;">Status Mitra</div>
-                    <div style="font-size:18px; font-weight:900; color:#166534; margin:10px 0 0;">Aktif & Terverifikasi</div>
+                <h1 class="hero-title">{{ $profile['business_name'] }}</h1>
+
+                @if ($profile['headline'])
+                    <p class="hero-subtitle">{{ $profile['headline'] }}</p>
+                @endif
+
+                <p class="hero-description">
+                    {{ $profile['description'] ?? 'Menyediakan hasil pertanian berkualitas premium langsung dari lahan terpercaya. Fokus pada transparansi proses dan kepuasan pelanggan jangka panjang.' }}
+                </p>
+
+                <div class="hero-actions">
+                    @if ($sections['show_contact'] && !empty($contact['whatsapp']))
+                        <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn btn-wa">
+                            <i class="fab fa-whatsapp"></i> Chat via WhatsApp
+                        </a>
+                    @endif
+                    @if ($sections['show_products'] && count($products) > 0)
+                        <a href="#produk" class="btn btn-outline">
+                            <i class="fas fa-box"></i> Lihat Katalog
+                        </a>
+                    @endif
+                </div>
+            </div>
+
+            <div class="hero-image-wrapper">
+                <img src="{{ $profile['cover_image_url'] }}" alt="{{ $profile['business_name'] }}">
+                <div class="hero-image-overlay">
+                    <span><i class="fas fa-leaf"></i>&nbsp; Hasil Pertanian Berkualitas</span>
                 </div>
             </div>
         </div>
+    </section>
+
+    {{-- Statistics --}}
+    @if ($sections['show_productivity'] && $statistics)
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-ruler-combined"></i></div>
+                        <div class="stat-value">{{ $statistics['total_area_ha'] }} <small style="font-size:14px;">Ha</small>
+                        </div>
+                        <div class="stat-label">Total Luas Lahan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="stat-value">{{ $statistics['total_seasons'] }}</div>
+                        <div class="stat-label">Musim Tanam</div>
+                    </div>
+                    @if ($statistics['latest_productivity'])
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-value">{{ $statistics['latest_productivity'] }} <small
+                                    style="font-size:14px;">t/ha</small></div>
+                            <div class="stat-label">Produktivitas</div>
+                        </div>
+                    @endif
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-truck"></i></div>
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Siap Distribusi</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     @endif
 
-    {{-- Main Container --}}
-    <main style="max-width:1200px; margin:0 auto; padding:48px 24px;" class="space-y-12">
-
+    <main>
         {{-- Products --}}
         @if ($sections['show_products'] && count($products) > 0)
-            <section id="katalog">
-                <div style="margin-bottom:24px; display:flex; align-items:flex-end; justify-content:space-between;">
-                    <div>
-                        <div class="am-tag">Etalase Komoditas</div>
-                        <h2 class="am-title">Hasil Panen Siap Pesan</h2>
+            <section class="section" id="produk">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Katalog</span>
+                        <h2 class="section-title">Hasil Pertanian Unggulan</h2>
+                        <div class="section-divider"></div>
                     </div>
-                    <span style="font-size:12px; font-weight:700; color:#166534; background:#dcfce7; padding:4px 12px; border-radius:9999px;">
-                        {{ count($products) }} Listing
-                    </span>
-                </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px;">
-                    @foreach ($products as $product)
-                        <div class="am-card" style="overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;">
-                            <div>
-                                <div style="height:180px; background:#f1f5f9; position:relative; overflow:hidden;">
-                                    @if ($product['image_url'])
-                                        <img src="{{ $product['image_url'] }}" alt="{{ $product['commodity'] }}" style="width:100%; height:100%; object-fit:cover;">
-                                    @else
-                                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
-                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
-                                            </svg>
-                                        </div>
-                                    @endif
-                                    <div style="position:absolute; top:10px; right:10px; background:#0f172a; color:#ffffff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px;">
-                                        {{ $product['quantity'] }} {{ $product['unit'] }}
-                                    </div>
+                    <div class="products-grid">
+                        @foreach ($products as $product)
+                            <div class="product-card">
+                                <div class="product-image">
+                                    <img src="{{ $product['image_url'] }}" alt="{{ $product['commodity'] }}">
+                                    <div class="product-badge">Stok: {{ $product['quantity'] }} {{ $product['unit'] }}</div>
                                 </div>
-
-                                <div style="padding:18px;">
-                                    <h3 style="font-size:16px; font-weight:800; color:#0f172a; margin:0 0 6px 0;">{{ $product['commodity'] }}</h3>
+                                <div class="product-content">
+                                    <h3 class="product-name">{{ $product['commodity'] }}</h3>
                                     @if ($product['price_per_unit'])
-                                        <div style="font-size:18px; font-weight:900; color:#166534; margin-bottom:8px;">
-                                            Rp{{ number_format($product['price_per_unit'], 0, ',', '.') }}
-                                            <span style="font-size:12px; font-weight:500; color:#64748b;">/ {{ $product['unit'] }}</span>
+                                        <div class="product-price">
+                                            Rp {{ number_format($product['price_per_unit'], 0, ',', '.') }}
+                                            <span>/ {{ $product['unit'] }}</span>
                                         </div>
                                     @endif
                                     @if ($product['description'])
-                                        <p style="font-size:12px; color:#64748b; margin:0; line-height:1.5;">{{ Str::limit($product['description'], 100) }}</p>
+                                        <p class="product-desc">{{ $product['description'] }}</p>
                                     @endif
+                                    <div class="product-action">
+                                        @if ($product['sales_link'])
+                                            <a href="{{ $product['sales_link'] }}" target="_blank" rel="nofollow"
+                                                class="btn btn-primary">
+                                                <i class="fas fa-shopping-cart"></i> Pesan
+                                            </a>
+                                        @elseif ($sections['show_contact'] && !empty($contact['whatsapp']))
+                                            @php
+                                                $waMsg = urlencode("Halo {$profile['business_name']}, saya tertarik dengan produk {$product['commodity']}. Mohon info detail dan ketersediaan.");
+                                                $waUrl = $contact['whatsapp'] . (str_contains($contact['whatsapp'], '?') ? '&' : '?') . "text={$waMsg}";
+                                            @endphp
+                                            <a href="{{ $waUrl }}" target="_blank" class="btn btn-primary">
+                                                <i class="fab fa-whatsapp"></i> Tanya Produk
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-
-                            <div style="padding:0 18px 18px;">
-                                @if ($product['sales_link'])
-                                    <a href="{{ $product['sales_link'] }}" target="_blank" rel="nofollow noopener" class="am-btn-primary" style="width:100%; box-sizing:border-box; padding:9px;">
-                                        Beli / Pesan
-                                    </a>
-                                @elseif ($sections['show_contact'] && !empty($contact['whatsapp']))
-                                    <a href="{{ $contact['whatsapp'] }}" target="_blank" class="am-btn-whatsapp" style="width:100%; box-sizing:border-box; padding:9px;">
-                                        Inquiry via WA
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </section>
         @endif
 
-        {{-- Harvest Log --}}
+        {{-- Harvest Data --}}
         @if ($sections['show_harvests'] && count($harvests) > 0)
-            <section id="riwayat">
-                <div style="margin-bottom:20px;">
-                    <div class="am-tag">Rekam Jejak Produksi</div>
-                    <h2 class="am-title">Riwayat Hasil Panen</h2>
-                </div>
+            <section class="section section-alt" id="panen">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Transparansi</span>
+                        <h2 class="section-title">Rekam Data Panen</h2>
+                        <div class="section-divider"></div>
+                    </div>
 
-                <div class="am-card" style="padding:0; overflow:hidden;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
-                        <thead>
-                            <tr style="background:#0f172a; color:#ffffff;">
-                                <th style="padding:14px 18px; font-size:11px; font-weight:700; text-transform:uppercase;">Periode</th>
-                                <th style="padding:14px 18px; font-size:11px; font-weight:700; text-transform:uppercase;">Lahan</th>
-                                <th style="padding:14px 18px; font-size:11px; font-weight:700; text-transform:uppercase;">Varietas</th>
-                                <th style="padding:14px 18px; font-size:11px; font-weight:700; text-transform:uppercase; text-align:right;">Hasil</th>
-                                <th style="padding:14px 18px; font-size:11px; font-weight:700; text-transform:uppercase; text-align:center;">Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($harvests as $i => $harvest)
-                                <tr style="border-bottom:1px solid #f1f5f9; background:{{ $i % 2 === 0 ? '#ffffff' : '#f8fafc' }};">
-                                    <td style="padding:14px 18px; font-weight:600;">{{ \Carbon\Carbon::parse($harvest['harvest_date'])->translatedFormat('F Y') }}</td>
-                                    <td style="padding:14px 18px; color:#475569;">{{ $harvest['farm_name'] ?? 'Lahan Utama' }}</td>
-                                    <td style="padding:14px 18px; font-weight:700; color:#166534;">{{ $harvest['variety_name'] ?? 'Varietas Unggul' }}</td>
-                                    <td style="padding:14px 18px; text-align:right; font-weight:800;">{{ number_format($harvest['quantity'], 1, ',', '.') }} {{ $harvest['unit'] }}</td>
-                                    <td style="padding:14px 18px; text-align:center;">
-                                        <span style="font-size:11px; font-weight:800; padding:3px 10px; border-radius:9999px; background:#dcfce7; color:#166534;">
-                                            {{ $harvest['quality_grade'] ?? 'Grade A' }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-calendar"></i>&nbsp; Periode</th>
+                                        <th><i class="fas fa-map"></i>&nbsp; Lahan</th>
+                                        <th><i class="fas fa-seedling"></i>&nbsp; Varietas</th>
+                                        <th style="text-align:right;"><i class="fas fa-weight"></i>&nbsp; Volume</th>
+                                        <th style="text-align:center;"><i class="fas fa-award"></i>&nbsp; Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($harvests as $harvest)
+                                        <tr>
+                                            <td style="font-weight:600; color:var(--dark);">
+                                                {{ \Carbon\Carbon::parse($harvest['harvest_date'])->translatedFormat('F Y') }}
+                                            </td>
+                                            <td>{{ $harvest['farm_name'] ?? 'Lahan Utama' }}</td>
+                                            <td style="color:var(--primary); font-weight:600;">
+                                                {{ $harvest['variety_name'] ?? 'Varietas Unggul' }}
+                                            </td>
+                                            <td style="text-align:right; font-weight:700;">
+                                                {{ number_format($harvest['quantity'], 1, ',', '.') }} {{ $harvest['unit'] }}
+                                            </td>
+                                            <td style="text-align:center;">
+                                                @php
+                                                    $grade = $harvest['quality_grade'] ?? 'A';
+                                                    $gradeClass = ($grade == 'A' || $grade == 'Premium') ? 'quality-a' : 'quality-b';
+                                                @endphp
+                                                <span class="quality-badge {{ $gradeClass }}">{{ $grade }}</span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
         @endif
 
         {{-- Gallery --}}
         @if ($sections['show_gallery'] && count($gallery) > 0)
-            <section id="dokumentasi">
-                <div style="margin-bottom:20px;">
-                    <div class="am-tag">Dokumentasi Budidaya</div>
-                    <h2 class="am-title">Galeri Foto Lapangan</h2>
-                </div>
+            <section class="section" id="galeri">
+                <div class="container">
+                    <div class="section-header">
+                        <span class="section-label">Dokumentasi</span>
+                        <h2 class="section-title">Galeri Lapangan</h2>
+                        <div class="section-divider"></div>
+                    </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px;">
-                    @foreach ($gallery as $item)
-                        <div class="am-card" style="aspect-ratio:4/3; overflow:hidden; position:relative;">
-                            <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->caption ?? 'Galeri' }}" style="width:100%; height:100%; object-fit:cover;">
-                            @if ($item->caption)
-                                <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(15,23,42,0.85); color:#ffffff; font-size:11px; padding:8px 12px;">
-                                    {{ $item->caption }}
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
+                    <div class="gallery-grid">
+                        @foreach ($gallery as $item)
+                            @php
+                                $imgSrc = is_array($item) ? $item['image_url'] : asset('storage/' . $item->image_path);
+                                $cap = is_array($item) ? ($item['caption'] ?? '') : ($item->caption ?? '');
+                            @endphp
+                            <div class="gallery-item">
+                                <img src="{{ $imgSrc }}" alt="{{ $cap ?: 'Galeri Usaha Tani' }}" loading="lazy">
+                                @if ($cap)
+                                    <div class="gallery-caption">{{ $cap }}</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </section>
         @endif
 
         {{-- Contact --}}
         @if ($sections['show_contact'] && $contact)
-            <section id="kontak">
-                <div class="am-card" style="background:#0f172a; color:#ffffff; padding:36px; text-align:center; border:none;">
-                    <h2 style="font-size:24px; font-weight:800; margin:0 0 8px 0; color:#ffffff;">Hubungi {{ $profile['business_name'] }}</h2>
-                    <p style="font-size:14px; color:#94a3b8; margin:0 0 24px 0;">Saluran komunikasi langsung untuk transaksi dan kerja sama pasokan panen.</p>
-                    
-                    <div style="display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;">
-                        @if (!empty($contact['whatsapp']))
-                            <a href="{{ $contact['whatsapp'] }}" target="_blank" class="am-btn-whatsapp">WhatsApp Langsung</a>
-                        @endif
-                        @if (!empty($contact['public_email']))
-                            <a href="mailto:{{ $contact['public_email'] }}" class="am-btn-primary" style="background:#ffffff; color:#0f172a !important; border-color:#ffffff;">Kirim Email</a>
-                        @endif
-                        @if (!empty($contact['public_phone']))
-                            <a href="tel:{{ $contact['public_phone'] }}" class="am-btn-primary" style="background:transparent; border-color:rgba(255,255,255,0.3);">{{ $contact['public_phone'] }}</a>
-                        @endif
+            <section class="contact-section" id="kontak">
+                <div class="container">
+                    <div class="contact-card">
+                        <span class="section-label" style="color:var(--accent); display:block; margin-bottom:10px;">
+                            <i class="fas fa-envelope"></i>&nbsp; Hubungi Kami
+                        </span>
+                        <h2 class="contact-title">Konsultasi & Pemesanan</h2>
+                        <p class="contact-desc">
+                            Dapatkan hasil pertanian berkualitas premium dengan harga kompetitif. Tim kami siap membantu
+                            kebutuhan Anda.
+                        </p>
+
+                        <div class="contact-actions">
+                            @if (!empty($contact['whatsapp']))
+                                <a href="{{ $contact['whatsapp'] }}" target="_blank" class="btn btn-wa">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp Business
+                                </a>
+                            @endif
+                            @if (!empty($contact['public_phone']))
+                                <a href="tel:{{ $contact['public_phone'] }}" class="btn btn-outline">
+                                    <i class="fas fa-phone"></i> {{ $contact['public_phone'] }}
+                                </a>
+                            @endif
+                            @if (!empty($contact['public_email']))
+                                <a href="mailto:{{ $contact['public_email'] }}" class="btn btn-outline">
+                                    <i class="fas fa-at"></i> Email
+                                </a>
+                            @endif
+                        </div>
+
+                        <div class="contact-info">
+                            @if ($sections['show_location'] && !empty($location['address']))
+                                <span><i class="fas fa-location-dot"></i> {{ $location['address'] }}</span>
+                            @endif
+                            <span><i class="fas fa-clock"></i> Buka Setiap Hari 06:00-20:00</span>
+                        </div>
                     </div>
                 </div>
             </section>
         @endif
-
     </main>
 
     {{-- Footer --}}
-    <footer style="background:#ffffff; border-top:1px solid #e2e8f0; color:#64748b; font-size:12px; text-align:center; padding:24px;">
-        &copy; {{ date('Y') }} {{ $profile['business_name'] }} &bull; Ditenagai oleh <strong>P.A.D.I. Smart Farming Network</strong>
+    <footer class="footer">
+        <div class="container">
+            <div>
+                <div class="footer-brand">{{ $profile['business_name'] }}</div>
+                <div style="color: rgba(255,255,255,0.5); font-size:12px;">
+                    Profil Usaha Pertanian Terverifikasi • Ekosistem P.A.D.I.
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="#produk">Produk</a>
+                <a href="#panen">Data Panen</a>
+                <a href="#galeri">Galeri</a>
+                <a href="#kontak">Kontak</a>
+            </div>
+            <div style="color: rgba(255,255,255,0.4); font-size:12px;">
+                &copy; {{ date('Y') }} {{ $profile['business_name'] }}. All rights reserved.
+            </div>
+        </div>
     </footer>
 
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+
 </body>
+
 </html>

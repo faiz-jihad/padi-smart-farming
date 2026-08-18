@@ -64,17 +64,19 @@ class AdminBroadcastService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): AdminBroadcast {
-        $data = $this->prepareData($data);
-        $data['admin_id'] = $adminId;
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($adminId, $data, $request, $audit, $notifications) {
+            $preparedData = $this->prepareData($data);
+            $preparedData['admin_id'] = $adminId;
 
-        $broadcast = AdminBroadcast::query()->create($data);
+            $broadcast = AdminBroadcast::query()->create($preparedData);
 
-        $this->dispatchUserNotifications($broadcast);
+            $this->dispatchUserNotifications($broadcast);
 
-        $audit->write('admin_broadcast_created', $broadcast, null, $broadcast->toArray(), $request);
-        $notifications->notifyAdmins('Broadcast dibuat', $broadcast->title, $broadcast->type);
+            $audit->write('admin_broadcast_created', $broadcast, null, $broadcast->toArray(), $request);
+            $notifications->notifyAdmins('Broadcast dibuat', $broadcast->title, $broadcast->type);
 
-        return $broadcast;
+            return $broadcast;
+        });
     }
 
     /**
@@ -87,15 +89,17 @@ class AdminBroadcastService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): void {
-        $oldValues = $broadcast->toArray();
-        $broadcast->update($this->prepareData($data, $broadcast));
+        \Illuminate\Support\Facades\DB::transaction(function () use ($broadcast, $data, $request, $audit, $notifications) {
+            $oldValues = $broadcast->toArray();
+            $broadcast->update($this->prepareData($data, $broadcast));
 
-        if ($broadcast->status === 'published' && ($oldValues['status'] ?? '') !== 'published') {
-            $this->dispatchUserNotifications($broadcast);
-        }
+            if ($broadcast->status === 'published' && ($oldValues['status'] ?? '') !== 'published') {
+                $this->dispatchUserNotifications($broadcast);
+            }
 
-        $audit->write('admin_broadcast_updated', $broadcast, $oldValues, $broadcast->toArray(), $request);
-        $notifications->notifyAdmins('Broadcast diperbarui', $broadcast->title, $broadcast->type);
+            $audit->write('admin_broadcast_updated', $broadcast, $oldValues, $broadcast->toArray(), $request);
+            $notifications->notifyAdmins('Broadcast diperbarui', $broadcast->title, $broadcast->type);
+        });
     }
 
     public function destroy(
@@ -104,12 +108,16 @@ class AdminBroadcastService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): void {
-        $oldValues = $broadcast->toArray();
-        $broadcast->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($broadcast, $request, $audit, $notifications) {
+            $oldValues = $broadcast->toArray();
+            $broadcastId = $broadcast->id;
+            $broadcast->delete();
 
-        $audit->write('admin_broadcast_deleted', AdminBroadcast::class, $oldValues, null, $request, $broadcast->id);
-        $notifications->notifyAdmins('Broadcast dihapus', $oldValues['title'] ?? 'Broadcast dihapus.');
+            $audit->write('admin_broadcast_deleted', AdminBroadcast::class, $oldValues, null, $request, $broadcastId);
+            $notifications->notifyAdmins('Broadcast dihapus', $oldValues['title'] ?? 'Broadcast dihapus.');
+        });
     }
+
 
     private function dispatchUserNotifications(AdminBroadcast $broadcast): void
     {

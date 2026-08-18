@@ -173,6 +173,11 @@ class FarmerPublicProfile extends Model
         return "https://wa.me/{$number}";
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'subdomain';
+    }
+
     // ─── Scopes ─────────────────────────────────────────────────────────────
 
     public function scopePublished($query)
@@ -185,3 +190,4 @@ class FarmerPublicProfile extends Model
         return $query->where('subdomain', $subdomain);
     }
 }
+

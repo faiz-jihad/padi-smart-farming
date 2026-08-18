@@ -158,12 +158,13 @@ class CropSeasonService
             ];
         }
 
-        $created = [];
-        foreach ($seasons as $s) {
-            $created[] = CropSeason::create($s);
-        }
-
-        return $created;
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($seasons) {
+            $created = [];
+            foreach ($seasons as $s) {
+                $created[] = CropSeason::create($s);
+            }
+            return $created;
+        });
     }
 
     /**
@@ -171,14 +172,17 @@ class CropSeasonService
      */
     public function autoGenerateAllFarmsCropSeasons(): int
     {
-        $farms = Farm::doesntHave('cropSeasons')->get();
-        $count = 0;
+        return \Illuminate\Support\Facades\DB::transaction(function () {
+            $farms = Farm::doesntHave('cropSeasons')->get();
+            $count = 0;
 
-        foreach ($farms as $farm) {
-            $this->autoGenerateCropSeasonsForFarm($farm);
-            $count++;
-        }
+            foreach ($farms as $farm) {
+                $this->autoGenerateCropSeasonsForFarm($farm);
+                $count++;
+            }
 
-        return $count;
+            return $count;
+        });
     }
 }
+
