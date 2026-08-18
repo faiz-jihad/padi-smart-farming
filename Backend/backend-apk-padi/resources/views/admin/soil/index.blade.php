@@ -22,14 +22,14 @@
 
         <div class="soil-header-actions">
             <a href="{{ route('admin.soil.create') }}" class="btn-soil-action btn-soil-primary">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 <span>Tambah Sampel Tanah</span>
             </a>
 
             <a href="{{ route('admin.weather.index') }}" class="btn-soil-action">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a2.5 2.5 0 002.5-2.5V7a2 2 0 00-2-2h-2c-.6 0-1.1-.3-1.4-.8l-1.2-2M15 21a6 6 0 100-12 6 6 0 000 12z" />
                 </svg>
                 <span>Data Cuaca</span>
@@ -39,24 +39,16 @@
 
     {{-- Status Alerts --}}
     @if(session('status'))
-        <div class="soil-alert soil-alert-success" id="alert-status">
+        <div style="background:#dcfce7; border:1px solid #86efac; color:#166534; padding:12px 18px; border-radius:10px; margin-bottom:20px; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between;" id="alert-status">
             <span>{{ session('status') }}</span>
-            <button type="button" class="soil-alert-close" onclick="document.getElementById('alert-status').remove()">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
+            <button type="button" style="background:none; border:none; color:#166534; cursor:pointer; font-weight:700;" onclick="document.getElementById('alert-status').remove()">✕</button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="soil-alert soil-alert-danger" id="alert-error">
+        <div style="background:#0f172a; border:1px solid #334155; color:#ffffff; padding:12px 18px; border-radius:10px; margin-bottom:20px; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between;" id="alert-error">
             <span>{{ session('error') }}</span>
-            <button type="button" class="soil-alert-close" onclick="document.getElementById('alert-error').remove()">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
+            <button type="button" style="background:none; border:none; color:#ffffff; cursor:pointer; font-weight:700;" onclick="document.getElementById('alert-error').remove()">✕</button>
         </div>
     @endif
 
@@ -68,7 +60,7 @@
                 <h3 class="stat-number">{{ number_format($stats['total_samples'], 0, ',', '.') }}</h3>
                 <p class="stat-description">Pengujian terdaftar</p>
             </div>
-            <div class="stat-icon stat-icon-green">
+            <div class="stat-icon stat-icon-primary">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.6 15.12a2 2 0 00-1.144.12l-1.344.603V19a2 2 0 002 2h14a2 2 0 002-2v-3.033l-.628-.539z" />
                 </svg>
@@ -81,7 +73,7 @@
                 <h3 class="stat-number">{{ number_format($stats['avg_ph'], 2, ',', '.') }}</h3>
                 <p class="stat-description">Tingkat keasaman lahan</p>
             </div>
-            <div class="stat-icon stat-icon-emerald">
+            <div class="stat-icon">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -94,7 +86,7 @@
                 <h3 class="stat-number">{{ number_format($stats['optimal_count'], 0, ',', '.') }}</h3>
                 <p class="stat-description">Subur & seimbang</p>
             </div>
-            <div class="stat-icon stat-icon-amber">
+            <div class="stat-icon stat-icon-primary">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
@@ -105,9 +97,9 @@
             <div class="stat-content">
                 <p class="stat-label">Perlu Penanganan</p>
                 <h3 class="stat-number">{{ number_format($stats['critical_count'] + $stats['needs_fertilizer_count'] + $stats['warning_count'], 0, ',', '.') }}</h3>
-                <p class="stat-description">Kurang hara / Kritis</p>
+                <p class="stat-description">Kurang hara / Peringatan</p>
             </div>
-            <div class="stat-icon stat-icon-red">
+            <div class="stat-icon">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -130,7 +122,7 @@
                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                     <input type="hidden" name="format" value="csv">
                     <button type="submit" class="btn-export">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         <span>Export CSV</span>
@@ -143,7 +135,7 @@
                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                     <input type="hidden" name="format" value="json">
                     <button type="submit" class="btn-export">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         <span>Export JSON</span>
@@ -190,10 +182,10 @@
         </div>
 
         <div class="table-wrapper">
-            <table>
+            <table class="soil-table">
                 <thead>
                     <tr>
-                        <th>Kode Sampel & Jenis</th>
+                        <th style="padding-left: 24px;">Kode Sampel & Jenis</th>
                         <th>Lahan & Petani</th>
                         <th>pH Level</th>
                         <th>Kandungan N - P - K</th>
@@ -201,22 +193,21 @@
                         <th>Skor Kesehatan</th>
                         <th>Status Evaluasi</th>
                         <th>Tanggal Uji</th>
-                        <th style="text-align: right;">Aksi</th>
+                        <th style="text-align: right; padding-right: 24px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($detections as $soil)
                         @php
                             $phClass = $soil->ph_level < 5.5 ? 'ph-critical' : ($soil->ph_level > 7.5 ? 'ph-warning' : 'ph-optimal');
-                            $scoreColor = '#166534';
                         @endphp
                         <tr>
-                            <td class="sample-cell">
+                            <td class="sample-cell" style="padding-left: 24px;">
                                 <p>{{ $soil->sample_code }}</p>
                                 <span>Jenis: {{ ucfirst($soil->soil_type) }}</span>
                             </td>
                             <td>
-                                <strong>{{ $soil->farm?->name ?? '-' }}</strong><br>
+                                <strong style="font-weight:700; color:#0f172a;">{{ $soil->farm?->name ?? '-' }}</strong><br>
                                 <span style="font-size:12px; color:#64748b;">Pemilik: {{ $soil->farm?->farmer?->name ?? '-' }}</span>
                             </td>
                             <td>
@@ -232,14 +223,14 @@
                                 </div>
                             </td>
                             <td>
-                                <span style="font-weight:600; color:#334155;">{{ number_format($soil->moisture_percentage, 1) }}%</span>
+                                <span style="font-weight:700; color:#0f172a;">{{ number_format($soil->moisture_percentage, 1) }}%</span>
                             </td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <div class="health-progress-bar">
-                                        <div class="health-progress-fill" style="width: {{ $soil->soil_health_score }}%; background: {{ $scoreColor }};"></div>
+                                        <div class="health-progress-fill" style="width: {{ $soil->soil_health_score }}%;"></div>
                                     </div>
-                                    <span style="font-weight:800; font-size:13px; color: {{ $scoreColor }};">{{ $soil->soil_health_score }}</span>
+                                    <span style="font-weight:800; font-size:12px; color:#166534;">{{ $soil->soil_health_score }}</span>
                                 </div>
                             </td>
                             <td>
@@ -254,11 +245,11 @@
                                 @endif
                             </td>
                             <td>
-                                <span style="font-size:13px; color:#64748b;">{{ $soil->tested_at->format('d M Y H:i') }}</span>
+                                <span style="font-size:12px; color:#64748b; font-weight:500;">{{ $soil->tested_at->format('d M Y H:i') }}</span>
                             </td>
-                            <td style="text-align: right;">
+                            <td style="text-align: right; padding-right: 24px; white-space:nowrap;">
                                 <a href="{{ route('admin.soil.show', $soil) }}" class="btn-action-view">
-                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
@@ -269,7 +260,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-action-delete">
-                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="13" height="13">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                         Hapus
