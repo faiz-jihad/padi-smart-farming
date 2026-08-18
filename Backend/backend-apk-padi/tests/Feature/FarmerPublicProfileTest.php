@@ -314,4 +314,74 @@ class FarmerPublicProfileTest extends TestCase
             'website_status' => ProfileWebsiteStatus::Suspended->value,
         ]);
     }
+
+    public function test_admin_can_create_farmer_public_profile_directly(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $template = ProfileTemplate::where('code', 'agri-modern')->first();
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.farmer-profiles.store'), [
+                'farmer_id'           => $farmer->id,
+                'profile_template_id' => $template->id,
+                'subdomain'           => 'adminbuatin',
+                'business_name'       => 'Sawah Buatan Admin',
+                'headline'            => 'Padi Unggul',
+                'website_status'      => 'published',
+                'verification_status' => 'verified',
+            ]);
+
+        $response->assertRedirect(route('admin.farmer-profiles.index'));
+        $this->assertDatabaseHas('farmer_public_profiles', [
+            'farmer_id'           => $farmer->id,
+            'subdomain'           => 'adminbuatin',
+            'business_name'       => 'Sawah Buatan Admin',
+            'website_status'      => ProfileWebsiteStatus::Published->value,
+            'verification_status' => ProfileVerificationStatus::Verified->value,
+        ]);
+    }
+
+    public function test_admin_can_edit_and_delete_farmer_public_profile(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $template = ProfileTemplate::where('code', 'harvest-prestige')->first();
+
+        $profile = FarmerPublicProfile::create([
+            'farmer_id'           => $farmer->id,
+            'profile_template_id' => $template->id,
+            'business_name'       => 'Nama Awal',
+            'subdomain'           => 'namaawal',
+            'website_status'      => ProfileWebsiteStatus::Draft,
+            'verification_status' => ProfileVerificationStatus::Unverified,
+        ]);
+
+        // Edit
+        $editResponse = $this->actingAs($admin)
+            ->patch(route('admin.farmer-profiles.update', $profile), [
+                'profile_template_id' => $template->id,
+                'subdomain'           => 'namabaru',
+                'business_name'       => 'Nama Baru Diubah Admin',
+                'website_status'      => 'published',
+                'verification_status' => 'verified',
+            ]);
+
+        $editResponse->assertRedirect(route('admin.farmer-profiles.index'));
+        $this->assertDatabaseHas('farmer_public_profiles', [
+            'id'            => $profile->id,
+            'subdomain'     => 'namabaru',
+            'business_name' => 'Nama Baru Diubah Admin',
+        ]);
+
+        // Delete
+        $deleteResponse = $this->actingAs($admin)
+            ->delete(route('admin.farmer-profiles.destroy', $profile));
+
+        $deleteResponse->assertRedirect(route('admin.farmer-profiles.index'));
+        $this->assertDatabaseMissing('farmer_public_profiles', [
+            'id' => $profile->id,
+        ]);
+    }
 }
+

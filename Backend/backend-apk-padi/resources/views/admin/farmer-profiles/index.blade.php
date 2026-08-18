@@ -19,14 +19,24 @@
 
 <div class="space-y-6">
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
+    {{-- Header with Create Action --}}
+    <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
             <h1 class="text-2xl font-bold text-[#0f172a]">Profil Publik Petani</h1>
-            <p class="text-slate-500 text-sm mt-1">Monitor, verifikasi, dan kelola website publik seluruh petani.</p>
+            <p class="text-slate-500 text-sm mt-1">Monitor, buat, verifikasi, dan kelola website publik seluruh petani.</p>
         </div>
-        <div class="text-sm text-slate-500">
-            {{ $profiles->total() }} profil terdaftar
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-slate-500 hidden sm:block">
+                {{ $profiles->total() }} profil terdaftar
+            </span>
+            <a href="{{ route('admin.farmer-profiles.create') }}"
+                class="inline-flex items-center gap-2 bg-[#1b5e20] hover:bg-[#145218] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Tambah Profil Publik
+            </a>
         </div>
     </div>
 
@@ -67,6 +77,9 @@
                     <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
                 </svg>
                 <p class="text-sm font-medium">Belum ada profil publik petani.</p>
+                <a href="{{ route('admin.farmer-profiles.create') }}" class="inline-block mt-3 text-xs font-semibold text-[#1b5e20] underline">
+                    + Buat Profil Publik Pertama
+                </a>
             </div>
         @else
             <div class="overflow-x-auto">
@@ -86,13 +99,17 @@
                             <tr class="hover:bg-[#1b5e20]/5 transition-colors">
                                 <td class="px-5 py-4">
                                     <p class="font-semibold text-[#0f172a]">{{ $profile->business_name }}</p>
-                                    <p class="text-xs text-slate-400 mt-0.5">{{ $profile->farmer?->name }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">{{ $profile->farmer?->name }} ({{ $profile->farmer?->phone ?? '-' }})</p>
                                 </td>
                                 <td class="px-5 py-4">
                                     @if ($profile->subdomain)
                                         <a href="{{ $profile->publicUrl() }}" target="_blank"
-                                            class="text-[#1b5e20] text-xs font-medium hover:underline">
+                                            class="text-[#1b5e20] text-xs font-medium hover:underline inline-flex items-center gap-1">
                                             {{ $profile->subdomain }}.{{ config('domains.base') }}
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                                <polyline points="15 3 21 3 21 9"/>
+                                            </svg>
                                         </a>
                                     @else
                                         <span class="text-slate-300 text-xs">Belum dipilih</span>
@@ -114,16 +131,22 @@
                                 <td class="px-5 py-4">
                                     <div class="flex items-center justify-end gap-2">
 
+                                        {{-- Edit Button --}}
+                                        <a href="{{ route('admin.farmer-profiles.edit', $profile) }}"
+                                            class="text-xs font-semibold text-slate-700 hover:text-[#1b5e20] border border-gray-200 hover:border-[#1b5e20] px-2.5 py-1.5 rounded-lg transition-all">
+                                            Edit
+                                        </a>
+
                                         @if ($profile->verification_status?->value === 'unverified')
                                             <form method="POST" action="{{ route('admin.farmer-profiles.verify', $profile) }}">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-green-700 hover:text-green-900 border border-green-200 hover:border-green-400 px-3 py-1.5 rounded-lg transition-all">
+                                                <button type="submit" class="text-xs font-semibold text-green-700 hover:text-green-900 border border-green-200 hover:border-green-400 px-2.5 py-1.5 rounded-lg transition-all">
                                                     Verifikasi
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('admin.farmer-profiles.reject', $profile) }}">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-all"
+                                                <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-all"
                                                     onclick="return confirm('Tolak verifikasi profil ini?')">
                                                     Tolak
                                                 </button>
@@ -133,19 +156,29 @@
                                         @if ($profile->website_status?->value === 'published')
                                             <form method="POST" action="{{ route('admin.farmer-profiles.suspend', $profile) }}">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-amber-700 hover:text-amber-900 border border-amber-200 hover:border-amber-400 px-3 py-1.5 rounded-lg transition-all"
+                                                <button type="submit" class="text-xs font-semibold text-amber-700 hover:text-amber-900 border border-amber-200 hover:border-amber-400 px-2.5 py-1.5 rounded-lg transition-all"
                                                     onclick="return confirm('Tangguhkan website petani ini?')">
-                                                    Tangguhkan
+                                                    Suspend
                                                 </button>
                                             </form>
                                         @elseif ($profile->website_status?->value === 'suspended')
                                             <form method="POST" action="{{ route('admin.farmer-profiles.restore', $profile) }}">
                                                 @csrf
-                                                <button type="submit" class="text-xs font-semibold text-[#1b5e20] hover:text-[#145218] border border-green-200 hover:border-[#1b5e20] px-3 py-1.5 rounded-lg transition-all">
+                                                <button type="submit" class="text-xs font-semibold text-[#1b5e20] hover:text-[#145218] border border-green-200 hover:border-[#1b5e20] px-2.5 py-1.5 rounded-lg transition-all">
                                                     Pulihkan
                                                 </button>
                                             </form>
                                         @endif
+
+                                        {{-- Delete Button --}}
+                                        <form method="POST" action="{{ route('admin.farmer-profiles.destroy', $profile) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition-all"
+                                                onclick="return confirm('Hapus profil website ini secara permanen?')">
+                                                Hapus
+                                            </button>
+                                        </form>
 
                                     </div>
                                 </td>

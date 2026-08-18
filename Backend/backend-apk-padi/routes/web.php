@@ -111,11 +111,17 @@ Route::middleware(['auth', 'admin.web'])
 
         // Farmer Public Profile Management (Admin)
         Route::get('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'index'])->name('farmer-profiles.index');
+        Route::get('/farmer-profiles/create', [FarmerPublicProfileAdminController::class, 'create'])->name('farmer-profiles.create');
+        Route::post('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'store'])->name('farmer-profiles.store');
+        Route::get('/farmer-profiles/{farmerProfile}/edit', [FarmerPublicProfileAdminController::class, 'edit'])->name('farmer-profiles.edit');
+        Route::patch('/farmer-profiles/{farmerProfile}', [FarmerPublicProfileAdminController::class, 'update'])->name('farmer-profiles.update');
+        Route::delete('/farmer-profiles/{farmerProfile}', [FarmerPublicProfileAdminController::class, 'destroy'])->name('farmer-profiles.destroy');
         Route::post('/farmer-profiles/{farmerProfile}/verify', [FarmerPublicProfileAdminController::class, 'verify'])->name('farmer-profiles.verify');
         Route::post('/farmer-profiles/{farmerProfile}/reject', [FarmerPublicProfileAdminController::class, 'reject'])->name('farmer-profiles.reject');
         Route::post('/farmer-profiles/{farmerProfile}/suspend', [FarmerPublicProfileAdminController::class, 'suspend'])->name('farmer-profiles.suspend');
         Route::post('/farmer-profiles/{farmerProfile}/restore', [FarmerPublicProfileAdminController::class, 'restore'])->name('farmer-profiles.restore');
     });
+
 
 // ─── Farmer Panel Auth ───────────────────────────────────────────────────────
 Route::middleware('guest:farmer')->group(function (): void {
