@@ -28,6 +28,9 @@ class AdminApiService
             'users' => $this->users($request, $id),
             'broadcasts' => $this->broadcasts($request, $id),
             'audit-logs' => $this->auditLogs($request, $id),
+            'farms', 'agriculture' => $this->farms($request, $id),
+            'weather' => $this->weather($request),
+            'soil' => $this->soil($request),
             default => ApiResponse::error('Fitur admin tidak ditemukan.', 404),
         };
     }
@@ -232,6 +235,65 @@ class AdminApiService
 
         return ApiResponse::success('Data audit log berhasil diambil.', [
             'audit_logs' => AuditLogResource::collection($logs),
+        ]);
+    }
+
+    private function farms(Request $request, ?string $id): JsonResponse
+    {
+        $farms = Farm::query()
+            ->with(['farmer', 'weatherSnapshots' => fn ($q) => $q->latest('observed_at')])
+            ->when($request->query('q'), function ($query, string $search): void {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('farmer', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            })
+            ->latest('id')
+            ->limit($this->limit($request))
+            ->get();
+
+        return ApiResponse::success('Data lahan pertanian admin berhasil diambil.', [
+            'farms' => $farms,
+        ]);
+    }
+
+    private function weather(Request $request): JsonResponse
+    {
+        $stats = [
+            'total_farms' => Farm::query()->count(),
+            'farms_with_weather' => \App\Models\WeatherSnapshot::query()->distinct('farm_id')->count('farm_id'),
+            'total_snapshots' => \App\Models\WeatherSnapshot::query()->count(),
+            'expired_snapshots' => \App\Models\WeatherSnapshot::query()->where('expires_at', '<', now())->count(),
+        ];
+
+        $latestSnapshots = \App\Models\WeatherSnapshot::query()
+            ->with('farm.farmer')
+            ->latest('observed_at')
+            ->limit($this->limit($request))
+            ->get();
+
+        return ApiResponse::success('Data pemantauan cuaca admin berhasil diambil.', [
+            'stats' => $stats,
+            'latest_snapshots' => $latestSnapshots,
+        ]);
+    }
+
+    private function soil(Request $request): JsonResponse
+    {
+        $stats = [
+            'total_samples' => \App\Models\SoilDetection::count(),
+            'avg_ph' => round(\App\Models\SoilDetection::avg('ph_level') ?? 6.5, 2),
+            'optimal_count' => \App\Models\SoilDetection::where('soil_status', 'optimal')->count(),
+            'critical_count' => \App\Models\SoilDetection::where('soil_status', 'critical')->count(),
+        ];
+
+        $detections = \App\Models\SoilDetection::query()
+            ->with('farm.farmer')
+            ->latest('tested_at')
+            ->limit($this->limit($request))
+            ->get();
+
+        return ApiResponse::success('Data analisis tanah admin berhasil diambil.', [
+            'stats' => $stats,
+            'detections' => $detections,
         ]);
     }
 
