@@ -28,6 +28,17 @@ import 'package:padi/features/land/presentation/screens/land_detail_screen.dart'
 import 'package:padi/features/cultivation/presentation/screens/add_activity_screen.dart';
 import 'package:padi/features/cultivation/presentation/screens/cultivation_timeline_screen.dart';
 import 'package:padi/features/cultivation/presentation/screens/start_planting_season_screen.dart';
+import 'package:padi/features/fertilizer/presentation/screens/fertilizer_calculator_screen.dart';
+import 'package:padi/features/finance/presentation/screens/add_transaction_screen.dart';
+import 'package:padi/features/finance/presentation/screens/finance_screen.dart';
+import 'package:padi/features/harvest/presentation/screens/add_harvest_screen.dart';
+import 'package:padi/features/harvest/presentation/screens/harvest_screen.dart';
+import 'package:padi/features/community_alert/presentation/screens/community_alert_screen.dart';
+import 'package:padi/features/community_alert/presentation/screens/report_condition_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/marketplace_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/cart_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/order_screen.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>(
   (ref) => const SecureTokenStorage(),
@@ -131,6 +142,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           return const AddActivityScreen();
         },
+      ),
+      GoRoute(
+        path: '/fertilizer',
+        builder: (context, state) => const FertilizerCalculatorScreen(),
+      ),
+      GoRoute(
+        path: '/finance',
+        builder: (context, state) => const FinanceScreen(),
+      ),
+      GoRoute(
+        path: '/finance/add',
+        builder: (context, state) => const AddTransactionScreen(),
+      ),
+      GoRoute(
+        path: '/harvest',
+        builder: (context, state) => const HarvestScreen(),
+      ),
+      GoRoute(
+        path: '/harvest/add',
+        builder: (context, state) => const AddHarvestScreen(),
+      ),
+      GoRoute(
+        path: '/community-alert',
+        builder: (context, state) => const CommunityAlertScreen(),
+      ),
+      GoRoute(
+        path: '/community-alert/report',
+        builder: (context, state) => const ReportConditionScreen(),
+      ),
+      GoRoute(
+        path: '/marketplace',
+        builder: (context, state) => const MarketplaceScreen(),
+      ),
+      GoRoute(
+        path: '/marketplace/product/:id',
+        builder: (context, state) {
+          final productId = state.pathParameters['id'] ?? '';
+
+          return ProductDetailScreen(
+            productId: productId,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/marketplace/cart',
+        builder: (context, state) => const CartScreen(),
+      ),
+      GoRoute(
+        path: '/marketplace/order',
+        builder: (context, state) => const OrderScreen(),
       ),
       GoRoute(
         path: '/profile',

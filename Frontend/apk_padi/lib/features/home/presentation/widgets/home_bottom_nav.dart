@@ -32,9 +32,8 @@ class HomeBottomNav extends StatelessWidget {
           label: 'Lahan',
         ),
         NavigationDestination(
-          icon: Icon(Icons.assignment_outlined),
-          selectedIcon: Icon(Icons.assignment_rounded),
-          label: 'Aktivitas',
+          icon: Icon(Icons.storefront_rounded),
+          label: 'Toko',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline_rounded),
