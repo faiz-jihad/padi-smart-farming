@@ -117,6 +117,118 @@
         </div>
     </div>
 
+    {{-- PEMBERITAHUAN & MONITORING IRIGASI LAHAN --}}
+    <section class="data-card" style="border: 1px solid #d6ead8; background: #ffffff; margin-bottom: 24px;">
+        <div class="data-header" style="background: #f0fdf4; border-bottom: 1px solid #d6ead8;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: #166534; color: #ffffff; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                    Pemberitahuan Irigasi
+                </div>
+                <div>
+                    <h2 style="color: #0f3d16; font-size: 16px; margin: 0;">Monitoring &amp; Peringatan Suplai Air Lahan</h2>
+                    <p style="color: #4b7c5e; font-size: 12px; margin: 2px 0 0 0;">Status ketersediaan air, rekomendasi rotasi pengairan (AWD), dan mitigasi kekeringan per lahan</p>
+                </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #166534; background: #e8f5e9; padding: 4px 10px; border-radius: 20px;">
+                {{ count($irrigationAlerts ?? []) }} Lahan Terpantau
+            </span>
+        </div>
+
+        <div style="padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px;">
+            @forelse($irrigationAlerts ?? [] as $alert)
+                <div style="border: 1px solid {{ $alert['status_color'] }}33; background: {{ $alert['bg_color'] }}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                            <strong style="font-size: 13px; color: #0f172a;">{{ $alert['farm_name'] }}</strong>
+                            <span style="font-size: 10px; font-weight: 700; color: {{ $alert['status_color'] }}; background: #ffffff; padding: 2px 8px; border-radius: 12px; border: 1px solid {{ $alert['status_color'] }}44;">
+                                {{ $alert['level_label'] }}
+                            </span>
+                        </div>
+                        <p style="font-size: 11px; color: #475569; margin: 0 0 8px 0;">
+                            Pemilik: <strong>{{ $alert['farmer_name'] }}</strong> &bull; {{ $alert['area_ha'] }} Ha &bull; <span style="text-decoration: underline;">{{ $alert['irrigation_type'] }}</span>
+                        </p>
+                        <p style="font-size: 12px; color: #1e293b; line-height: 1.45; margin: 0;">
+                            {{ $alert['message'] }}
+                        </p>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed {{ $alert['status_color'] }}44; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; font-weight: 600; color: {{ $alert['status_color'] }};">Rekomendasi Tindakan:</span>
+                        <a href="{{ route('admin.weather.map') }}" style="font-size: 11px; font-weight: 700; color: #ffffff; background: {{ $alert['status_color'] }}; padding: 4px 10px; border-radius: 6px; text-decoration: none;">
+                            {{ $alert['action_label'] }} &rarr;
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div style="grid-column: 1 / -1; text-align: center; color: #64748b; font-size: 13px; padding: 20px;">
+                    Semua sistem irigasi lahan dalam status optimal.
+                </div>
+            @endforelse
+        </div>
+    </section>
+
+    {{-- JADWAL WAKTU TANAM & PANEN KONKRET --}}
+    <section class="data-card" style="border: 1px solid #d6ead8; background: #ffffff; margin-bottom: 24px;">
+        <div class="data-header" style="background: #f0fdf4; border-bottom: 1px solid #d6ead8;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: #15803d; color: #ffffff; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                    Jadwal Tanam Konkret
+                </div>
+                <div>
+                    <h2 style="color: #0f3d16; font-size: 16px; margin: 0;">Timeline Siklus Tanam, HST &amp; Target Panen Pasti</h2>
+                    <p style="color: #4b7c5e; font-size: 12px; margin: 2px 0 0 0;">Detail tanggal tanam riil, usia tanaman (HST), fase pertumbuhan, estimasi tanggal panen, dan instruksi mingguan</p>
+                </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #15803d; background: #e8f5e9; padding: 4px 10px; border-radius: 20px;">
+                {{ count($concreteSchedules ?? []) }} Siklus Tanam Terjadwal
+            </span>
+        </div>
+
+        <div style="padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px;">
+            @forelse($concreteSchedules ?? [] as $sch)
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div>
+                            <strong style="font-size: 14px; color: #0f172a; display: block;">{{ $sch['farm_name'] }}</strong>
+                            <span style="font-size: 12px; color: #64748b;">Petani: {{ $sch['farmer_name'] }} &bull; Varietas: <span style="font-weight: 600; color: #166534;">{{ $sch['variety_name'] }}</span> ({{ $sch['maturity_days'] }} Hari)</span>
+                        </div>
+                        <span class="irrigation-badge {{ $sch['badge_class'] }}" style="font-size: 11px;">
+                            {{ $sch['status_label'] }}
+                        </span>
+                    </div>
+
+                    {{-- Timeline Progress Bar --}}
+                    <div style="margin: 12px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+                            <span>Tanam: <strong>{{ $sch['planting_date'] }}</strong></span>
+                            <span>Target Panen: <strong style="color: #166534;">{{ $sch['harvest_date'] }}</strong></span>
+                        </div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative;">
+                            <div style="width: {{ $sch['progress_pct'] }}%; height: 100%; background: linear-gradient(90deg, #16a34a, #15803d); border-radius: 4px;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 4px;">
+                            <span>Fase: <strong>{{ $sch['phase'] }}</strong></span>
+                            <span style="font-weight: 700; color: {{ $sch['days_remaining'] <= 14 ? '#dc2626' : '#15803d' }};">
+                                Sisa {{ $sch['days_remaining'] }} Hari Panen
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Weekly Action Box --}}
+                    <div style="background: #f8fafc; border-left: 3px solid #166534; padding: 8px 12px; border-radius: 0 6px 6px 0; margin-top: 10px;">
+                        <span style="font-size: 10px; font-weight: 700; color: #166534; text-transform: uppercase;">Tindakan Lapangan Wajib Minggu Ini:</span>
+                        <p style="font-size: 11px; color: #334155; margin: 2px 0 0 0; line-height: 1.4;">
+                            {{ $sch['action'] }}
+                        </p>
+                    </div>
+                </div>
+            @empty
+                <div style="grid-column: 1 / -1; text-align: center; color: #64748b; font-size: 13px; padding: 20px;">
+                    Belum ada jadwal musim tanam yang terdaftar.
+                </div>
+            @endforelse
+        </div>
+    </section>
+
     {{-- INTERACTIVE PLANTING TIME ADVISOR CALCULATOR --}}
     <section class="data-card" style="border: 2px solid #a7f3d0; background: #f0fdf4; margin-bottom: 28px;">
         <div class="data-header" style="background: #e8f5e9; border-bottom: 1px solid #c8e6c9;">

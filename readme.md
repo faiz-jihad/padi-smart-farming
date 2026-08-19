@@ -90,33 +90,92 @@ pencatatan biaya, pendapatan, dan hasil panen;
 
 marketplace yang mempertemukan petani dan pembeli.
 
-Fitur utama
+## Fitur utama
 
 1. Predictive Farming
+- Menampilkan cuaca saat ini dan prakiraan tujuh hari berbasis BMKG dan Open-Meteo.
+- Memberikan status rekomendasi tanam konkret: baik, waspada, atau tunda.
+- Menjelaskan faktor agroklimat yang memengaruhi rekomendasi tanam dan irigasi.
 
-Menampilkan cuaca saat ini dan prakiraan tujuh hari.
+2. Manajemen Lahan, Musim Tanam, & Notifikasi Irigasi
+- Menambahkan lahan berdasarkan luas, titik polygon GIS, varietas, dan sistem irigasi (Teknis, Setengah Teknis, Tadah Hujan, Rawa).
+- Kalender waktu tanam konkret: menghitung Hari Setelah Tanam (HST), fase pertumbuhan riil, estimasi tanggal panen pasti, dan milestone agronomi mingguan.
+- Pusat Pemberitahuan Irigasi: monitoring ketersediaan air dan rekomendasi pengairan berselang (AWD).
 
-Memberikan status rekomendasi tanam: baik, waspada, atau tunda.
+3. Kalkulator Pupuk & Nutrisi
+- Menghitung kebutuhan pupuk presisi berdasarkan luas lahan dan fase spesifik tanaman padi.
+- Mendukung formulasi Urea, NPK, dan KCl sesuai dosis anjuran Kementerian Pertanian.
 
-Menjelaskan faktor yang memengaruhi rekomendasi.
+4. Scan Penyakit AI & Community Early Warning
+- Deteksi penyakit daun padi berbasis Computer Vision (Blas, Hawar Daun Bakteri, Tungro, Bercak Coklat).
+- Peringatan dini penyebaran penyakit berbasis radius geospasial bagi petani sekitar.
 
-Menyimpan versi algoritma dan waktu pembaruan data.
+5. Keuangan Usaha Tani & Marketplace
+- Pencatatan biaya operasional, pendapatan, dan laporan hasil panen terstruktur.
+- Marketplace langsung yang mempertemukan petani dengan pembeli komoditas gabah dan beras.
 
-2. Manajemen lahan dan musim tanam
+## Dataset & Sumber Data yang Digunakan
 
-Menambahkan lahan berdasarkan luas, lokasi, varietas, dan jenis irigasi.
+Aplikasi **P.A.D.I. (Predictive Agriculture & Disease Intelligence)** mengintegrasikan berbagai lapisan data spasial, agroklimat, agronomi, dan citra kecerdasan buatan:
 
-Mengelola periode semai, tanam, perawatan, dan estimasi panen.
+### 1. Data Geospasial & Batas Administrasi Nasional
+- **Cakupan Spasial**: 38 Provinsi, 514 Kabupaten/Kota, dan 7.264 Kecamatan di seluruh Indonesia.
+- **Format Data**: Standar OGC / RFC 7946 GeoJSON (`Polygon` & `MultiPolygon`) dengan koordinat `[longitude, latitude]`.
+- **Sumber Data**: Kepmendagri / BPS via dataset spasial wilayah terverifikasi (`cahyadsn/wilayah_boundaries`).
+- **Pemanfaatan**:
+  - Peta persebaran risiko cuaca dan hama/penyakit interaktif berbasis Leaflet GIS.
+  - Drill-down bertingkat dari level nasional &rarr; provinsi &rarr; kabupaten &rarr; kecamatan &rarr; polygon lahan petani (*field boundary mapping*).
+  - Geofencing radius peringatan dini wabah penyakit (Community Early Warning System radius 5-25 km).
 
-Menampilkan aktivitas budidaya dalam bentuk timeline.
+### 2. Data Agroklimat & Prakiraan Cuaca
+- **Sumber Data**: BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) Open Data & Open-Meteo Agro Weather API.
+- **Parameter yang Digunakan**:
+  - Suhu Udara Rata-rata, Minimum, dan Maksimum (°C).
+  - Kelembaban Relatif Udara (RH %).
+  - Curah Hujan Harian, Akumulasi Mingguan, dan Probabilitas Hujan (mm/hari).
+  - Kecepatan & Arah Angin (km/jam).
+  - Evapotranspirasi Acuan ($ET_0$) dan Indeks Radiasi Surya (MJ/m²/hari).
+- **Pemanfaatan**:
+  - Penentuan jendela waktu tanam ideal (Maju / Tepat Waktu / Tunda).
+  - Model prediksi risiko kekeringan (*drought risk*) dan banjir (*flood risk*).
 
-3. Kalkulator pupuk
+### 3. Data Kalender Tanam Konkret & Varietas Padi
+- **Katalog Varietas Unggul**:
+  - Inpari 32 HDB (115 Hari, Tahan Blas & Hawar Daun Bakteri).
+  - Inpari 42 Agritan GSR (112 Hari, Hemat Air & Tahan Rebah).
+  - Ciherang (116 Hari, Pulen & Adaptif Irigasi Teknis).
+  - Mekongga (118 Hari), IR64 (115 Hari), dan varietas lokal bersertifikat.
+- **Siklus 5 Fase Pertumbuhan Terhitung Sejak Hari Setelah Tanam (HST)**:
+  - **Fase Semai & Olah Tanah** (H-21 s/d H-1): Pembajakan & perendaman benih.
+  - **Fase Vegetatif Awal** (1 - 30 HST): Tanam pindah, perakaran, pemupukan dasar.
+  - **Fase Vegetatif Aktif / Anakan Maksimum** (31 - 55 HST): Pembentukan anakan produktif, pemupukan susulan II.
+  - **Fase Bunting & Pembungaan / Generatif** (56 - 85 HST): *Panicle initiation* & *heading*, fase kritis kebutuhan air.
+  - **Fase Pematangan Bulir & Panen** (86 - 115 HST): *Milky*, *dough*, *mature grain*, pengeringan lahan menjelang panen.
 
-Menghitung kebutuhan pupuk berdasarkan luas lahan dan fase tanaman.
+### 4. Data Monitoring Irigasi & Kebutuhan Air (AWD System)
+- **Tipologi Lahan**: Irigasi Teknis, Setengah Teknis, Tadah Hujan, Rawa Pasang Surut.
+- **Sistem Irigasi Berselang (Alternate Wetting and Drying - AWD)**:
+  - Fase Vegetatif: Tinggi muka air genangan 2-3 cm.
+  - Fase Anakan & Bunting: Genangan air 3-5 cm.
+  - Fase Pematangan: Pengeringan bertahap 10-14 hari sebelum panen.
+- **Pemberitahuan & Peringatan Otomatis**:
+  - Peringatan dini kekurangan air untuk lahan tadah hujan.
+  - Rekomendasi pengaturan pintu tabat/air untuk lahan rawa.
+  - Notifikasi rotasi jadwal air untuk efisiensi konsumsi air hingga 25%.
 
-Mendukung komponen seperti Urea, NPK, dan KCl.
+### 5. Data Citra Penyakit & Model AI (Computer Vision)
+- **Dataset Citra Daun Padi**: Ribuan sampel citra daun padi berkualitas tinggi dengan augmentasi data kondisi lapangan Indonesia.
+- **Kelas Penyakit**:
+  1. Blas Daun (*Pyricularia oryzae* / *Magnaporthe oryzae*).
+  2. Hawar Daun Bakteri / Kresek (*Xanthomonas oryzae pv. oryzae*).
+  3. Tungro (*Rice Tungro Bacilliform Virus* - RTBV).
+  4. Bercak Coklat (*Bipolaris oryzae*).
+  5. Daun Sehat (*Healthy*).
+- **Rekomendasi Tindakan**: Panduan teknis pengendalian terpadu (Kultur teknis, Hayati, dan Kimiawi berizin Kementan).
 
-Menampilkan formula, sumber, versi aturan, dan disclaimer.
+### 6. Data Komoditas, Sarana Produksi, & Marketplace
+- **Katalog Komoditas**: Gabah Kering Panen (GKP), Gabah Kering Giling (GKG), Beras Medium, Beras Premium.
+- **Sarana Produksi (Saprodi)**: Pupuk Bersubsidi & Non-Subsidi (Urea, NPK Phonska, SP-36, ZA, KCl, Organik), Benih Bersertifikat, Alat Mesin Pertanian (Alsintan).
 
 4. AI Disease Detection
 

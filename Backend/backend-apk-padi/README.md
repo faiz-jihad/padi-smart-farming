@@ -1,58 +1,56 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# P.A.D.I. — Backend REST API & Admin Management
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Predictive Agriculture & Disease Intelligence (P.A.D.I.) — Backend REST API dibangun menggunakan **Laravel 12 (PHP 8.2+)**, **MySQL**, dan arsitektur modular untuk mendukung aplikasi mobile Flutter dan Dashboard Admin Web.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Dataset & Spesifikasi Data Sistem
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Platform P.A.D.I. mengolah dan menyajikan data terintegrasi berikut:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Data Spasial & Batas Administrasi Nasional (GeoJSON RFC 7946)
+- **38 Provinsi**: Data batas polygon provinsi di seluruh Indonesia.
+- **514 Kabupaten / Kota**: Seluruh kabupaten/kota di Indonesia dengan koordinat MultiPolygon/Polygon standar OGC.
+- **7.264 Kecamatan**: Batas polygon kecamatan lengkap di 38 provinsi dari sumber terverifikasi Kepmendagri/BPS.
+- **Titik & Polygon Lahan Pertanian**: Boundary lahan presisi per petani untuk kalkulasi spasial risiko cuaca dan geofencing penyakit.
 
-## Learning Laravel
+### 2. Data Agroklimat & Prakiraan Cuaca Presisi
+- **Integrasi**: BMKG Open Data & Open-Meteo Agro API.
+- **Parameter**: Suhu udara (°C), kelembaban (RH %), curah hujan harian & mingguan (mm), kecepatan angin (km/h), radiasi matahari, dan evapotranspirasi acuan ($ET_0$).
+- **Pemanfaatan**: Rekomendasi jendela tanam ideal, estimasi risiko kekeringan (*drought*), dan potensi banjir (*flood*).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 3. Data Kalender Tanam Konkret & Varietas Padi
+- **Katalog Varietas**: Inpari 32 HDB (115 hari), Inpari 42 GSR (112 hari), Ciherang (116 hari), Mekongga (118 hari), IR64 (115 hari).
+- **Perhitungan Konkret**:
+  - Tanggal Tanam Riil & Tanggal Panen Pasti.
+  - Usia Tanaman Berjalan dalam Hari Setelah Tanam (HST).
+  - 5 Fase Pertumbuhan: Semai, Vegetatif Awal, Anakan Maksimum, Bunting (*Heading*), Pematangan (*Ripening*).
+  - Tindakan agronomi wajib mingguan per fase.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 4. Data Monitoring Irigasi & Kebutuhan Air
+- **Tipologi Lahan**: Irigasi Teknis, Setengah Teknis, Tadah Hujan, Rawa Pasang Surut.
+- **Sistem AWD (Alternate Wetting and Drying)**: Pengaturan ketinggian genangan air (2-5 cm) dan pengeringan berkala untuk efisiensi air 25%.
+- **Sistem Notifikasi & Alert**: Peringatan kekurangan air, jadwal buka/tutup pintu air rawa, dan rekomendasi pompa air.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 5. Data Citra Penyakit & AI Computer Vision
+- **Model Deep Learning**: Klasifikasi 4 penyakit daun padi utama (*Blas*, *Hawar Daun Bakteri*, *Tungro*, *Bercak Coklat*) + Daun Sehat.
+- **Early Warning System (EWS)**: Geofencing radius peringatan dini penyebaran penyakit (5 - 25 km).
 
-## Agentic Development
+### 6. Data Usaha Tani & Marketplace
+- Pencatatan biaya operasional, pendapatan, dan panen.
+- Katalog komoditas gabah/beras dan saprodi (benih, pupuk, alsintan).
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
+
+## 🚀 Perintah Artisan Khusus Geo & Pertanian
 
 ```bash
-composer require laravel/boost --dev
+# Import batas administrasi 38 provinsi & 514 kabupaten/kota
+php artisan geo:import-provinces
 
-php artisan boost:install
+# Import 7.264 batas polygon kecamatan seluruh Indonesia
+php artisan geo:import-district-boundaries --all
+
+# Auto-generate siklus musim tanam untuk seluruh lahan terdaftar
+php artisan tinker --execute="app(\App\Services\Agriculture\CropSeasonService::class)->autoGenerateAllFarmsCropSeasons();"
 ```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
