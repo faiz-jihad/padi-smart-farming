@@ -2,19 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
+use App\Http\Resources\AuditLogResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class AuditLogController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $logs = AuditLog::with('user')
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $logs,
-        ]);
+        return AuditLogResource::collection($resources->auditLogs());
     }
 }

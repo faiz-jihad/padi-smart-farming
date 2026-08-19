@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MarketOffer;
+use App\Http\Resources\MarketOfferResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class MarketOfferController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $offers = MarketOffer::with(['listing', 'partner'])->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $offers,
-        ]);
+        return MarketOfferResource::collection($resources->marketOffers());
     }
 }

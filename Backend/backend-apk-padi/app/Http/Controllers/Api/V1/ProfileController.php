@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Profile\ChangePasswordRequest;
 use App\Http\Requests\Api\V1\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Services\Api\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,18 +17,14 @@ class ProfileController extends Controller
     public function show(Request $request): JsonResponse
     {
         return ApiResponse::success('Profil berhasil diambil.', [
-                'user' => UserResource::make($request->user()),
+            'user' => UserResource::make($request->user()),
         ]);
     }
 
-    public function update(UpdateProfileRequest $request): JsonResponse
+    public function update(UpdateProfileRequest $request, ProfileService $profile): JsonResponse
     {
-        $user = $request->user();
-        $user->fill($request->validated());
-        $user->save();
-
         return ApiResponse::success('Profil berhasil diperbarui.', [
-                'user' => UserResource::make($user->refresh()),
+            'user' => UserResource::make($profile->update($request->user(), $request->validated())),
         ]);
     }
 

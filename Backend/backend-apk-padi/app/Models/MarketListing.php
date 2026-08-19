@@ -18,6 +18,8 @@ class MarketListing extends Model
         'unit',
         'price_per_unit',
         'description',
+        'sales_link',
+        'image_url',
         'status',
         'published_at',
         'expires_at',

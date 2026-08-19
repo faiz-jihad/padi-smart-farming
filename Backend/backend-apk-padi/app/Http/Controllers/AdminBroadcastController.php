@@ -2,19 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AdminBroadcast;
+use App\Http\Resources\AdminBroadcastResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class AdminBroadcastController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $broadcasts = AdminBroadcast::with('admin')
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $broadcasts,
-        ]);
+        return AdminBroadcastResource::collection($resources->adminBroadcasts());
     }
 }

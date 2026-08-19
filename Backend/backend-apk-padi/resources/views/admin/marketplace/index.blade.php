@@ -1,842 +1,243 @@
 @extends('layouts.admin')
 
 @section('content')
-
 <link rel="stylesheet" href="{{ asset('css/admin/marketplace.css') }}">
 
-<div class="marketplace-page">
+<div class="market-page">
+    {{-- Breadcrumb --}}
+    <nav class="market-breadcrumb" aria-label="Breadcrumb">
+        <span>Admin</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="market-breadcrumb-current">Marketplace Hasil Panen</span>
+    </nav>
 
-    <div class="marketplace-container">
-
-        <div class="marketplace-header">
-
-            <div class="marketplace-header-content">
-
-                <p class="marketplace-eyebrow">
-                    Manajemen Marketplace
-                </p>
-
-                <h1 class="marketplace-title">
-                    Marketplace
-                </h1>
-
-                <p class="marketplace-description">
-                    Pantau listing hasil panen, penawaran pembeli, kontrak, dan transaksi marketplace P.A.D.I.
-                </p>
-
-            </div>
-
-            <div class="marketplace-header-badge">
-
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M3 3h18v18H3z"/>
-                    <path d="M7 7h10"/>
-                    <path d="M7 11h10"/>
-                    <path d="M7 15h6"/>
-                </svg>
-
-                <div>
-
-                    <span>
-                        Market Service
-                    </span>
-
-                    <strong>
-                        Monitoring Transaksi
-                    </strong>
-
-                </div>
-
-            </div>
-
+    {{-- Page Header --}}
+    <div class="market-header">
+        <div class="market-header-content">
+            <h1 class="market-title">Manajemen Marketplace & Listing Panen</h1>
+            <p class="market-description">Kelola katalog komoditas hasil panen, link transaksi penjualan (Tokopedia/Shopee/WA), foto produk, dan penawaran dari mitra.</p>
         </div>
 
-
-        <div class="marketplace-stat-grid">
-
-            <div class="marketplace-stat-card">
-
-                <div class="marketplace-stat-top">
-
-                    <span class="marketplace-stat-label">
-                        Listing Aktif
-                    </span>
-
-                    <div class="marketplace-stat-icon green">
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M6 2h12v20H6z"/>
-                            <path d="M9 6h6"/>
-                            <path d="M9 10h6"/>
-                            <path d="M9 14h3"/>
-                        </svg>
-
-                    </div>
-
-                </div>
-
-                <div class="marketplace-stat-bottom">
-
-                    <strong>
-                        86
-                    </strong>
-
-                    <span>
-                        Penawaran hasil panen
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-stat-card">
-
-                <div class="marketplace-stat-top">
-
-                    <span class="marketplace-stat-label">
-                        Penawaran Masuk
-                    </span>
-
-                    <div class="marketplace-stat-icon orange">
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M20 7h-9"/>
-                            <path d="M20 12h-9"/>
-                            <path d="M20 17h-9"/>
-                            <path d="M4 7h.01"/>
-                            <path d="M4 12h.01"/>
-                            <path d="M4 17h.01"/>
-                        </svg>
-
-                    </div>
-
-                </div>
-
-                <div class="marketplace-stat-bottom">
-
-                    <strong>
-                        34
-                    </strong>
-
-                    <span>
-                        Menunggu proses
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-stat-card">
-
-                <div class="marketplace-stat-top">
-
-                    <span class="marketplace-stat-label">
-                        Kontrak Berjalan
-                    </span>
-
-                    <div class="marketplace-stat-icon blue">
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <path d="M14 2v6h6"/>
-                            <path d="M8 13h8"/>
-                            <path d="M8 17h5"/>
-                        </svg>
-
-                    </div>
-
-                </div>
-
-                <div class="marketplace-stat-bottom">
-
-                    <strong>
-                        18
-                    </strong>
-
-                    <span>
-                        Kontrak aktif
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-stat-card">
-
-                <div class="marketplace-stat-top">
-
-                    <span class="marketplace-stat-label">
-                        Nilai Transaksi
-                    </span>
-
-                    <div class="marketplace-stat-icon yellow">
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <circle cx="12" cy="12" r="9"/>
-                            <path d="M16 8h-5a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4H8"/>
-                            <path d="M12 6v2"/>
-                            <path d="M12 16v2"/>
-                        </svg>
-
-                    </div>
-
-                </div>
-
-                <div class="marketplace-stat-bottom">
-
-                    <strong>
-                        Rp 248 Jt
-                    </strong>
-
-                    <span>
-                        Nilai kontrak aktif
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="marketplace-data-card">
-
-            <div class="marketplace-data-header">
-
-                <div>
-
-                    <h2>
-                        Listing Marketplace
-                    </h2>
-
-                    <p>
-                        Kelola dan pantau penawaran hasil panen dari petani.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-filter-wrapper">
-
-                <div class="marketplace-filter-grid">
-
-                    <div class="marketplace-search">
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-
-                        <input
-                            type="text"
-                            placeholder="Cari komoditas atau petani..."
-                        >
-
-                    </div>
-
-
-                    <select>
-
-                        <option>
-                            Semua Komoditas
-                        </option>
-
-                        <option>
-                            Gabah
-                        </option>
-
-                        <option>
-                            Beras
-                        </option>
-
-                        <option>
-                            Pupuk
-                        </option>
-
-                    </select>
-
-
-                    <select>
-
-                        <option>
-                            Semua Status
-                        </option>
-
-                        <option>
-                            Aktif
-                        </option>
-
-                        <option>
-                            Draft
-                        </option>
-
-                        <option>
-                            Terjual
-                        </option>
-
-                        <option>
-                            Kedaluwarsa
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                KOMODITAS
-                            </th>
-
-                            <th>
-                                PETANI
-                            </th>
-
-                            <th>
-                                JUMLAH
-                            </th>
-
-                            <th>
-                                HARGA
-                            </th>
-
-                            <th>
-                                STATUS
-                            </th>
-
-                            <th>
-                                PUBLIKASI
-                            </th>
-
-                            <th class="right">
-                                AKSI
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        @foreach([
-                            [
-                                'commodity' => 'Gabah Kering Panen',
-                                'code' => 'GKP',
-                                'farmer' => 'Ahmad Setiawan',
-                                'location' => 'Indramayu',
-                                'quantity' => '2.500 kg',
-                                'price' => 'Rp 6.200 / kg',
-                                'status' => 'Aktif',
-                                'date' => '12 Agustus 2026',
-                            ],
-                            [
-                                'commodity' => 'Beras Medium',
-                                'code' => 'Beras',
-                                'farmer' => 'Budi Raharjo',
-                                'location' => 'Subang',
-                                'quantity' => '1.200 kg',
-                                'price' => 'Rp 12.500 / kg',
-                                'status' => 'Aktif',
-                                'date' => '11 Agustus 2026',
-                            ],
-                            [
-                                'commodity' => 'Gabah Kering Panen',
-                                'code' => 'GKP',
-                                'farmer' => 'Citra Nugraha',
-                                'location' => 'Karawang',
-                                'quantity' => '3.000 kg',
-                                'price' => 'Rp 6.100 / kg',
-                                'status' => 'Terjual',
-                                'date' => '8 Agustus 2026',
-                            ],
-                            [
-                                'commodity' => 'Pupuk Urea',
-                                'code' => 'Pupuk',
-                                'farmer' => 'Dedi Saputra',
-                                'location' => 'Kramat',
-                                'quantity' => '500 kg',
-                                'price' => 'Rp 2.200 / kg',
-                                'status' => 'Draft',
-                                'date' => '-',
-                            ],
-                        ] as $item)
-
-                            <tr>
-
-                                <td>
-
-                                    <div class="commodity-cell">
-
-                                        <div class="commodity-icon">
-
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            >
-                                                <path d="M12 22V4"/>
-                                                <path d="M8 8c-2-2-3-4-3-6"/>
-                                                <path d="M16 8c2-2 3-4 3-6"/>
-                                                <path d="M8 14c-2-2-3-4-3-6"/>
-                                                <path d="M16 14c2-2 3-4 3-6"/>
-                                            </svg>
-
-                                        </div>
-
-                                        <div>
-
-                                            <strong>
-                                                {{ $item['commodity'] }}
-                                            </strong>
-
-                                            <span>
-                                                {{ $item['code'] }}
-                                            </span>
-
-                                        </div>
-
-                                    </div>
-
-                                </td>
-
-
-                                <td>
-
-                                    <div class="farmer-cell">
-
-                                        <strong>
-                                            {{ $item['farmer'] }}
-                                        </strong>
-
-                                        <span>
-                                            {{ $item['location'] }}
-                                        </span>
-
-                                    </div>
-
-                                </td>
-
-
-                                <td>
-
-                                    <span class="quantity-value">
-                                        {{ $item['quantity'] }}
-                                    </span>
-
-                                </td>
-
-
-                                <td>
-
-                                    <span class="price-value">
-                                        {{ $item['price'] }}
-                                    </span>
-
-                                </td>
-
-
-                                <td>
-
-                                    @if($item['status'] === 'Aktif')
-
-                                        <span class="listing-status active">
-                                            Aktif
-                                        </span>
-
-                                    @elseif($item['status'] === 'Terjual')
-
-                                        <span class="listing-status sold">
-                                            Terjual
-                                        </span>
-
-                                    @else
-
-                                        <span class="listing-status draft">
-                                            Draft
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-
-                                <td>
-
-                                    <span class="publish-date">
-                                        {{ $item['date'] }}
-                                    </span>
-
-                                </td>
-
-
-                                <td class="action-cell">
-
-                                    <button
-                                        type="button"
-                                        class="detail-button"
-                                    >
-                                        Detail
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                        @endforeach
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="marketplace-pagination-wrapper">
-
-                <p>
-                    Menampilkan
-                    <strong>1–4</strong>
-                    dari
-                    <strong>86</strong>
-                    listing
-                </p>
-
-                <div class="marketplace-pagination">
-
-                    <button
-                        type="button"
-                        disabled
-                        class="pagination-button pagination-prev"
-                    >
-                        Sebelumnya
-                    </button>
-
-                    <button
-                        type="button"
-                        class="pagination-number active"
-                    >
-                        1
-                    </button>
-
-                    <button
-                        type="button"
-                        class="pagination-number"
-                    >
-                        2
-                    </button>
-
-                    <button
-                        type="button"
-                        class="pagination-number"
-                    >
-                        3
-                    </button>
-
-                    <button
-                        type="button"
-                        class="pagination-button pagination-next"
-                    >
-                        Selanjutnya
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="marketplace-secondary-grid">
-
-            <div class="marketplace-secondary-card">
-
-                <div class="secondary-card-header">
-
-                    <div>
-
-                        <h2>
-                            Penawaran Masuk
-                        </h2>
-
-                        <p>
-                            Penawaran harga dari pembeli terhadap listing petani.
-                        </p>
-
-                    </div>
-
-                    <span>
-                        34 Penawaran
-                    </span>
-
-                </div>
-
-
-                <div class="offer-list">
-
-                    <div class="offer-item">
-
-                        <div class="offer-avatar">
-                            M
-                        </div>
-
-                        <div class="offer-content">
-
-                            <strong>
-                                Mitra Beras Nusantara
-                            </strong>
-
-                            <span>
-                                Gabah Kering Panen · 1.000 kg
-                            </span>
-
-                        </div>
-
-                        <div class="offer-price">
-
-                            <strong>
-                                Rp 6.350/kg
-                            </strong>
-
-                            <span>
-                                Menunggu
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="offer-item">
-
-                        <div class="offer-avatar">
-                            P
-                        </div>
-
-                        <div class="offer-content">
-
-                            <strong>
-                                PT Pangan Sejahtera
-                            </strong>
-
-                            <span>
-                                Beras Medium · 500 kg
-                            </span>
-
-                        </div>
-
-                        <div class="offer-price">
-
-                            <strong>
-                                Rp 12.700/kg
-                            </strong>
-
-                            <span>
-                                Menunggu
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="offer-item">
-
-                        <div class="offer-avatar">
-                            K
-                        </div>
-
-                        <div class="offer-content">
-
-                            <strong>
-                                Koperasi Tani Makmur
-                            </strong>
-
-                            <span>
-                                Gabah Kering Panen · 2.000 kg
-                            </span>
-
-                        </div>
-
-                        <div class="offer-price">
-
-                            <strong>
-                                Rp 6.250/kg
-                            </strong>
-
-                            <span>
-                                Diproses
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="marketplace-secondary-card">
-
-                <div class="secondary-card-header">
-
-                    <div>
-
-                        <h2>
-                            Kontrak Berjalan
-                        </h2>
-
-                        <p>
-                            Ringkasan kontrak pembelian yang sedang berlangsung.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="contract-summary">
-
-                    <div class="contract-summary-item">
-
-                        <span>
-                            Kontrak aktif
-                        </span>
-
-                        <strong>
-                            18
-                        </strong>
-
-                    </div>
-
-
-                    <div class="contract-summary-item">
-
-                        <span>
-                            Menunggu DP
-                        </span>
-
-                        <strong>
-                            5
-                        </strong>
-
-                    </div>
-
-
-                    <div class="contract-summary-item">
-
-                        <span>
-                            Selesai
-                        </span>
-
-                        <strong>
-                            42
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="contract-progress">
-
-                    <div class="contract-progress-header">
-
-                        <span>
-                            Proses transaksi
-                        </span>
-
-                        <strong>
-                            72%
-                        </strong>
-
-                    </div>
-
-                    <div class="progress-track">
-
-                        <div class="progress-value"></div>
-
-                    </div>
-
-                    <p>
-                        Sebagian besar kontrak aktif sudah memasuki proses pembayaran.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        <a href="{{ route('admin.marketplace.create') }}" class="btn-market-action btn-market-primary">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Tambah Listing Produk Baru</span>
+        </a>
     </div>
 
-</div>
+    {{-- Status Alerts --}}
+    @if(session('status'))
+        <div class="market-alert market-alert-success" id="alert-status">
+            <span>{{ session('status') }}</span>
+            <button type="button" style="background:transparent; border:none; cursor:pointer;" onclick="document.getElementById('alert-status').remove()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    @endif
 
+    {{-- Stat KPI Cards --}}
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Total Listing</p>
+                <h3 class="stat-number">{{ number_format($stats['listings'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Produk terdaftar di sistem</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Published / Aktif</p>
+                <h3 class="stat-number" style="color:#1b5e20;">{{ number_format($stats['published'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Tampil aktif di marketplace</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Total Penawaran</p>
+                <h3 class="stat-number">{{ number_format($stats['offers'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Tawaran masuk dari mitra</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Penawaran Pending</p>
+                <h3 class="stat-number" style="color:#0f172a;">{{ number_format($stats['pending_offers'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Menunggu konfirmasi</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Data Listing Panen Card --}}
+    <section class="data-card">
+        <div class="data-header">
+            <div>
+                <h2>Katalog Listing Produk & Hasil Panen</h2>
+                <p>Menampilkan {{ $listings->firstItem() ?? 0 }} - {{ $listings->lastItem() ?? 0 }} dari {{ $listings->total() }} produk terdaftar</p>
+            </div>
+        </div>
+
+        {{-- Filter & Search Bar --}}
+        <div class="filter-wrapper">
+            <form method="GET" action="{{ route('admin.marketplace.index') }}" class="filter-form">
+                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama komoditas atau deskripsi..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; outline:none; width:260px;">
+
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="published" @selected(($filters['status'] ?? '') === 'published')>Published</option>
+                    <option value="draft" @selected(($filters['status'] ?? '') === 'draft')>Draft</option>
+                    <option value="closed" @selected(($filters['status'] ?? '') === 'closed')>Closed / Terjual</option>
+                    <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Expired</option>
+                </select>
+
+                <button type="submit" class="btn-filter-submit">Filter</button>
+                @if(!empty($filters['search']) || !empty($filters['status']))
+                    <a href="{{ route('admin.marketplace.index') }}" class="btn-market-action" style="padding:9px 14px;">Reset</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Foto Produk</th>
+                        <th>Komoditas & Lahan</th>
+                        <th>Link Penjualan</th>
+                        <th>Petani</th>
+                        <th>Jumlah Total</th>
+                        <th>Harga Satuan</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($listings as $listing)
+                        @php
+                            $thumb = $listing->image_url ?? ($listing->images->first()?->image_path ?? asset('images/padi-logo.jpeg'));
+                        @endphp
+                        <tr>
+                            <td>
+                                <img src="{{ $thumb }}" alt="{{ $listing->commodity }}" class="product-thumb" onerror="this.src='{{ asset('images/padi-logo.jpeg') }}'">
+                            </td>
+                            <td>
+                                <strong style="font-size:15px; color:#0f172a; display:block;">{{ $listing->commodity }}</strong>
+                                <span style="font-size:12px; color:#64748b; display:block;">{{ Str::limit($listing->description ?? 'Tidak ada deskripsi', 50) }}</span>
+                                <span style="font-size:11px; font-weight:700; color:#1b5e20;">{{ $listing->farm?->name ?? '-' }}</span>
+                            </td>
+                            <td>
+                                @if($listing->sales_link)
+                                    <a href="{{ $listing->sales_link }}" target="_blank" class="sales-link-btn" title="{{ $listing->sales_link }}">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        <span>Buka Link</span>
+                                    </a>
+                                @else
+                                    <span style="font-size:12px; color:#94a3b8;">- Tidak Ada Link -</span>
+                                @endif
+                            </td>
+                            <td>
+                                <strong>{{ $listing->farmer?->name ?? '-' }}</strong>
+                            </td>
+                            <td>
+                                <span style="font-size:14px; font-weight:700; color:#0f172a;">{{ number_format((float) $listing->quantity, 2, ',', '.') }} {{ $listing->unit }}</span>
+                            </td>
+                            <td>
+                                <span style="font-size:14px; font-weight:800; color:#1b5e20;">Rp {{ number_format((float) $listing->price_per_unit, 0, ',', '.') }}</span>
+                            </td>
+                            <td>
+                                <span class="market-status-badge status-{{ $listing->status }}">
+                                    {{ strtoupper($listing->status) }}
+                                </span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
+                                    <a href="{{ route('admin.marketplace.edit', $listing) }}" class="btn-market-action" style="padding:6px 12px; font-size:12px;">Edit</a>
+
+                                    <form method="POST" action="{{ route('admin.marketplace.listings.destroy', $listing) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus listing {{ $listing->commodity }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-market-action" style="background:#fef2f2; color:#dc2626; border-color:#fca5a5; padding:6px 12px; font-size:12px; cursor:pointer;">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" style="padding:48px; text-align:center; color:#64748b;">Belum ada listing marketplace terdaftar.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($listings->hasPages())
+            <div class="pagination-wrapper">
+                {{ $listings->withQueryString()->links() }}
+            </div>
+        @endif
+    </section>
+
+    {{-- Penawaran Terbaru Card --}}
+    <section class="data-card">
+        <div class="data-header">
+            <div>
+                <h2>Penawaran Terbaru Dari Pembeli / Mitra</h2>
+                <p>10 tawaran pembelian hasil panen terbaru</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Offer</th>
+                        <th>Komoditas Listing</th>
+                        <th>Nama Mitra Pembeli</th>
+                        <th>Harga Tawaran</th>
+                        <th>Jumlah Tawaran</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Aksi Update Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($offers as $offer)
+                        <tr>
+                            <td><strong>#{{ $offer->id }}</strong></td>
+                            <td>{{ $offer->listing?->commodity ?? '-' }}</td>
+                            <td><strong>{{ $offer->partner?->name ?? '-' }}</strong></td>
+                            <td><strong style="color:#1b5e20;">Rp {{ number_format((float) $offer->offered_price, 0, ',', '.') }}</strong></td>
+                            <td>{{ number_format((float) $offer->quantity, 2, ',', '.') }}</td>
+                            <td><span class="market-status-badge status-{{ $offer->status }}">{{ strtoupper($offer->status) }}</span></td>
+                            <td style="text-align:right;">
+                                <form method="POST" action="{{ route('admin.marketplace.offers.update', $offer) }}" style="display:inline-flex; gap:6px;">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="status" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; background:#fff;">
+                                        @foreach(['pending', 'accepted', 'rejected', 'cancelled'] as $st)
+                                            <option value="{{ $st }}" @selected($offer->status === $st)>{{ ucfirst($st) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="btn-market-action" style="padding:6px 12px; font-size:12px; background:#1b5e20; color:#fff; border-color:#1b5e20; cursor:pointer;">Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" style="padding:48px; text-align:center; color:#64748b;">Belum ada penawaran marketplace di database.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
 @endsection

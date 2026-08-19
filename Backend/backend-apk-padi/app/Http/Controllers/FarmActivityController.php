@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FarmActivity;
+use App\Http\Resources\FarmActivityResource;
+use App\Services\Api\ApiResourceIndexService;
+use Illuminate\Http\JsonResponse;
 
 class FarmActivityController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources): JsonResponse
     {
-        $activities = FarmActivity::with('cropSeason')->get();
-
         return response()->json([
             'success' => true,
-            'data' => $activities,
+            'message' => 'Data aktivitas lahan berhasil diambil.',
+            'data' => [
+                'farm_activities' => FarmActivityResource::collection($resources->farmActivities()),
+            ],
         ]);
     }
 }

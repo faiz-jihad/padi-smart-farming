@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'weather' => [
+        'provider' => env('WEATHER_PROVIDER', 'openweathermap'),
+        'api_key' => env('WEATHER_API_KEY'),
+        'base_url' => env('WEATHER_BASE_URL', 'https://api.openweathermap.org/data/2.5'),
+        'agromonitoring_base_url' => env('AGROMONITORING_BASE_URL', 'https://api.agromonitoring.com/1.0'),
+        'timeout' => env('WEATHER_TIMEOUT', 10),
+    ],
+
 ];

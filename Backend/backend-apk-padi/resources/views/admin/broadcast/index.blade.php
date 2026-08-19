@@ -1,500 +1,256 @@
 @extends('layouts.admin')
 
 @section('content')
-
 <link rel="stylesheet" href="{{ asset('css/admin/broadcast.css') }}">
 
 <div class="broadcast-page">
+    {{-- Breadcrumb --}}
+    <nav class="broadcast-breadcrumb" aria-label="Breadcrumb">
+        <span>Admin</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="broadcast-breadcrumb-current">Siaran Informasi Broadcast</span>
+    </nav>
 
-    <div class="broadcast-container">
-
-        <div class="broadcast-header">
-
-            <div>
-                <p class="broadcast-eyebrow">
-                    Sistem P.A.D.I.
-                </p>
-
-                <h1 class="broadcast-title">
-                    Broadcast
-                </h1>
-
-                <p class="broadcast-description">
-                    Kelola pengumuman dan informasi yang dibuat oleh administrator.
-                </p>
-            </div>
-
-            <button type="button" class="broadcast-add-button">
-
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14"/>
-                    <path d="M5 12h14"/>
-                </svg>
-
-                <span>Buat Broadcast</span>
-
-            </button>
-
+    {{-- Page Header --}}
+    <div class="broadcast-header">
+        <div class="broadcast-header-content">
+            <h1 class="broadcast-title">Manajemen Siaran Informasi Broadcast</h1>
+            <p class="broadcast-description">Kirimkan pengumuman, peringatan cuaca/hama, atau informasi irigasi langsung ke notifikasi akun petani & penyuluh.</p>
         </div>
-
-
-        <div class="broadcast-stat-grid">
-
-            <div class="broadcast-stat-card">
-
-                <div class="broadcast-stat-icon green">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12h18"/>
-                        <path d="M12 3v18"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <span>Total Broadcast</span>
-                    <strong>24</strong>
-                </div>
-
-            </div>
-
-
-            <div class="broadcast-stat-card">
-
-                <div class="broadcast-stat-icon blue">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m5 12 5 5L20 7"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <span>Published</span>
-                    <strong>18</strong>
-                </div>
-
-            </div>
-
-
-            <div class="broadcast-stat-card">
-
-                <div class="broadcast-stat-icon yellow">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 7v5l3 2"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <span>Draft</span>
-                    <strong>4</strong>
-                </div>
-
-            </div>
-
-
-            <div class="broadcast-stat-card">
-
-                <div class="broadcast-stat-icon red">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="m15 9-6 6"/>
-                        <path d="m9 9 6 6"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <span>Expired</span>
-                    <strong>2</strong>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="broadcast-card">
-
-            <div class="broadcast-toolbar">
-
-                <div class="broadcast-tabs">
-
-                    <button type="button" class="broadcast-tab active">
-                        Semua
-                    </button>
-
-                    <button type="button" class="broadcast-tab">
-                        Draft
-                    </button>
-
-                    <button type="button" class="broadcast-tab">
-                        Published
-                    </button>
-
-                    <button type="button" class="broadcast-tab">
-                        Expired
-                    </button>
-
-                </div>
-
-
-                <div class="broadcast-search">
-
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="m20 20-4-4"/>
-                    </svg>
-
-                    <input
-                        type="text"
-                        placeholder="Cari broadcast..."
-                    >
-
-                </div>
-
-            </div>
-
-
-            <div class="broadcast-table-wrapper">
-
-                <table class="broadcast-table">
-
-                    <thead>
-                        <tr>
-                            <th>JUDUL</th>
-                            <th>TIPE</th>
-                            <th>STATUS</th>
-                            <th>PUBLISHED</th>
-                            <th>EXPIRED</th>
-                            <th>AKSI</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-
-                            <td>
-                                <div class="broadcast-title-cell">
-                                    <strong>
-                                        Informasi Jadwal Tanam
-                                    </strong>
-
-                                    <span>
-                                        Informasi jadwal tanam padi untuk periode berikutnya.
-                                    </span>
-                                </div>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-type type-info">
-                                    Info
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-status published">
-                                    Published
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    15 Agu 2026 08:00
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    30 Agu 2026 23:59
-                                </span>
-                            </td>
-
-                            <td>
-                                <div class="broadcast-actions">
-
-                                    <button type="button" class="broadcast-action view" title="Lihat">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
-                                            <circle cx="12" cy="12" r="2.5"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action edit" title="Edit">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action delete" title="Hapus">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 15H6L5 6"/>
-                                            <path d="M10 11v6"/>
-                                            <path d="M14 11v6"/>
-                                        </svg>
-                                    </button>
-
-                                </div>
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <div class="broadcast-title-cell">
-                                    <strong>
-                                        Peringatan Cuaca
-                                    </strong>
-
-                                    <span>
-                                        Himbauan kepada petani terkait kondisi cuaca wilayah.
-                                    </span>
-                                </div>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-type type-warning">
-                                    Warning
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-status published">
-                                    Published
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    14 Agu 2026 10:30
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    20 Agu 2026 23:59
-                                </span>
-                            </td>
-
-                            <td>
-                                <div class="broadcast-actions">
-
-                                    <button type="button" class="broadcast-action view" title="Lihat">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
-                                            <circle cx="12" cy="12" r="2.5"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action edit" title="Edit">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action delete" title="Hapus">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 15H6L5 6"/>
-                                            <path d="M10 11v6"/>
-                                            <path d="M14 11v6"/>
-                                        </svg>
-                                    </button>
-
-                                </div>
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <div class="broadcast-title-cell">
-                                    <strong>
-                                        Program Bantuan Petani
-                                    </strong>
-
-                                    <span>
-                                        Informasi program bantuan dan pendaftaran bagi petani.
-                                    </span>
-                                </div>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-type type-announcement">
-                                    Announcement
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-status draft">
-                                    Draft
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    -
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    -
-                                </span>
-                            </td>
-
-                            <td>
-                                <div class="broadcast-actions">
-
-                                    <button type="button" class="broadcast-action view" title="Lihat">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
-                                            <circle cx="12" cy="12" r="2.5"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action edit" title="Edit">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action delete" title="Hapus">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 15H6L5 6"/>
-                                            <path d="M10 11v6"/>
-                                            <path d="M14 11v6"/>
-                                        </svg>
-                                    </button>
-
-                                </div>
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-                                <div class="broadcast-title-cell">
-                                    <strong>
-                                        Pemeliharaan Sistem
-                                    </strong>
-
-                                    <span>
-                                        Pemberitahuan pemeliharaan sistem P.A.D.I.
-                                    </span>
-                                </div>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-type type-system">
-                                    System
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-status expired">
-                                    Expired
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    01 Agu 2026 20:00
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="broadcast-date">
-                                    02 Agu 2026 02:00
-                                </span>
-                            </td>
-
-                            <td>
-                                <div class="broadcast-actions">
-
-                                    <button type="button" class="broadcast-action view" title="Lihat">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/>
-                                            <circle cx="12" cy="12" r="2.5"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action edit" title="Edit">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 20h9"/>
-                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>
-                                        </svg>
-                                    </button>
-
-                                    <button type="button" class="broadcast-action delete" title="Hapus">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 6h18"/>
-                                            <path d="M8 6V4h8v2"/>
-                                            <path d="M19 6l-1 15H6L5 6"/>
-                                            <path d="M10 11v6"/>
-                                            <path d="M14 11v6"/>
-                                        </svg>
-                                    </button>
-
-                                </div>
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="broadcast-pagination">
-
-                <p>
-                    Menampilkan <strong>1–4</strong> dari <strong>24</strong> broadcast
-                </p>
-
-                <div class="broadcast-pagination-buttons">
-
-                    <button type="button" class="broadcast-page-button disabled">
-                        Sebelumnya
-                    </button>
-
-                    <button type="button" class="broadcast-page-button active">
-                        1
-                    </button>
-
-                    <button type="button" class="broadcast-page-button">
-                        2
-                    </button>
-
-                    <button type="button" class="broadcast-page-button">
-                        3
-                    </button>
-
-                    <button type="button" class="broadcast-page-button">
-                        Selanjutnya
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
     </div>
 
-</div>
+    {{-- Status Alerts --}}
+    @if(session('status'))
+        <div class="broadcast-alert broadcast-alert-success" id="alert-status">
+            <span>{{ session('status') }}</span>
+            <button type="button" style="background:transparent; border:none; cursor:pointer;" onclick="document.getElementById('alert-status').remove()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    @endif
 
+    {{-- Stat KPI Cards --}}
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Total Broadcast</p>
+                <h3 class="stat-number">{{ number_format($stats['total'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Terdaftar di database</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Published / Terkirim</p>
+                <h3 class="stat-number" style="color:#1b5e20;">{{ number_format($stats['published'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Aktif diterima pengguna</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Draft</p>
+                <h3 class="stat-number">{{ number_format($stats['draft'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Belum dipublikasikan</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-content">
+                <p class="stat-label">Kadaluarsa</p>
+                <h3 class="stat-number" style="color:#dc2626;">{{ number_format($stats['expired'], 0, ',', '.') }}</h3>
+                <p class="stat-description">Masa berlaku habis</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Form Buat Broadcast Card --}}
+    <section class="data-card" style="border: 2px solid #a7f3d0; background: #ffffff; margin-bottom: 32px;">
+        <div class="data-header" style="background: #f0fdf4; border-bottom: 1px solid #c8e6c9;">
+            <div>
+                <h2 style="color: #1b5e20; font-size: 18px;">Buat Siaran Informasi Baru</h2>
+                <p style="color: #166534;">Input pesan pengumuman atau peringatan untuk dikirimkan secara langsung ke aplikasi mobile pengguna</p>
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <form method="POST" action="{{ route('admin.broadcast.store') }}">
+                @csrf
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="title">Judul Siaran <span style="color:#dc2626;">*</span></label>
+                        <input type="text" name="title" id="title" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; box-sizing:border-box;" placeholder="Contoh: Peringatan Dini Hama Wereng Karawang" value="{{ old('title') }}" required>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="type">Tipe Pesan <span style="color:#dc2626;">*</span></label>
+                        <select name="type" id="type" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; background:#fff;" required>
+                            <option value="info">Informasi Umum</option>
+                            <option value="warning">Peringatan / Warning</option>
+                            <option value="announcement">Pengumuman Resmi</option>
+                            <option value="system">Pemberitahuan Sistem</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="target_role">Sasaran Penerima <span style="color:#dc2626;">*</span></label>
+                        <select name="target_role" id="target_role" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; background:#fff;" required>
+                            <option value="all">Semua Pengguna (Petani & Partner)</option>
+                            <option value="farmer">Khusus Petani</option>
+                            <option value="partner">Khusus Penyuluh / Mitra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="message">Isi Pesan Siaran <span style="color:#dc2626;">*</span></label>
+                    <textarea name="message" id="message" rows="3" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; box-sizing:border-box;" placeholder="Tuliskan petunjuk teknis atau instruksi siaran lengkap..." required>{{ old('message') }}</textarea>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:16px; align-items:end;">
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="status">Status Publikasi <span style="color:#dc2626;">*</span></label>
+                        <select name="status" id="status" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; background:#fff;" required>
+                            <option value="published">Published (Langsung Kirim Notifikasi)</option>
+                            <option value="draft">Draft (Simpan Dulu)</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px;" for="expires_at">Batas Kedaluwarsa (Opsional)</label>
+                        <input type="datetime-local" name="expires_at" id="expires_at" style="width:100%; padding:9px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; background:#fff; box-sizing:border-box;">
+                    </div>
+
+                    <button type="submit" class="btn-broadcast-action btn-broadcast-primary" style="padding:11px 24px; border:none; cursor:pointer;">
+                        Kirim Siaran Informasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    {{-- Daftar Broadcast Card --}}
+    <section class="data-card">
+        <div class="data-header">
+            <div>
+                <h2>Daftar Riwayat Siaran Informasi Broadcast</h2>
+                <p>Menampilkan {{ $broadcasts->firstItem() ?? 0 }} - {{ $broadcasts->lastItem() ?? 0 }} dari {{ $broadcasts->total() }} broadcast terdaftar</p>
+            </div>
+        </div>
+
+        {{-- Filter & Search Bar --}}
+        <div class="filter-wrapper">
+            <form method="GET" action="{{ route('admin.broadcast.index') }}" class="filter-form">
+                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari judul siaran atau pesan..." style="padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:13px; outline:none; width:240px;">
+
+                <select name="type" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Tipe Pesan</option>
+                    <option value="info" @selected(($filters['type'] ?? '') === 'info')>Informasi Umum</option>
+                    <option value="warning" @selected(($filters['type'] ?? '') === 'warning')>Peringatan</option>
+                    <option value="announcement" @selected(($filters['type'] ?? '') === 'announcement')>Pengumuman</option>
+                    <option value="system" @selected(($filters['type'] ?? '') === 'system')>Sistem</option>
+                </select>
+
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="published" @selected(($filters['status'] ?? '') === 'published')>Published</option>
+                    <option value="draft" @selected(($filters['status'] ?? '') === 'draft')>Draft</option>
+                    <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Expired</option>
+                </select>
+
+                <button type="submit" class="btn-filter-submit">Filter</button>
+                @if(!empty($filters['search']) || !empty($filters['type']) || !empty($filters['status']))
+                    <a href="{{ route('admin.broadcast.index') }}" class="btn-broadcast-action" style="padding:9px 14px;">Reset</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Judul & Isi Pesan</th>
+                        <th>Tipe</th>
+                        <th>Target Penerima</th>
+                        <th>Dipublikasi Pada</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Aksi Management</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($broadcasts as $b)
+                        @php
+                            $targetLabel = match($b->target_role) {
+                                'farmer' => 'Khusus Petani',
+                                'partner' => 'Khusus Penyuluh',
+                                default => 'Semua Pengguna',
+                            };
+                        @endphp
+                        <tr>
+                            <td style="max-width: 320px;">
+                                <strong style="font-size:15px; color:#0f172a; display:block;">{{ $b->title }}</strong>
+                                <p style="font-size:12px; color:#334155; margin:4px 0; line-height:1.4;">{{ Str::limit($b->message, 120) }}</p>
+                                <span style="font-size:11px; color:#64748b;">Dibuat oleh: {{ $b->admin?->name ?? 'Admin P.A.D.I.' }}</span>
+                            </td>
+                            <td>
+                                <span class="type-badge type-{{ $b->type }}">{{ strtoupper($b->type) }}</span>
+                            </td>
+                            <td>
+                                <span style="font-size:12px; font-weight:700; color:#1b5e20;">{{ $targetLabel }}</span>
+                            </td>
+                            <td>
+                                <span style="font-size:13px; color:#334155;">{{ $b->published_at ? $b->published_at->format('d M Y H:i') : '-' }}</span>
+                            </td>
+                            <td>
+                                <span class="type-badge {{ $b->status === 'published' ? 'type-info' : ($b->status === 'draft' ? 'type-system' : 'type-warning') }}">
+                                    {{ strtoupper($b->status) }}
+                                </span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
+                                    <form method="POST" action="{{ route('admin.broadcast.update', $b) }}" style="display:inline-flex; gap:4px;">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="title" value="{{ $b->title }}">
+                                        <input type="hidden" name="message" value="{{ $b->message }}">
+                                        <input type="hidden" name="type" value="{{ $b->type }}">
+                                        <input type="hidden" name="target_role" value="{{ $b->target_role }}">
+                                        <select name="status" style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; background:#fff;">
+                                            <option value="published" @selected($b->status === 'published')>Publish</option>
+                                            <option value="draft" @selected($b->status === 'draft')>Draft</option>
+                                            <option value="expired" @selected($b->status === 'expired')>Expired</option>
+                                        </select>
+                                        <button type="submit" class="btn-broadcast-action" style="padding:6px 12px; font-size:12px; background:#1b5e20; color:#fff; border-color:#1b5e20; cursor:pointer;">Update</button>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('admin.broadcast.destroy', $b) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus broadcast {{ $b->title }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-broadcast-action" style="background:#fef2f2; color:#dc2626; border-color:#fca5a5; padding:6px 12px; font-size:12px; cursor:pointer;">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="padding:48px; text-align:center; color:#64748b;">Belum ada siaran broadcast terdaftar di database.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($broadcasts->hasPages())
+            <div class="pagination-wrapper">
+                {{ $broadcasts->withQueryString()->links() }}
+            </div>
+        @endif
+    </section>
+</div>
 @endsection

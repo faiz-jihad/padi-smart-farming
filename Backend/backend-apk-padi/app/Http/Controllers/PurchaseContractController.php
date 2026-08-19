@@ -2,22 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PurchaseContract;
+use App\Http\Resources\PurchaseContractResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class PurchaseContractController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $contracts = PurchaseContract::with([
-            'listing',
-            'farmer',
-            'partner',
-            'offer',
-        ])->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $contracts,
-        ]);
+        return PurchaseContractResource::collection($resources->purchaseContracts());
     }
 }

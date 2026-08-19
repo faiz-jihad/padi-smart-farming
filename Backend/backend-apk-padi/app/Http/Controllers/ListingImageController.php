@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ListingImage;
+use App\Http\Resources\ListingImageResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class ListingImageController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $images = ListingImage::with('listing')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $images,
-        ]);
+        return ListingImageResource::collection($resources->listingImages());
     }
 }

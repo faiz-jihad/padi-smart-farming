@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CropSeason extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'farm_id',
         'variety_id',

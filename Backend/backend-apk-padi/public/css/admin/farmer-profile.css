@@ -1,0 +1,253 @@
+/* ==========================================================================
+   P.A.D.I. Farmer Public Profile Admin CSS
+   Strict 3-Color Palette: Green (#166534), Slate/Black (#0f172a), White (#ffffff)
+   ========================================================================== */
+
+.fp-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.fp-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+.fp-breadcrumb svg {
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+}
+
+.fp-breadcrumb-current {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.fp-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.fp-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px 0;
+}
+
+.fp-description {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.fp-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.fp-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.fp-card-step {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #166534;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.fp-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.fp-card-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    margin: 2px 0 0 0;
+}
+
+.fp-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.fp-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.fp-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.fp-full {
+    grid-column: 1 / -1;
+}
+
+.fp-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.fp-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 7px;
+}
+
+.fp-required {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+.fp-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+.fp-input-subdomain {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.fp-input-subdomain input {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-right: none !important;
+}
+
+.fp-subdomain-suffix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    white-space: nowrap;
+}
+
+.fp-upload-box {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 20px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.fp-upload-box:hover {
+    border-color: #166534;
+    background: #f0fdf4;
+}
+
+.fp-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.fp-toggle-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fp-toggle-item:hover {
+    background: #ffffff;
+    border-color: #166534;
+    box-shadow: 0 2px 8px rgba(22, 101, 52, 0.08);
+}
+
+.fp-toggle-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #166534;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.fp-toggle-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+}
+
+.fp-toggle-desc {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.fp-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 8px;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+    .fp-grid-2,
+    .fp-grid-3,
+    .fp-grid-4 {
+        grid-template-columns: 1fr;
+    }
+    
+    .fp-card {
+        padding: 20px;
+    }
+}

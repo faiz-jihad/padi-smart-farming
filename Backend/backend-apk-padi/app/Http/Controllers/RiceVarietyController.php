@@ -2,20 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RiceVariety;
+use App\Http\Resources\RiceVarietyResource;
+use App\Services\Api\ApiResourceIndexService;
 
 class RiceVarietyController extends Controller
 {
-    public function index()
+    public function index(ApiResourceIndexService $resources)
     {
-        $varieties = RiceVariety::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $varieties,
-        ]);
+        return RiceVarietyResource::collection($resources->riceVarieties());
     }
 }

@@ -1,0 +1,109 @@
+{
+  "healthy": {
+    "name": "Healthy",
+    "immediate_actions": [
+      "Lanjutkan pemantauan rutin kondisi daun dan pertumbuhan tanaman.",
+      "Pertahankan sanitasi lahan serta keseimbangan air dan pupuk."
+    ],
+    "prevention_steps": [
+      "Gunakan benih sehat dan varietas yang sesuai wilayah.",
+      "Lakukan pengamatan berkala terutama setelah hujan atau perubahan cuaca ekstrem."
+    ],
+    "danger_signs": [
+      "Muncul bercak luas, daun menguning, atau pertumbuhan tanaman tidak seragam."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh jika muncul gejala baru atau hasil scan berikutnya confidence rendah.",
+    "sources": [
+      "Knowledge base internal P.A.D.I. MVP",
+      "Panduan umum pengamatan organisme pengganggu tanaman padi"
+    ]
+  },
+  "blast": {
+    "name": "Blast",
+    "immediate_actions": [
+      "Pisahkan pengamatan pada rumpun yang menunjukkan bercak dan dokumentasikan perkembangan gejala.",
+      "Kurangi kelembapan berlebih di sekitar tanaman jika memungkinkan.",
+      "Jangan menentukan dosis pestisida tanpa rekomendasi penyuluh atau label resmi produk."
+    ],
+    "prevention_steps": [
+      "Gunakan varietas tahan jika tersedia untuk musim berikutnya.",
+      "Hindari pemupukan nitrogen berlebihan.",
+      "Jaga jarak tanam dan sirkulasi udara agar kanopi tidak terlalu lembap."
+    ],
+    "danger_signs": [
+      "Bercak menyebar cepat ke banyak rumpun.",
+      "Gejala muncul pada leher malai.",
+      "Tanaman menunjukkan penurunan vigor secara luas."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh jika area terdampak meningkat atau confidence berada pada level rendah hingga medium.",
+    "sources": [
+      "Knowledge base internal P.A.D.I. MVP",
+      "Panduan umum pengendalian penyakit blas padi"
+    ]
+  },
+  "tungro": {
+    "name": "Tungro",
+    "immediate_actions": [
+      "Amati sebaran tanaman menguning dan pertumbuhan kerdil di petakan.",
+      "Pantau keberadaan wereng hijau sebagai vektor.",
+      "Konsultasikan tindakan pengendalian vektor dengan penyuluh setempat."
+    ],
+    "prevention_steps": [
+      "Gunakan varietas tahan atau toleran sesuai rekomendasi wilayah.",
+      "Lakukan tanam serempak pada hamparan yang sama.",
+      "Bersihkan gulma yang dapat menjadi inang alternatif."
+    ],
+    "danger_signs": [
+      "Tanaman muda menguning oranye dan tumbuh kerdil.",
+      "Gejala menyebar mengikuti pola keberadaan vektor.",
+      "Banyak rumpun tidak pulih setelah pemupukan normal."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh segera karena tungro memerlukan konfirmasi lapangan dan pengendalian vektor.",
+    "sources": [
+      "Knowledge base internal P.A.D.I. MVP",
+      "Panduan umum pengamatan tungro pada padi"
+    ]
+  },
+  "bacterial_leaf_blight": {
+    "name": "Bacterial Leaf Blight",
+    "immediate_actions": [
+      "Amati tepi daun yang menguning atau mengering dan catat luas serangan.",
+      "Hindari memindahkan tanaman atau alat dari area bergejala ke area sehat tanpa sanitasi.",
+      "Jangan menambahkan dosis pestisida atau bakterisida tanpa panduan resmi."
+    ],
+    "prevention_steps": [
+      "Gunakan benih sehat dan varietas tahan jika tersedia.",
+      "Kelola air agar tidak mempercepat penyebaran penyakit.",
+      "Hindari pemupukan nitrogen berlebih."
+    ],
+    "danger_signs": [
+      "Daun mengering dari tepi secara luas.",
+      "Gejala menyebar cepat setelah hujan atau genangan.",
+      "Tanaman muda menunjukkan layu atau kerusakan parah."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh jika gejala menyebar cepat atau terjadi pada fase vegetatif awal.",
+    "sources": [
+      "Knowledge base internal P.A.D.I. MVP",
+      "Panduan umum pengendalian hawar daun bakteri padi"
+    ]
+  },
+  "unknown": {
+    "name": "Tidak Dapat Dipastikan",
+    "immediate_actions": [
+      "Ambil ulang foto daun dari jarak dekat dengan pencahayaan cukup.",
+      "Bandingkan gejala dengan beberapa rumpun lain sebelum membuat keputusan tindakan."
+    ],
+    "prevention_steps": [
+      "Pantau perkembangan gejala selama beberapa hari.",
+      "Jaga sanitasi lahan dan hindari tindakan kimia tanpa diagnosis yang lebih pasti."
+    ],
+    "danger_signs": [
+      "Gejala menyebar cepat ke banyak rumpun.",
+      "Tanaman menunjukkan layu, menguning luas, atau kerusakan parah."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh untuk pemeriksaan lapangan karena diagnosis belum dapat dipastikan.",
+    "sources": [
+      "Knowledge base internal P.A.D.I. MVP"
+    ]
+  }
+}
