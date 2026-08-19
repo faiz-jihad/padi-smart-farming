@@ -614,7 +614,7 @@
 
             spBody.innerHTML = `
                 <div class="geo-stat-section">
-                    <div class="geo-stat-section__label">Statistik Wilayah</div>
+                    <div class="geo-stat-section__label">Statistik Wilayah (Data Riil)</div>
                     <div class="geo-stat-grid">
                         <div class="geo-stat-card">
                             <div class="geo-stat-card__value">${s.villages ?? 0}</div>
@@ -633,6 +633,11 @@
                             <div class="geo-stat-card__label">Hektar</div>
                         </div>
                     </div>
+                    ${(s.farms ?? 0) === 0 ? `
+                        <div style="margin-top: 8px; padding: 6px 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 0.72rem; color: #64748b; line-height: 1.4;">
+                            Belum ada akun petani atau petak lahan yang didaftarkan di kecamatan ini.
+                        </div>
+                    ` : ''}
                 </div>
 
                 <div class="geo-divider"></div>

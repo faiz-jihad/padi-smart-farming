@@ -362,30 +362,15 @@ class AdministrativeBoundaryService
         $farms   = Farm::where('district_id', $district->id)->get();
         $farmers = User::whereIn('id', $farms->pluck('farmer_user_id')->unique()->filter())->count();
 
-        $totalArea    = round((float) $farms->sum('area_ha'), 1);
+        $totalArea    = round((float) $farms->sum('area_ha'), 2);
         $villageCount = $district->villages->count();
 
-        // Baseline estimates if no farmer has registered individual parcel yet in this district
-        if ($farms->count() > 0) {
-            $planting      = $farms->where('status', 'planting')->count();
-            $harvestReady  = $farms->where('status', 'harvest_ready')->count();
-            $idle          = $farms->where('status', 'idle')->count();
-            $irrigated     = $farms->whereNotNull('irrigation_type')->count();
-            $irrigationPct = round(($irrigated / $farms->count()) * 100);
-            $waterStatus   = $this->resolveWaterStatus($irrigationPct);
-        } else {
-            // Agro-climate regional estimates based on district coordinates & national paddy baseline
-            $hash = crc32($district->code ?? $district->name);
-            $estArea = 450 + ($hash % 650);
-            $totalArea = round($estArea, 1);
-            $farmers = 85 + ($hash % 120);
-            $farmsCount = 60 + ($hash % 90);
-            $planting = (int) round($farmsCount * 0.65);
-            $harvestReady = (int) round($farmsCount * 0.20);
-            $idle = max(0, $farmsCount - $planting - $harvestReady);
-            $irrigationPct = 70 + ($hash % 25);
-            $waterStatus = $irrigationPct >= 75 ? 'NORMAL' : 'TERBATAS';
-        }
+        $planting      = $farms->where('status', 'planting')->count();
+        $harvestReady  = $farms->where('status', 'harvest_ready')->count();
+        $idle          = $farms->where('status', 'idle')->count();
+        $irrigated     = $farms->whereNotNull('irrigation_type')->count();
+        $irrigationPct = $farms->count() > 0 ? round(($irrigated / $farms->count()) * 100) : 0;
+        $waterStatus   = $farms->count() > 0 ? $this->resolveWaterStatus($irrigationPct) : 'Belum Ada Lahan';
 
         // Risk heuristics
         $risk = $this->calculateRisk($district->latitude ?? -6.25, $district->longitude ?? 108.08, $farms);
@@ -400,9 +385,8 @@ class AdministrativeBoundaryService
             'statistics' => [
                 'villages'          => $villageCount,
                 'farmers'           => $farmers,
-                'farms'             => $farms->count() > 0 ? $farms->count() : ($planting + $harvestReady + $idle),
+                'farms'             => $farms->count(),
                 'farm_area_hectare' => $totalArea,
-                'is_estimated'      => $farms->count() === 0,
             ],
             'agriculture' => [
                 'planting'      => $planting,
