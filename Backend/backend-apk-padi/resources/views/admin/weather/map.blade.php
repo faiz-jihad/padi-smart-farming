@@ -157,7 +157,7 @@
             maxZoom: 19
         }).addTo(map);
 
-        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(map);
+        L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
 
         setTimeout(() => { map.invalidateSize(); }, 150);
         setTimeout(() => { map.invalidateSize(); }, 500);
@@ -691,9 +691,17 @@
                 </div>
             `;
 
-            spDrillBtn.style.display = 'flex';
-            spDrillBtn.textContent   = 'Lihat Desa / Kelurahan';
-            spDrillBtn.onclick       = () => drillToVillage(state.districtId, state.districtName);
+            if (d.has_sub_villages && s.villages > 0) {
+                spDrillBtn.style.display = 'flex';
+                spDrillBtn.textContent   = `Lihat Desa / Kelurahan (${s.villages} Desa)`;
+                spDrillBtn.onclick       = () => drillToVillage(state.districtId, state.districtName);
+            } else {
+                spDrillBtn.style.display = 'flex';
+                spDrillBtn.textContent   = 'Fokus Peta Kecamatan';
+                spDrillBtn.onclick       = () => {
+                    if (activeLayer) safeFitBounds(activeLayer, 0.08);
+                };
+            }
 
             spBackBtn.style.display  = 'flex';
             spBackBtn.onclick        = () => loadProvince(state.provinceId, state.provinceName);
@@ -714,15 +722,24 @@
             showLoading();
             closePanel();
 
-            layers.district.eachLayer(l => l.setStyle({ fillOpacity: 0.04, weight: 1, color: '#94a3b8' }));
-            layers.village.clearLayers();
-            layers.farm.clearLayers();
-
             fetch(`/admin/map/geo/villages?district_id=${districtId}`)
                 .then(r => r.json())
                 .then(geojson => {
                     hideLoading();
-                    if (!geojson.features || geojson.features.length === 0) return;
+                    if (!geojson.features || geojson.features.length === 0) {
+                        // Fallback: keep district layer fully visible and open district summary
+                        layers.district.eachLayer(l => l.setStyle(districtStyle()));
+                        if (activeLayer) {
+                            activeLayer.setStyle(districtSelectedStyle());
+                            safeFitBounds(activeLayer, 0.08);
+                        }
+                        fetchDistrictSummary(districtId, districtName);
+                        return;
+                    }
+
+                    layers.district.eachLayer(l => l.setStyle({ fillOpacity: 0.04, weight: 1, color: '#94a3b8' }));
+                    layers.village.clearLayers();
+                    layers.farm.clearLayers();
 
                     const geoLayer = L.geoJSON(geojson, {
                         style: {
@@ -762,7 +779,10 @@
                     geoLayer.addTo(layers.village);
                     safeFitBounds(geoLayer, 0.05);
                 })
-                .catch(() => hideLoading());
+                .catch(() => {
+                    hideLoading();
+                    layers.district.eachLayer(l => l.setStyle(districtStyle()));
+                });
         }
 
         // ──────────────────────────────────────────────────────

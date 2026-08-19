@@ -113,7 +113,7 @@
     right: 0;
     width: 320px;
     height: 100%;
-    z-index: 999;
+    z-index: 1050;
     background: #ffffff;
     border-left: 1px solid #d6ead8;
     display: flex;
