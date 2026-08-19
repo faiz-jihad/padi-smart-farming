@@ -18,11 +18,15 @@ class AuthController extends Controller
         $user = Auth::user();
 
         if (app(AdminAuthService::class)->canAccessAdmin($user)) {
-            return redirect()->route('admin.dashboard');
+            if ($user?->role === \App\Enums\UserRole::Admin->value) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('admin.agriculture.index');
         }
 
         return view('admin.auth.login', [
-            'title' => 'Login Admin',
+            'title' => 'Login Admin & PPL',
         ]);
     }
 
@@ -36,13 +40,18 @@ class AuthController extends Controller
         if (! $result['ok']) {
             return back()
                 ->withInput($request->only('email', 'remember'))
-                ->withErrors(['email' => $result['message'] ?? 'Login admin gagal.']);
+                ->withErrors(['email' => $result['message'] ?? 'Login gagal.']);
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard'))
-            ->with('status', 'Login admin berhasil.');
+        $user = Auth::user();
+        $targetRoute = ($user?->role === \App\Enums\UserRole::Admin->value)
+            ? route('admin.dashboard')
+            : route('admin.agriculture.index');
+
+        return redirect()->intended($targetRoute)
+            ->with('status', 'Login berhasil.');
     }
 
     public function logout(Request $request, AdminAuthService $auth): RedirectResponse

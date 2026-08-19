@@ -16,7 +16,7 @@ class AdminAuthService
     public function canAccessAdmin(?User $user): bool
     {
         return $user !== null
-            && $user->role === UserRole::Admin->value
+            && in_array($user->role, [UserRole::Admin->value, UserRole::ExtensionOfficer->value, 'ppl'], true)
             && $user->status === UserStatus::Active->value;
     }
 
@@ -43,13 +43,13 @@ class AdminAuthService
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             RateLimiter::hit($throttleKey, 60);
 
-            return ['ok' => false, 'message' => 'Email atau password admin tidak valid.'];
+            return ['ok' => false, 'message' => 'Email atau password tidak valid.'];
         }
 
         if (! $this->canAccessAdmin($user)) {
             RateLimiter::hit($throttleKey, 60);
 
-            return ['ok' => false, 'message' => 'Akun ini tidak memiliki akses admin aktif.'];
+            return ['ok' => false, 'message' => 'Akun ini tidak memiliki akses panel internal aktif.'];
         }
 
         RateLimiter::clear($throttleKey);

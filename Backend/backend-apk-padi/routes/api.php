@@ -110,8 +110,16 @@ Route::prefix('v1')->group(function (): void {
 
         // Planting Calendars & Best Planting Time Advisor API
         Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
+        Route::get('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'show']);
         Route::get('districts/{district}/planting-calendar', [PlantingCalendarController::class, 'byDistrict']);
         Route::post('planting-calendar/recommend-planting-window', [PlantingCalendarController::class, 'recommendPlantingWindow']);
+
+        Route::middleware('role:extension_officer|admin')->group(function (): void {
+            Route::post('planting-calendars', [PlantingCalendarController::class, 'store']);
+            Route::patch('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'update']);
+            Route::put('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'update']);
+            Route::delete('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'destroy']);
+        });
 
         // Knowledge Base API
         Route::get('knowledge-base', [\App\Http\Controllers\Api\V1\KnowledgeController::class, 'index']);

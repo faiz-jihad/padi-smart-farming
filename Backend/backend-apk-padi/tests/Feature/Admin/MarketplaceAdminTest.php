@@ -13,9 +13,17 @@ class MarketplaceAdminTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+    }
+
     public function test_admin_can_create_update_and_delete_marketplace_listing_with_sales_link_and_image(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
 
         $farm = Farm::create([

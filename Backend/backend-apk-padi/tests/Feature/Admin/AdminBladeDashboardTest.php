@@ -15,6 +15,13 @@ class AdminBladeDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+    }
+
     public function test_guest_is_redirected_to_admin_login(): void
     {
         $this->get(route('admin.dashboard'))
@@ -26,7 +33,7 @@ class AdminBladeDashboardTest extends TestCase
         $this->get(route('admin.login'))
             ->assertOk()
             ->assertSee('Admin Console')
-            ->assertSee('Email admin')
+            ->assertSee('Email Admin / PPL')
             ->assertSee('css/admin/auth.css', false)
             ->assertDontSee('admin-auth__showcase')
             ->assertDontSee('Pusat Kendali Operasional');
@@ -41,6 +48,8 @@ class AdminBladeDashboardTest extends TestCase
             'role' => UserRole::Admin->value,
             'status' => UserStatus::Active->value,
         ]);
+
+        $admin->assignRole(UserRole::Admin->value);
 
         $this->from(route('admin.login'))
             ->post(route('admin.login.submit'), [
@@ -83,6 +92,8 @@ class AdminBladeDashboardTest extends TestCase
             'status' => UserStatus::Suspended->value,
         ]);
 
+        $admin->assignRole(UserRole::Admin->value);
+
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertRedirect(route('admin.login'));
@@ -96,6 +107,8 @@ class AdminBladeDashboardTest extends TestCase
             'role' => UserRole::Admin->value,
             'status' => UserStatus::Active->value,
         ]);
+
+        $admin->assignRole(UserRole::Admin->value);$admin->assignRole(UserRole::Admin->value);
 
         $this->actingAs($admin)
             ->post(route('admin.logout'))
@@ -111,6 +124,8 @@ class AdminBladeDashboardTest extends TestCase
             'role' => UserRole::Admin->value,
             'status' => UserStatus::Active->value,
         ]);
+
+        $user->assignRole(UserRole::Admin->value);
 
         Notification::query()->create([
             'user_id' => $user->id,
@@ -145,6 +160,8 @@ class AdminBladeDashboardTest extends TestCase
             'role' => UserRole::Admin->value,
             'status' => UserStatus::Active->value,
         ]);
+
+        $user->assignRole(UserRole::Admin->value);
 
         $notification = Notification::query()->create([
             'user_id' => $user->id,

@@ -46,11 +46,32 @@
                 </div>
             @endif
 
+            <div class="admin-auth__roles" style="display: flex; gap: 8px; margin-bottom: 20px; padding: 4px; background: #f1f5f9; border-radius: 8px;">
+                <button
+                    type="button"
+                    id="roleAdminBtn"
+                    class="admin-auth__role-tab is-active"
+                    style="flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: #1b5e20; color: #ffffff; transition: all 0.2s;"
+                    onclick="switchLoginRole('admin')"
+                >
+                    Masuk sebagai Admin
+                </button>
+                <button
+                    type="button"
+                    id="rolePplBtn"
+                    class="admin-auth__role-tab"
+                    style="flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: transparent; color: #64748b; transition: all 0.2s;"
+                    onclick="switchLoginRole('ppl')"
+                >
+                    Masuk sebagai PPL / Penyuluh
+                </button>
+            </div>
+
             <form method="POST" action="{{ route('admin.login.submit') }}" class="admin-auth__form">
                 @csrf
 
                 <label class="admin-auth__field" for="email">
-                    <span>Email admin</span>
+                    <span id="emailLabel">Email Admin / PPL</span>
                     <input
                         id="email"
                         type="email"
@@ -93,17 +114,42 @@
                         value="1"
                         @checked(old('remember'))
                     >
-                    <span>Ingat sesi admin</span>
+                    <span>Ingat sesi masuk</span>
                 </label>
 
-                <button type="submit" class="admin-auth__submit">Masuk Admin</button>
+                <button type="submit" id="submitBtn" class="admin-auth__submit">Masuk Console</button>
             </form>
 
             <footer class="admin-auth__footer">
-                Akses internal P.A.D.I. Smart Farming
+                Akses internal P.A.D.I. Smart Farming (Admin & Penyuluh)
             </footer>
         </section>
     </main>
+
+    <script>
+        function switchLoginRole(role) {
+            const adminBtn = document.getElementById('roleAdminBtn');
+            const pplBtn = document.getElementById('rolePplBtn');
+            const emailInput = document.getElementById('email');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (role === 'ppl') {
+                pplBtn.style.background = '#1b5e20';
+                pplBtn.style.color = '#ffffff';
+                adminBtn.style.background = 'transparent';
+                adminBtn.style.color = '#64748b';
+                emailInput.placeholder = 'penyuluh@padi.id';
+                submitBtn.textContent = 'Masuk sebagai PPL / Penyuluh';
+            } else {
+                adminBtn.style.background = '#1b5e20';
+                adminBtn.style.color = '#ffffff';
+                pplBtn.style.background = 'transparent';
+                pplBtn.style.color = '#64748b';
+                emailInput.placeholder = 'admin@padi.id';
+                submitBtn.textContent = 'Masuk sebagai Admin';
+            }
+        }
+    </script>
 </body>
 
 </html>
