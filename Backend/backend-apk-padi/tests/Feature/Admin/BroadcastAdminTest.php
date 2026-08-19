@@ -12,9 +12,17 @@ class BroadcastAdminTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+    }
+
     public function test_admin_can_create_broadcast_and_dispatch_user_notifications(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $partner = User::factory()->create(['role' => 'partner', 'status' => 'active']);
 

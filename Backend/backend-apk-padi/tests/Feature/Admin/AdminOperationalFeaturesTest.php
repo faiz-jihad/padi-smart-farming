@@ -359,9 +359,13 @@ class AdminOperationalFeaturesTest extends TestCase
 
     private function adminUser(): User
     {
-        return User::factory()->create([
+        $admin = User::factory()->create([
             'role' => UserRole::Admin->value,
             'status' => UserStatus::Active->value,
         ]);
+
+        $admin->assignRole(UserRole::Admin->value);
+
+        return $admin;
     }
 }

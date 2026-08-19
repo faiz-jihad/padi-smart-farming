@@ -54,11 +54,6 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');
 
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        Route::post('/users', [UserController::class, 'store'])->name('users.store');
-        Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
-        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-
         Route::get('/agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
         Route::post('/agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
         Route::patch('/agriculture/{farm}', [AgricultureController::class, 'update'])->name('agriculture.update');
@@ -69,21 +64,6 @@ Route::middleware(['auth', 'admin.web'])
 
         Route::get('/early-warning', [EarlyWarningController::class, 'index'])->name('early-warning.index');
         Route::post('/early-warning', [EarlyWarningController::class, 'store'])->name('early-warning.store');
-
-        Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
-        Route::get('/marketplace/create', [MarketplaceController::class, 'create'])->name('marketplace.create');
-        Route::post('/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
-        Route::get('/marketplace/{listing}/edit', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
-        Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
-        Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
-        Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
-
-        Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
-        Route::post('/broadcast', [BroadcastController::class, 'store'])->name('broadcast.store');
-        Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
-        Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
-
-        Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
 
         // Weather Management Routes
         Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');
@@ -130,22 +110,45 @@ Route::middleware(['auth', 'admin.web'])
         Route::patch('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'update'])->name('knowledge.update');
         Route::delete('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'destroy'])->name('knowledge.destroy');
 
-        // Farmer Public Profile Management (Admin)
-        Route::get('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'index'])->name('farmer-profiles.index');
-        Route::get('/farmer-profiles/create', [FarmerPublicProfileAdminController::class, 'create'])->name('farmer-profiles.create');
-        Route::post('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'store'])->name('farmer-profiles.store');
-        Route::get('/farmer-profiles/{farmerProfile:subdomain}/edit', [FarmerPublicProfileAdminController::class, 'edit'])->name('farmer-profiles.edit');
-        Route::patch('/farmer-profiles/{farmerProfile:subdomain}', [FarmerPublicProfileAdminController::class, 'update'])->name('farmer-profiles.update');
-        Route::delete('/farmer-profiles/{farmerProfile:subdomain}', [FarmerPublicProfileAdminController::class, 'destroy'])->name('farmer-profiles.destroy');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/verify', [FarmerPublicProfileAdminController::class, 'verify'])->name('farmer-profiles.verify');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/reject', [FarmerPublicProfileAdminController::class, 'reject'])->name('farmer-profiles.reject');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/suspend', [FarmerPublicProfileAdminController::class, 'suspend'])->name('farmer-profiles.suspend');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/restore', [FarmerPublicProfileAdminController::class, 'restore'])->name('farmer-profiles.restore');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/listings', [FarmerPublicProfileAdminController::class, 'storeListing'])->name('farmer-profiles.listings.store');
-        Route::patch('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'updateListing'])->name('farmer-profiles.listings.update');
-        Route::delete('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'destroyListing'])->name('farmer-profiles.listings.destroy');
-        Route::post('/farmer-profiles/{farmerProfile:subdomain}/gallery', [FarmerPublicProfileAdminController::class, 'storeGallery'])->name('farmer-profiles.gallery.store');
-        Route::delete('/farmer-profiles/{farmerProfile:subdomain}/gallery/{gallery}', [FarmerPublicProfileAdminController::class, 'destroyGallery'])->name('farmer-profiles.gallery.destroy');
+        // ─── Admin-Only Sub-Routes ──────────────────────────────────────────
+        Route::middleware('role:admin')->group(function (): void {
+            Route::get('/users', [UserController::class, 'index'])->name('users.index');
+            Route::post('/users', [UserController::class, 'store'])->name('users.store');
+            Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+            Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+            Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
+            Route::get('/marketplace/create', [MarketplaceController::class, 'create'])->name('marketplace.create');
+            Route::post('/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
+            Route::get('/marketplace/{listing}/edit', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
+            Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
+            Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
+            Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
+
+            Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
+            Route::post('/broadcast', [BroadcastController::class, 'store'])->name('broadcast.store');
+            Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
+            Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
+
+            Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
+
+            // Farmer Public Profile Management (Admin)
+            Route::get('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'index'])->name('farmer-profiles.index');
+            Route::get('/farmer-profiles/create', [FarmerPublicProfileAdminController::class, 'create'])->name('farmer-profiles.create');
+            Route::post('/farmer-profiles', [FarmerPublicProfileAdminController::class, 'store'])->name('farmer-profiles.store');
+            Route::get('/farmer-profiles/{farmerProfile:subdomain}/edit', [FarmerPublicProfileAdminController::class, 'edit'])->name('farmer-profiles.edit');
+            Route::patch('/farmer-profiles/{farmerProfile:subdomain}', [FarmerPublicProfileAdminController::class, 'update'])->name('farmer-profiles.update');
+            Route::delete('/farmer-profiles/{farmerProfile:subdomain}', [FarmerPublicProfileAdminController::class, 'destroy'])->name('farmer-profiles.destroy');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/verify', [FarmerPublicProfileAdminController::class, 'verify'])->name('farmer-profiles.verify');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/reject', [FarmerPublicProfileAdminController::class, 'reject'])->name('farmer-profiles.reject');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/suspend', [FarmerPublicProfileAdminController::class, 'suspend'])->name('farmer-profiles.suspend');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/restore', [FarmerPublicProfileAdminController::class, 'restore'])->name('farmer-profiles.restore');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/listings', [FarmerPublicProfileAdminController::class, 'storeListing'])->name('farmer-profiles.listings.store');
+            Route::patch('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'updateListing'])->name('farmer-profiles.listings.update');
+            Route::delete('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'destroyListing'])->name('farmer-profiles.listings.destroy');
+            Route::post('/farmer-profiles/{farmerProfile:subdomain}/gallery', [FarmerPublicProfileAdminController::class, 'storeGallery'])->name('farmer-profiles.gallery.store');
+            Route::delete('/farmer-profiles/{farmerProfile:subdomain}/gallery/{gallery}', [FarmerPublicProfileAdminController::class, 'destroyGallery'])->name('farmer-profiles.gallery.destroy');
+        });
     });
 
 

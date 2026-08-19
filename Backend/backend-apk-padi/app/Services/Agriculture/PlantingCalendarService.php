@@ -210,4 +210,37 @@ class PlantingCalendarService
             'milestones' => $milestones,
         ];
     }
+    /**
+     * Create a new planting calendar / recommendation record.
+     */
+    public function create(array $data): PlantingCalendar
+    {
+        return PlantingCalendar::query()->create($data)->load(['province', 'regency', 'district', 'village']);
+    }
+
+    /**
+     * Find a planting calendar by ID.
+     */
+    public function find(int $id): ?PlantingCalendar
+    {
+        return PlantingCalendar::with(['province', 'regency', 'district', 'village'])->find($id);
+    }
+
+    /**
+     * Update an existing planting calendar / recommendation record.
+     */
+    public function update(PlantingCalendar $calendar, array $data): PlantingCalendar
+    {
+        $calendar->update($data);
+
+        return $calendar->fresh(['province', 'regency', 'district', 'village']);
+    }
+
+    /**
+     * Delete a planting calendar record.
+     */
+    public function delete(PlantingCalendar $calendar): bool
+    {
+        return (bool) $calendar->delete();
+    }
 }

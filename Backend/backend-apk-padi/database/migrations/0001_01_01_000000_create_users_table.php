@@ -19,9 +19,11 @@ return new class extends Migration
 
             $table->enum('role', [
                 'farmer',
+                'buyer',
+                'extension_officer',
+                'admin',
                 'ppl',
                 'partner',
-                'admin',
             ])->index();
 
             $table->enum('status', [

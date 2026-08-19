@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use Database\Seeders\RoleSeeder;
 
 class FarmerPublicProfileTest extends TestCase
 {
@@ -23,6 +24,7 @@ class FarmerPublicProfileTest extends TestCase
     {
         parent::setUp();
         $this->seed(\Database\Seeders\ProfileTemplateSeeder::class);
+        $this->seed(RoleSeeder::class);
     }
 
     public function test_farmer_can_login_to_farmer_web_panel(): void
@@ -251,7 +253,7 @@ class FarmerPublicProfileTest extends TestCase
         $response->assertOk()
             ->assertSee('Pak Joko Organik Farm')
             ->assertSee('Beras Pandan Wangi Terbaik')
-            ->assertSee('Terverifikasi P.A.D.I.');
+            ->assertSee('Terverifikasi Sistem P.A.D.I.');
     }
 
     public function test_public_direct_path_serves_published_farmer_profile(): void
@@ -272,7 +274,7 @@ class FarmerPublicProfileTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Pak Joko Organik Farm')
-            ->assertSee('Terverifikasi P.A.D.I.');
+            ->assertSee('Terverifikasi Sistem P.A.D.I.');
     }
 
 
@@ -304,6 +306,7 @@ class FarmerPublicProfileTest extends TestCase
     public function test_admin_can_verify_and_suspend_farmer_profile(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $template = ProfileTemplate::where('code', 'harvest-prestige')->first();
 
@@ -351,6 +354,7 @@ class FarmerPublicProfileTest extends TestCase
     public function test_admin_can_create_farmer_public_profile_directly(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $template = ProfileTemplate::where('code', 'agri-modern')->first();
 
@@ -378,6 +382,7 @@ class FarmerPublicProfileTest extends TestCase
     public function test_admin_can_edit_and_delete_farmer_public_profile(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $template = ProfileTemplate::where('code', 'harvest-prestige')->first();
 

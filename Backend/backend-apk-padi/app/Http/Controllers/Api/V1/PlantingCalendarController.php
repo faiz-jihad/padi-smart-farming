@@ -143,4 +143,59 @@ class PlantingCalendarController extends Controller
             'data' => $recommendation,
         ]);
     }
+
+    /**
+     * Store a newly created planting calendar / recommendation.
+     */
+    public function store(\App\Http\Requests\Api\V1\PlantingCalendar\StorePlantingCalendarRequest $request): JsonResponse
+    {
+        $calendar = $this->plantingCalendarService->create($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kalender tanam berhasil ditambahkan',
+            'data'    => PlantingCalendarResource::make($calendar),
+        ], 201);
+    }
+
+    /**
+     * Display the specified planting calendar.
+     */
+    public function show(PlantingCalendar $plantingCalendar): JsonResponse
+    {
+        $plantingCalendar->loadMissing(['province', 'regency', 'district', 'village']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail kalender tanam berhasil diambil',
+            'data'    => PlantingCalendarResource::make($plantingCalendar),
+        ]);
+    }
+
+    /**
+     * Update the specified planting calendar in storage.
+     */
+    public function update(\App\Http\Requests\Api\V1\PlantingCalendar\UpdatePlantingCalendarRequest $request, PlantingCalendar $plantingCalendar): JsonResponse
+    {
+        $calendar = $this->plantingCalendarService->update($plantingCalendar, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kalender tanam berhasil diperbarui',
+            'data'    => PlantingCalendarResource::make($calendar),
+        ]);
+    }
+
+    /**
+     * Remove the specified planting calendar from storage.
+     */
+    public function destroy(PlantingCalendar $plantingCalendar): JsonResponse
+    {
+        $this->plantingCalendarService->delete($plantingCalendar);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kalender tanam berhasil dihapus',
+        ]);
+    }
 }
