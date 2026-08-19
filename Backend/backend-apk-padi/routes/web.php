@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
 use App\Http\Controllers\Admin\MarketplaceController;
 use App\Http\Controllers\Admin\SoilController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminMapController;
 use App\Http\Controllers\Admin\WeatherController;
 use App\Http\Controllers\Farmer\AuthController as FarmerAuthController;
 use App\Http\Controllers\Farmer\ProfileWebsiteController;
@@ -96,6 +97,21 @@ Route::middleware(['auth', 'admin.web'])
         Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
         Route::post('/weather/test-connection', [WeatherController::class, 'testConnection'])->name('weather.test-connection');
         Route::post('/weather/clear-cache', [WeatherController::class, 'clearCache'])->name('weather.clear-cache');
+
+        // Admin Geo Intelligence Map Routes
+        Route::prefix('/map')->name('map.')->group(function (): void {
+            Route::get('/geo/provinces', [AdminMapController::class, 'provincesBoundaries'])->name('geo.provinces');
+            Route::get('/geo/regencies', [AdminMapController::class, 'regenciesBoundaries'])->name('geo.regencies');
+            Route::get('/geo/province/{province}', [AdminMapController::class, 'singleProvince'])->name('geo.province.single');
+            Route::get('/geo/regency/{regency}', [AdminMapController::class, 'singleRegency'])->name('geo.regency.single');
+            Route::get('/geo/districts', [AdminMapController::class, 'districtsBoundaries'])->name('geo.districts');
+            Route::get('/geo/villages', [AdminMapController::class, 'villagesBoundaries'])->name('geo.villages');
+            Route::get('/geo/farms', [AdminMapController::class, 'farmsBoundaries'])->name('geo.farms');
+            Route::get('/districts/{district}/summary', [AdminMapController::class, 'districtSummary'])->name('districts.summary');
+            Route::get('/villages/{village}/summary', [AdminMapController::class, 'villageSummary'])->name('villages.summary');
+            Route::get('/provinces', [AdminMapController::class, 'provinces'])->name('provinces');
+            Route::get('/regencies', [AdminMapController::class, 'regencies'])->name('regencies');
+        });
 
         // Soil Detection Routes
         Route::get('/soil', [SoilController::class, 'index'])->name('soil.index');

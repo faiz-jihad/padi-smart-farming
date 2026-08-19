@@ -159,4 +159,21 @@ class AdminBladeDashboardTest extends TestCase
 
         $this->assertNotNull($notification->refresh()->read_at);
     }
+
+    public function test_admin_dashboard_renders_disaster_warnings_and_threats(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin Test',
+            'role' => UserRole::Admin->value,
+            'status' => UserStatus::Active->value,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Radar Ancaman Bencana Pertanian')
+            ->assertSee('Potensi Banjir & Curah Hujan')
+            ->assertSee('Ancaman Ledakan Hama Wereng')
+            ->assertSee('Rekomendasi:');
+    }
 }

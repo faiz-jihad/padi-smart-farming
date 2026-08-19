@@ -191,6 +191,159 @@ class _AdminOverviewContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 22),
+        if (data.disasterSummary != null || data.disasterThreats.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: (data.disasterSummary?.systemStatus == 'danger')
+                    ? const Color(0xFFFCA5A5)
+                    : (data.disasterSummary?.systemStatus == 'warning'
+                        ? const Color(0xFFFED7AA)
+                        : const Color(0xFFBBF7D0)),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: padiGreen,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'RADAR CUACA & BENCANA',
+                          style: TextStyle(
+                            color: padiGreen,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      data.disasterSummary?.systemStatus == 'danger'
+                          ? 'BAHAYA'
+                          : (data.disasterSummary?.systemStatus == 'warning'
+                              ? 'SIAGA'
+                              : 'NORMAL'),
+                      style: TextStyle(
+                        color: data.disasterSummary?.systemStatus == 'danger'
+                            ? const Color(0xFFDC2626)
+                            : (data.disasterSummary?.systemStatus == 'warning'
+                                ? const Color(0xFFEA580C)
+                                : padiGreen),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  data.disasterSummary?.statusHeadline ??
+                      'Radar Ancaman Bencana Pertanian',
+                  style: const TextStyle(
+                    color: padiInk,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                ...data.disasterThreats.map((threat) => Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${threat.categoryLabel} • ${threat.severityLabel}',
+                                style: TextStyle(
+                                  color: threat.severity == 'danger'
+                                      ? const Color(0xFFDC2626)
+                                      : (threat.severity == 'warning'
+                                          ? const Color(0xFFEA580C)
+                                          : padiGreen),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                threat.probability,
+                                style: const TextStyle(
+                                  color: padiMuted,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            threat.title,
+                            style: const TextStyle(
+                              color: padiInk,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.lightbulb_outline_rounded,
+                                    size: 14, color: padiGreen),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    threat.recommendation,
+                                    style: const TextStyle(
+                                      color: padiInk,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
         _Section(
           title: 'Pengguna Terbaru',
           emptyText: 'Belum ada pengguna.',

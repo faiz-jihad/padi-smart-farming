@@ -22,8 +22,7 @@ use RuntimeException;
 
 class ProfileWebsiteController extends Controller
 {
-    // ─── Website Saya — Dashboard ──────────────────────────────────────────
-
+    // ─── Website Saya — Dashboard     
     public function index(): View
     {
         $farmer = Auth::guard('farmer')->user();
@@ -35,7 +34,7 @@ class ProfileWebsiteController extends Controller
         ]);
     }
 
-    // ─── Edit Profile ──────────────────────────────────────────────────────
+    // ─── Edit Profile     
 
     public function edit(): View
     {

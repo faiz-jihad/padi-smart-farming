@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="{{ asset('css/admin/layout.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin/theme.css') }}">
     <script src="{{ asset('js/pwa-notification-sw.js') }}"></script>
+
+    @stack('styles')
 </head>
 
 <body class="admin-body">
@@ -36,6 +38,7 @@
 
     </div>
 
+    @stack('scripts')
 </body>
 
 </html>

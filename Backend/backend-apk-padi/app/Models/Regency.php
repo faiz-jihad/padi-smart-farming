@@ -16,12 +16,16 @@ class Regency extends Model
         'type',
         'latitude',
         'longitude',
+        'geometry',
+        'bbox',
     ];
 
     protected function casts(): array
     {
         return [
-            'type' => RegencyType::class,
+            'type'     => RegencyType::class,
+            'geometry' => 'array',
+            'bbox'     => 'array',
         ];
     }
 

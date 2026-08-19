@@ -50,6 +50,158 @@
         @endforeach
     </section>
 
+    {{-- ========================================================================= --}}
+    {{-- Pantauan Cuaca & Mikroklimat Lahan (Consistent Dashboard Panel)           --}}
+    {{-- ========================================================================= --}}
+    <article class="dashboard-panel">
+        <div class="dashboard-panel__header">
+            <div>
+                <h2>Pantauan Cuaca & Mikroklimat</h2>
+                <p>Kondisi iklim dan cuaca lahan pertanian real-time.</p>
+            </div>
+
+            <div class="dashboard-weather-controls">
+                @if(isset($farms) && $farms->isNotEmpty())
+                    <form method="GET" action="{{ route('admin.dashboard') }}" class="dashboard-farm-form">
+                        <label for="farm_select" class="sr-only">Pilih Lokasi Lahan</label>
+                        <div class="dashboard-select-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="dashboard-select-icon">
+                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <select id="farm_select" name="farm_id" onchange="this.form.submit()" class="dashboard-farm-select">
+                                <option value="">Semua Lahan (Rata-rata)</option>
+                                @foreach($farms as $farm)
+                                    <option value="{{ $farm->id }}" {{ (string)$selectedFarmId === (string)$farm->id ? 'selected' : '' }}>
+                                        Lahan {{ $farm->name }} ({{ $farm->farmer?->name ?? 'Petani' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                @endif
+
+                <a href="{{ route('admin.weather.index') }}" class="dashboard-panel__link">
+                    Lihat peta cuaca
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-weather-kpis">
+            {{-- KPI 1: Suhu & Kondisi --}}
+            <div class="dashboard-kpi-card">
+                <div class="dashboard-kpi-card__body">
+                    <div>
+                        <p class="dashboard-kpi-card__label">Suhu Udara</p>
+                        <strong class="dashboard-kpi-card__value">{{ number_format($liveWeather['temp'], 1, ',', '.') }}<span style="font-size: 20px; font-weight: 600; color: var(--admin-text-muted);">°C</span></strong>
+                    </div>
+                    <span class="dashboard-kpi-card__icon dashboard-tone-green" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                        </svg>
+                    </span>
+                </div>
+                <p class="dashboard-kpi-card__helper">{{ $liveWeather['condition_title'] ?? 'Berawan' }} • Terasa {{ $liveWeather['feels_like'] }}°C</p>
+            </div>
+
+            {{-- KPI 2: Kelembapan --}}
+            <div class="dashboard-kpi-card">
+                <div class="dashboard-kpi-card__body">
+                    <div>
+                        <p class="dashboard-kpi-card__label">Kelembapan Udara</p>
+                        <strong class="dashboard-kpi-card__value">{{ $liveWeather['humidity'] }}<span style="font-size: 20px; font-weight: 600; color: var(--admin-text-muted);">%</span></strong>
+                    </div>
+                    <span class="dashboard-kpi-card__icon dashboard-tone-blue" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                        </svg>
+                    </span>
+                </div>
+                <p class="dashboard-kpi-card__helper">{{ $liveWeather['humidity'] >= 80 ? 'Kelembapan tinggi' : 'Kelembapan optimal' }}</p>
+            </div>
+
+            {{-- KPI 3: Peluang Hujan --}}
+            <div class="dashboard-kpi-card">
+                <div class="dashboard-kpi-card__body">
+                    <div>
+                        <p class="dashboard-kpi-card__label">Peluang Hujan</p>
+                        <strong class="dashboard-kpi-card__value">{{ $liveWeather['rain_chance'] }}<span style="font-size: 20px; font-weight: 600; color: var(--admin-text-muted);">%</span></strong>
+                    </div>
+                    <span class="dashboard-kpi-card__icon dashboard-tone-orange" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/>
+                        </svg>
+                    </span>
+                </div>
+                <p class="dashboard-kpi-card__helper">{{ $liveWeather['rain_chance'] >= 70 ? 'Potensi hujan lebat lokal' : 'Kondisi relatif stabil' }}</p>
+            </div>
+
+            {{-- KPI 4: Lengas Tanah & Angin --}}
+            <div class="dashboard-kpi-card">
+                <div class="dashboard-kpi-card__body">
+                    <div>
+                        <p class="dashboard-kpi-card__label">Lengas Tanah</p>
+                        <strong class="dashboard-kpi-card__value">{{ $liveWeather['soil_moisture'] }}<span style="font-size: 20px; font-weight: 600; color: var(--admin-text-muted);">%</span></strong>
+                    </div>
+                    <span class="dashboard-kpi-card__icon dashboard-tone-green" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22v-9"/><path d="M9 15c1.5-3 5-3 5-7-4 0-5 3.5-5 7z"/><path d="M15 11c-1-2-3-2-3-5 3 0 4 2.5 3 5z"/>
+                        </svg>
+                    </span>
+                </div>
+                <p class="dashboard-kpi-card__helper">Angin {{ $liveWeather['wind_speed'] }} km/j • {{ $liveWeather['location_name'] }}</p>
+            </div>
+        </div>
+    </article>
+
+    {{-- ========================================================================= --}}
+    {{-- Radar Peringatan & Ancaman Bencana (Consistent Dashboard Panel)           --}}
+    {{-- ========================================================================= --}}
+    <article class="dashboard-panel">
+        <div class="dashboard-panel__header">
+            <div>
+                <h2>Radar Ancaman Bencana Pertanian</h2>
+                <p>Peringatan dini otomatis berbasis sensor agroklimat dan laporan lapangan.</p>
+            </div>
+
+            <a href="{{ route('admin.early-warning.index') }}" class="dashboard-panel__link">
+                Kirim broadcast peringatan
+            </a>
+        </div>
+
+        <div class="dashboard-disaster-grid">
+            @foreach($disasterThreats as $threat)
+                <div class="dashboard-threat-clean-card">
+                    <div class="dashboard-threat-clean-head">
+                        <span class="dashboard-threat-clean-cat">{{ $threat['category_label'] }}</span>
+                        <span class="dashboard-threat-clean-badge dashboard-threat-clean-badge--{{ $threat['severity'] }}">
+                            {{ $threat['severity_label'] }}
+                        </span>
+                    </div>
+
+                    <h3 class="dashboard-threat-clean-title">{{ $threat['title'] }}</h3>
+
+                    <div class="dashboard-threat-clean-metrics">
+                        @foreach($threat['metrics'] as $mk => $mv)
+                            <span><strong>{{ $mk }}:</strong> {{ $mv }}</span>
+                        @endforeach
+                    </div>
+
+                    <p class="dashboard-threat-clean-recom">
+                        <strong>Rekomendasi:</strong> {{ $threat['recommendation'] }}
+                    </p>
+
+                    <div class="dashboard-threat-clean-footer">
+                        <span class="dashboard-threat-clean-time">{{ $threat['timeframe'] }}</span>
+                        <a href="{{ $threat['action_route'] }}" class="dashboard-threat-clean-link">
+                            {{ $threat['action_label'] }} →
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </article>
+
     <section class="dashboard-overview">
 
         <article class="dashboard-panel dashboard-panel--activity">

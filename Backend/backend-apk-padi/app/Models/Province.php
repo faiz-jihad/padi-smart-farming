@@ -14,7 +14,17 @@ class Province extends Model
         'name',
         'latitude',
         'longitude',
+        'geometry',
+        'bbox',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'geometry' => 'array',
+            'bbox'     => 'array',
+        ];
+    }
 
     public function regencies(): HasMany
     {

@@ -1,92 +1,128 @@
 @extends('layouts.admin')
 
+@section('title', 'Geo Intelligence Map - Administrative Hierarchy')
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="stylesheet" href="{{ asset('css/admin/weather-map.css') }}" />
+@endpush
+
 @section('content')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <link rel="stylesheet" href="{{ asset('css/admin/weather-map.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/operational.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/weather-map.css') }}" />
 
     <div class="admin-page">
+
+        {{-- Header Bar --}}
         <div class="admin-page__header">
             <div>
-                <p class="admin-page__eyebrow">Admin — Geospatial Console</p>
-                <h1 class="admin-page__title">Peta Cuaca & Geolocation Tanah</h1>
-                <p class="admin-page__description">Visualisasi data cuaca real-time dan analisis geolocation kelembaban/suhu tanah dari AgroMonitoring untuk seluruh wilayah Indonesia.</p>
+                <h1 class="admin-page__title">P.A.D.I Geo Intelligence Map</h1>
+                <p class="admin-page__subtitle">Hierarchical Administrative Geographic Map &bull; Multi-Level Drill-Down</p>
             </div>
             <div class="admin-page__actions">
-                <a href="{{ route('admin.soil.index') }}" class="admin-btn admin-btn--secondary">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.5L4.5 18a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 9.5V2"/><path d="M8.5 2h7"/></svg> Deteksi Tanah
-                </a>
-                <a href="{{ route('admin.weather.index') }}" class="admin-btn admin-btn--secondary">Kembali ke Dashboard</a>
+                <a href="{{ route('admin.weather.index') }}" class="admin-btn admin-btn--secondary">Cuaca &amp; Dashboard</a>
+                <a href="{{ route('admin.soil.index') }}" class="admin-btn admin-btn--secondary">Deteksi Tanah</a>
             </div>
         </div>
 
         @if (session('status'))
-            <div class="admin-alert admin-alert--success">
-                {{ session('status') }}
-            </div>
+            <div class="admin-alert admin-alert--success">{{ session('status') }}</div>
         @endif
 
-        @if (session('error'))
-            <div class="admin-alert admin-alert--error">
-                {{ session('error') }}
-            </div>
-        @endif
+        {{-- ═══════════════════════════════════════════════ --}}
+        {{-- Region Selector Bar                            --}}
+        {{-- ═══════════════════════════════════════════════ --}}
+        <section class="admin-card" style="padding: 0; overflow: hidden;">
+            <div class="geo-region-bar">
+                <button id="btn-indonesia" type="button" class="admin-btn admin-btn--secondary" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;">
+                    Peta Indonesia
+                </button>
 
-        <!-- Quick Region Selector & Instructions Bar -->
-        <section class="admin-card" style="padding: 1rem 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.85rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 4px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg> Lintas Sentra Padi:
-                    </span>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-6.3031" data-lng="107.3009" data-name="Karawang, Jawa Barat">Karawang</button>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-6.4064" data-lng="108.2827" data-name="Indramayu, Jawa Barat">Indramayu</button>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-6.5716" data-lng="107.7587" data-name="Subang, Jawa Barat">Subang</button>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-7.4042" data-lng="111.4464" data-name="Ngawi, Jawa Timur">Ngawi</button>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-3.8996" data-lng="119.8044" data-name="Sidrap, Sulawesi Selatan">Sidrap</button>
-                    <button class="admin-btn admin-btn--secondary admin-btn--sm region-btn" data-lat="-8.5412" data-lng="115.1238" data-name="Tabanan, Bali">Tabanan</button>
-                </div>
-                <div style="font-size: 0.85rem; color: #166534; font-weight: 600; background: #dcfce7; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Klik di manapun pada peta untuk inspeksi cuaca &amp; data tanah AgroMonitoring
-                </div>
-            </div>
-        </section>
+                <span class="geo-region-bar__label" style="margin-left: 0.5rem;">Provinsi:</span>
+                <select id="province-select" class="geo-region-select">
+                    <option value="">-- Pilih Provinsi --</option>
+                </select>
 
-        <!-- Map Container -->
-        <section class="admin-card" style="padding: 0; overflow: hidden; position: relative;">
-            <div id="weatherMap" class="weather-map" style="height: 580px; width: 100%;"></div>
-        </section>
+                <span class="geo-region-bar__label" style="margin-left: 0.5rem;">Kabupaten/Kota:</span>
+                <select id="regency-select" class="geo-region-select">
+                    <option value="">-- Pilih Kabupaten/Kota --</option>
+                </select>
 
-        <!-- Legend Card -->
-        <section class="admin-card" style="margin-top: 1rem;">
-            <div class="admin-card__header">
-                <div class="admin-card__title">
-                    <span>Legenda Peta &amp; Geolocation</span>
-                    <h2>Indikator Status Lahan &amp; Sensor AgroMonitoring</h2>
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.78rem; color: #4b7c5e; font-weight: 500;">Klik polygon wilayah untuk detail drill-down</span>
                 </div>
             </div>
-            <div class="weather-legend" style="display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 1rem 1.25rem;">
-                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 22px; height: 16px; background: rgba(16, 185, 129, 0.35); border: 2px solid #10b981; border-radius: 4px;"></div>
-                    <span>Batas Polygon Area Lahan</span>
+
+            {{-- Map + Side Panel container --}}
+            <div class="geo-map-wrapper">
+                {{-- Loading overlay --}}
+                <div id="geo-loading" class="geo-loading-overlay">
+                    <div class="geo-loading-spinner"></div>
                 </div>
-                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div class="legend-icon" style="background-color: #10b981; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <span>Lahan Terdaftar (Data Terkini)</span>
+
+                {{-- Breadcrumb Navigation --}}
+                <div id="geo-breadcrumb" class="geo-breadcrumb">
+                    <span class="geo-breadcrumb__item is-link" data-action="indonesia">Indonesia</span>
                 </div>
-                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div class="legend-icon" style="background-color: #ef4444; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+                {{-- Level Indicator --}}
+                <div id="geo-level-pill" class="geo-level-pill">Tingkat: Kecamatan</div>
+
+                {{-- Leaflet Map --}}
+                <div id="geoMap" class="geo-map"></div>
+
+                {{-- Side Panel: Dynamic Content per Administrative Level --}}
+                <div id="geo-side-panel" class="geo-side-panel">
+                    <div class="geo-side-panel__header">
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="sp-badge" class="geo-side-panel__level-badge">Wilayah</div>
+                            <h2 id="sp-title" class="geo-side-panel__title">—</h2>
+                            <p id="sp-subtitle" class="geo-side-panel__subtitle">—</p>
+                        </div>
+                        <button id="sp-close" type="button" class="geo-side-panel__close" title="Tutup panel">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                     </div>
-                    <span>Lahan Terdaftar (Data Kadaluarsa)</span>
+
+                    <div id="sp-body" class="geo-side-panel__body">
+                        {{-- Dynamically populated by JS --}}
+                    </div>
+
+                    <div class="geo-side-panel__footer">
+                        <button id="sp-drill-btn" type="button" class="geo-panel-btn geo-panel-btn--primary" style="display: none;"></button>
+                        <button id="sp-back-btn" type="button" class="geo-panel-btn geo-panel-btn--back" style="display: none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                            Kembali ke Atas
+                        </button>
+                    </div>
                 </div>
-                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div class="legend-icon" style="background-color: #2563eb; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                    </div>
-                    <span>Titik Lokasi Pilihan / Inspeksi Bebas</span>
+            </div>
+
+            {{-- Legend --}}
+            <div class="geo-legend-strip" style="border-top: 1px solid #d6ead8;">
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: rgba(15,118,110,0.18); border: 2px solid #0f766e;"></div>
+                    <span>Batas Provinsi</span>
+                </div>
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: rgba(22,101,52,0.18); border: 2px solid #16a34a;"></div>
+                    <span>Batas Kab/Kota</span>
+                </div>
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: rgba(37,99,235,0.18); border: 2px solid #2563eb;"></div>
+                    <span>Batas Kecamatan</span>
+                </div>
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: rgba(234,88,12,0.2); border: 2px solid #ea580c;"></div>
+                    <span>Batas Desa</span>
+                </div>
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: rgba(22,163,74,0.35); border: 2px solid #15803d;"></div>
+                    <span>Polygon Lahan</span>
+                </div>
+                <div class="geo-legend-item">
+                    <div class="geo-legend-swatch" style="background: #166534; border-radius: 50%; width: 12px; height: 12px;"></div>
+                    <span>Titik Lahan</span>
                 </div>
             </div>
         </section>
@@ -94,234 +130,959 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('weatherMap').setView([-2.5489, 118.0149], 5);
+    document.addEventListener('DOMContentLoaded', function () {
 
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
+        // ──────────────────────────────────────────────────────
+        // STATE
+        // ──────────────────────────────────────────────────────
+        const state = {
+            level: 'district',           // 'indonesia' | 'province' | 'district' | 'village' | 'farm'
+            provinceId: null,
+            provinceName: 'Jawa Barat',
+            regencyId: null,
+            regencyName: 'Indramayu',
+            districtId: null,
+            districtName: null,
+            villageId: null,
+            villageName: null,
+        };
 
-            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri'
-            });
+        // ──────────────────────────────────────────────────────
+        // MAP INIT
+        // ──────────────────────────────────────────────────────
+        const map = L.map('geoMap', { zoomControl: true }).setView([-6.32, 108.20], 10);
 
-            L.control.layers({
-                "Peta Jalan": osmLayer,
-                "Satelit Agronomi": satelliteLayer
-            }, null, { position: 'topright' }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
 
-            const farmsData = @json($farms);
-            const weatherMarkers = [];
+        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(map);
 
-            const createWeatherIcon = (condition) => {
-                let color = '#3b82f6';
-                let svgInner = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+        setTimeout(() => { map.invalidateSize(); }, 150);
+        setTimeout(() => { map.invalidateSize(); }, 500);
+        window.addEventListener('resize', () => { map.invalidateSize(); });
 
-                if (condition === 'expired') {
-                    color = '#ef4444';
-                    svgInner = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-                } else if (condition === 'fresh') {
-                    color = '#10b981';
-                    svgInner = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-                } else if (condition === 'loading') {
-                    color = '#fbbf24';
-                    svgInner = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-                }
+        // Layer groups for each hierarchical level
+        const layers = {
+            province: L.layerGroup().addTo(map),
+            regency:  L.layerGroup().addTo(map),
+            district: L.layerGroup().addTo(map),
+            village:  L.layerGroup().addTo(map),
+            farm:     L.layerGroup().addTo(map),
+        };
 
-                return L.divIcon({
-                    html: `<div class="weather-marker" style="background-color: ${color}; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">${svgInner}</div>`,
-                    className: 'weather-marker-container',
-                    iconSize: [34, 34],
-                    iconAnchor: [17, 17],
-                    popupAnchor: [0, -17]
+        let activeLayer = null;
+
+        // ──────────────────────────────────────────────────────
+        // DOM REFS
+        // ──────────────────────────────────────────────────────
+        const loadingEl      = document.getElementById('geo-loading');
+        const sidePanel      = document.getElementById('geo-side-panel');
+        const spBadge        = document.getElementById('sp-badge');
+        const spTitle        = document.getElementById('sp-title');
+        const spSubtitle     = document.getElementById('sp-subtitle');
+        const spBody         = document.getElementById('sp-body');
+        const spDrillBtn     = document.getElementById('sp-drill-btn');
+        const spBackBtn      = document.getElementById('sp-back-btn');
+        const levelPill      = document.getElementById('geo-level-pill');
+        const btnIndonesia   = document.getElementById('btn-indonesia');
+        const provinceSelect = document.getElementById('province-select');
+        const regencySelect  = document.getElementById('regency-select');
+
+        document.getElementById('sp-close').addEventListener('click', closePanel);
+        spBackBtn.addEventListener('click', goBack);
+        btnIndonesia.addEventListener('click', loadIndonesia);
+
+        // ──────────────────────────────────────────────────────
+        // LOADING HELPERS
+        // ──────────────────────────────────────────────────────
+        function showLoading() { loadingEl.classList.add('is-visible'); }
+        function hideLoading() { loadingEl.classList.remove('is-visible'); }
+
+        function clearAllLayers() {
+            layers.province.clearLayers();
+            layers.regency.clearLayers();
+            layers.district.clearLayers();
+            layers.village.clearLayers();
+            layers.farm.clearLayers();
+            activeLayer = null;
+        }
+
+        // ──────────────────────────────────────────────────────
+        // PROVINCE & REGENCY SELECTORS INITIALIZATION
+        // ──────────────────────────────────────────────────────
+        fetch('/admin/map/provinces')
+            .then(r => r.json())
+            .then(res => {
+                provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                (res.data || []).forEach(prov => {
+                    const opt = document.createElement('option');
+                    opt.value = prov.id;
+                    opt.textContent = prov.name;
+                    opt.dataset.name = prov.name;
+                    provinceSelect.appendChild(opt);
                 });
-            };
 
-            farmsData.data.forEach(farm => {
-                let boundaryPoints = [];
-                if (farm.boundary_coordinates) {
-                    if (typeof farm.boundary_coordinates === 'string') {
-                        try { boundaryPoints = JSON.parse(farm.boundary_coordinates); } catch(e) {}
-                    } else if (Array.isArray(farm.boundary_coordinates)) {
-                        boundaryPoints = farm.boundary_coordinates;
-                    }
+                // Default to Jawa Barat on first load
+                const jabar = [...provinceSelect.options].find(o => o.textContent.toLowerCase().includes('jawa barat'));
+                if (jabar) {
+                    provinceSelect.value = jabar.value;
+                    state.provinceId   = parseInt(jabar.value);
+                    state.provinceName = jabar.dataset.name || jabar.textContent;
+                } else if (provinceSelect.options.length > 1) {
+                    provinceSelect.value = provinceSelect.options[1].value;
+                    state.provinceId   = parseInt(provinceSelect.options[1].value);
+                    state.provinceName = provinceSelect.options[1].textContent;
                 }
 
-                // Render polygon boundary shape on map if 3+ points exist
-                if (boundaryPoints && boundaryPoints.length >= 3) {
-                    const polygonLatLngs = boundaryPoints.map(p => [parseFloat(p.lat), parseFloat(p.lng)]);
-                    const polygon = L.polygon(polygonLatLngs, {
-                        color: '#10b981',
-                        weight: 2.5,
-                        fillColor: '#10b981',
-                        fillOpacity: 0.35
-                    }).addTo(map);
-
-                    polygon.bindTooltip(`Batas Polygon: ${farm.name} (${farm.area_ha || 0} ha)`, { sticky: true });
-                }
-
-                if (farm.latitude && farm.longitude) {
-                    const latestWeather = farm.weather_snapshots && farm.weather_snapshots.length > 0 ? farm.weather_snapshots[0] : null;
-                    let condition = 'loading';
-                    let weatherHtml = '<em>Data tidak tersedia</em>';
-
-                    if (latestWeather) {
-                        const expiresAt = new Date(latestWeather.expires_at);
-                        const now = new Date();
-                        condition = expiresAt > now ? 'fresh' : 'expired';
-
-                        const payload = latestWeather.payload_json || {};
-                        const temp = payload.main?.temp || 'N/A';
-                        const humidity = payload.main?.humidity || 'N/A';
-                        const windSpeed = payload.wind?.speed || 'N/A';
-                        const description = payload.weather?.[0]?.description || 'N/A';
-                        const icon = payload.weather?.[0]?.icon || '';
-                        const observedAt = new Date(latestWeather.observed_at).toLocaleString('id-ID');
-
-                        weatherHtml = `
-                            <div style="font-size: 0.85rem;">
-                                ${icon ? `<img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}" style="width: 44px; height: 44px; display: block; margin: 0 auto;">` : ''}
-                                <p style="text-align: center; margin: 4px 0;"><strong>${description}</strong></p>
-                                <table style="font-size: 0.8rem; border-collapse: collapse; width: 100%; margin-top: 6px;">
-                                    <tr><td style="padding: 2px 4px;">Suhu:</td><td style="padding: 2px 4px; font-weight: 700;">${temp}°C</td></tr>
-                                    <tr><td style="padding: 2px 4px;">Kelembaban:</td><td style="padding: 2px 4px;">${humidity}%</td></tr>
-                                    <tr><td style="padding: 2px 4px;">Angin:</td><td style="padding: 2px 4px;">${windSpeed} m/s</td></tr>
-                                    <tr><td style="padding: 2px 4px;">Update:</td><td style="padding: 2px 4px; font-size: 0.7rem; color: #666;">${observedAt}</td></tr>
-                                </table>
-                            </div>
-                        `;
-                    }
-
-                    const marker = L.marker([farm.latitude, farm.longitude], {
-                        icon: createWeatherIcon(condition)
-                    }).addTo(map);
-
-                    const popupContent = `
-                        <div class="weather-popup" style="font-family: inherit; min-width: 220px;">
-                            <h3 style="margin: 0 0 4px 0; font-size: 1rem; color: #166534;">${farm.name}</h3>
-                            <p style="margin: 0 0 6px 0; font-size: 0.8rem; color: #64748b;">Petani: <strong>${farm.farmer?.name || '-'}</strong></p>
-                            <p style="margin: 0 0 8px 0; font-size: 0.75rem; color: #94a3b8;">Koordinat: ${farm.latitude}, ${farm.longitude}</p>
-                            <hr style="margin: 6px 0; border: none; border-top: 1px solid #e2e8f0;">
-                            ${weatherHtml}
-                            <hr style="margin: 8px 0; border: none; border-top: 1px solid #e2e8f0;">
-                            <div style="display: flex; gap: 6px; flex-direction: column;">
-                                <a href="/admin/weather/history?farm_id=${farm.id}" style="color: #166534; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Riwayat Cuaca Lahan &rarr;</a>
-                                <a href="/admin/soil/create?farm_id=${farm.id}" style="color: #2563eb; font-weight: 700; font-size: 0.8rem; text-decoration: none;">+ Uji Sampel Tanah Lahan Ini</a>
-                            </div>
-                        </div>
-                    `;
-
-                    marker.bindPopup(popupContent, { maxWidth: 280 });
-                    weatherMarkers.push(marker);
-                }
+                loadRegenciesForProvince(state.provinceId, true);
+            })
+            .catch(() => {
+                provinceSelect.innerHTML = '<option value="">Gagal memuat provinsi</option>';
             });
 
-            if (weatherMarkers.length > 0) {
-                const group = new L.featureGroup(weatherMarkers);
-                map.fitBounds(group.getBounds().pad(0.1));
+        function loadRegenciesForProvince(provinceId, isInitial = false) {
+            regencySelect.innerHTML = '<option value="">Memuat Kab/Kota...</option>';
+
+            fetch(`/admin/map/regencies?province_id=${provinceId}`)
+                .then(r => r.json())
+                .then(res => {
+                    regencySelect.innerHTML = '<option value="">-- Pilih Kabupaten/Kota --</option>';
+                    const list = res.data || [];
+
+                    list.forEach(reg => {
+                        const opt = document.createElement('option');
+                        opt.value = reg.id;
+                        opt.textContent = reg.name;
+                        opt.dataset.name = reg.name;
+                        opt.dataset.lat = reg.latitude;
+                        opt.dataset.lng = reg.longitude;
+                        regencySelect.appendChild(opt);
+                    });
+
+                    // Prefer Indramayu on initial load
+                    if (isInitial) {
+                        const indra = [...regencySelect.options].find(o => o.textContent.toLowerCase().includes('indramayu'));
+                        if (indra) {
+                            regencySelect.value = indra.value;
+                            loadRegency(parseInt(indra.value), indra.dataset.name || indra.textContent);
+                        } else if (regencySelect.options.length > 1) {
+                            regencySelect.value = regencySelect.options[1].value;
+                            loadRegency(parseInt(regencySelect.options[1].value), regencySelect.options[1].textContent);
+                        }
+                    }
+                })
+                .catch(() => {
+                    regencySelect.innerHTML = '<option value="">Gagal memuat Kab/Kota</option>';
+                });
+        }
+
+        provinceSelect.addEventListener('change', function () {
+            const id = parseInt(this.value);
+            if (!id) {
+                loadIndonesia();
+                return;
             }
+            const name = this.options[this.selectedIndex]?.dataset?.name || this.options[this.selectedIndex]?.text || 'Provinsi';
+            state.provinceId   = id;
+            state.provinceName = name;
+            loadProvince(id, name);
+        });
 
-            let activeInspectMarker = null;
-
-            map.on('click', function(e) {
-                const lat = e.latlng.lat.toFixed(4);
-                const lng = e.latlng.lng.toFixed(4);
-
-                if (activeInspectMarker) {
-                    map.removeLayer(activeInspectMarker);
+        regencySelect.addEventListener('change', function () {
+            const id = parseInt(this.value);
+            if (!id) {
+                if (state.provinceId) {
+                    loadProvince(state.provinceId, state.provinceName);
+                } else {
+                    loadIndonesia();
                 }
+                return;
+            }
+            const name = this.options[this.selectedIndex]?.dataset?.name || this.options[this.selectedIndex]?.text || 'Kabupaten';
+            loadRegency(id, name);
+        });
 
-                const customPin = L.divIcon({
-                    html: `<div style="background-color: #2563eb; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(37,99,235,0.4);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
-                    className: 'inspect-pin',
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 18],
-                    popupAnchor: [0, -18]
-                });
+        // ──────────────────────────────────────────────────────
+        // LEVEL 1: INDONESIA (38 PROVINCE POLYGONS)
+        // ──────────────────────────────────────────────────────
+        function loadIndonesia() {
+            state.level        = 'indonesia';
+            state.provinceId   = null;
+            state.provinceName = null;
+            state.regencyId    = null;
+            state.regencyName  = null;
+            state.districtId   = null;
+            state.districtName = null;
+            state.villageId    = null;
+            state.villageName  = null;
 
-                activeInspectMarker = L.marker([lat, lng], { icon: customPin }).addTo(map);
+            provinceSelect.value = '';
+            regencySelect.innerHTML = '<option value="">-- Pilih Kabupaten/Kota --</option>';
 
-                const loadingPopup = `
-                    <div style="padding: 10px; text-align: center; min-width: 240px;">
-                        <p style="margin: 0; font-weight: 600; color: #1e293b;">Menarik Data Cuaca &amp; Soil Geolocation...</p>
-                        <small style="color: #64748b;">Koordinat: ${lat}, ${lng}</small>
-                    </div>
-                `;
+            updateBreadcrumb();
+            updateLevelPill('38 Provinsi Indonesia');
+            showLoading();
+            closePanel();
+            clearAllLayers();
 
-                activeInspectMarker.bindPopup(loadingPopup, { maxWidth: 300 }).openPopup();
+            fetch('/admin/map/geo/provinces')
+                .then(r => r.json())
+                .then(geojson => {
+                    hideLoading();
+                    if (!geojson.features || geojson.features.length === 0) return;
 
-                fetch(`/admin/weather/inspect?latitude=${lat}&longitude=${lng}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.success) {
-                            const w = res.weather || {};
-                            const s = res.soil || {};
-                            const desc = w.description || 'Tidak ada deskripsi';
-                            const icon = w.weather ? `https://openweathermap.org/img/wn/${res.weather_raw?.weather?.[0]?.icon || '01d'}@2x.png` : '';
+                    const geoLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#0f766e',
+                            weight: 2,
+                            fillColor: '#14b8a6',
+                            fillOpacity: 0.30,
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const p = feature.properties;
+                            layer.bindTooltip(
+                                `<strong>Provinsi ${p.name}</strong><br>${p.regency_count} Kabupaten/Kota`,
+                                { className: 'geo-polygon-tooltip', sticky: true }
+                            );
 
-                            const popupHtml = `
-                                <div style="font-family: inherit; min-width: 250px; padding: 4px;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                                        <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">Pilihan Titik Lokasi</span>
-                                        <span style="font-size: 0.7rem; color: #64748b;">${res.provider}</span>
-                                    </div>
-                                    <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; color: #0f172a;">Koordinat: ${lat}, ${lng}</h4>
+                            layer.on('mouseover', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.50, weight: 3, color: '#115e59' });
+                                }
+                            });
 
-                                    <div style="background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; margin-top: 8px;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            ${icon ? `<img src="${icon}" style="width: 40px; height: 40px;">` : ''}
-                                            <div>
-                                                <strong style="font-size: 0.9rem; display: block; color: #0f172a;">${w.temperature ?? '-'}°C — ${ucfirst(desc)}</strong>
-                                                <small style="color: #64748b;">Kelembaban Udara: ${w.humidity ?? '-'}% | Angin: ${w.wind_speed ?? '-'} m/s</small>
-                                            </div>
+                            layer.on('mouseout', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.30, weight: 2, color: '#0f766e' });
+                                }
+                            });
+
+                            layer.on('click', function () {
+                                activeLayer = this;
+                                this.setStyle({ fillOpacity: 0.45, weight: 3, color: '#042f2e' });
+                                safeFitBounds(this, 0.05);
+                                loadProvince(p.id, p.name);
+                            });
+                        }
+                    });
+
+                    geoLayer.addTo(layers.province);
+                    safeFitBounds(geoLayer, 0.02);
+                })
+                .catch(() => hideLoading());
+        }
+
+        // ──────────────────────────────────────────────────────
+        // LEVEL 2: PROVINCE (REGENCY POLYGONS PER PROVINCE)
+        // ──────────────────────────────────────────────────────
+        function loadProvince(provinceId, provinceName) {
+            state.level        = 'province';
+            state.provinceId   = provinceId;
+            state.provinceName = provinceName;
+            state.regencyId    = null;
+            state.regencyName  = null;
+            state.districtId   = null;
+            state.districtName = null;
+            state.villageId    = null;
+            state.villageName  = null;
+
+            provinceSelect.value = provinceId;
+            updateBreadcrumb();
+            updateLevelPill(`Kab/Kota di ${provinceName}`);
+            showLoading();
+            closePanel();
+            clearAllLayers();
+
+            // Refresh regency dropdown in background
+            loadRegenciesForProvince(provinceId, false);
+
+            fetch(`/admin/map/geo/regencies?province_id=${provinceId}`)
+                .then(r => r.json())
+                .then(geojson => {
+                    hideLoading();
+                    if (!geojson.features || geojson.features.length === 0) return;
+
+                    const geoLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: '#166534',
+                            weight: 2,
+                            fillColor: '#22c55e',
+                            fillOpacity: 0.30,
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const p = feature.properties;
+                            layer.bindTooltip(
+                                `<strong>${p.type_label} ${p.name}</strong><br>${p.district_count} Kecamatan`,
+                                { className: 'geo-polygon-tooltip', sticky: true }
+                            );
+
+                            layer.on('mouseover', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.50, weight: 3, color: '#14532d' });
+                                }
+                            });
+
+                            layer.on('mouseout', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.30, weight: 2, color: '#166534' });
+                                }
+                            });
+
+                            layer.on('click', function () {
+                                activeLayer = this;
+                                this.setStyle({ fillOpacity: 0.45, weight: 3, color: '#052e16' });
+                                safeFitBounds(this, 0.05);
+                                loadRegency(p.id, p.name);
+                            });
+                        }
+                    });
+
+                    geoLayer.addTo(layers.regency);
+                    safeFitBounds(geoLayer, 0.05);
+                })
+                .catch(() => hideLoading());
+        }
+
+        // ──────────────────────────────────────────────────────
+        // LEVEL 3: REGENCY → load Districts
+        // ──────────────────────────────────────────────────────
+        function loadRegency(regencyId, regencyName) {
+            state.regencyId    = regencyId;
+            state.regencyName  = regencyName;
+            state.level        = 'district';
+            state.districtId   = null;
+            state.districtName = null;
+            state.villageId    = null;
+            state.villageName  = null;
+
+            regencySelect.value = regencyId;
+            updateBreadcrumb();
+            updateLevelPill(`Kecamatan (${regencyName})`);
+            showLoading();
+            closePanel();
+            clearAllLayers();
+
+            fetch(`/admin/map/geo/districts?regency_id=${regencyId}`)
+                .then(r => r.json())
+                .then(geojson => {
+                    if (geojson.features && geojson.features.length > 0) {
+                        const geoLayer = L.geoJSON(geojson, {
+                            style: districtStyle,
+                            onEachFeature: onEachDistrict,
+                        });
+
+                        geoLayer.addTo(layers.district);
+                        safeFitBounds(geoLayer, 0.05);
+                        hideLoading();
+                    } else {
+                        // Fallback: Fetch direct Regency GeoJSON polygon
+                        fetch(`/admin/map/geo/regency/${regencyId}`)
+                            .then(r => r.json())
+                            .then(regFeature => {
+                                hideLoading();
+                                if (regFeature && regFeature.geometry) {
+                                    const layer = L.geoJSON(regFeature, {
+                                        style: {
+                                            color: '#166534',
+                                            weight: 2.8,
+                                            fillColor: '#22c55e',
+                                            fillOpacity: 0.35,
+                                        },
+                                        onEachFeature: function (f, l) {
+                                            l.bindTooltip(
+                                                `<strong>${regFeature.properties?.type_label || 'Kab/Kota'} ${regencyName}</strong><br>Batas Polygon Wilayah Aktif`,
+                                                { className: 'geo-polygon-tooltip', sticky: true }
+                                            );
+                                        }
+                                    }).addTo(layers.regency);
+                                    safeFitBounds(layer, 0.05);
+                                }
+
+                                // Show side panel summary for regency
+                                spBadge.textContent    = 'Kabupaten / Kota';
+                                spTitle.textContent    = regencyName;
+                                spSubtitle.textContent = `Provinsi ${state.provinceName || 'Indonesia'}`;
+                                spBody.innerHTML = `
+                                    <div class="geo-stat-section">
+                                        <div class="geo-stat-section__label">Status Pemetaan</div>
+                                        <div style="padding: 12px; background: #f8fafc; border: 1px solid #d6ead8; border-radius: 8px; font-size: 0.8rem; color: #166534; line-height: 1.6;">
+                                            <strong>${regencyName}</strong> aktif di peta. Batas polygon kabupaten telah terpasang. Data polygon tingkat kecamatan untuk wilayah ini siap dipetakan.
                                         </div>
                                     </div>
+                                `;
+                                spDrillBtn.style.display = 'none';
+                                spBackBtn.style.display  = 'flex';
+                                spBackBtn.onclick        = () => loadProvince(state.provinceId, state.provinceName);
+                                openPanel();
+                            })
+                            .catch(() => hideLoading());
+                    }
+                })
+                .catch(() => hideLoading());
+        }
 
-                                    <div style="background: #f0fdf4; padding: 8px; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 8px;">
-                                        <span style="font-size: 0.75rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> Geolocation Kualitas Tanah (AgroMonitoring):
-                                        </span>
-                                        <table style="font-size: 0.8rem; width: 100%; border-collapse: collapse;">
-                                            <tr><td>Suhu Tanah (10cm):</td><td style="font-weight: 700; color: #15803d; text-align: right;">${s.soil_temp_celsius ?? '-'} °C</td></tr>
-                                            <tr><td>Kelembaban Tanah:</td><td style="font-weight: 700; color: #0284c7; text-align: right;">${s.moisture_percentage ?? '-'} %</td></tr>
-                                            <tr><td>Estimasi pH Tanah:</td><td style="font-weight: 700; color: #16a34a; text-align: right;">6.5 (Ideal)</td></tr>
-                                        </table>
-                                    </div>
+        // ──────────────────────────────────────────────────────
+        // DISTRICT POLYGON STYLES & EVENTS
+        // ──────────────────────────────────────────────────────
+        function districtStyle() {
+            return {
+                color:       '#166534',
+                weight:      2.5,
+                fillColor:   '#22c55e',
+                fillOpacity: 0.35,
+            };
+        }
 
-                                    <div style="margin-top: 10px; text-align: center;">
-                                        <a href="/admin/soil/create?latitude=${lat}&longitude=${lng}&moisture_percentage=${s.moisture_percentage || 50}&soil_temp_celsius=${s.soil_temp_celsius || ''}" class="admin-btn admin-btn--sm" style="width: 100%; box-sizing: border-box;">
-                                            + Buat Uji Sampel Tanah Di Sini
-                                        </a>
-                                    </div>
-                                </div>
-                            `;
-                            activeInspectMarker.bindPopup(popupHtml, { maxWidth: 300 }).openPopup();
-                        }
-                    })
-                    .catch(err => {
-                        activeInspectMarker.bindPopup('<p style="color: red; font-size: 0.85rem;">Gagal mengambil data lokasi ini.</p>').openPopup();
-                    });
+        function districtHoverStyle() {
+            return { fillOpacity: 0.55, weight: 3.5, color: '#14532d', fillColor: '#16a34a' };
+        }
+
+        function districtSelectedStyle() {
+            return { fillOpacity: 0.65, weight: 4, color: '#052e16', fillColor: '#15803d' };
+        }
+
+        function onEachDistrict(feature, layer) {
+            const props = feature.properties;
+
+            layer.bindTooltip(
+                `<strong>Kecamatan ${props.name}</strong><br>${props.farm_count} lahan &bull; ${props.total_area_ha} Ha`,
+                { className: 'geo-polygon-tooltip', sticky: true }
+            );
+
+            layer.on('mouseover', function () {
+                if (activeLayer !== this) {
+                    this.setStyle(districtHoverStyle());
+                }
             });
 
-            document.querySelectorAll('.region-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const lat = parseFloat(this.getAttribute('data-lat'));
-                    const lng = parseFloat(this.getAttribute('data-lng'));
+            layer.on('mouseout', function () {
+                if (activeLayer !== this) {
+                    this.setStyle(districtStyle());
+                }
+            });
 
-                    map.flyTo([lat, lng], 11, { duration: 1.5 });
+            layer.on('click', function () {
+                if (activeLayer && activeLayer !== this) {
+                    activeLayer.setStyle(districtStyle());
+                }
+                activeLayer = this;
+                this.setStyle(districtSelectedStyle());
+                this.bringToFront();
 
-                    setTimeout(() => {
-                        map.fire('click', { latlng: L.latLng(lat, lng) });
-                    }, 1200);
+                safeFitBounds(this, 0.08);
+                fetchDistrictSummary(props.id, props.name);
+            });
+        }
+
+        // ──────────────────────────────────────────────────────
+        // DISTRICT SUMMARY PANEL
+        // ──────────────────────────────────────────────────────
+        function fetchDistrictSummary(districtId, districtName) {
+            state.districtId   = districtId;
+            state.districtName = districtName;
+            state.level        = 'district';
+
+            showLoading();
+
+            fetch(`/admin/map/districts/${districtId}/summary`)
+                .then(r => r.json())
+                .then(data => {
+                    hideLoading();
+                    renderDistrictPanel(data);
+                    openPanel();
+                    updateBreadcrumb();
+                })
+                .catch(() => hideLoading());
+        }
+
+        function renderDistrictPanel(d) {
+            const s  = d.statistics || {};
+            const ag = d.agriculture || {};
+            const ir = d.irrigation  || {};
+            const ri = d.risk        || {};
+
+            spBadge.textContent    = 'Kecamatan';
+            spTitle.textContent    = d.district?.name || '—';
+            spSubtitle.textContent = d.district?.regency || '—';
+
+            const total = (ag.planting || 0) + (ag.harvest_ready || 0) + (ag.idle || 0) || 1;
+            const pPct  = Math.round((ag.planting      || 0) / total * 100);
+            const hPct  = Math.round((ag.harvest_ready || 0) / total * 100);
+            const iPct  = 100 - pPct - hPct;
+
+            spBody.innerHTML = `
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Statistik Wilayah</div>
+                    <div class="geo-stat-grid">
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.villages ?? 0}</div>
+                            <div class="geo-stat-card__label">Desa</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farmers ?? 0}</div>
+                            <div class="geo-stat-card__label">Petani</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farms ?? 0}</div>
+                            <div class="geo-stat-card__label">Lahan</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farm_area_hectare ?? 0}</div>
+                            <div class="geo-stat-card__label">Hektar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Kondisi Pertanian</div>
+                    <div class="geo-agri-bar">
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--planting"  style="width:${pPct}%"></div>
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--harvest"   style="width:${hPct}%"></div>
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--idle"      style="width:${iPct}%"></div>
+                    </div>
+                    <div class="geo-agri-legend">
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--planting"></div>Tanam (${ag.planting ?? 0})</div>
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--harvest"></div>Panen (${ag.harvest_ready ?? 0})</div>
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--idle"></div>Bero (${ag.idle ?? 0})</div>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Irigasi &amp; Air</div>
+                    <div class="geo-progress" style="margin-bottom: 10px;">
+                        <div class="geo-progress__label">
+                            <span>Cakupan Irigasi</span>
+                            <span class="geo-progress__value">${ir.coverage_percentage ?? 0}%</span>
+                        </div>
+                        <div class="geo-progress__track">
+                            <div class="geo-progress__fill" style="width:${ir.coverage_percentage ?? 0}%"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                        <span style="color: #475569; font-weight: 500;">Status Air:</span>
+                        <span class="geo-water-badge ${waterBadgeClass(ir.water_status)}">${ir.water_status ?? '-'}</span>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Penilaian Risiko</div>
+                    <div class="geo-risk-grid">
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Kekeringan</span>
+                            <span class="geo-risk-badge ${riskClass(ri.drought)}">${ri.drought ?? '-'}</span>
+                        </div>
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Banjir</span>
+                            <span class="geo-risk-badge ${riskClass(ri.flood)}">${ri.flood ?? '-'}</span>
+                        </div>
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Penyakit</span>
+                            <span class="geo-risk-badge ${riskClass(ri.disease)}">${ri.disease ?? '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            spDrillBtn.style.display = 'flex';
+            spDrillBtn.textContent   = 'Lihat Desa / Kelurahan';
+            spDrillBtn.onclick       = () => drillToVillage(state.districtId, state.districtName);
+
+            spBackBtn.style.display  = 'flex';
+            spBackBtn.onclick        = () => loadProvince(state.provinceId, state.provinceName);
+        }
+
+        // ──────────────────────────────────────────────────────
+        // LEVEL 4: DISTRICT → load Villages
+        // ──────────────────────────────────────────────────────
+        function drillToVillage(districtId, districtName) {
+            state.level        = 'village';
+            state.districtId   = districtId;
+            state.districtName = districtName;
+            state.villageId    = null;
+            state.villageName  = null;
+
+            updateBreadcrumb();
+            updateLevelPill(`Desa (${districtName})`);
+            showLoading();
+            closePanel();
+
+            layers.district.eachLayer(l => l.setStyle({ fillOpacity: 0.04, weight: 1, color: '#94a3b8' }));
+            layers.village.clearLayers();
+            layers.farm.clearLayers();
+
+            fetch(`/admin/map/geo/villages?district_id=${districtId}`)
+                .then(r => r.json())
+                .then(geojson => {
+                    hideLoading();
+                    if (!geojson.features || geojson.features.length === 0) return;
+
+                    const geoLayer = L.geoJSON(geojson, {
+                        style: {
+                            color:       '#ea580c',
+                            weight:      2,
+                            fillColor:   '#f97316',
+                            fillOpacity: 0.18,
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const p = feature.properties;
+                            layer.bindTooltip(
+                                `<strong>Desa ${p.name}</strong><br>${p.farm_count} lahan &bull; ${p.total_area_ha} Ha`,
+                                { className: 'geo-polygon-tooltip', sticky: true }
+                            );
+
+                            layer.on('mouseover', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.38, weight: 3, color: '#c2410c' });
+                                }
+                            });
+
+                            layer.on('mouseout', function () {
+                                if (activeLayer !== this) {
+                                    this.setStyle({ fillOpacity: 0.18, weight: 2, color: '#ea580c' });
+                                }
+                            });
+
+                            layer.on('click', function () {
+                                activeLayer = this;
+                                this.setStyle({ fillOpacity: 0.5, weight: 3, color: '#9a3412', fillColor: '#ea580c' });
+                                safeFitBounds(this, 0.08);
+                                fetchVillageSummary(p.id, p.name);
+                            });
+                        }
+                    });
+
+                    geoLayer.addTo(layers.village);
+                    safeFitBounds(geoLayer, 0.05);
+                })
+                .catch(() => hideLoading());
+        }
+
+        // ──────────────────────────────────────────────────────
+        // VILLAGE SUMMARY PANEL
+        // ──────────────────────────────────────────────────────
+        function fetchVillageSummary(villageId, villageName) {
+            state.villageId   = villageId;
+            state.villageName = villageName;
+
+            showLoading();
+
+            fetch(`/admin/map/villages/${villageId}/summary`)
+                .then(r => r.json())
+                .then(data => {
+                    hideLoading();
+                    renderVillagePanel(data);
+                    openPanel();
+                    updateBreadcrumb();
+                })
+                .catch(() => hideLoading());
+        }
+
+        function renderVillagePanel(d) {
+            const s  = d.statistics || {};
+            const ag = d.agriculture || {};
+            const ir = d.irrigation  || {};
+            const ri = d.risk        || {};
+            const wt = d.weather     || {};
+
+            spBadge.textContent    = 'Desa / Kelurahan';
+            spTitle.textContent    = d.village?.name || '—';
+            spSubtitle.textContent = `Kec. ${d.village?.district || '—'}, ${d.village?.regency || '—'}`;
+
+            const total = (ag.planting || 0) + (ag.harvest_ready || 0) + (ag.idle || 0) || 1;
+            const pPct  = Math.round((ag.planting      || 0) / total * 100);
+            const hPct  = Math.round((ag.harvest_ready || 0) / total * 100);
+            const iPct  = 100 - pPct - hPct;
+
+            spBody.innerHTML = `
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Statistik Desa</div>
+                    <div class="geo-stat-grid">
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farmers ?? 0}</div>
+                            <div class="geo-stat-card__label">Petani</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farms ?? 0}</div>
+                            <div class="geo-stat-card__label">Lahan</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${s.farm_area_hectare ?? 0}</div>
+                            <div class="geo-stat-card__label">Hektar</div>
+                        </div>
+                        <div class="geo-stat-card">
+                            <div class="geo-stat-card__value">${wt.temperature ? wt.temperature + '&deg;C' : '—'}</div>
+                            <div class="geo-stat-card__label">Suhu</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Kondisi Lahan</div>
+                    <div class="geo-agri-bar">
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--planting"  style="width:${pPct}%"></div>
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--harvest"   style="width:${hPct}%"></div>
+                        <div class="geo-agri-bar__segment geo-agri-bar__segment--idle"      style="width:${iPct}%"></div>
+                    </div>
+                    <div class="geo-agri-legend">
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--planting"></div>Tanam (${ag.planting ?? 0})</div>
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--harvest"></div>Panen (${ag.harvest_ready ?? 0})</div>
+                        <div class="geo-agri-legend__item"><div class="geo-agri-legend__dot geo-agri-legend__dot--idle"></div>Bero (${ag.idle ?? 0})</div>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Irigasi &amp; Air</div>
+                    <div class="geo-progress" style="margin-bottom: 10px;">
+                        <div class="geo-progress__label">
+                            <span>Cakupan Irigasi</span>
+                            <span class="geo-progress__value">${ir.coverage_percentage ?? 0}%</span>
+                        </div>
+                        <div class="geo-progress__track">
+                            <div class="geo-progress__fill" style="width:${ir.coverage_percentage ?? 0}%"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                        <span style="color: #475569; font-weight: 500;">Status Air:</span>
+                        <span class="geo-water-badge ${waterBadgeClass(wt.status)}">${wt.status ?? '-'}</span>
+                    </div>
+                </div>
+
+                <div class="geo-divider"></div>
+
+                <div class="geo-stat-section">
+                    <div class="geo-stat-section__label">Penilaian Risiko</div>
+                    <div class="geo-risk-grid">
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Kekeringan</span>
+                            <span class="geo-risk-badge ${riskClass(ri.drought)}">${ri.drought ?? '-'}</span>
+                        </div>
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Banjir</span>
+                            <span class="geo-risk-badge ${riskClass(ri.flood)}">${ri.flood ?? '-'}</span>
+                        </div>
+                        <div class="geo-risk-row">
+                            <span class="geo-risk-row__name">Penyakit</span>
+                            <span class="geo-risk-badge ${riskClass(ri.disease)}">${ri.disease ?? '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            spDrillBtn.style.display = 'flex';
+            spDrillBtn.textContent   = 'Lihat Lahan & Titik Sawah';
+            spDrillBtn.onclick       = () => drillToFarm(state.villageId, state.villageName);
+
+            spBackBtn.style.display  = 'flex';
+            spBackBtn.onclick        = () => drillToVillage(state.districtId, state.districtName);
+        }
+
+        // ──────────────────────────────────────────────────────
+        // LEVEL 5: VILLAGE → load Farms
+        // ──────────────────────────────────────────────────────
+        function drillToFarm(villageId, villageName) {
+            state.level     = 'farm';
+            state.villageId = villageId;
+
+            updateBreadcrumb();
+            updateLevelPill(`Lahan Pertanian (${villageName})`);
+            showLoading();
+            closePanel();
+
+            layers.village.eachLayer(l => l.setStyle({ fillOpacity: 0.05, weight: 1, color: '#94a3b8' }));
+            layers.farm.clearLayers();
+
+            fetch(`/admin/map/geo/farms?village_id=${villageId}`)
+                .then(r => r.json())
+                .then(geojson => {
+                    hideLoading();
+                    if (!geojson.features || geojson.features.length === 0) return;
+
+                    const geoLayer = L.geoJSON(geojson, {
+                        style: function (feature) {
+                            return {
+                                color:       '#15803d',
+                                weight:      2,
+                                fillColor:   '#16a34a',
+                                fillOpacity: 0.35,
+                            };
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            return L.circleMarker(latlng, {
+                                radius:      7,
+                                fillColor:   '#166534',
+                                color:       '#ffffff',
+                                weight:      2,
+                                opacity:     1,
+                                fillOpacity: 0.9,
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const p = feature.properties;
+                            layer.on('click', function (e) {
+                                renderFarmPopup(p, e.latlng || layer.getLatLng?.());
+                            });
+                        }
+                    });
+
+                    geoLayer.addTo(layers.farm);
+                    safeFitBounds(geoLayer, 0.12);
+                })
+                .catch(() => hideLoading());
+        }
+
+        function renderFarmPopup(props, latlng) {
+            const statusLabel = {
+                'active':   'Aktif',
+                'inactive': 'Nonaktif',
+                'verified': 'Terverifikasi',
+            }[props.status] || props.status || '-';
+
+            const html = `
+                <div class="geo-farm-popup">
+                    <div class="geo-farm-popup__title">${props.name || 'Lahan'}</div>
+                    <div class="geo-farm-popup__subtitle">Pemilik: ${props.farmer_name || '-'}</div>
+                    <div class="geo-farm-popup__row">
+                        <span class="geo-farm-popup__key">Luas</span>
+                        <span class="geo-farm-popup__val">${props.area_ha ?? 0} Ha</span>
+                    </div>
+                    <div class="geo-farm-popup__row">
+                        <span class="geo-farm-popup__key">Status</span>
+                        <span class="geo-farm-popup__val">${statusLabel}</span>
+                    </div>
+                    <a class="geo-farm-popup__link" href="/admin/weather/history?farm_id=${props.id}">Riwayat Cuaca Lahan &rarr;</a>
+                    <a class="geo-farm-popup__link" href="/admin/soil/create?farm_id=${props.id}" style="margin-top: 4px;">+ Uji Sampel Tanah</a>
+                </div>
+            `;
+
+            L.popup({ maxWidth: 270 })
+                .setLatLng(latlng)
+                .setContent(html)
+                .openOn(map);
+        }
+
+        // ──────────────────────────────────────────────────────
+        // PANEL HELPERS
+        // ──────────────────────────────────────────────────────
+        function openPanel()  { sidePanel.classList.add('is-open'); }
+        function closePanel() { sidePanel.classList.remove('is-open'); }
+
+        function goBack() {
+            if (state.level === 'farm') {
+                drillToVillage(state.districtId, state.districtName);
+            } else if (state.level === 'village') {
+                loadRegency(state.regencyId, state.regencyName);
+            } else if (state.level === 'district') {
+                loadProvince(state.provinceId, state.provinceName);
+            } else if (state.level === 'province') {
+                loadIndonesia();
+            } else {
+                loadIndonesia();
+            }
+        }
+
+        // ──────────────────────────────────────────────────────
+        // BREADCRUMB
+        // ──────────────────────────────────────────────────────
+        function updateBreadcrumb() {
+            const bc = document.getElementById('geo-breadcrumb');
+
+            let html = `
+                <span class="geo-breadcrumb__item ${state.level === 'indonesia' ? 'is-current' : 'is-link'}" data-action="indonesia">Indonesia</span>
+            `;
+
+            if (state.provinceName && state.level !== 'indonesia') {
+                html += `
+                    <span class="geo-breadcrumb__sep">/</span>
+                    <span class="geo-breadcrumb__item ${state.level === 'province' ? 'is-current' : 'is-link'}" data-action="province">${state.provinceName}</span>
+                `;
+            }
+
+            if (state.regencyName && (state.level === 'district' || state.level === 'village' || state.level === 'farm')) {
+                html += `
+                    <span class="geo-breadcrumb__sep">/</span>
+                    <span class="geo-breadcrumb__item ${state.level === 'district' ? 'is-current' : 'is-link'}" data-action="regency">${state.regencyName}</span>
+                `;
+            }
+
+            if (state.districtName && (state.level === 'village' || state.level === 'farm')) {
+                html += `
+                    <span class="geo-breadcrumb__sep">/</span>
+                    <span class="geo-breadcrumb__item ${state.level === 'village' ? 'is-current' : 'is-link'}" data-action="district">${state.districtName}</span>
+                `;
+            }
+
+            if (state.villageName && state.level === 'farm') {
+                html += `
+                    <span class="geo-breadcrumb__sep">/</span>
+                    <span class="geo-breadcrumb__item is-current">${state.villageName}</span>
+                `;
+            }
+
+            bc.innerHTML = html;
+
+            // Attach click handlers
+            bc.querySelectorAll('[data-action]').forEach(el => {
+                el.addEventListener('click', function () {
+                    const action = this.dataset.action;
+                    if (action === 'indonesia') loadIndonesia();
+                    if (action === 'province')  loadProvince(state.provinceId, state.provinceName);
+                    if (action === 'regency')   loadRegency(state.regencyId, state.regencyName);
+                    if (action === 'district')  drillToVillage(state.districtId, state.districtName);
                 });
             });
+        }
 
-            L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(map);
+        // ──────────────────────────────────────────────────────
+        // LEVEL PILL
+        // ──────────────────────────────────────────────────────
+        function updateLevelPill(label) {
+            levelPill.textContent = `Tingkat: ${label}`;
+        }
 
-            function ucfirst(string) {
-                return string ? string.charAt(0).toUpperCase() + string.slice(1) : '';
+        // ──────────────────────────────────────────────────────
+        // UTILITIES & SAFE HELPERS
+        // ──────────────────────────────────────────────────────
+        function safeFitBounds(layerOrBounds, pad = 0.05) {
+            try {
+                const b = (layerOrBounds && typeof layerOrBounds.getBounds === 'function')
+                    ? layerOrBounds.getBounds()
+                    : layerOrBounds;
+                if (b && typeof b.isValid === 'function' && b.isValid()) {
+                    map.fitBounds(b.pad(pad));
+                }
+            } catch (e) {
+                console.warn('safeFitBounds ignored invalid bounds', e);
             }
-        });
+        }
+
+        function riskClass(level) {
+            if (!level || typeof level !== 'string') return '';
+            const l = level.toUpperCase();
+            if (l.includes('TINGGI') || l.includes('BAHAYA') || l.includes('WASPADA')) return 'is-high';
+            if (l.includes('SEDANG')) return 'is-medium';
+            return 'is-low';
+        }
+
+        function waterBadgeClass(status) {
+            if (!status || typeof status !== 'string') return '';
+            const s = status.toUpperCase();
+            if (s.includes('KRISIS') || s.includes('KURANG') || s.includes('RENDAH')) return 'is-danger';
+            if (s.includes('WASPADA')) return 'is-warning';
+            return 'is-safe';
+        }
+
+    });
     </script>
 @endsection

@@ -4,12 +4,16 @@ class AdminOverview {
     required this.users,
     required this.broadcasts,
     required this.auditLogs,
+    this.disasterSummary,
+    this.disasterThreats = const [],
   });
 
   final AdminSummary summary;
   final List<AdminUserPreview> users;
   final List<AdminBroadcastPreview> broadcasts;
   final List<AdminAuditLogPreview> auditLogs;
+  final AdminDisasterSummary? disasterSummary;
+  final List<AdminDisasterThreat> disasterThreats;
 
   factory AdminOverview.fromJson(Map<String, dynamic>? json) {
     final data = _payload(json);
@@ -19,6 +23,10 @@ class AdminOverview {
       users: readAdminUsers(data['users']),
       broadcasts: readAdminBroadcasts(data['broadcasts']),
       auditLogs: readAdminAuditLogs(data['audit_logs']),
+      disasterSummary: data['disaster_summary'] != null
+          ? AdminDisasterSummary.fromJson(data['disaster_summary'] as Map<String, dynamic>?)
+          : null,
+      disasterThreats: readAdminDisasterThreats(data['disaster_threats']),
     );
   }
 }
@@ -150,6 +158,88 @@ class AdminAuditLogPreview {
   }
 }
 
+class AdminDisasterSummary {
+  const AdminDisasterSummary({
+    required this.totalThreats,
+    required this.dangerCount,
+    required this.warningCount,
+    required this.advisoryCount,
+    required this.systemStatus,
+    required this.statusHeadline,
+    required this.statusSubline,
+    required this.evaluatedAt,
+  });
+
+  final int totalThreats;
+  final int dangerCount;
+  final int warningCount;
+  final int advisoryCount;
+  final String systemStatus;
+  final String statusHeadline;
+  final String statusSubline;
+  final String evaluatedAt;
+
+  factory AdminDisasterSummary.fromJson(Map<String, dynamic>? json) {
+    return AdminDisasterSummary(
+      totalThreats: _readInt(json, 'total_threats'),
+      dangerCount: _readInt(json, 'danger_count'),
+      warningCount: _readInt(json, 'warning_count'),
+      advisoryCount: _readInt(json, 'advisory_count'),
+      systemStatus: json?['system_status']?.toString() ?? 'safe',
+      statusHeadline: json?['status_headline']?.toString() ?? 'Status Agroklimat Normal',
+      statusSubline: json?['status_subline']?.toString() ?? '',
+      evaluatedAt: json?['evaluated_at']?.toString() ?? '',
+    );
+  }
+}
+
+class AdminDisasterThreat {
+  const AdminDisasterThreat({
+    required this.id,
+    required this.type,
+    required this.categoryLabel,
+    required this.title,
+    required this.subtitle,
+    required this.severity,
+    required this.severityLabel,
+    required this.probability,
+    required this.timeframe,
+    required this.impactArea,
+    required this.affectedCount,
+    required this.recommendation,
+  });
+
+  final String id;
+  final String type;
+  final String categoryLabel;
+  final String title;
+  final String subtitle;
+  final String severity;
+  final String severityLabel;
+  final String probability;
+  final String timeframe;
+  final String impactArea;
+  final int affectedCount;
+  final String recommendation;
+
+  factory AdminDisasterThreat.fromJson(Map<String, dynamic> json) {
+    return AdminDisasterThreat(
+      id: json['id']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'general',
+      categoryLabel: json['category_label']?.toString() ?? 'Bencana',
+      title: json['title']?.toString() ?? '-',
+      subtitle: json['subtitle']?.toString() ?? '',
+      severity: json['severity']?.toString() ?? 'advisory',
+      severityLabel: json['severity_label']?.toString() ?? 'Waspada',
+      probability: json['probability']?.toString() ?? '-',
+      timeframe: json['timeframe']?.toString() ?? '-',
+      impactArea: json['impact_area']?.toString() ?? '-',
+      affectedCount: _readInt(json, 'affected_count'),
+      recommendation: json['recommendation']?.toString() ?? '',
+    );
+  }
+}
+
 List<T> _readList<T>(Object? value, T Function(Map<String, dynamic>) fromJson) {
   if (value is! List) {
     return const [];
@@ -183,6 +273,10 @@ List<AdminBroadcastPreview> readAdminBroadcasts(Object? value) {
 
 List<AdminAuditLogPreview> readAdminAuditLogs(Object? value) {
   return _readList(value, AdminAuditLogPreview.fromJson);
+}
+
+List<AdminDisasterThreat> readAdminDisasterThreats(Object? value) {
+  return _readList(value, AdminDisasterThreat.fromJson);
 }
 
 AdminUserPreview readAdminUser(Map<String, dynamic>? json) {

@@ -71,7 +71,14 @@ class AdminOverviewApiTest extends TestCase
             ->assertJsonPath('data.summary.broadcasts_total', 1)
             ->assertJsonPath('data.summary.audit_logs_total', 1)
             ->assertJsonPath('data.broadcasts.0.title', 'Peringatan cuaca')
-            ->assertJsonPath('data.audit_logs.0.action', 'published_broadcast');
+            ->assertJsonPath('data.audit_logs.0.action', 'published_broadcast')
+            ->assertJsonStructure([
+                'data' => [
+                    'disaster_summary' => ['total_threats', 'system_status', 'status_headline'],
+                    'disaster_threats',
+                    'active_warnings',
+                ],
+            ]);
     }
 
     public function test_admin_can_list_and_update_users(): void

@@ -37,6 +37,11 @@ class AdminApiService
 
     private function overview(): JsonResponse
     {
+        $dashboardService = app(AdminDashboardService::class);
+        $disasterThreats = $dashboardService->disasterThreats();
+        $disasterSummary = $dashboardService->disasterSummary($disasterThreats);
+        $activeWarnings = $dashboardService->activeWarnings();
+
         return ApiResponse::success('Data admin berhasil diambil.', [
             'summary' => [
                 'users_total' => User::query()->count(),
@@ -50,7 +55,12 @@ class AdminApiService
                 'alert_subscriptions_total' => AlertSubscription::query()->count(),
                 'broadcasts_total' => AdminBroadcast::query()->count(),
                 'audit_logs_total' => AuditLog::query()->count(),
+                'disaster_threats_total' => count($disasterThreats),
+                'disaster_danger_total' => $disasterSummary['danger_count'] ?? 0,
             ],
+            'disaster_summary' => $disasterSummary,
+            'disaster_threats' => $disasterThreats,
+            'active_warnings' => $activeWarnings,
             'users' => UserResource::collection(User::query()->latest('id')->limit(8)->get()),
             'broadcasts' => AdminBroadcastResource::collection(
                 AdminBroadcast::query()->with('admin')->latest('id')->limit(5)->get(),

@@ -12,7 +12,8 @@ class DashboardController extends Controller
 {
     public function index(AdminDashboardService $dashboard): View
     {
-        return view('admin.dashboard', $dashboard->viewData(Auth::id()));
+        $farmId = request()->filled('farm_id') ? (int) request('farm_id') : null;
+        return view('admin.dashboard', $dashboard->viewData(Auth::id(), $farmId));
     }
 
     public function markNotificationsRead(AdminDashboardService $dashboard): RedirectResponse
