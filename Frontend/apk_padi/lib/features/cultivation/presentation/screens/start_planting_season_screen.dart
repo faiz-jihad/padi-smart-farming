@@ -1,0 +1,331 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:padi/features/home/presentation/screens/home_screen.dart';
+
+const Color seasonGreen = Color(0xFF075C3D);
+const Color seasonBackground = Color(0xFFF7F9F4);
+const Color seasonText = Color(0xFF183D2D);
+
+class StartPlantingSeasonScreen extends StatefulWidget {
+  const StartPlantingSeasonScreen({super.key});
+
+  @override
+  State<StartPlantingSeasonScreen> createState() =>
+      _StartPlantingSeasonScreenState();
+}
+
+class _StartPlantingSeasonScreenState
+    extends State<StartPlantingSeasonScreen> {
+  DateTime selectedDate = DateTime.now();
+  String selectedVariety = 'Padi';
+
+  Future<void> _selectDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      helpText: 'Pilih tanggal mulai tanam',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (date != null) {
+      setState(() {
+        selectedDate = date;
+      });
+    }
+  }
+
+  void _startSeason() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Musim tanam berhasil dimulai.',
+        ),
+      ),
+    );
+
+    context.go('/land/timeline');
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: seasonBackground,
+      appBar: AppBar(
+        backgroundColor: seasonBackground,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          onPressed: () {
+            context.go('/home');
+          },
+          icon: const Icon(Icons.arrow_back_rounded, size: 34),
+          color: primaryGreen,
+          tooltip: 'Kembali',
+        ),
+        title: const Text(
+          'Mulai Musim Tanam',
+          style: TextStyle(
+            color: seasonText,
+            fontSize: 23,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF5EF),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.spa_rounded,
+                  color: seasonGreen,
+                  size: 42,
+                ),
+                SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Siap mulai menanam?',
+                        style: TextStyle(
+                          color: seasonText,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Catat awal musim tanam agar kegiatan sawah lebih mudah dipantau.',
+                        style: TextStyle(
+                          color: Color(0xFF69766F),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 25),
+          const _Label(
+            title: 'Jenis tanaman',
+            description: 'Tanaman yang akan ditanam',
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: const Color(0xFFE1E7E2),
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedVariety,
+                isExpanded: true,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: seasonGreen,
+                  size: 30,
+                ),
+                style: const TextStyle(
+                  color: seasonText,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Padi',
+                    child: Text('Padi'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedVariety = value;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 23),
+          const _Label(
+            title: 'Tanggal mulai tanam',
+            description: 'Kapan mulai menanam?',
+          ),
+          const SizedBox(height: 10),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              onTap: _selectDate,
+              borderRadius: BorderRadius.circular(18),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 17,
+                  vertical: 19,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_rounded,
+                      color: seasonGreen,
+                      size: 27,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _formatDate(selectedDate),
+                        style: const TextStyle(
+                          color: seasonText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.edit_calendar_rounded,
+                      color: seasonGreen,
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 25),
+          Container(
+            padding: const EdgeInsets.all(17),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8DF),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.volume_up_rounded,
+                  color: Color(0xFF946E00),
+                  size: 29,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Setelah dimulai, Anda bisa mencatat kegiatan seperti pemupukan, penyemprotan, dan panen.',
+                    style: TextStyle(
+                      color: Color(0xFF5B4808),
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            height: 64,
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _startSeason,
+              icon: const Icon(
+                Icons.play_arrow_rounded,
+                size: 29,
+              ),
+              label: const Text(
+                'Mulai Musim Tanam',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: seasonGreen,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  const _Label({
+    required this.title,
+    required this.description,
+  });
+
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: seasonText,
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          description,
+          style: const TextStyle(
+            color: Color(0xFF69766F),
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+}
