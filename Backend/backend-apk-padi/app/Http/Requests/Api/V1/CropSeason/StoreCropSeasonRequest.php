@@ -17,11 +17,35 @@ class StoreCropSeasonRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'farm_id' => ['required', 'integer', 'exists:farms,id'],
-            'variety_id' => ['nullable', 'integer', 'exists:rice_varieties,id'],
-            'planned_planting_date' => ['nullable', 'date'],
-            'planting_date' => ['nullable', 'date'],
-            'estimated_harvest_date' => ['nullable', 'date'],
+            'farm_id' => [
+                'required',
+                'integer',
+                'exists:farms,id',
+            ],
+
+            'variety_id' => [
+                'nullable',
+                'integer',
+                'exists:rice_varieties,id',
+            ],
+
+            'planned_planting_date' => [
+                'nullable',
+                'date',
+            ],
+
+            'planting_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:planned_planting_date',
+            ],
+            
+            'estimated_harvest_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:planting_date',
+            ],
+
             'status' => [
                 'nullable',
                 'string',
