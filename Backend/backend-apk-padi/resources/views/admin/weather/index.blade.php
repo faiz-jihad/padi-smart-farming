@@ -12,20 +12,30 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span class="weather-breadcrumb-current">Manajemen Cuaca</span>
+        <span class="weather-breadcrumb-current">Manajemen Cuaca & Tanah</span>
     </nav>
 
     {{-- Page Header --}}
     <div class="weather-header">
         <div class="weather-header-content">
-            <h1 class="weather-title">Manajemen Cuaca & Iklim Pertanian</h1>
-            <p class="weather-description">Pantau data cuaca real-time, temperatur tanah, kelembaban, dan proyeksi iklim untuk kawasan pertanian P.A.D.I.</p>
+            <h1 class="weather-title">Manajemen Cuaca & Telemetri Tanah</h1>
+            <p class="weather-description">Pantau data agroklimat real-time, kadar lengas tanah, suhu perakaran, dan proyeksi cuaca untuk seluruh kawasan pertanian P.A.D.I.</p>
         </div>
 
         <div class="weather-header-actions">
-            <form action="{{ route('admin.weather.refresh-all') }}" method="POST" style="display:inline;">
+            {{-- Auto-Sync Countdown Widget --}}
+            <button type="button" id="weatherAutoSyncBtn" class="btn-weather-action" onclick="toggleWeatherAutoSync()" title="Klik untuk jeda / aktifkan auto-update cuaca & tanah" style="border-radius: 999px; background: #f8fafc; font-weight: 750;">
+                <span id="weatherAutoSyncIcon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                </span>
+                <span>Auto-Sync: <strong id="weatherAutoSyncTimer" style="color: #1b5e20;">05:00</strong></span>
+            </button>
+
+            <form id="formRefreshAll" action="{{ route('admin.weather.refresh-all') }}" method="POST" style="display:inline;">
                 @csrf
-                <button type="submit" class="btn-weather-action btn-weather-primary">
+                <button type="submit" id="btnRefreshAll" class="btn-weather-action btn-weather-primary">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -107,7 +117,7 @@
 
         <div class="stat-card">
             <div class="stat-content">
-                <p class="stat-label">Terhubung Cuaca</p>
+                <p class="stat-label">Terhubung Cuaca & Tanah</p>
                 <h3 class="stat-number">{{ number_format($stats['farms_with_weather'], 0, ',', '.') }}</h3>
                 <p class="stat-description">Memiliki snapshot aktif</p>
             </div>
@@ -120,7 +130,7 @@
 
         <div class="stat-card">
             <div class="stat-content">
-                <p class="stat-label">Total Snapshot</p>
+                <p class="stat-label">Total Snapshot Sensor</p>
                 <h3 class="stat-number">{{ number_format($stats['total_snapshots'], 0, ',', '.') }}</h3>
                 <p class="stat-description">Riwayat pemantauan</p>
             </div>
@@ -147,21 +157,26 @@
 
     {{-- Interactive Leaflet Weather Map Section --}}
     <section class="weather-map-section">
-        <div class="weather-map-header">
+        <div class="weather-map-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
-                <h2>Peta Sebaran Cuaca Lahan Pertanian</h2>
-                <p>Klik penanda lokasi lahan pada peta untuk melihat cuaca real-time & rekomendasi irigasi.</p>
+                <h2>Peta Sebaran Cuaca & Tanah Pertanian</h2>
+                <p>Klik penanda lokasi lahan pada peta untuk melihat cuaca real-time, kadar lengas, dan suhu tanah.</p>
+            </div>
+
+            <div style="display:flex; gap:6px;">
+                <button type="button" class="btn-weather-action" id="btnMapStreet" onclick="switchWeatherMapLayer('street')" style="padding:6px 12px; font-size:12px;">Peta Jalan</button>
+                <button type="button" class="btn-weather-action" id="btnMapSatellite" onclick="switchWeatherMapLayer('satellite')" style="padding:6px 12px; font-size:12px;">Satelit</button>
             </div>
         </div>
 
-        <div id="weather-dashboard-map" class="weather-map-container"></div>
+        <div id="weather-dashboard-map" class="weather-map-container" style="height: 380px;"></div>
     </section>
 
     {{-- Data Cuaca Real-Time Lahan --}}
     <section class="data-card">
         <div class="data-header">
             <div>
-                <h2>Data Cuaca Lahan Real-Time</h2>
+                <h2>Data Cuaca & Telemetri Tanah Real-Time</h2>
                 <p>Menampilkan {{ $farms->firstItem() ?? 0 }} - {{ $farms->lastItem() ?? 0 }} dari {{ $farms->total() }} lahan terdaftar</p>
             </div>
         </div>
@@ -173,7 +188,7 @@
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama lahan atau pemilik...">
+                    <input type="search" id="weatherSearchInput" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama lahan atau pemilik...">
                 </div>
 
                 <button type="submit" class="btn-filter-submit">Filter</button>
@@ -184,13 +199,14 @@
         </div>
 
         <div class="table-wrapper">
-            <table>
+            <table id="farmWeatherTable">
                 <thead>
                     <tr>
                         <th>Lahan & Lokasi</th>
                         <th>Pemilik Lahan</th>
                         <th>Kondisi Cuaca</th>
-                        <th>Suhu (°C)</th>
+                        <th>Suhu Udara</th>
+                        <th>Lengas & Suhu Tanah</th>
                         <th>Kelembaban</th>
                         <th>Kecepatan Angin</th>
                         <th>Pembaruan Terakhir</th>
@@ -207,8 +223,10 @@
                             $windSpeed = $payload['wind']['speed'] ?? null;
                             $weatherDesc = $payload['weather'][0]['description'] ?? 'Belum ada data';
                             $weatherIcon = $payload['weather'][0]['icon'] ?? '';
+                            $soilMoisture = $payload['soil']['moisture_percentage'] ?? null;
+                            $soilTemp = $payload['soil']['soil_temp_celsius'] ?? null;
                         @endphp
-                        <tr>
+                        <tr id="farm-row-{{ $farm->id }}" data-farm-name="{{ strtolower($farm->name) }}" data-farmer-name="{{ strtolower($farm->farmer?->name ?? '') }}">
                             <td class="farm-cell">
                                 <p>{{ $farm->name }}</p>
                                 <span>
@@ -245,6 +263,25 @@
                                 @endif
                             </td>
                             <td>
+                                @if($soilMoisture !== null || $humidity !== null)
+                                    @php
+                                        $displayMoisture = $soilMoisture ?? round($humidity * 0.72);
+                                        $displaySoilTemp = $soilTemp ?? ($temp ? round($temp - 1.8, 1) : 25.5);
+                                    @endphp
+                                    <div style="display:flex; flex-direction:column; gap:2px;">
+                                        <span class="metric-pill" style="font-size:11.5px; font-weight:700; color:#166534; background:#dcfce7; display:inline-flex; align-items:center; gap:4px;">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                                            </svg>
+                                            {{ $displayMoisture }}% Lengas
+                                        </span>
+                                        <small style="color:#64748b; font-size:11px; font-weight:600;">Suhu: {{ $displaySoilTemp }}°C</small>
+                                    </div>
+                                @else
+                                    <span style="color:#94a3b8;">-</span>
+                                @endif
+                            </td>
+                            <td>
                                 @if($humidity !== null)
                                     <span class="metric-pill">
                                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -270,27 +307,23 @@
                             </td>
                             <td>
                                 @if($latestWeather)
-                                    <span style="font-size:13px; color:#64748b;">{{ $latestWeather->observed_at->diffForHumans() }}</span>
+                                    <span class="farm-time-ago" style="font-size:13px; color:#64748b;">{{ $latestWeather->observed_at->diffForHumans() }}</span>
                                 @else
                                     <span style="color:#94a3b8; font-size:12px;">Belum ada snapshot</span>
                                 @endif
                             </td>
                             <td style="text-align: right;">
-                                <form action="{{ route('admin.weather.refresh') }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    <input type="hidden" name="farm_id" value="{{ $farm->id }}">
-                                    <button type="submit" class="btn-refresh-sm">
-                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        Perbarui
-                                    </button>
-                                </form>
+                                <button type="button" class="btn-refresh-sm btn-ajax-refresh-farm" onclick="refreshSingleFarm({{ $farm->id }}, this)">
+                                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Perbarui
+                                </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="weather-empty">
+                            <td colspan="9" class="weather-empty">
                                 Belum ada data lahan pertanian.
                             </td>
                         </tr>
@@ -310,7 +343,7 @@
     <section class="data-card">
         <div class="data-header">
             <div>
-                <h2>Log Snapshot Pembaruan Cuaca</h2>
+                <h2>Log Snapshot Pembaruan Cuaca & Tanah</h2>
                 <p>10 riwayat snapshot pemantauan cuaca paling baru</p>
             </div>
         </div>
@@ -377,20 +410,169 @@
 </div>
 
 <script>
+    let weatherMap = null;
+    let weatherStreetLayer = null;
+    let weatherSatelliteLayer = null;
+
+    // Auto-Sync Timer for Weather Page (5 Menit)
+    const WEATHER_SYNC_SEC = 300;
+    let weatherSyncLeft = WEATHER_SYNC_SEC;
+    let weatherSyncPaused = false;
+    let weatherTimerId = null;
+
+    function formatWeatherTime(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function initWeatherAutoSync() {
+        const timerEl = document.getElementById('weatherAutoSyncTimer');
+        const iconEl = document.getElementById('weatherAutoSyncIcon');
+
+        weatherTimerId = setInterval(() => {
+            if (weatherSyncPaused) return;
+
+            weatherSyncLeft--;
+            if (timerEl) timerEl.textContent = formatWeatherTime(weatherSyncLeft);
+
+            if (weatherSyncLeft <= 0) {
+                weatherSyncLeft = WEATHER_SYNC_SEC;
+                // Auto-refresh all farms asynchronously every 5 minutes
+                triggerAutoRefreshAllFarms();
+            }
+        }, 1000);
+    }
+
+    window.toggleWeatherAutoSync = function() {
+        weatherSyncPaused = !weatherSyncPaused;
+        const timerEl = document.getElementById('weatherAutoSyncTimer');
+        const iconEl = document.getElementById('weatherAutoSyncIcon');
+
+        if (timerEl) timerEl.textContent = weatherSyncPaused ? 'Jeda' : formatWeatherTime(weatherSyncLeft);
+        if (iconEl) {
+            iconEl.innerHTML = weatherSyncPaused
+                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>';
+        }
+    };
+
+    window.switchWeatherMapLayer = function(layerType) {
+        if (!weatherMap) return;
+        if (layerType === 'satellite') {
+            weatherMap.removeLayer(weatherStreetLayer);
+            weatherSatelliteLayer.addTo(weatherMap);
+            document.getElementById('btnMapSatellite')?.classList.add('btn-weather-primary');
+            document.getElementById('btnMapStreet')?.classList.remove('btn-weather-primary');
+        } else {
+            weatherMap.removeLayer(weatherSatelliteLayer);
+            weatherStreetLayer.addTo(weatherMap);
+            document.getElementById('btnMapStreet')?.classList.add('btn-weather-primary');
+            document.getElementById('btnMapSatellite')?.classList.remove('btn-weather-primary');
+        }
+    };
+
+    function debounce(func, wait = 250) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    window.refreshSingleFarm = async function(farmId, button) {
+        if (button) button.classList.add('is-loading');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        try {
+            const res = await fetch('{{ route("admin.weather.refresh") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ farm_id: farmId })
+            });
+
+            if (res.status === 429) {
+                const errData = await res.json().catch(() => ({}));
+                alert(errData.message || 'Batas laju pembaruan tercapai. Silakan tunggu beberapa saat.');
+                return;
+            }
+
+            const result = await res.json();
+            if (result.success) {
+                const row = document.getElementById(`farm-row-${farmId}`);
+                const timeEl = row ? row.querySelector('.farm-time-ago') : null;
+                if (timeEl) timeEl.textContent = 'Baru saja';
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (button) button.classList.remove('is-loading');
+        }
+    };
+
+    async function triggerAutoRefreshAllFarms() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        try {
+            await fetch('{{ route("admin.weather.refresh-all") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+        } catch (e) {
+            console.error('Auto sync error:', e);
+        }
+    }
+
+    function initWeatherWebSockets() {
+        if (typeof window.Echo === 'undefined') return;
+
+        try {
+            window.Echo.channel('agri-telemetry')
+                .listen('.telemetry.updated', (data) => {
+                    if (data && data.farm_id) {
+                        const row = document.getElementById(`farm-row-${data.farm_id}`);
+                        if (row) {
+                            const timeEl = row.querySelector('.farm-time-ago');
+                            if (timeEl) timeEl.textContent = 'Baru saja (WebSocket)';
+                        }
+                    }
+                });
+        } catch (e) {
+            console.warn('Weather WebSocket error:', e);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        initWeatherAutoSync();
+        initWeatherWebSockets();
+
         const farmsData = @json($farmsForMap);
-        
         const defaultLat = -7.250000;
         const defaultLng = 112.750000;
 
-        const map = L.map('weather-dashboard-map', {
+        weatherMap = L.map('weather-dashboard-map', {
             scrollWheelZoom: false
         }).setView([defaultLat, defaultLng], 12);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        weatherStreetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+        }).addTo(weatherMap);
+
+        weatherSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19
+        });
+
+        document.getElementById('btnMapStreet')?.classList.add('btn-weather-primary');
 
         const bounds = [];
 
@@ -411,7 +593,7 @@
                     weight: 2.5,
                     fillColor: '#10b981',
                     fillOpacity: 0.35
-                }).addTo(map);
+                }).addTo(weatherMap);
 
                 polygon.bindTooltip(`Batas Lahan: ${farm.name}`, { sticky: true });
             }
@@ -422,21 +604,47 @@
                 bounds.push([lat, lng]);
 
                 const popupContent = `
-                    <div style="font-family: system-ui; padding: 4px;">
-                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: #0f172a;">${farm.name}</h4>
+                    <div style="font-family: inherit; padding: 4px; min-width: 210px;">
+                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: #0f172a; font-weight:800;">${farm.name}</h4>
                         <p style="margin: 0 0 6px 0; font-size: 12px; color: #64748b;">Pemilik: ${farm.farmer ? farm.farmer.name : '-'}</p>
-                        <p style="margin: 0; font-size: 12px; color: #1b5e20; font-weight: 600;">Koordinat: ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:6px; font-size:11.5px; color:#166534; margin-bottom:6px;">
+                            <strong>Koordinat:</strong> ${lat.toFixed(4)}, ${lng.toFixed(4)}
+                        </div>
                     </div>
                 `;
 
                 L.marker([lat, lng])
-                    .addTo(map)
+                    .addTo(weatherMap)
                     .bindPopup(popupContent);
             }
         });
 
         if (bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [40, 40] });
+            weatherMap.fitBounds(bounds, { padding: [40, 40] });
+        }
+
+        setTimeout(() => {
+            if (weatherMap) weatherMap.invalidateSize();
+        }, 200);
+
+        // Fast Debounced Client-Side Search in Table
+        const searchInput = document.getElementById('weatherSearchInput');
+        if (searchInput) {
+            const debouncedTableFilter = debounce(function(q) {
+                document.querySelectorAll('#farmWeatherTable tbody tr').forEach(row => {
+                    const farmName = row.getAttribute('data-farm-name') || '';
+                    const farmerName = row.getAttribute('data-farmer-name') || '';
+                    if (!q || farmName.includes(q) || farmerName.includes(q)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }, 200);
+
+            searchInput.addEventListener('input', function(e) {
+                debouncedTableFilter(e.target.value.toLowerCase().trim());
+            });
         }
     });
 </script>

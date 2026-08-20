@@ -35,7 +35,7 @@ class WeatherController extends Controller
     /**
      * Refresh weather data for a farm
      */
-    public function refresh(Request $request): RedirectResponse
+    public function refresh(Request $request)
     {
         $validated = $request->validate([
             'farm_id' => 'required|integer|exists:farms,id',
@@ -44,12 +44,24 @@ class WeatherController extends Controller
         try {
             $result = $this->weatherService->refreshWeatherData($validated['farm_id']);
 
-            if ($result) {
-                return back()->with('status', 'Data cuaca berhasil diperbarui.');
+            if ($request->ajax() || $request->wantsJson()) {
+                $farm = \App\Models\Farm::with(['weatherSnapshots' => fn ($q) => $q->latest('observed_at')->limit(1)])->find($validated['farm_id']);
+                return response()->json([
+                    'success' => (bool) $result,
+                    'message' => $result ? 'Data cuaca & tanah berhasil diperbarui.' : 'Gagal memperbarui data.',
+                    'snapshot' => $farm?->weatherSnapshots?->first(),
+                ]);
             }
 
-            return back()->with('error', 'Gagal memperbarui data cuaca.');
+            if ($result) {
+                return back()->with('status', 'Data cuaca & tanah berhasil diperbarui.');
+            }
+
+            return back()->with('error', 'Gagal memperbarui data cuaca & tanah.');
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
@@ -57,13 +69,24 @@ class WeatherController extends Controller
     /**
      * Refresh weather data for all farms
      */
-    public function refreshAll(Request $request): RedirectResponse
+    public function refreshAll(Request $request)
     {
         try {
             $count = $this->weatherService->refreshAllFarmsWeatherData();
 
-            return back()->with('status', "Data cuaca untuk {$count} lahan berhasil diperbarui.");
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Data cuaca & tanah untuk {$count} lahan berhasil diperbarui.",
+                    'count' => $count,
+                ]);
+            }
+
+            return back()->with('status', "Data cuaca & tanah untuk {$count} lahan berhasil diperbarui.");
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }

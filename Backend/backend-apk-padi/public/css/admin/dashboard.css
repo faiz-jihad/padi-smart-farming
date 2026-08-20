@@ -632,4 +632,841 @@
     }
 }
 
+/* ==========================================================================
+   Interactive Engine Extensions: Actions, Charts, Mini GIS, Modals, & Gauges
+   ========================================================================== */
+
+.dashboard-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-dash-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: var(--admin-radius-sm);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.16s ease;
+}
+
+.btn-dash-action svg {
+    width: 15px;
+    height: 15px;
+}
+
+.btn-dash-action:hover {
+    border-color: var(--admin-border-strong);
+    background: var(--admin-surface-secondary);
+    transform: translateY(-1px);
+}
+
+.btn-dash-primary {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: #ffffff;
+}
+
+.btn-dash-primary:hover {
+    background: var(--admin-primary-hover);
+    border-color: var(--admin-primary-hover);
+    color: #ffffff;
+}
+
+.btn-dash-sync.is-loading svg {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.dashboard-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    font-size: 11.5px;
+    font-weight: 750;
+}
+
+.dashboard-autosync-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--admin-surface-secondary);
+    border: 1px solid var(--admin-border);
+    color: var(--admin-text-secondary);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    line-height: 1;
+}
+
+.dashboard-autosync-pill:hover {
+    border-color: var(--admin-primary);
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+}
+
+.dashboard-autosync-pill strong {
+    color: var(--admin-primary);
+}
+
+.dashboard-autosync-pill.is-paused {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.dashboard-autosync-pill.is-paused strong {
+    color: #991b1b;
+}
+
+.autosync-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+}
+
+.autosync-icon svg {
+    display: block;
+}
+
+.dashboard-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Telemetry Chart Section */
+.chart-tabs-wrap {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: var(--admin-radius-sm);
+    background: var(--admin-surface-secondary);
+    border: 1px solid var(--admin-border);
+    gap: 3px;
+}
+
+.chart-tab-btn {
+    padding: 5px 11px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--admin-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.chart-tab-btn:hover {
+    color: var(--admin-text);
+}
+
+.chart-tab-btn.is-active {
+    background: var(--admin-surface);
+    color: var(--admin-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.dashboard-chart-container {
+    position: relative;
+    height: 280px;
+    padding: 16px 20px;
+}
+
+.dashboard-chart-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-top: 1px solid var(--admin-border);
+    background: var(--admin-surface-secondary);
+    font-size: 12px;
+    color: var(--admin-text-secondary);
+}
+
+.dashboard-chart-footer svg {
+    width: 16px;
+    height: 16px;
+    color: var(--admin-primary);
+    flex-shrink: 0;
+}
+
+/* Two Column Grid for GIS & Microclimate */
+.dashboard-gis-climate-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 24px;
+}
+
+.mini-gis-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.map-layer-btn {
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text-secondary);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.map-layer-btn:hover {
+    border-color: var(--admin-border-strong);
+    color: var(--admin-text);
+}
+
+.map-layer-btn.is-active {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: #ffffff;
+}
+
+.dashboard-mini-gis-map {
+    height: 350px;
+    width: 100%;
+    background: #e2e8f0;
+}
+
+/* Custom GIS Pin */
+.custom-gis-pin-wrap {
+    background: transparent;
+    border: none;
+}
+
+.gis-pin-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.gis-pin-dot:hover {
+    transform: scale(1.18);
+}
+
+.gis-pin--pulse {
+    animation: pinDangerPulse 1.8s infinite;
+}
+
+@keyframes pinDangerPulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* GIS Popup Card */
+.gis-popup-card {
+    font-family: inherit;
+    padding: 4px;
+    min-width: 220px;
+}
+
+.gis-popup-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.gis-popup-head h4 {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.gis-popup-badge {
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.gis-popup-badge--danger { background: #fee2e2; color: #991b1b; }
+.gis-popup-badge--warning { background: #fef3c7; color: #92400e; }
+.gis-popup-badge--safe { background: #dcfce7; color: #166534; }
+
+.gis-popup-farmer {
+    margin: 0 0 8px;
+    font-size: 11.5px;
+    color: #64748b;
+}
+
+.gis-popup-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.gis-popup-metrics span {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.gis-popup-metrics strong {
+    display: block;
+    font-size: 12px;
+    color: #1e293b;
+    margin-top: 1px;
+}
+
+.gis-popup-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.gis-popup-btn {
+    color: #166534;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.gis-popup-btn:hover {
+    text-decoration: underline;
+}
+
+/* Microclimate Gauges Row */
+.dashboard-gauges-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--admin-border);
+}
+
+.gauge-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--admin-surface-secondary);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    padding: 10px 14px;
+}
+
+.gauge-svg-wrap {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.gauge-svg {
+    transform: rotate(-90deg);
+}
+
+.gauge-bg {
+    fill: none;
+    stroke: var(--admin-border);
+    stroke-width: 7;
+}
+
+.gauge-progress {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 7;
+    transition: stroke-dashoffset 0.8s ease;
+}
+
+.gauge-progress--soil {
+    stroke: #3b82f6;
+}
+
+.gauge-progress--rain {
+    stroke: #f59e0b;
+}
+
+.gauge-center-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--admin-text);
+}
+
+.gauge-info h5 {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 750;
+    color: var(--admin-text);
+}
+
+.gauge-info p {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--admin-text-secondary);
+}
+
+/* 5-Day Forecast Horizontal Strip */
+.forecast-strip-panel {
+    padding: 14px 20px;
+    border-top: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+}
+
+.forecast-strip-panel h4 {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    font-weight: 750;
+    color: var(--admin-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.forecast-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.forecast-strip-item {
+    background: var(--admin-surface-secondary);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    padding: 8px 6px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.forecast-strip-item strong {
+    font-size: 11px;
+    color: var(--admin-text);
+}
+
+.forecast-strip-item small {
+    font-size: 10px;
+    color: var(--admin-text-muted);
+}
+
+.forecast-strip-icon {
+    width: 28px;
+    height: 28px;
+}
+
+.forecast-strip-temp {
+    font-size: 11.5px;
+    font-weight: 750;
+    color: var(--admin-text);
+}
+
+.forecast-strip-pop {
+    font-size: 10px;
+    color: #0284c7;
+    font-weight: 700;
+}
+
+/* Threat Clean Card Clickable */
+.dashboard-threat-clean-card.is-clickable {
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.dashboard-threat-clean-card.is-clickable:hover {
+    border-color: var(--admin-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+}
+
+.dashboard-threat-summary-badge {
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.dashboard-threat-summary-badge--danger { background: #fee2e2; color: #991b1b; }
+.dashboard-threat-summary-badge--warning { background: #fef3c7; color: #92400e; }
+.dashboard-threat-summary-badge--safe { background: var(--admin-primary-soft); color: var(--admin-primary); }
+
+/* Activity Header & Search Filter */
+.activity-filter-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--admin-border);
+    background: var(--admin-surface-secondary);
+}
+
+.activity-filter-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.activity-search-box {
+    position: relative;
+    flex: 1;
+    max-width: 260px;
+}
+
+.activity-search-box svg {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--admin-text-muted);
+}
+
+.activity-search-box input {
+    width: 100%;
+    padding: 6px 10px 6px 28px;
+    border-radius: var(--admin-radius-sm);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: 12px;
+    outline: none;
+    font-family: inherit;
+}
+
+.activity-search-box input:focus {
+    border-color: var(--admin-primary);
+}
+
+.activity-filter-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.activity-filter-tab {
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text-secondary);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+
+.activity-filter-tab:hover {
+    color: var(--admin-text);
+    border-color: var(--admin-border-strong);
+}
+
+.activity-filter-tab.is-active {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Modals (Quick Broadcast, Threat SOP Detail, Quick Report)
+   ========================================================================== */
+
+.dashboard-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.dashboard-modal-backdrop.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dashboard-modal-dialog {
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.96);
+    transition: transform 0.2s ease;
+    overflow: hidden;
+}
+
+.dashboard-modal-backdrop.is-active .dashboard-modal-dialog {
+    transform: scale(1);
+}
+
+.dashboard-modal-dialog--wide {
+    max-width: 720px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--admin-border);
+    background: var(--admin-surface-secondary);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--admin-text);
+}
+
+.modal-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--admin-radius-sm);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text-secondary);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+    background: var(--admin-surface-secondary);
+    color: var(--admin-text);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--admin-border);
+    background: var(--admin-surface-secondary);
+}
+
+/* Modal Threat Detail Styles */
+.modal-threat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-threat-badge {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.modal-threat-badge--danger { background: #fee2e2; color: #991b1b; }
+.modal-threat-badge--warning { background: #fef3c7; color: #92400e; }
+.modal-threat-badge--advisory { background: #e0f2fe; color: #0369a1; }
+.modal-threat-badge--safe { background: #dcfce7; color: #166534; }
+
+.td-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 8px 0;
+}
+
+.td-metric-box {
+    background: var(--admin-surface-secondary);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    padding: 10px;
+    text-align: center;
+}
+
+.td-metric-box span {
+    display: block;
+    font-size: 11px;
+    color: var(--admin-text-secondary);
+}
+
+.td-metric-box strong {
+    display: block;
+    font-size: 13px;
+    color: var(--admin-text);
+    margin-top: 2px;
+}
+
+.td-sop-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--admin-radius-sm);
+    padding: 12px 14px;
+    color: #166534;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.td-sop-box strong {
+    color: #14532d;
+}
+
+/* Form Styles for Quick Broadcast */
+.qb-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qb-form-group label {
+    font-size: 12.5px;
+    font-weight: 750;
+    color: var(--admin-text);
+}
+
+.qb-input,
+.qb-select,
+.qb-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: var(--admin-radius-sm);
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.qb-input:focus,
+.qb-select:focus,
+.qb-textarea:focus {
+    border-color: var(--admin-primary);
+}
+
+/* Toast Container */
+.dashboard-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dashboard-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--admin-radius-sm);
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 650;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: toastIn 0.25s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.dashboard-toast--success {
+    border-left: 4px solid #10b981;
+}
+
+.dashboard-toast--error {
+    border-left: 4px solid #ef4444;
+}
+
+.dashboard-toast.is-leaving {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+    .dashboard-gis-climate-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 
