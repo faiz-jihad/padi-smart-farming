@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\CropSeason\Actions\CreateCropSeasonAction;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\Api\V1\CropSeason\StoreCropSeasonRequest;
 use App\Http\Resources\CropSeasonResource;
 use App\Services\Api\CropSeasonService;
+use App\Services\CropSeasonService as CropSeasonWriteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,9 +24,9 @@ class CropSeasonController extends Controller
 
     public function store(
         StoreCropSeasonRequest $request,
-        CreateCropSeasonAction $action
+        CropSeasonWriteService $cropSeasons
     ): JsonResponse {
-        $cropSeason = $action->execute(
+        $cropSeason = $cropSeasons->createCropSeason(
             $request->user(),
             $request->validated()
         );
