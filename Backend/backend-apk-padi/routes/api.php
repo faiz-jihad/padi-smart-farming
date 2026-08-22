@@ -21,7 +21,7 @@ use App\Http\Controllers\FarmerProfileController;
 use App\Http\Controllers\FertilizerRuleController;
 use App\Http\Controllers\Api\V1\HarvestController;
 use App\Http\Controllers\ListingImageController;
-use App\Http\Controllers\MarketListingController;
+use App\Http\Controllers\Api\V1\MarketListingController;
 use App\Http\Controllers\MarketOfferController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PartnerFavoriteController;
@@ -166,6 +166,10 @@ Route::prefix('v1')->group(function (): void {
 
         // Marketplace API
         Route::get('market-listings', [MarketListingController::class, 'index']);
+    Route::post('market-listings', [MarketListingController::class, 'store']);
+    Route::get('market-listings/{marketListing}', [MarketListingController::class, 'show']);
+    Route::patch('market-listings/{marketListing}', [MarketListingController::class, 'update']);
+    Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy']);
         Route::get('listing-images', [ListingImageController::class, 'index']);
         Route::get('market-offers', [MarketOfferController::class, 'index']);
         Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
