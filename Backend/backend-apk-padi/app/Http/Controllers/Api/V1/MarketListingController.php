@@ -1,91 +1,96 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\MarketListing\StoreMarketListingRequest;
+use App\Http\Requests\Api\V1\MarketListing\UpdateMarketListingRequest;
 use App\Http\Resources\MarketListingResource;
 use App\Models\MarketListing;
+use App\Services\MarketListingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MarketListingController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = MarketListing::query()
-            ->with([
-                'farmer',
-                'farm',
-                'cropSeason',
-                'harvest',
-                'images',
-            ])
-            ->where('status', 'published')
-            ->latest('id');
-
-        if ($request->filled('search')) {
-            $search = $request->string('search')->toString();
-
-            $query->where(function ($query) use ($search): void {
-                $query
-                    ->where('commodity', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        return MarketListingResource::collection(
-            $query->get()
-        );
-    }
-
-    public function show(MarketListing $marketListing)
-    {
-        $marketListing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-            'offers',
+    public function index(
+        Request $request,
+        MarketListingService $listings
+    ): JsonResponse {
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar listing berhasil diambil',
+            'data' => MarketListingResource::collection(
+                $listings->getListings($request->user())
+            ),
         ]);
-
-        return new MarketListingResource(
-            $marketListing
-        );
     }
 
     public function store(
-        StoreMarketListingRequest $request
+        StoreMarketListingRequest $request,
+        MarketListingService $listings
     ): JsonResponse {
-        $listing = MarketListing::create([
-            'farmer_id' => $request->user()->id,
-            'farm_id' => $request->validated('farm_id'),
-            'crop_season_id' => $request->validated('crop_season_id'),
-            'harvest_id' => $request->validated('harvest_id'),
-            'commodity' => $request->validated('commodity'),
-            'quantity' => $request->validated('quantity'),
-            'unit' => $request->validated('unit'),
-            'price_per_unit' => $request->validated('price_per_unit'),
-            'description' => $request->validated('description'),
-            'sales_link' => $request->validated('sales_link'),
-            'image_url' => $request->validated('image_url'),
-            'status' => 'published',
-            'published_at' => now(),
-            'expires_at' => $request->validated('expires_at'),
-        ]);
-
-        $listing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-        ]);
+        $listing = $listings->createListing(
+            $request->user(),
+            $request->validated()
+        );
 
         return response()->json([
             'success' => true,
-            'message' => 'Hasil panen berhasil dipublikasikan.',
+            'message' => 'Listing hasil panen berhasil dibuat',
             'data' => new MarketListingResource($listing),
         ], 201);
+    }
+
+    public function show(
+        Request $request,
+        MarketListing $marketListing,
+        MarketListingService $listings
+    ): JsonResponse {
+        $listing = $listings->getListing(
+            $request->user(),
+            $marketListing
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail listing berhasil diambil',
+            'data' => new MarketListingResource($listing),
+        ]);
+    }
+
+    public function update(
+        UpdateMarketListingRequest $request,
+        MarketListing $marketListing,
+        MarketListingService $listings
+    ): JsonResponse {
+        $listing = $listings->updateListing(
+            $request->user(),
+            $marketListing,
+            $request->validated()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listing berhasil diperbarui',
+            'data' => new MarketListingResource($listing),
+        ]);
+    }
+
+    public function destroy(
+        Request $request,
+        MarketListing $marketListing,
+        MarketListingService $listings
+    ): JsonResponse {
+        $listings->deleteListing(
+            $request->user(),
+            $marketListing
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listing berhasil dihapus',
+            'data' => null,
+        ]);
     }
 }

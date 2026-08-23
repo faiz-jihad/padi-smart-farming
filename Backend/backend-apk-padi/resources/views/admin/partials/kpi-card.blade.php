@@ -10,7 +10,7 @@
         <div class="dashboard-kpi-card__body">
             <div>
                 <p class="dashboard-kpi-card__label">{{ $metric['label'] }}</p>
-                <strong class="dashboard-kpi-card__value">{{ number_format($metric['value'], 0, ',', '.') }}</strong>
+                <strong class="dashboard-kpi-card__value" data-countup="{{ $metric['value'] }}">{{ number_format($metric['value'], 0, ',', '.') }}</strong>
             </div>
 
             <span class="dashboard-kpi-card__icon dashboard-tone-{{ $metric['tone'] }}" aria-hidden="true">

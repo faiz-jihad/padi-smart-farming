@@ -165,7 +165,19 @@
                                 <a href="#endpoints-GETapi-v1-farmers">GET api/v1/farmers</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-farm-activities">
-                                <a href="#endpoints-GETapi-v1-farm-activities">GET api/v1/farm-activities</a>
+                                <a href="#endpoints-GETapi-v1-farm-activities">List current user's farm activities (with optional crop_season_id filter)</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-farm-activities">
+                                <a href="#endpoints-POSTapi-v1-farm-activities">Store a new farm activity</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-farm-activities--farmActivity_id-">
+                                <a href="#endpoints-GETapi-v1-farm-activities--farmActivity_id-">Show farm activity detail</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">
+                                <a href="#endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">Update farm activity</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">
+                                <a href="#endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">Delete farm activity</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-harvests">
                                 <a href="#endpoints-GETapi-v1-harvests">GET api/v1/harvests</a>
@@ -233,6 +245,12 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-notifications">
                                 <a href="#endpoints-GETapi-v1-notifications">GET api/v1/notifications</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-notifications-send-push">
+                                <a href="#endpoints-POSTapi-v1-notifications-send-push">Dispatch a notification payload to device service workers / database.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-notifications--notification_id--read">
+                                <a href="#endpoints-PATCHapi-v1-notifications--notification_id--read">Mark notification as read.</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-ppl-validations">
                                 <a href="#endpoints-GETapi-v1-ppl-validations">GET api/v1/ppl-validations</a>
                             </li>
@@ -244,6 +262,12 @@
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-device-tokens">
                                 <a href="#endpoints-GETapi-v1-device-tokens">GET api/v1/device-tokens</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-device-tokens">
+                                <a href="#endpoints-POSTapi-v1-device-tokens">Register or update a device push token from Service Worker / Mobile app.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-device-tokens">
+                                <a href="#endpoints-DELETEapi-v1-device-tokens">Remove a device token when user logs out or revokes permission.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-partner-favorites">
                                 <a href="#endpoints-GETapi-v1-partner-favorites">GET api/v1/partner-favorites</a>
@@ -262,7 +286,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: August 18, 2026</li>
+        <li>Last updated: August 20, 2026</li>
     </ul>
 </div>
 
@@ -338,7 +362,7 @@ access-control-allow-origin: *
     &quot;status&quot;: &quot;ok&quot;,
     &quot;system&quot;: &quot;P.A.D.I. Smart Farming API&quot;,
     &quot;version&quot;: &quot;1.0.0&quot;,
-    &quot;timestamp&quot;: &quot;2026-08-18T09:50:48+00:00&quot;
+    &quot;timestamp&quot;: &quot;2026-08-20T01:33:34+00:00&quot;
 }</code>
  </pre>
     </span>
@@ -453,7 +477,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-regions-provinces">
             <blockquote>
-            <p>Example response (200):</p>
+            <p>Example response (500):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -465,17 +489,7 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: true,
-    &quot;message&quot;: &quot;Daftar provinsi berhasil diambil&quot;,
-    &quot;data&quot;: [
-        {
-            &quot;id&quot;: 1,
-            &quot;code&quot;: &quot;32&quot;,
-            &quot;name&quot;: &quot;Jawa Barat&quot;,
-            &quot;latitude&quot;: &quot;-6.9174639&quot;,
-            &quot;longitude&quot;: &quot;107.6191228&quot;
-        }
-    ]
+    &quot;message&quot;: &quot;Server Error&quot;
 }</code>
  </pre>
     </span>
@@ -598,7 +612,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-regions-regencies">
             <blockquote>
-            <p>Example response (422):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -610,13 +624,90 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Data yang diberikan tidak valid.&quot;,
-    &quot;errors&quot;: {
-        &quot;province_id&quot;: [
-            &quot;The selected province id is invalid.&quot;
-        ]
-    }
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daftar kabupaten/kota berhasil diambil&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 271,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3672&quot;,
+            &quot;name&quot;: &quot;Cilegon&quot;,
+            &quot;type&quot;: &quot;city&quot;,
+            &quot;type_label&quot;: &quot;Kota&quot;,
+            &quot;latitude&quot;: &quot;-6.0098090&quot;,
+            &quot;longitude&quot;: &quot;106.0421287&quot;
+        },
+        {
+            &quot;id&quot;: 267,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3602&quot;,
+            &quot;name&quot;: &quot;Lebak&quot;,
+            &quot;type&quot;: &quot;regency&quot;,
+            &quot;type_label&quot;: &quot;Kabupaten&quot;,
+            &quot;latitude&quot;: &quot;-6.3607671&quot;,
+            &quot;longitude&quot;: &quot;106.2461870&quot;
+        },
+        {
+            &quot;id&quot;: 266,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3601&quot;,
+            &quot;name&quot;: &quot;Pandeglang&quot;,
+            &quot;type&quot;: &quot;regency&quot;,
+            &quot;type_label&quot;: &quot;Kabupaten&quot;,
+            &quot;latitude&quot;: &quot;-6.3168554&quot;,
+            &quot;longitude&quot;: &quot;106.1147945&quot;
+        },
+        {
+            &quot;id&quot;: 269,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3604&quot;,
+            &quot;name&quot;: &quot;Serang&quot;,
+            &quot;type&quot;: &quot;regency&quot;,
+            &quot;type_label&quot;: &quot;Kabupaten&quot;,
+            &quot;latitude&quot;: &quot;-6.1153025&quot;,
+            &quot;longitude&quot;: &quot;106.1520151&quot;
+        },
+        {
+            &quot;id&quot;: 272,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3673&quot;,
+            &quot;name&quot;: &quot;Serang&quot;,
+            &quot;type&quot;: &quot;city&quot;,
+            &quot;type_label&quot;: &quot;Kota&quot;,
+            &quot;latitude&quot;: &quot;-6.1196976&quot;,
+            &quot;longitude&quot;: &quot;106.1734607&quot;
+        },
+        {
+            &quot;id&quot;: 268,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3603&quot;,
+            &quot;name&quot;: &quot;Tangerang&quot;,
+            &quot;type&quot;: &quot;regency&quot;,
+            &quot;type_label&quot;: &quot;Kabupaten&quot;,
+            &quot;latitude&quot;: &quot;-6.2696305&quot;,
+            &quot;longitude&quot;: &quot;106.4844047&quot;
+        },
+        {
+            &quot;id&quot;: 270,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3671&quot;,
+            &quot;name&quot;: &quot;Tangerang&quot;,
+            &quot;type&quot;: &quot;city&quot;,
+            &quot;type_label&quot;: &quot;Kota&quot;,
+            &quot;latitude&quot;: &quot;-6.1643616&quot;,
+            &quot;longitude&quot;: &quot;106.6410711&quot;
+        },
+        {
+            &quot;id&quot;: 273,
+            &quot;province_id&quot;: 16,
+            &quot;code&quot;: &quot;3674&quot;,
+            &quot;name&quot;: &quot;Tangerang Selatan&quot;,
+            &quot;type&quot;: &quot;city&quot;,
+            &quot;type_label&quot;: &quot;Kota&quot;,
+            &quot;latitude&quot;: &quot;-6.3215680&quot;,
+            &quot;longitude&quot;: &quot;106.7077421&quot;
+        }
+    ]
 }</code>
  </pre>
     </span>
@@ -752,7 +843,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-regions-districts">
             <blockquote>
-            <p>Example response (422):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -764,13 +855,100 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Data yang diberikan tidak valid.&quot;,
-    &quot;errors&quot;: {
-        &quot;regency_id&quot;: [
-            &quot;The selected regency id is invalid.&quot;
-        ]
-    }
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daftar kecamatan berhasil diambil&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 238,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111504&quot;,
+            &quot;name&quot;: &quot;Beutong&quot;,
+            &quot;latitude&quot;: &quot;4.2863225&quot;,
+            &quot;longitude&quot;: &quot;96.5007402&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 244,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111510&quot;,
+            &quot;name&quot;: &quot;Beutong Ateuh Banggalang&quot;,
+            &quot;latitude&quot;: &quot;4.4816846&quot;,
+            &quot;longitude&quot;: &quot;96.5754659&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 239,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111505&quot;,
+            &quot;name&quot;: &quot;Darul Makmur&quot;,
+            &quot;latitude&quot;: &quot;4.0381916&quot;,
+            &quot;longitude&quot;: &quot;96.5950504&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 235,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111501&quot;,
+            &quot;name&quot;: &quot;Kuala&quot;,
+            &quot;latitude&quot;: &quot;4.0961760&quot;,
+            &quot;longitude&quot;: &quot;96.2970947&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 241,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111507&quot;,
+            &quot;name&quot;: &quot;Kuala Pesisir&quot;,
+            &quot;latitude&quot;: &quot;4.0526889&quot;,
+            &quot;longitude&quot;: &quot;96.2644004&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 236,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111502&quot;,
+            &quot;name&quot;: &quot;Seunagan&quot;,
+            &quot;latitude&quot;: &quot;4.2336346&quot;,
+            &quot;longitude&quot;: &quot;96.2949769&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 237,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111503&quot;,
+            &quot;name&quot;: &quot;Seunagan Timur&quot;,
+            &quot;latitude&quot;: &quot;4.3367108&quot;,
+            &quot;longitude&quot;: &quot;96.3680986&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 240,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111506&quot;,
+            &quot;name&quot;: &quot;Suka Makmue&quot;,
+            &quot;latitude&quot;: &quot;4.1848571&quot;,
+            &quot;longitude&quot;: &quot;96.3250418&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 242,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111508&quot;,
+            &quot;name&quot;: &quot;Tadu Raya&quot;,
+            &quot;latitude&quot;: &quot;4.0711036&quot;,
+            &quot;longitude&quot;: &quot;96.3898458&quot;,
+            &quot;has_boundary&quot;: false
+        },
+        {
+            &quot;id&quot;: 243,
+            &quot;regency_id&quot;: 16,
+            &quot;code&quot;: &quot;111509&quot;,
+            &quot;name&quot;: &quot;Tripa Makmur&quot;,
+            &quot;latitude&quot;: &quot;3.9323305&quot;,
+            &quot;longitude&quot;: &quot;96.4099493&quot;,
+            &quot;has_boundary&quot;: false
+        }
+    ]
 }</code>
  </pre>
     </span>
@@ -906,7 +1084,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-regions-villages">
             <blockquote>
-            <p>Example response (422):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -918,13 +1096,9 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Data yang diberikan tidak valid.&quot;,
-    &quot;errors&quot;: {
-        &quot;district_id&quot;: [
-            &quot;The selected district id is invalid.&quot;
-        ]
-    }
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daftar desa/kelurahan berhasil diambil&quot;,
+    &quot;data&quot;: []
 }</code>
  </pre>
     </span>
@@ -1246,28 +1420,23 @@ access-control-allow-origin: *
     &quot;message&quot;: &quot;Wilayah administratif berhasil dideteksi&quot;,
     &quot;data&quot;: {
         &quot;province&quot;: {
-            &quot;id&quot;: 1,
-            &quot;code&quot;: &quot;32&quot;,
-            &quot;name&quot;: &quot;Jawa Barat&quot;
+            &quot;id&quot;: 19,
+            &quot;code&quot;: &quot;53&quot;,
+            &quot;name&quot;: &quot;Nusa Tenggara Timur&quot;
         },
         &quot;regency&quot;: {
-            &quot;id&quot;: 1,
-            &quot;code&quot;: &quot;3212&quot;,
-            &quot;name&quot;: &quot;Indramayu&quot;,
+            &quot;id&quot;: 306,
+            &quot;code&quot;: &quot;5314&quot;,
+            &quot;name&quot;: &quot;Rote Ndao&quot;,
             &quot;type&quot;: &quot;regency&quot;
         },
         &quot;district&quot;: {
-            &quot;id&quot;: 8,
-            &quot;code&quot;: &quot;321215&quot;,
-            &quot;name&quot;: &quot;Jatibarang&quot;
+            &quot;id&quot;: 4508,
+            &quot;code&quot;: &quot;531401&quot;,
+            &quot;name&quot;: &quot;Rote Barat Daya&quot;
         },
-        &quot;village&quot;: {
-            &quot;id&quot;: 14,
-            &quot;code&quot;: &quot;3212150002&quot;,
-            &quot;name&quot;: &quot;Krasak&quot;,
-            &quot;type&quot;: &quot;village&quot;
-        },
-        &quot;formatted_address&quot;: &quot;Desa Krasak, Kec. Jatibarang, Kab. Indramayu, Prov. Jawa Barat&quot;,
+        &quot;village&quot;: null,
+        &quot;formatted_address&quot;: &quot;Kec. Rote Barat Daya, Kab. Rote Ndao, Prov. Nusa Tenggara Timur&quot;,
         &quot;resolution_method&quot;: &quot;nearest_centroid&quot;
     }
 }</code>
@@ -1417,7 +1586,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-maps-districts">
             <blockquote>
-            <p>Example response (422):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -1429,11 +1598,2173 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Data yang diberikan tidak valid.&quot;,
-    &quot;errors&quot;: {
-        &quot;regency_id&quot;: [
-            &quot;The selected regency id is invalid.&quot;
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;GeoJSON batas kecamatan berhasil diambil&quot;,
+    &quot;data&quot;: {
+        &quot;type&quot;: &quot;FeatureCollection&quot;,
+        &quot;features&quot;: [
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 238,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 238,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111504&quot;,
+                    &quot;name&quot;: &quot;Beutong&quot;,
+                    &quot;latitude&quot;: &quot;4.2863225&quot;,
+                    &quot;longitude&quot;: &quot;96.5007402&quot;,
+                    &quot;bbox&quot;: [
+                        96.360187,
+                        4.145057,
+                        96.644089,
+                        4.455028
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.4943292373045,
+                                4.436416886430209
+                            ],
+                            [
+                                96.6440888311347,
+                                4.3578736161745155
+                            ],
+                            [
+                                96.6347406176854,
+                                4.311598277238772
+                            ],
+                            [
+                                96.62212947499535,
+                                4.2933954000777135
+                            ],
+                            [
+                                96.63581137569452,
+                                4.2657936533544785
+                            ],
+                            [
+                                96.63045758924642,
+                                4.249613318200147
+                            ],
+                            [
+                                96.6377149445891,
+                                4.232838118384507
+                            ],
+                            [
+                                96.62641250523296,
+                                4.224272057909218
+                            ],
+                            [
+                                96.59428978114852,
+                                4.232481198148832
+                            ],
+                            [
+                                96.5867944786823,
+                                4.215824971445329
+                            ],
+                            [
+                                96.5333715007942,
+                                4.164940920886863
+                            ],
+                            [
+                                96.48675200030465,
+                                4.149209000295173
+                            ],
+                            [
+                                96.44184499964706,
+                                4.145057000380291
+                            ],
+                            [
+                                96.40876999963581,
+                                4.164902000027325
+                            ],
+                            [
+                                96.39989005238408,
+                                4.19498885505169
+                            ],
+                            [
+                                96.37563577387192,
+                                4.203520990401444
+                            ],
+                            [
+                                96.38072705810731,
+                                4.213459328185479
+                            ],
+                            [
+                                96.39188197087634,
+                                4.211841294040539
+                            ],
+                            [
+                                96.39169637328905,
+                                4.222615493210469
+                            ],
+                            [
+                                96.38113156596904,
+                                4.227374414997314
+                            ],
+                            [
+                                96.3970939243452,
+                                4.240993781337977
+                            ],
+                            [
+                                96.38152100029401,
+                                4.258869999550882
+                            ],
+                            [
+                                96.36018724764341,
+                                4.341982944557287
+                            ],
+                            [
+                                96.36442269565094,
+                                4.35517680386647
+                            ],
+                            [
+                                96.37985801713387,
+                                4.363531112670785
+                            ],
+                            [
+                                96.43386066923455,
+                                4.364924635563511
+                            ],
+                            [
+                                96.43451258059116,
+                                4.372641647893772
+                            ],
+                            [
+                                96.44785131078942,
+                                4.372304037001754
+                            ],
+                            [
+                                96.45837823956418,
+                                4.388965094863295
+                            ],
+                            [
+                                96.4861349799454,
+                                4.404085687804297
+                            ],
+                            [
+                                96.48705046280867,
+                                4.431220416588985
+                            ],
+                            [
+                                96.47138052439175,
+                                4.433930246583657
+                            ],
+                            [
+                                96.46222088528566,
+                                4.445777585167491
+                            ],
+                            [
+                                96.47223623201654,
+                                4.455028376858138
+                            ],
+                            [
+                                96.4943292373045,
+                                4.436416886430209
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 244,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 244,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111510&quot;,
+                    &quot;name&quot;: &quot;Beutong Ateuh Banggalang&quot;,
+                    &quot;latitude&quot;: &quot;4.4816846&quot;,
+                    &quot;longitude&quot;: &quot;96.5754659&quot;,
+                    &quot;bbox&quot;: [
+                        96.443334,
+                        4.300006,
+                        96.753492,
+                        4.632219
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.51371599999345,
+                                4.624602000382083
+                            ],
+                            [
+                                96.57600600007692,
+                                4.575553000270816
+                            ],
+                            [
+                                96.63928700089446,
+                                4.561204999611107
+                            ],
+                            [
+                                96.65276600105017,
+                                4.5500470003688065
+                            ],
+                            [
+                                96.65565855889542,
+                                4.529737676252807
+                            ],
+                            [
+                                96.61856573242267,
+                                4.530637986653801
+                            ],
+                            [
+                                96.60557441572678,
+                                4.51383245900081
+                            ],
+                            [
+                                96.60662359720129,
+                                4.502715222429629
+                            ],
+                            [
+                                96.61169832941442,
+                                4.499383735171307
+                            ],
+                            [
+                                96.62201624495378,
+                                4.514185521144952
+                            ],
+                            [
+                                96.65944658878908,
+                                4.502307759395649
+                            ],
+                            [
+                                96.68872688144046,
+                                4.469782496065363
+                            ],
+                            [
+                                96.65473298114222,
+                                4.449387189567176
+                            ],
+                            [
+                                96.62784400020053,
+                                4.406300001244119
+                            ],
+                            [
+                                96.68392900012333,
+                                4.394170000345298
+                            ],
+                            [
+                                96.6717972977072,
+                                4.381874659987602
+                            ],
+                            [
+                                96.67622955065332,
+                                4.366799383884484
+                            ],
+                            [
+                                96.7189429996198,
+                                4.354000999646473
+                            ],
+                            [
+                                96.71603300032274,
+                                4.328955001172403
+                            ],
+                            [
+                                96.75349155229338,
+                                4.300006044843144
+                            ],
+                            [
+                                96.4969466448718,
+                                4.4339422453384145
+                            ],
+                            [
+                                96.47223623201654,
+                                4.455028376858138
+                            ],
+                            [
+                                96.48413364485191,
+                                4.464669925776491
+                            ],
+                            [
+                                96.48413364485191,
+                                4.500076305776929
+                            ],
+                            [
+                                96.45925282935463,
+                                4.501138613756041
+                            ],
+                            [
+                                96.44333423468726,
+                                4.527836165906365
+                            ],
+                            [
+                                96.47283657714638,
+                                4.545343051440739
+                            ],
+                            [
+                                96.49222918363,
+                                4.547722511884444
+                            ],
+                            [
+                                96.4900696568892,
+                                4.624764871201876
+                            ],
+                            [
+                                96.50284699968933,
+                                4.632219000006899
+                            ],
+                            [
+                                96.51371599999345,
+                                4.624602000382083
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 239,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 239,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111505&quot;,
+                    &quot;name&quot;: &quot;Darul Makmur&quot;,
+                    &quot;latitude&quot;: &quot;4.0381916&quot;,
+                    &quot;longitude&quot;: &quot;96.5950504&quot;,
+                    &quot;bbox&quot;: [
+                        96.409514,
+                        3.730657,
+                        96.799313,
+                        4.357874
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.79366377076644,
+                                4.280400503180715
+                            ],
+                            [
+                                96.79931279744773,
+                                4.264787837188976
+                            ],
+                            [
+                                96.78977737932263,
+                                4.244403419682101
+                            ],
+                            [
+                                96.79356146838711,
+                                4.203107418272793
+                            ],
+                            [
+                                96.7489875999978,
+                                4.160402648663364
+                            ],
+                            [
+                                96.71623996490251,
+                                4.099878656274996
+                            ],
+                            [
+                                96.72386692541835,
+                                4.094137680209826
+                            ],
+                            [
+                                96.71892471460393,
+                                4.078783084571739
+                            ],
+                            [
+                                96.72766775716133,
+                                4.057487742865078
+                            ],
+                            [
+                                96.72724367105866,
+                                4.037679764709424
+                            ],
+                            [
+                                96.71288208883738,
+                                4.021715401744416
+                            ],
+                            [
+                                96.71749834757077,
+                                4.0096457876230716
+                            ],
+                            [
+                                96.70644147169662,
+                                4.005376706769653
+                            ],
+                            [
+                                96.6991035568837,
+                                3.987804796654075
+                            ],
+                            [
+                                96.6851083854437,
+                                3.989339534691794
+                            ],
+                            [
+                                96.68611480775223,
+                                3.9834373740356455
+                            ],
+                            [
+                                96.67899839955658,
+                                3.9866384362148892
+                            ],
+                            [
+                                96.63189982571646,
+                                3.9634371990675277
+                            ],
+                            [
+                                96.61665658683205,
+                                3.9288892606309105
+                            ],
+                            [
+                                96.6212808036662,
+                                3.912727623281228
+                            ],
+                            [
+                                96.60333195800354,
+                                3.9081860838207376
+                            ],
+                            [
+                                96.59610446464939,
+                                3.8866602917391333
+                            ],
+                            [
+                                96.6009757630211,
+                                3.8798426644074766
+                            ],
+                            [
+                                96.58469921479701,
+                                3.8337684597466932
+                            ],
+                            [
+                                96.61067759979147,
+                                3.8178275466040645
+                            ],
+                            [
+                                96.61176962227029,
+                                3.7981900025666278
+                            ],
+                            [
+                                96.61991838022914,
+                                3.7901697460370087
+                            ],
+                            [
+                                96.60636614018529,
+                                3.7694766919958056
+                            ],
+                            [
+                                96.61748434532632,
+                                3.765866306085229
+                            ],
+                            [
+                                96.61480955741519,
+                                3.7504809536331436
+                            ],
+                            [
+                                96.62406019172454,
+                                3.7410621254168177
+                            ],
+                            [
+                                96.54860986895034,
+                                3.7306569027938963
+                            ],
+                            [
+                                96.51696812567849,
+                                3.73746322115079
+                            ],
+                            [
+                                96.4095137182835,
+                                3.8275872268690705
+                            ],
+                            [
+                                96.41450011638733,
+                                3.8770980450387924
+                            ],
+                            [
+                                96.42317589774956,
+                                3.89286143380815
+                            ],
+                            [
+                                96.41690467241278,
+                                3.9014736969535875
+                            ],
+                            [
+                                96.42952458259344,
+                                3.9027099580981144
+                            ],
+                            [
+                                96.44441730801242,
+                                3.9243585094376954
+                            ],
+                            [
+                                96.45557096622719,
+                                3.924041827568317
+                            ],
+                            [
+                                96.46454041221034,
+                                3.938459475324578
+                            ],
+                            [
+                                96.4602069848645,
+                                3.9536190026149143
+                            ],
+                            [
+                                96.46846582074107,
+                                3.9742634725812422
+                            ],
+                            [
+                                96.48373601770311,
+                                3.9714733825906023
+                            ],
+                            [
+                                96.47434507566476,
+                                3.9803684951099854
+                            ],
+                            [
+                                96.48904295666716,
+                                3.9829849260135575
+                            ],
+                            [
+                                96.46414211506664,
+                                4.009250258592601
+                            ],
+                            [
+                                96.45274048858272,
+                                4.009611595398837
+                            ],
+                            [
+                                96.45335004366962,
+                                4.01963765125663
+                            ],
+                            [
+                                96.44431078241672,
+                                4.0201705220520125
+                            ],
+                            [
+                                96.45704930238344,
+                                4.04147949658153
+                            ],
+                            [
+                                96.45187699462764,
+                                4.077276381999468
+                            ],
+                            [
+                                96.4624081259343,
+                                4.084512790333065
+                            ],
+                            [
+                                96.46581713475302,
+                                4.101415280191077
+                            ],
+                            [
+                                96.50880586979514,
+                                4.134654831855073
+                            ],
+                            [
+                                96.51304163975993,
+                                4.157892303587005
+                            ],
+                            [
+                                96.54503493881145,
+                                4.173827485350216
+                            ],
+                            [
+                                96.59428978114852,
+                                4.232481198148832
+                            ],
+                            [
+                                96.62070179944857,
+                                4.224391031021298
+                            ],
+                            [
+                                96.63616829503087,
+                                4.228674061258971
+                            ],
+                            [
+                                96.63045758924642,
+                                4.249613318200147
+                            ],
+                            [
+                                96.63581137569452,
+                                4.2657936533544785
+                            ],
+                            [
+                                96.62212947499535,
+                                4.2933954000777135
+                            ],
+                            [
+                                96.6347406176854,
+                                4.311598277238772
+                            ],
+                            [
+                                96.6440888311347,
+                                4.3578736161745155
+                            ],
+                            [
+                                96.79366377076644,
+                                4.280400503180715
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 235,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 235,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111501&quot;,
+                    &quot;name&quot;: &quot;Kuala&quot;,
+                    &quot;latitude&quot;: &quot;4.0961760&quot;,
+                    &quot;longitude&quot;: &quot;96.2970947&quot;,
+                    &quot;bbox&quot;: [
+                        96.225949,
+                        4.030382,
+                        96.357984,
+                        4.147081
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.25822700007603,
+                                4.147081000188052
+                            ],
+                            [
+                                96.34526205759795,
+                                4.141906879399016
+                            ],
+                            [
+                                96.3318690209386,
+                                4.135685913574093
+                            ],
+                            [
+                                96.33757292604975,
+                                4.1233471359615805
+                            ],
+                            [
+                                96.31414725589121,
+                                4.09171995810965
+                            ],
+                            [
+                                96.33845399995221,
+                                4.090950999988706
+                            ],
+                            [
+                                96.34668500001283,
+                                4.083355999579737
+                            ],
+                            [
+                                96.34395987524812,
+                                4.07323970844584
+                            ],
+                            [
+                                96.35798387535561,
+                                4.064509707856757
+                            ],
+                            [
+                                96.3358938747026,
+                                4.031603708444436
+                            ],
+                            [
+                                96.31374643255185,
+                                4.0303816457963535
+                            ],
+                            [
+                                96.28658475468274,
+                                4.053096483715819
+                            ],
+                            [
+                                96.2857640135984,
+                                4.0759938273532725
+                            ],
+                            [
+                                96.26084709661626,
+                                4.079785405971734
+                            ],
+                            [
+                                96.2259489657722,
+                                4.11754872829124
+                            ],
+                            [
+                                96.24334104025684,
+                                4.129489366141399
+                            ],
+                            [
+                                96.23425111389787,
+                                4.132910442962611
+                            ],
+                            [
+                                96.23837085243298,
+                                4.143926604729074
+                            ],
+                            [
+                                96.25707803342453,
+                                4.13648311760187
+                            ],
+                            [
+                                96.25822700007603,
+                                4.147081000188052
+                            ]
+                        ],
+                        [
+                            [
+                                96.31802953383595,
+                                4.089491987565225
+                            ],
+                            [
+                                96.31836294129675,
+                                4.089054967412892
+                            ],
+                            [
+                                96.31783944593371,
+                                4.088620992364952
+                            ],
+                            [
+                                96.31841201909947,
+                                4.089014473639111
+                            ],
+                            [
+                                96.31802953383595,
+                                4.089491987565225
+                            ]
+                        ],
+                        [
+                            [
+                                96.31736938109213,
+                                4.0894857040020725
+                            ],
+                            [
+                                96.3173733776793,
+                                4.089486231904118
+                            ],
+                            [
+                                96.31737166177282,
+                                4.08948620312583
+                            ],
+                            [
+                                96.31736938109213,
+                                4.0894857040020725
+                            ]
+                        ],
+                        [
+                            [
+                                96.31751178604014,
+                                4.088351845061652
+                            ],
+                            [
+                                96.31747372942914,
+                                4.08827166510531
+                            ],
+                            [
+                                96.31757235537998,
+                                4.088424817851092
+                            ],
+                            [
+                                96.31751178604014,
+                                4.088351845061652
+                            ]
+                        ],
+                        [
+                            [
+                                96.31742922288038,
+                                4.088094817921558
+                            ],
+                            [
+                                96.31743004755873,
+                                4.088040621177754
+                            ],
+                            [
+                                96.31742985780176,
+                                4.088097561753102
+                            ],
+                            [
+                                96.31742922288038,
+                                4.088094817921558
+                            ]
+                        ],
+                        [
+                            [
+                                96.31794200192189,
+                                4.087676809437255
+                            ],
+                            [
+                                96.31755882238178,
+                                4.087804138150489
+                            ],
+                            [
+                                96.31743197030926,
+                                4.08800705578102
+                            ],
+                            [
+                                96.31755532761633,
+                                4.087802063414529
+                            ],
+                            [
+                                96.31794200192189,
+                                4.087676809437255
+                            ]
+                        ],
+                        [
+                            [
+                                96.31854051873,
+                                4.087462304941482
+                            ],
+                            [
+                                96.31857749975188,
+                                4.087436032147195
+                            ],
+                            [
+                                96.31853183037975,
+                                4.087467388808989
+                            ],
+                            [
+                                96.31854051873,
+                                4.087462304941482
+                            ]
+                        ],
+                        [
+                            [
+                                96.31895696329326,
+                                4.086565336421188
+                            ],
+                            [
+                                96.31887674016946,
+                                4.086983317026522
+                            ],
+                            [
+                                96.31873053108922,
+                                4.087254672165443
+                            ],
+                            [
+                                96.3188504098186,
+                                4.08697897240171
+                            ],
+                            [
+                                96.31895696329326,
+                                4.086565336421188
+                            ]
+                        ],
+                        [
+                            [
+                                96.31899996707489,
+                                4.086448025256232
+                            ],
+                            [
+                                96.31904601056499,
+                                4.086358333170608
+                            ],
+                            [
+                                96.31898313896073,
+                                4.086493929351434
+                            ],
+                            [
+                                96.31899996707489,
+                                4.086448025256232
+                            ]
+                        ],
+                        [
+                            [
+                                96.32015170183962,
+                                4.0863881456963895
+                            ],
+                            [
+                                96.32006934642328,
+                                4.086068296414794
+                            ],
+                            [
+                                96.31913702915062,
+                                4.085431890269547
+                            ],
+                            [
+                                96.31996695860829,
+                                4.085959152892656
+                            ],
+                            [
+                                96.32006784005881,
+                                4.08605513303803
+                            ],
+                            [
+                                96.32020109440504,
+                                4.0862618071367365
+                            ],
+                            [
+                                96.32015170183962,
+                                4.0863881456963895
+                            ]
+                        ],
+                        [
+                            [
+                                96.31993543107535,
+                                4.0863352628621215
+                            ],
+                            [
+                                96.32000276421627,
+                                4.086376057009488
+                            ],
+                            [
+                                96.31996858458257,
+                                4.086365635665629
+                            ],
+                            [
+                                96.31993543107535,
+                                4.0863352628621215
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 241,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 241,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111507&quot;,
+                    &quot;name&quot;: &quot;Kuala Pesisir&quot;,
+                    &quot;latitude&quot;: &quot;4.0526889&quot;,
+                    &quot;longitude&quot;: &quot;96.2644004&quot;,
+                    &quot;bbox&quot;: [
+                        96.189681,
+                        3.982822,
+                        96.330615,
+                        4.118164
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.22996030542379,
+                                4.118164437438907
+                            ],
+                            [
+                                96.26084709661626,
+                                4.079785405971734
+                            ],
+                            [
+                                96.2857640135984,
+                                4.0759938273532725
+                            ],
+                            [
+                                96.28658475468274,
+                                4.053096483715819
+                            ],
+                            [
+                                96.3196567122875,
+                                4.031296923614207
+                            ],
+                            [
+                                96.33061494602299,
+                                4.014686161237421
+                            ],
+                            [
+                                96.29559036240533,
+                                3.9828222962120208
+                            ],
+                            [
+                                96.19356487981543,
+                                4.104152785023075
+                            ],
+                            [
+                                96.19200978832112,
+                                4.099156821729991
+                            ],
+                            [
+                                96.18968095880928,
+                                4.1069270217647045
+                            ],
+                            [
+                                96.20017250285878,
+                                4.115484616921606
+                            ],
+                            [
+                                96.21486242576037,
+                                4.110680791085713
+                            ],
+                            [
+                                96.22996030542379,
+                                4.118164437438907
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 236,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 236,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111502&quot;,
+                    &quot;name&quot;: &quot;Seunagan&quot;,
+                    &quot;latitude&quot;: &quot;4.2336346&quot;,
+                    &quot;longitude&quot;: &quot;96.2949769&quot;,
+                    &quot;bbox&quot;: [
+                        96.251998,
+                        4.18811,
+                        96.36144,
+                        4.273897
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.28239911382809,
+                                4.2708564929328645
+                            ],
+                            [
+                                96.30019373565244,
+                                4.267759667574637
+                            ],
+                            [
+                                96.31470659913032,
+                                4.246400579223405
+                            ],
+                            [
+                                96.33275022884004,
+                                4.2533169719008015
+                            ],
+                            [
+                                96.35119187600435,
+                                4.2246225425963075
+                            ],
+                            [
+                                96.36144026675498,
+                                4.224822156117682
+                            ],
+                            [
+                                96.3456326088579,
+                                4.21650787074168
+                            ],
+                            [
+                                96.32419340530146,
+                                4.224330295306913
+                            ],
+                            [
+                                96.30772832410292,
+                                4.199664757722417
+                            ],
+                            [
+                                96.29937553425356,
+                                4.199655533376188
+                            ],
+                            [
+                                96.29816493706227,
+                                4.188864960249759
+                            ],
+                            [
+                                96.29344887696413,
+                                4.194182561575985
+                            ],
+                            [
+                                96.2731502799615,
+                                4.188109671823952
+                            ],
+                            [
+                                96.2668995510735,
+                                4.225254503392648
+                            ],
+                            [
+                                96.25199750687949,
+                                4.244815986368735
+                            ],
+                            [
+                                96.25849062284402,
+                                4.247951337784059
+                            ],
+                            [
+                                96.25883206035138,
+                                4.273897188904186
+                            ],
+                            [
+                                96.28239911382809,
+                                4.2708564929328645
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 237,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 237,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111503&quot;,
+                    &quot;name&quot;: &quot;Seunagan Timur&quot;,
+                    &quot;latitude&quot;: &quot;4.3367108&quot;,
+                    &quot;longitude&quot;: &quot;96.3680986&quot;,
+                    &quot;bbox&quot;: [
+                        96.260167,
+                        4.224388,
+                        96.488758,
+                        4.445778
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.46753489831696,
+                                4.436747119284178
+                            ],
+                            [
+                                96.48705046280867,
+                                4.431220416588985
+                            ],
+                            [
+                                96.48875769980805,
+                                4.408051310419694
+                            ],
+                            [
+                                96.45828813109244,
+                                4.3888896372470185
+                            ],
+                            [
+                                96.44785131078942,
+                                4.372304037001754
+                            ],
+                            [
+                                96.39484611025983,
+                                4.3594103776868565
+                            ],
+                            [
+                                96.38042640665338,
+                                4.3636569979721
+                            ],
+                            [
+                                96.3639925202387,
+                                4.354270344800625
+                            ],
+                            [
+                                96.36105902615321,
+                                4.331907828883232
+                            ],
+                            [
+                                96.38152100029401,
+                                4.258869999550882
+                            ],
+                            [
+                                96.3970939243452,
+                                4.240993781337977
+                            ],
+                            [
+                                96.39249731759719,
+                                4.235589093262092
+                            ],
+                            [
+                                96.3518833125649,
+                                4.224387564134815
+                            ],
+                            [
+                                96.33275022884004,
+                                4.2533169719008015
+                            ],
+                            [
+                                96.31510634867908,
+                                4.246276846899036
+                            ],
+                            [
+                                96.29960312478443,
+                                4.268132280980012
+                            ],
+                            [
+                                96.26016660660366,
+                                4.274856492133438
+                            ],
+                            [
+                                96.27329918341064,
+                                4.286254523127809
+                            ],
+                            [
+                                96.27868696782934,
+                                4.307658701687785
+                            ],
+                            [
+                                96.31126916903696,
+                                4.337605561947157
+                            ],
+                            [
+                                96.30488678299872,
+                                4.349962450107057
+                            ],
+                            [
+                                96.32071692124896,
+                                4.357354320645413
+                            ],
+                            [
+                                96.32018426988822,
+                                4.36765810423816
+                            ],
+                            [
+                                96.34106985708831,
+                                4.376954630951502
+                            ],
+                            [
+                                96.33253009908486,
+                                4.390992541772448
+                            ],
+                            [
+                                96.36400622141002,
+                                4.39271028015537
+                            ],
+                            [
+                                96.37209382457041,
+                                4.417923819628641
+                            ],
+                            [
+                                96.43352250885675,
+                                4.423624222779722
+                            ],
+                            [
+                                96.46222088528566,
+                                4.445777585167491
+                            ],
+                            [
+                                96.46753489831696,
+                                4.436747119284178
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 240,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 240,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111506&quot;,
+                    &quot;name&quot;: &quot;Suka Makmue&quot;,
+                    &quot;latitude&quot;: &quot;4.1848571&quot;,
+                    &quot;longitude&quot;: &quot;96.3250418&quot;,
+                    &quot;bbox&quot;: [
+                        96.268872,
+                        4.135531,
+                        96.391882,
+                        4.230796
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;MultiPolygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                [
+                                    96.33211986434031,
+                                    4.136026431074981
+                                ],
+                                [
+                                    96.33179337266608,
+                                    4.135531097082492
+                                ],
+                                [
+                                    96.3323547933391,
+                                    4.1362991109152745
+                                ],
+                                [
+                                    96.33211986434031,
+                                    4.136026431074981
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.3332016732187,
+                                    4.137036876051013
+                                ],
+                                [
+                                    96.33310275229024,
+                                    4.136919224043027
+                                ],
+                                [
+                                    96.33302492675904,
+                                    4.136861141328666
+                                ],
+                                [
+                                    96.3332016732187,
+                                    4.137036876051013
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.3332016732187,
+                                    4.137036876051013
+                                ],
+                                [
+                                    96.33325027797798,
+                                    4.137094685371494
+                                ],
+                                [
+                                    96.33321978106812,
+                                    4.137054879579068
+                                ],
+                                [
+                                    96.3332016732187,
+                                    4.137036876051013
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.33325027797798,
+                                    4.137094685371494
+                                ],
+                                [
+                                    96.33331617759956,
+                                    4.137180694733331
+                                ],
+                                [
+                                    96.33336185326698,
+                                    4.137287266194448
+                                ],
+                                [
+                                    96.33334468610843,
+                                    4.137206968426881
+                                ],
+                                [
+                                    96.33325027797798,
+                                    4.137094685371494
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.33693373830147,
+                                    4.138929840140065
+                                ],
+                                [
+                                    96.33748315662245,
+                                    4.138727295728188
+                                ],
+                                [
+                                    96.33801087789976,
+                                    4.138617063127015
+                                ],
+                                [
+                                    96.33739987580367,
+                                    4.138742682229065
+                                ],
+                                [
+                                    96.33693373830147,
+                                    4.138929840140065
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.33693373830147,
+                                    4.138929840140065
+                                ],
+                                [
+                                    96.3365961975565,
+                                    4.139054274834962
+                                ],
+                                [
+                                    96.3363575057943,
+                                    4.139187152365253
+                                ],
+                                [
+                                    96.33662421863283,
+                                    4.139093546430047
+                                ],
+                                [
+                                    96.33693373830147,
+                                    4.138929840140065
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34161669975094,
+                                    4.1392371906438825
+                                ],
+                                [
+                                    96.341625725347,
+                                    4.1390281756098375
+                                ],
+                                [
+                                    96.34145513114942,
+                                    4.138769364214852
+                                ],
+                                [
+                                    96.34121852041847,
+                                    4.138675733098637
+                                ],
+                                [
+                                    96.34161669975094,
+                                    4.1392371906438825
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34161669975094,
+                                    4.1392371906438825
+                                ],
+                                [
+                                    96.34161023992067,
+                                    4.139386785671661
+                                ],
+                                [
+                                    96.34174704119306,
+                                    4.139557630780075
+                                ],
+                                [
+                                    96.3416748813907,
+                                    4.139425146253529
+                                ],
+                                [
+                                    96.34161669975094,
+                                    4.1392371906438825
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34174704119306,
+                                    4.139557630780075
+                                ],
+                                [
+                                    96.34177637078295,
+                                    4.13960576159667
+                                ],
+                                [
+                                    96.34180823915898,
+                                    4.139634059664161
+                                ],
+                                [
+                                    96.34174704119306,
+                                    4.139557630780075
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34180823915898,
+                                    4.139634059664161
+                                ],
+                                [
+                                    96.3418521323701,
+                                    4.13968887604085
+                                ],
+                                [
+                                    96.34188705214581,
+                                    4.139704042207825
+                                ],
+                                [
+                                    96.34180823915898,
+                                    4.139634059664161
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34188705214581,
+                                    4.139704042207825
+                                ],
+                                [
+                                    96.34208542640135,
+                                    4.139827724170175
+                                ],
+                                [
+                                    96.3422512496955,
+                                    4.139950559870499
+                                ],
+                                [
+                                    96.3421517496036,
+                                    4.139819003444302
+                                ],
+                                [
+                                    96.34188705214581,
+                                    4.139704042207825
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34196854691095,
+                                    4.140671799963627
+                                ],
+                                [
+                                    96.34203020802772,
+                                    4.140574496915576
+                                ],
+                                [
+                                    96.34200013379922,
+                                    4.1405944834486945
+                                ],
+                                [
+                                    96.34196854691095,
+                                    4.140671799963627
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.34287287098624,
+                                    4.140757282322795
+                                ],
+                                [
+                                    96.34276312132107,
+                                    4.140724888742682
+                                ],
+                                [
+                                    96.34259240301702,
+                                    4.140816996407295
+                                ],
+                                [
+                                    96.34275119721002,
+                                    4.140757844399047
+                                ],
+                                [
+                                    96.34287287098624,
+                                    4.140757282322795
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.38432956235948,
+                                    4.230001340089814
+                                ],
+                                [
+                                    96.39188197087634,
+                                    4.211841294040539
+                                ],
+                                [
+                                    96.38072705810731,
+                                    4.213459328185479
+                                ],
+                                [
+                                    96.37202950685634,
+                                    4.189836091362565
+                                ],
+                                [
+                                    96.35942000542894,
+                                    4.191188640243581
+                                ],
+                                [
+                                    96.36129462065026,
+                                    4.182968802568212
+                                ],
+                                [
+                                    96.34528035160702,
+                                    4.175571367924363
+                                ],
+                                [
+                                    96.32846688383967,
+                                    4.18020052383514
+                                ],
+                                [
+                                    96.33602743481833,
+                                    4.173244141004375
+                                ],
+                                [
+                                    96.32950997600466,
+                                    4.16670093190254
+                                ],
+                                [
+                                    96.3346029977302,
+                                    4.149752813141845
+                                ],
+                                [
+                                    96.34529683168347,
+                                    4.141905746253258
+                                ],
+                                [
+                                    96.26887173014632,
+                                    4.146920746395381
+                                ],
+                                [
+                                    96.2756633149101,
+                                    4.153153504130955
+                                ],
+                                [
+                                    96.2712781576609,
+                                    4.16886142811245
+                                ],
+                                [
+                                    96.27778251065439,
+                                    4.187018933576951
+                                ],
+                                [
+                                    96.29344887696413,
+                                    4.194182561575985
+                                ],
+                                [
+                                    96.29816493706227,
+                                    4.188864960249759
+                                ],
+                                [
+                                    96.31906215069773,
+                                    4.220828196763932
+                                ],
+                                [
+                                    96.3456326088579,
+                                    4.21650787074168
+                                ],
+                                [
+                                    96.37007317024069,
+                                    4.230796101558894
+                                ],
+                                [
+                                    96.38432956235948,
+                                    4.230001340089814
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 242,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 242,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111508&quot;,
+                    &quot;name&quot;: &quot;Tadu Raya&quot;,
+                    &quot;latitude&quot;: &quot;4.0711036&quot;,
+                    &quot;longitude&quot;: &quot;96.3898458&quot;,
+                    &quot;bbox&quot;: [
+                        96.29559,
+                        3.924879,
+                        96.515005,
+                        4.203119
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;MultiPolygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                [
+                                    96.32000276421627,
+                                    4.086376057009488
+                                ],
+                                [
+                                    96.31993543107535,
+                                    4.0863352628621215
+                                ],
+                                [
+                                    96.31996858458257,
+                                    4.086365635665629
+                                ],
+                                [
+                                    96.32000276421627,
+                                    4.086376057009488
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31922750724374,
+                                    4.0854515692345785
+                                ],
+                                [
+                                    96.32006934642328,
+                                    4.086068296414794
+                                ],
+                                [
+                                    96.3201709131572,
+                                    4.086387234683173
+                                ],
+                                [
+                                    96.32006784005881,
+                                    4.08605513303803
+                                ],
+                                [
+                                    96.31922750724374,
+                                    4.0854515692345785
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31898313896073,
+                                    4.086493929351434
+                                ],
+                                [
+                                    96.31904601056499,
+                                    4.086358333170608
+                                ],
+                                [
+                                    96.31899996707489,
+                                    4.086448025256232
+                                ],
+                                [
+                                    96.31898313896073,
+                                    4.086493929351434
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31893164557903,
+                                    4.086705874376662
+                                ],
+                                [
+                                    96.31896403106526,
+                                    4.08654605585582
+                                ],
+                                [
+                                    96.31873053108922,
+                                    4.087254672165443
+                                ],
+                                [
+                                    96.31885008965997,
+                                    4.087064256909969
+                                ],
+                                [
+                                    96.31893164557903,
+                                    4.086705874376662
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31856306203576,
+                                    4.087451838631523
+                                ],
+                                [
+                                    96.31857749975188,
+                                    4.087436032147195
+                                ],
+                                [
+                                    96.31853183037975,
+                                    4.087467388808989
+                                ],
+                                [
+                                    96.31856306203576,
+                                    4.087451838631523
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.3180116966825,
+                                    4.087668172348344
+                                ],
+                                [
+                                    96.31778052055466,
+                                    4.087703575060004
+                                ],
+                                [
+                                    96.3176543438729,
+                                    4.087747765946688
+                                ],
+                                [
+                                    96.31755532761633,
+                                    4.087802063414529
+                                ],
+                                [
+                                    96.31746165782931,
+                                    4.087886426117734
+                                ],
+                                [
+                                    96.31743197030926,
+                                    4.08800705578102
+                                ],
+                                [
+                                    96.3180116966825,
+                                    4.087668172348344
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31742985780176,
+                                    4.088097561753102
+                                ],
+                                [
+                                    96.31743004755873,
+                                    4.088040621177754
+                                ],
+                                [
+                                    96.31742922288038,
+                                    4.088094817921558
+                                ],
+                                [
+                                    96.31742985780176,
+                                    4.088097561753102
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31752423175794,
+                                    4.088359938960082
+                                ],
+                                [
+                                    96.31747372942914,
+                                    4.08827166510531
+                                ],
+                                [
+                                    96.31757235537998,
+                                    4.088424817851092
+                                ],
+                                [
+                                    96.31752423175794,
+                                    4.088359938960082
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.3173733776793,
+                                    4.089486231904118
+                                ],
+                                [
+                                    96.31736938109213,
+                                    4.0894857040020725
+                                ],
+                                [
+                                    96.31737166177282,
+                                    4.08948620312583
+                                ],
+                                [
+                                    96.3173733776793,
+                                    4.089486231904118
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.31800231495492,
+                                    4.088699275651095
+                                ],
+                                [
+                                    96.31837453355791,
+                                    4.089238852690926
+                                ],
+                                [
+                                    96.31796504615,
+                                    4.089499046343974
+                                ],
+                                [
+                                    96.31833342824518,
+                                    4.089375855411447
+                                ],
+                                [
+                                    96.31842356729385,
+                                    4.089122109897517
+                                ],
+                                [
+                                    96.31800231495492,
+                                    4.088699275651095
+                                ]
+                            ]
+                        ],
+                        [
+                            [
+                                [
+                                    96.37612427391616,
+                                    4.203119181405157
+                                ],
+                                [
+                                    96.39989005238408,
+                                    4.19498885505169
+                                ],
+                                [
+                                    96.40876999963581,
+                                    4.164902000027325
+                                ],
+                                [
+                                    96.44184499964706,
+                                    4.145057000380291
+                                ],
+                                [
+                                    96.51500541556754,
+                                    4.156238774999508
+                                ],
+                                [
+                                    96.50880586979514,
+                                    4.134654831855073
+                                ],
+                                [
+                                    96.46581713475302,
+                                    4.101415280191077
+                                ],
+                                [
+                                    96.4624081259343,
+                                    4.084512790333065
+                                ],
+                                [
+                                    96.45187699462764,
+                                    4.077276381999468
+                                ],
+                                [
+                                    96.45704930238344,
+                                    4.04147949658153
+                                ],
+                                [
+                                    96.43553461243249,
+                                    4.004255326821919
+                                ],
+                                [
+                                    96.42231178326227,
+                                    3.9909038541296127
+                                ],
+                                [
+                                    96.38898783472087,
+                                    3.9779162372445853
+                                ],
+                                [
+                                    96.38248252934534,
+                                    3.9716663357328343
+                                ],
+                                [
+                                    96.38654845424782,
+                                    3.9575777130410756
+                                ],
+                                [
+                                    96.36369966590689,
+                                    3.949463050179645
+                                ],
+                                [
+                                    96.33492173005385,
+                                    3.924878587376952
+                                ],
+                                [
+                                    96.29559036240533,
+                                    3.9828222962120208
+                                ],
+                                [
+                                    96.33061494602299,
+                                    4.014686161237421
+                                ],
+                                [
+                                    96.3196567122875,
+                                    4.031296923614207
+                                ],
+                                [
+                                    96.3358938747026,
+                                    4.031603708444436
+                                ],
+                                [
+                                    96.35798387535561,
+                                    4.064509707856757
+                                ],
+                                [
+                                    96.34395987524812,
+                                    4.07323970844584
+                                ],
+                                [
+                                    96.34668500001283,
+                                    4.083355999579737
+                                ],
+                                [
+                                    96.33845399995221,
+                                    4.090950999988706
+                                ],
+                                [
+                                    96.3141744522892,
+                                    4.091597509117776
+                                ],
+                                [
+                                    96.33757292604975,
+                                    4.1233471359615805
+                                ],
+                                [
+                                    96.33169338783966,
+                                    4.135379404835703
+                                ],
+                                [
+                                    96.34514913962113,
+                                    4.140761607162517
+                                ],
+                                [
+                                    96.34388024927415,
+                                    4.14843739726814
+                                ],
+                                [
+                                    96.3346029977302,
+                                    4.149752813141845
+                                ],
+                                [
+                                    96.32950997600466,
+                                    4.16670093190254
+                                ],
+                                [
+                                    96.33602743481833,
+                                    4.173244141004375
+                                ],
+                                [
+                                    96.32846688383967,
+                                    4.18020052383514
+                                ],
+                                [
+                                    96.34288185521353,
+                                    4.175095476375191
+                                ],
+                                [
+                                    96.3578741463748,
+                                    4.18044062573432
+                                ],
+                                [
+                                    96.35942000542894,
+                                    4.191188640243581
+                                ],
+                                [
+                                    96.37202950685634,
+                                    4.189836091362565
+                                ],
+                                [
+                                    96.37612427391616,
+                                    4.203119181405157
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                &quot;type&quot;: &quot;Feature&quot;,
+                &quot;id&quot;: 243,
+                &quot;properties&quot;: {
+                    &quot;district_id&quot;: 243,
+                    &quot;regency_id&quot;: 16,
+                    &quot;code&quot;: &quot;111509&quot;,
+                    &quot;name&quot;: &quot;Tripa Makmur&quot;,
+                    &quot;latitude&quot;: &quot;3.9323305&quot;,
+                    &quot;longitude&quot;: &quot;96.4099493&quot;,
+                    &quot;bbox&quot;: [
+                        96.334922,
+                        3.827587,
+                        96.489043,
+                        4.019838
+                    ]
+                },
+                &quot;geometry&quot;: {
+                    &quot;type&quot;: &quot;Polygon&quot;,
+                    &quot;coordinates&quot;: [
+                        [
+                            [
+                                96.44974134128995,
+                                4.019838039993601
+                            ],
+                            [
+                                96.45274048858272,
+                                4.009611595398837
+                            ],
+                            [
+                                96.46414211506664,
+                                4.009250258592601
+                            ],
+                            [
+                                96.48904295666716,
+                                3.9829849260135575
+                            ],
+                            [
+                                96.47434507566476,
+                                3.9803684951099854
+                            ],
+                            [
+                                96.48373601770311,
+                                3.9714733825906023
+                            ],
+                            [
+                                96.46846582074107,
+                                3.9742634725812422
+                            ],
+                            [
+                                96.4602069848645,
+                                3.9536190026149143
+                            ],
+                            [
+                                96.46454041221034,
+                                3.938459475324578
+                            ],
+                            [
+                                96.45557096622719,
+                                3.924041827568317
+                            ],
+                            [
+                                96.44441730801242,
+                                3.9243585094376954
+                            ],
+                            [
+                                96.42952458259344,
+                                3.9027099580981144
+                            ],
+                            [
+                                96.41690467241278,
+                                3.9014736969535875
+                            ],
+                            [
+                                96.42317589774956,
+                                3.89286143380815
+                            ],
+                            [
+                                96.41450011638733,
+                                3.8770980450387924
+                            ],
+                            [
+                                96.4095137182835,
+                                3.8275872268690705
+                            ],
+                            [
+                                96.38276407919898,
+                                3.850053067694944
+                            ],
+                            [
+                                96.33492173005385,
+                                3.924878587376952
+                            ],
+                            [
+                                96.36369966590689,
+                                3.949463050179645
+                            ],
+                            [
+                                96.38654845424782,
+                                3.9575777130410756
+                            ],
+                            [
+                                96.38393211417576,
+                                3.9737987524105165
+                            ],
+                            [
+                                96.42231178326227,
+                                3.9909038541296127
+                            ],
+                            [
+                                96.44974134128995,
+                                4.019838039993601
+                            ]
+                        ]
+                    ]
+                }
+            }
         ]
     }
 }</code>
@@ -1571,7 +3902,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-maps-villages">
             <blockquote>
-            <p>Example response (422):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -1583,12 +3914,11 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Data yang diberikan tidak valid.&quot;,
-    &quot;errors&quot;: {
-        &quot;district_id&quot;: [
-            &quot;The selected district id is invalid.&quot;
-        ]
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;GeoJSON batas desa/kelurahan berhasil diambil&quot;,
+    &quot;data&quot;: {
+        &quot;type&quot;: &quot;FeatureCollection&quot;,
+        &quot;features&quot;: []
     }
 }</code>
  </pre>
@@ -1700,7 +4030,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"email\": \"zbailey@example.net\",
     \"phone\": \"iyvdljnikhwaykcm\",
     \"password\": \"architecto\",
-    \"account_type\": \"buyer\",
+    \"account_type\": \"farmer\",
     \"device_name\": \"n\"
 }"
 </code></pre></div>
@@ -1721,7 +4051,7 @@ let body = {
     "email": "zbailey@example.net",
     "phone": "iyvdljnikhwaykcm",
     "password": "architecto",
-    "account_type": "buyer",
+    "account_type": "farmer",
     "device_name": "n"
 };
 
@@ -1862,10 +4192,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="account_type"                data-endpoint="POSTapi-v1-auth-register"
-               value="buyer"
+               value="farmer"
                data-component="body">
     <br>
-<p>Example: <code>buyer</code></p>
+<p>Example: <code>farmer</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>farmer</code></li> <li><code>buyer</code></li></ul>
         </div>
@@ -3261,7 +5591,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"inactive\"
+    \"status\": \"active\"
 }"
 </code></pre></div>
 
@@ -3288,7 +5618,7 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "inactive"
+    "status": "active"
 };
 
 fetch(url, {
@@ -3512,10 +5842,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-farms"
-               value="inactive"
+               value="active"
                data-component="body">
     <br>
-<p>Example: <code>inactive</code></p>
+<p>Example: <code>active</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -3690,7 +6020,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"inactive\"
+    \"status\": \"active\"
 }"
 </code></pre></div>
 
@@ -3717,7 +6047,7 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "inactive"
+    "status": "active"
 };
 
 fetch(url, {
@@ -3954,10 +6284,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="inactive"
+               value="active"
                data-component="body">
     <br>
-<p>Example: <code>inactive</code></p>
+<p>Example: <code>active</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -4249,7 +6579,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
-    \"season\": \"rainy\",
+    \"season\": \"transition\",
     \"year\": 22,
     \"status\": \"draft\"
 }"
@@ -4271,7 +6601,7 @@ let body = {
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
-    "season": "rainy",
+    "season": "transition",
     "year": 22,
     "status": "draft"
 };
@@ -4430,10 +6760,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="season"                data-endpoint="GETapi-v1-planting-calendars"
-               value="rainy"
+               value="transition"
                data-component="body">
     <br>
-<p>Example: <code>rainy</code></p>
+<p>Example: <code>transition</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
         </div>
@@ -4624,7 +6954,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"planned_date\": \"2026-08-18T09:50:53\",
+    \"planned_date\": \"2026-08-20T01:35:33\",
     \"variety_id\": 16
 }"
 </code></pre></div>
@@ -4642,7 +6972,7 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "planned_date": "2026-08-18T09:50:53",
+    "planned_date": "2026-08-20T01:35:33",
     "variety_id": 16
 };
 
@@ -4747,10 +7077,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_date"                data-endpoint="POSTapi-v1-planting-calendar-recommend-planting-window"
-               value="2026-08-18T09:50:53"
+               value="2026-08-20T01:35:33"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T09:50:53</code></p>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:33</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>variety_id</code></b>&nbsp;&nbsp;
@@ -5163,7 +7493,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-GETapi-v1-farm-activities">GET api/v1/farm-activities</h2>
+                    <h2 id="endpoints-GETapi-v1-farm-activities">List current user&#039;s farm activities (with optional crop_season_id filter)</h2>
 
 <p>
 </p>
@@ -5290,6 +7620,664 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-farm-activities">Store a new farm activity</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-farm-activities">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/farm-activities" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"crop_season_id\": 16,
+    \"type\": \"spraying\",
+    \"occurred_at\": \"2026-08-20T01:35:34\",
+    \"notes\": \"architecto\",
+    \"cost\": 39
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/farm-activities"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "crop_season_id": 16,
+    "type": "spraying",
+    "occurred_at": "2026-08-20T01:35:34",
+    "notes": "architecto",
+    "cost": 39
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-farm-activities">
+</span>
+<span id="execution-results-POSTapi-v1-farm-activities" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-farm-activities"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-farm-activities"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-farm-activities" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-farm-activities">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-farm-activities" data-method="POST"
+      data-path="api/v1/farm-activities"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-farm-activities', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-farm-activities"
+                    onclick="tryItOut('POSTapi-v1-farm-activities');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-farm-activities"
+                    onclick="cancelTryOut('POSTapi-v1-farm-activities');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-farm-activities"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/farm-activities</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-farm-activities"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-farm-activities"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>crop_season_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="crop_season_id"                data-endpoint="POSTapi-v1-farm-activities"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="type"                data-endpoint="POSTapi-v1-farm-activities"
+               value="spraying"
+               data-component="body">
+    <br>
+<p>Example: <code>spraying</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>land_preparation</code></li> <li><code>planting</code></li> <li><code>fertilizing</code></li> <li><code>spraying</code></li> <li><code>irrigation</code></li> <li><code>other</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>occurred_at</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="occurred_at"                data-endpoint="POSTapi-v1-farm-activities"
+               value="2026-08-20T01:35:34"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:34</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="POSTapi-v1-farm-activities"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>cost</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="cost"                data-endpoint="POSTapi-v1-farm-activities"
+               value="39"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>39</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-GETapi-v1-farm-activities--farmActivity_id-">Show farm activity detail</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-farm-activities--farmActivity_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/farm-activities/16" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/farm-activities/16"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-farm-activities--farmActivity_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-farm-activities--farmActivity_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-farm-activities--farmActivity_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-farm-activities--farmActivity_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-farm-activities--farmActivity_id-" data-method="GET"
+      data-path="api/v1/farm-activities/{farmActivity_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-farm-activities--farmActivity_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-farm-activities--farmActivity_id-"
+                    onclick="tryItOut('GETapi-v1-farm-activities--farmActivity_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-farm-activities--farmActivity_id-"
+                    onclick="cancelTryOut('GETapi-v1-farm-activities--farmActivity_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-farm-activities--farmActivity_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/farm-activities/{farmActivity_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>farmActivity_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farmActivity_id"                data-endpoint="GETapi-v1-farm-activities--farmActivity_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>The ID of the farmActivity. Example: <code>16</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">Update farm activity</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-farm-activities--farmActivity_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost/api/v1/farm-activities/16" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"crop_season_id\": 16,
+    \"type\": \"planting\",
+    \"occurred_at\": \"2026-08-20T01:35:34\",
+    \"notes\": \"architecto\",
+    \"cost\": 39
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/farm-activities/16"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "crop_season_id": 16,
+    "type": "planting",
+    "occurred_at": "2026-08-20T01:35:34",
+    "notes": "architecto",
+    "cost": 39
+};
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-farm-activities--farmActivity_id-">
+</span>
+<span id="execution-results-PATCHapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-farm-activities--farmActivity_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-farm-activities--farmActivity_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-farm-activities--farmActivity_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-farm-activities--farmActivity_id-" data-method="PATCH"
+      data-path="api/v1/farm-activities/{farmActivity_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-farm-activities--farmActivity_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-farm-activities--farmActivity_id-"
+                    onclick="tryItOut('PATCHapi-v1-farm-activities--farmActivity_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-farm-activities--farmActivity_id-"
+                    onclick="cancelTryOut('PATCHapi-v1-farm-activities--farmActivity_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-farm-activities--farmActivity_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/farm-activities/{farmActivity_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>farmActivity_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farmActivity_id"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>The ID of the farmActivity. Example: <code>16</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>crop_season_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="crop_season_id"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="type"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="planting"
+               data-component="body">
+    <br>
+<p>Example: <code>planting</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>land_preparation</code></li> <li><code>planting</code></li> <li><code>fertilizing</code></li> <li><code>spraying</code></li> <li><code>irrigation</code></li> <li><code>other</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>occurred_at</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="occurred_at"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="2026-08-20T01:35:34"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:34</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>cost</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="cost"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
+               value="39"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>39</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">Delete farm activity</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-farm-activities--farmActivity_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/farm-activities/16" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/farm-activities/16"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-farm-activities--farmActivity_id-">
+</span>
+<span id="execution-results-DELETEapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-farm-activities--farmActivity_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-farm-activities--farmActivity_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-farm-activities--farmActivity_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-farm-activities--farmActivity_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-farm-activities--farmActivity_id-" data-method="DELETE"
+      data-path="api/v1/farm-activities/{farmActivity_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-farm-activities--farmActivity_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-farm-activities--farmActivity_id-"
+                    onclick="tryItOut('DELETEapi-v1-farm-activities--farmActivity_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-farm-activities--farmActivity_id-"
+                    onclick="cancelTryOut('DELETEapi-v1-farm-activities--farmActivity_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-farm-activities--farmActivity_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/farm-activities/{farmActivity_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-farm-activities--farmActivity_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>farmActivity_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farmActivity_id"                data-endpoint="DELETEapi-v1-farm-activities--farmActivity_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>The ID of the farmActivity. Example: <code>16</code></p>
+            </div>
+                    </form>
 
                     <h2 id="endpoints-GETapi-v1-harvests">GET api/v1/harvests</h2>
 
@@ -6864,7 +9852,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"organic_matter_percentage\": 1,
     \"soil_temp_celsius\": 1,
     \"soil_type\": \"latosol\",
-    \"tested_at\": \"2026-08-18T09:50:53\",
+    \"tested_at\": \"2026-08-20T01:35:35\",
     \"notes\": \"l\",
     \"sync_agromonitoring\": true
 }"
@@ -6892,7 +9880,7 @@ let body = {
     "organic_matter_percentage": 1,
     "soil_temp_celsius": 1,
     "soil_type": "latosol",
-    "tested_at": "2026-08-18T09:50:53",
+    "tested_at": "2026-08-20T01:35:35",
     "notes": "l",
     "sync_agromonitoring": true
 };
@@ -7108,10 +10096,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="tested_at"                data-endpoint="POSTapi-v1-soil-detections"
-               value="2026-08-18T09:50:53"
+               value="2026-08-20T01:35:35"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T09:50:53</code></p>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -7727,9 +10715,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"farm_id\": 16,
     \"variety_id\": 16,
-    \"planned_planting_date\": \"2026-08-18T09:50:54\",
-    \"planting_date\": \"2026-08-18T09:50:54\",
-    \"estimated_harvest_date\": \"2026-08-18T09:50:54\",
+    \"planned_planting_date\": \"2026-08-20T01:35:35\",
+    \"planting_date\": \"2026-08-20T01:35:35\",
+    \"estimated_harvest_date\": \"2026-08-20T01:35:35\",
     \"status\": \"cancelled\"
 }"
 </code></pre></div>
@@ -7748,9 +10736,9 @@ const headers = {
 let body = {
     "farm_id": 16,
     "variety_id": 16,
-    "planned_planting_date": "2026-08-18T09:50:54",
-    "planting_date": "2026-08-18T09:50:54",
-    "estimated_harvest_date": "2026-08-18T09:50:54",
+    "planned_planting_date": "2026-08-20T01:35:35",
+    "planting_date": "2026-08-20T01:35:35",
+    "estimated_harvest_date": "2026-08-20T01:35:35",
     "status": "cancelled"
 };
 
@@ -7867,10 +10855,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T09:50:54"
+               value="2026-08-20T01:35:35"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_date</code></b>&nbsp;&nbsp;
@@ -7879,10 +10867,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T09:50:54"
+               value="2026-08-20T01:35:35"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>estimated_harvest_date</code></b>&nbsp;&nbsp;
@@ -7891,10 +10879,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="estimated_harvest_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-18T09:50:54"
+               value="2026-08-20T01:35:35"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-18T09:50:54</code></p>
+<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -8680,6 +11668,344 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="endpoints-POSTapi-v1-notifications-send-push">Dispatch a notification payload to device service workers / database.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-notifications-send-push">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/notifications/send-push" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"user_id\": 16,
+    \"title\": \"n\",
+    \"body\": \"g\",
+    \"type\": \"z\",
+    \"url\": \"http:\\/\\/rempel.com\\/sunt-nihil-accusantium-harum-mollitia\",
+    \"icon\": \"k\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/notifications/send-push"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "user_id": 16,
+    "title": "n",
+    "body": "g",
+    "type": "z",
+    "url": "http:\/\/rempel.com\/sunt-nihil-accusantium-harum-mollitia",
+    "icon": "k"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-notifications-send-push">
+</span>
+<span id="execution-results-POSTapi-v1-notifications-send-push" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-notifications-send-push"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-notifications-send-push"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-notifications-send-push" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-notifications-send-push">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-notifications-send-push" data-method="POST"
+      data-path="api/v1/notifications/send-push"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-notifications-send-push', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-notifications-send-push"
+                    onclick="tryItOut('POSTapi-v1-notifications-send-push');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-notifications-send-push"
+                    onclick="cancelTryOut('POSTapi-v1-notifications-send-push');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-notifications-send-push"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/notifications/send-push</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>user_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="user_id"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>title</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="title"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>body</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="body"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="type"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="z"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters. Example: <code>z</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>url</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="url"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="http://rempel.com/sunt-nihil-accusantium-harum-mollitia"
+               data-component="body">
+    <br>
+<p>Must not be greater than 500 characters. Example: <code>http://rempel.com/sunt-nihil-accusantium-harum-mollitia</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>icon</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="icon"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value="k"
+               data-component="body">
+    <br>
+<p>Must not be greater than 500 characters. Example: <code>k</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>data</code></b>&nbsp;&nbsp;
+<small>object</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="data"                data-endpoint="POSTapi-v1-notifications-send-push"
+               value=""
+               data-component="body">
+    <br>
+
+        </div>
+        </form>
+
+                    <h2 id="endpoints-PATCHapi-v1-notifications--notification_id--read">Mark notification as read.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-notifications--notification_id--read">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost/api/v1/notifications/1/read" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/notifications/1/read"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-notifications--notification_id--read">
+</span>
+<span id="execution-results-PATCHapi-v1-notifications--notification_id--read" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-notifications--notification_id--read"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-notifications--notification_id--read"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-notifications--notification_id--read" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-notifications--notification_id--read">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-notifications--notification_id--read" data-method="PATCH"
+      data-path="api/v1/notifications/{notification_id}/read"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-notifications--notification_id--read', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-notifications--notification_id--read"
+                    onclick="tryItOut('PATCHapi-v1-notifications--notification_id--read');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-notifications--notification_id--read"
+                    onclick="cancelTryOut('PATCHapi-v1-notifications--notification_id--read');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-notifications--notification_id--read"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/notifications/{notification_id}/read</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-notifications--notification_id--read"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-notifications--notification_id--read"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>notification_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="notification_id"                data-endpoint="PATCHapi-v1-notifications--notification_id--read"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the notification. Example: <code>1</code></p>
+            </div>
+                    </form>
+
                     <h2 id="endpoints-GETapi-v1-ppl-validations">GET api/v1/ppl-validations</h2>
 
 <p>
@@ -9191,6 +12517,286 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-device-tokens">Register or update a device push token from Service Worker / Mobile app.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-device-tokens">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/device-tokens" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"token\": \"b\",
+    \"platform\": \"ngzmiyvdljnikhwa\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/device-tokens"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "token": "b",
+    "platform": "ngzmiyvdljnikhwa"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-device-tokens">
+</span>
+<span id="execution-results-POSTapi-v1-device-tokens" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-device-tokens"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-device-tokens"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-device-tokens" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-device-tokens">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-device-tokens" data-method="POST"
+      data-path="api/v1/device-tokens"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-device-tokens', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-device-tokens"
+                    onclick="tryItOut('POSTapi-v1-device-tokens');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-device-tokens"
+                    onclick="cancelTryOut('POSTapi-v1-device-tokens');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-device-tokens"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/device-tokens</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-device-tokens"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-device-tokens"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>token</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="token"                data-endpoint="POSTapi-v1-device-tokens"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>b</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>platform</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="platform"                data-endpoint="POSTapi-v1-device-tokens"
+               value="ngzmiyvdljnikhwa"
+               data-component="body">
+    <br>
+<p>Must not be greater than 20 characters. Example: <code>ngzmiyvdljnikhwa</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>web</code></li> <li><code>android</code></li> <li><code>ios</code></li></ul>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-DELETEapi-v1-device-tokens">Remove a device token when user logs out or revokes permission.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-device-tokens">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/device-tokens" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"token\": \"architecto\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/device-tokens"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "token": "architecto"
+};
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-device-tokens">
+</span>
+<span id="execution-results-DELETEapi-v1-device-tokens" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-device-tokens"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-device-tokens"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-device-tokens" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-device-tokens">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-device-tokens" data-method="DELETE"
+      data-path="api/v1/device-tokens"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-device-tokens', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-device-tokens"
+                    onclick="tryItOut('DELETEapi-v1-device-tokens');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-device-tokens"
+                    onclick="cancelTryOut('DELETEapi-v1-device-tokens');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-device-tokens"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/device-tokens</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-device-tokens"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-device-tokens"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>token</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="token"                data-endpoint="DELETEapi-v1-device-tokens"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+        </form>
 
                     <h2 id="endpoints-GETapi-v1-partner-favorites">GET api/v1/partner-favorites</h2>
 

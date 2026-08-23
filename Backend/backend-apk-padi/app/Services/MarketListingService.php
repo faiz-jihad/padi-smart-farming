@@ -2,20 +2,191 @@
 
 namespace App\Services;
 
+use App\Models\CropSeason;
+use App\Models\Farm;
+use App\Models\Harvest;
 use App\Models\MarketListing;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class MarketListingService
 {
-    public function getListings(): Collection
+    public function getListings(User $user): Collection
     {
-        return MarketListing::with([
+        return MarketListing::query()
+            ->where('status', 'published')
+            ->with([
+                'farmer',
+                'farm',
+                'cropSeason',
+                'harvest',
+                'images',
+                'offers',
+            ])
+            ->latest()
+            ->get();
+    }
+
+    public function createListing(
+        User $user,
+        array $data
+    ): MarketListing {
+        $farm = Farm::query()
+            ->findOrFail($data['farm_id']);
+
+        $this->authorizeFarm($user, $farm);
+
+        $cropSeason = CropSeason::query()
+            ->where('id', $data['crop_season_id'])
+            ->where('farm_id', $farm->id)
+            ->firstOrFail();
+
+        if (! empty($data['harvest_id'])) {
+            $harvest = Harvest::query()
+                ->where('id', $data['harvest_id'])
+                ->where('crop_season_id', $cropSeason->id)
+                ->firstOrFail();
+
+            if ((float) $data['quantity'] > (float) $harvest->quantity) {
+                abort(
+                    422,
+                    'Jumlah yang dijual tidak boleh melebihi hasil panen'
+                );
+            }
+        }
+
+        $listing = MarketListing::query()->create([
+            ...$data,
+            'farmer_id' => $user->id,
+            'status' => 'draft',
+        ]);
+
+        return $listing->load([
             'farmer',
             'farm',
             'cropSeason',
             'harvest',
             'images',
             'offers',
-        ])->get();
+        ]);
+    }
+
+    public function getListing(
+        User $user,
+        MarketListing $listing
+    ): MarketListing {
+        $this->authorizeListing($user, $listing);
+
+        return $listing->load([
+            'farmer',
+            'farm',
+            'cropSeason',
+            'harvest',
+            'images',
+            'offers',
+        ]);
+    }
+
+    public function updateListing(
+        User $user,
+        MarketListing $listing,
+        array $data
+    ): MarketListing {
+        $this->authorizeListing($user, $listing);
+
+        if ($listing->status !== 'draft') {
+            abort(
+                422,
+                'Listing yang sudah dipublikasikan tidak dapat diedit'
+            );
+        }
+
+        if (
+            isset($data['quantity'])
+            && $listing->harvest_id
+        ) {
+            $harvest = $listing->harvest;
+
+            if ((float) $data['quantity'] > (float) $harvest->quantity) {
+                abort(
+                    422,
+                    'Jumlah yang dijual tidak boleh melebihi hasil panen'
+                );
+            }
+        }
+
+        $listing->update($data);
+
+        return $listing->load([
+            'farmer',
+            'farm',
+            'cropSeason',
+            'harvest',
+            'images',
+            'offers',
+        ]);
+    }
+
+    public function publishListing(
+        User $user,
+        MarketListing $listing
+    ): MarketListing {
+        $this->authorizeListing($user, $listing);
+
+        if ($listing->status !== 'draft') {
+            abort(422, 'Hanya listing draft yang dapat dipublikasikan');
+        }
+
+        $listing->update([
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        return $listing->load([
+            'farmer',
+            'farm',
+            'cropSeason',
+            'harvest',
+        ]);
+    }
+
+    public function deleteListing(
+        User $user,
+        MarketListing $listing
+    ): void {
+        $this->authorizeListing($user, $listing);
+
+        if ($listing->status !== 'draft') {
+            abort(
+                422,
+                'Hanya listing draft yang dapat dihapus'
+            );
+        }
+
+        $listing->delete();
+    }
+
+    private function authorizeFarm(
+        User $user,
+        Farm $farm
+    ): void {
+        if (
+            ! $user->hasRole('admin')
+            && $farm->farmer_user_id !== $user->id
+        ) {
+            abort(403, 'Anda tidak memiliki akses ke lahan ini');
+        }
+    }
+
+    private function authorizeListing(
+        User $user,
+        MarketListing $listing
+    ): void {
+        if (
+            ! $user->hasRole('admin')
+            && $listing->farmer_id !== $user->id
+        ) {
+            abort(403, 'Anda tidak memiliki akses ke listing ini');
+        }
     }
 }

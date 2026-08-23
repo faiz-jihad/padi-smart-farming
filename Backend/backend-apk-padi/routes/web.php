@@ -50,7 +50,7 @@ Route::middleware(['auth', 'admin.web'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function (): void {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [DashboardController::class, 'index'])->middleware('throttle:admin-sync')->name('dashboard');
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');
 
@@ -70,8 +70,8 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/weather/map', [WeatherController::class, 'map'])->name('weather.map');
         Route::get('/weather/inspect', [WeatherController::class, 'inspectLocation'])->name('weather.inspect');
         Route::get('/weather/history', [WeatherController::class, 'history'])->name('weather.history');
-        Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->name('weather.refresh');
-        Route::post('/weather/refresh-all', [WeatherController::class, 'refreshAll'])->name('weather.refresh-all');
+        Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->middleware('throttle:weather-refresh')->name('weather.refresh');
+        Route::post('/weather/refresh-all', [WeatherController::class, 'refreshAll'])->middleware('throttle:weather-refresh')->name('weather.refresh-all');
         Route::post('/weather/export', [WeatherController::class, 'export'])->name('weather.export');
         Route::get('/weather/settings', [WeatherController::class, 'settings'])->name('weather.settings');
         Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
@@ -126,7 +126,7 @@ Route::middleware(['auth', 'admin.web'])
             Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
 
             Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
-            Route::post('/broadcast', [BroadcastController::class, 'store'])->name('broadcast.store');
+            Route::post('/broadcast', [BroadcastController::class, 'store'])->middleware('throttle:broadcast-alert')->name('broadcast.store');
             Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
             Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
 

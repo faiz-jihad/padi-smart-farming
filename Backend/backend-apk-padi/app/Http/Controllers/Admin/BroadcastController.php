@@ -25,7 +25,13 @@ class BroadcastController extends Controller
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): RedirectResponse {
-        $broadcasts->store($request->user()->id, $request->validated(), $request, $audit, $notifications);
+        $broadcast = $broadcasts->store($request->user()->id, $request->validated(), $request, $audit, $notifications);
+
+        try {
+            broadcast(new \App\Events\DisasterEarlyWarningAlert($request->validated()))->toOthers();
+        } catch (\Throwable $e) {
+            // Graceful fallback
+        }
 
         return back()->with('status', 'Broadcast berhasil dibuat.');
     }

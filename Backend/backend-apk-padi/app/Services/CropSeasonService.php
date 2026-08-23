@@ -27,13 +27,47 @@ class CropSeasonService
             ->whereKey($data['farm_id'])
             ->firstOrFail();
 
+        $status = $data['status'] ?? 'planned';
+
+        $plantingDate = $data['planting_date'] ?? $data['planned_planting_date'] ?? null;
+        $harvestDate = $data['estimated_harvest_date'] ?? null;
+
+        if ($plantingDate && $harvestDate) {
+            $hasOverlap = $farm->cropSeasons()
+                ->whereNotIn('status', ['cancelled'])
+                ->where(function ($query) use ($plantingDate, $harvestDate): void {
+                    $query
+                        ->whereDate('planting_date', '<=', $harvestDate)
+                        ->whereDate('estimated_harvest_date', '>=', $plantingDate);
+                })
+                ->exists();
+
+            if ($hasOverlap) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'farm_id' => 'Periode crop season bertabrakan dengan crop season lain di lahan ini.',
+                ]);
+            }
+        }
+
+        if ($status === 'active') {
+            $hasActiveSeason = $farm->cropSeasons()
+                ->where('status', 'active')
+                ->exists();
+
+            if ($hasActiveSeason) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'farm_id' => 'Lahan ini sudah memiliki crop season yang aktif.',
+                ]);
+            }
+        }
+
         return CropSeason::query()->create([
             'farm_id' => $farm->id,
             'variety_id' => $data['variety_id'] ?? null,
             'planned_planting_date' => $data['planned_planting_date'] ?? null,
             'planting_date' => $data['planting_date'] ?? null,
             'estimated_harvest_date' => $data['estimated_harvest_date'] ?? null,
-            'status' => $data['status'] ?? 'planned',
+            'status' => $status,
         ]);
     }
 }

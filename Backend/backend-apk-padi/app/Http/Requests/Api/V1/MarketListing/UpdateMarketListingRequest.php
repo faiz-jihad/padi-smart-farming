@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\V1\MarketListing;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreMarketListingRequest extends FormRequest
+class UpdateMarketListingRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,38 +14,23 @@ class StoreMarketListingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'farm_id' => [
-                'required',
-                'integer',
-                'exists:farms,id',
-            ],
-            'crop_season_id' => [
-                'required',
-                'integer',
-                'exists:crop_seasons,id',
-            ],
-            'harvest_id' => [
-                'nullable',
-                'integer',
-                'exists:harvests,id',
-            ],
             'commodity' => [
-                'required',
+                'sometimes',
                 'string',
                 'max:100',
             ],
             'quantity' => [
-                'required',
+                'sometimes',
                 'numeric',
                 'gt:0',
             ],
             'unit' => [
-                'required',
+                'sometimes',
                 'string',
-                'max:30',
+                'max:20',
             ],
             'price_per_unit' => [
-                'required',
+                'sometimes',
                 'numeric',
                 'gt:0',
             ],
@@ -62,11 +47,6 @@ class StoreMarketListingRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:2048',
-            ],
-            'expires_at' => [
-                'nullable',
-                'date',
-                'after:published_at',
             ],
         ];
     }
