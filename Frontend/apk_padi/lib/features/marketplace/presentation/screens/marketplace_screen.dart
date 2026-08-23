@@ -1,66 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:padi/core/network/api_client.dart';
+import 'package:padi/core/storage/token_storage.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
+import 'package:padi/features/marketplace/data/models/market_listing_model.dart';
+import 'package:padi/features/marketplace/data/services/marketplace_api_service.dart';
+import 'package:padi/features/marketplace/presentation/widgets/market_listing_card.dart';
 
-class MarketplaceScreen extends StatelessWidget {
-  const MarketplaceScreen({super.key});
+class MarketplaceScreen extends StatefulWidget {
+  const MarketplaceScreen({
+    super.key,
+  });
 
-  static const products = [
-    {
-      'id': '1',
-      'name': 'Pupuk Urea',
-      'category': 'Pupuk',
-      'price': 120000,
-      'description': 'Pupuk nitrogen untuk membantu pertumbuhan tanaman padi.',
-      'icon': Icons.grass_rounded,
-    },
-    {
-      'id': '2',
-      'name': 'Benih Padi Unggul',
-      'category': 'Benih',
-      'price': 85000,
-      'description': 'Benih padi unggul untuk mendukung hasil panen yang optimal.',
-      'icon': Icons.spa_rounded,
-    },
-    {
-      'id': '3',
-      'name': 'Pupuk NPK',
-      'category': 'Pupuk',
-      'price': 150000,
-      'description': 'Pupuk NPK dengan kandungan nutrisi lengkap untuk tanaman.',
-      'icon': Icons.eco_rounded,
-    },
-    {
-      'id': '4',
-      'name': 'Sprayer Manual',
-      'category': 'Alat',
-      'price': 250000,
-      'description': 'Alat penyemprot manual untuk kebutuhan perawatan tanaman.',
-      'icon': Icons.water_drop_rounded,
-    },
-    {
-      'id': '5',
-      'name': 'Pestisida Tanaman',
-      'category': 'Pestisida',
-      'price': 95000,
-      'description': 'Produk perlindungan tanaman untuk membantu mengendalikan hama.',
-      'icon': Icons.bug_report_rounded,
-    },
-    {
-      'id': '6',
-      'name': 'Pupuk Organik',
-      'category': 'Pupuk',
-      'price': 75000,
-      'description': 'Pupuk organik untuk membantu menjaga kesuburan tanah.',
-      'icon': Icons.compost_rounded,
-    },
-  ];
+  @override
+  State<MarketplaceScreen> createState() => _MarketplaceScreenState();
+}
 
-  String formatPrice(int price) {
-    return 'Rp ${price.toString().replaceAllMapped(
-          RegExp(r'\B(?=(\d{3})+(?!\d))'),
-          (match) => '.',
-        )}';
+class _MarketplaceScreenState extends State<MarketplaceScreen> {
+  late final MarketplaceApiService _service;
+
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  List<MarketListingModel> _listings = [];
+
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _service = MarketplaceApiService(
+      ApiClient(
+        const SecureTokenStorage(),
+      ),
+    );
+
+    _loadListings();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadListings() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
+
+    try {
+      final listings = await _service.fetchListings();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _listings = listings;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+        _error = e.toString().replaceFirst(
+          'Exception: ',
+          '',
+        );
+      });
+    }
+  }
+
+  Future<void> _openCreateListing() async {
+    final result = await context.push(
+      '/marketplace/create',
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result == true) {
+      await _loadListings();
+    }
+  }
+
+  List<MarketListingModel> get _filteredListings {
+    final keyword = _searchController.text
+        .trim()
+        .toLowerCase();
+
+    if (keyword.isEmpty) {
+      return _listings;
+    }
+
+    return _listings.where((listing) {
+      final commodity = listing.commodity.toLowerCase();
+
+      final description =
+          (listing.description ?? '').toLowerCase();
+
+      return commodity.contains(keyword) ||
+          description.contains(keyword);
+    }).toList();
   }
 
   @override
@@ -71,281 +123,263 @@ class MarketplaceScreen extends StatelessWidget {
         backgroundColor: padiField,
         elevation: 0,
         scrolledUnderElevation: 0,
+        leading: IconButton(
+          onPressed: () {
+            context.go('/home');
+          },
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: padiInk,
+          ),
+        ),
         title: const Text(
-          'Marketplace',
+          'Toko',
           style: TextStyle(
             color: padiInk,
             fontSize: 20,
             fontWeight: FontWeight.w900,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.push('/marketplace/cart');
-            },
-            icon: const Icon(
-              Icons.shopping_cart_outlined,
-              color: padiInk,
-            ),
-          ),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: padiGreen,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.storefront_rounded,
-                  color: padiCream,
-                  size: 36,
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Kebutuhan Pertanian',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'Temukan kebutuhan pertanian untuk sawah Anda.',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Cari produk...',
-              prefixIcon: const Icon(
-                Icons.search_rounded,
-                color: padiGreen,
-              ),
-              suffixIcon: IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.tune_rounded),
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          const Text(
-            'Kategori',
-            style: TextStyle(
-              color: padiInk,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 42,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: const [
-                _CategoryChip(
-                  label: 'Semua',
-                  selected: true,
-                ),
-                _CategoryChip(label: 'Pupuk'),
-                _CategoryChip(label: 'Benih'),
-                _CategoryChip(label: 'Pestisida'),
-                _CategoryChip(label: 'Alat'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 22),
-          const Text(
-            'Produk Pilihan',
-            style: TextStyle(
-              color: padiInk,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: products.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.68,
-            ),
-            itemBuilder: (context, index) {
-              final product = products[index];
-
-              return _ProductCard(
-                name: product['name'] as String,
-                category: product['category'] as String,
-                price: formatPrice(product['price'] as int),
-                icon: product['icon'] as IconData,
-                onTap: () {
-                  context.push(
-                    '/marketplace/product/${product['id']}',
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    this.selected = false,
-  });
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) {},
-        selectedColor: padiGreen,
-        backgroundColor: Colors.white,
-        labelStyle: TextStyle(
-          color: selected ? Colors.white : padiInk,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isLoading
+            ? null
+            : _openCreateListing,
+        backgroundColor: padiGreen,
+        foregroundColor: Colors.white,
+        icon: const Icon(
+          Icons.add_rounded,
         ),
-        side: BorderSide(
-          color: selected
-              ? padiGreen
-              : Colors.black.withValues(alpha: 0.06),
+        label: const Text(
+          'Jual Hasil Panen',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _ProductCard extends StatelessWidget {
-  const _ProductCard({
-    required this.name,
-    required this.category,
-    required this.price,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String name;
-  final String category;
-  final String price;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: padiField,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    icon,
+      body: RefreshIndicator(
+        onRefresh: _loadListings,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  8,
+                  20,
+                  16,
+                ),
+                child: _buildHeader(),
+              ),
+            ),
+            if (_isLoading)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(
                     color: padiGreen,
-                    size: 52,
+                  ),
+                ),
+              )
+            else if (_error != null)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildError(),
+              )
+            else if (_filteredListings.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildEmpty(),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  100,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final listing =
+                          _filteredListings[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 14,
+                        ),
+                        child: MarketListingCard(
+                          listing: listing,
+                          onTap: () {
+                            context.push(
+                              '/marketplace/${listing.id}',
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    childCount: _filteredListings.length,
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                category,
-                style: const TextStyle(
-                  color: padiMuted,
-                  fontSize: 10,
-                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: padiGreen,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: const Row(
+            children: [
+              Icon(
+                Icons.storefront_rounded,
+                color: Colors.white,
+                size: 34,
               ),
-              const SizedBox(height: 3),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: padiInk,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                price,
-                style: const TextStyle(
-                  color: padiGreen,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                height: 34,
-                child: FilledButton(
-                  onPressed: onTap,
-                  style: FilledButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(11),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pasar Hasil Panen',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Lihat Produk',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
+                    SizedBox(height: 4),
+                    Text(
+                      'Temukan hasil panen dari petani.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _searchController,
+          onChanged: (_) {
+            setState(() {});
+          },
+          decoration: InputDecoration(
+            hintText: 'Cari hasil panen...',
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+            ),
+            suffixIcon:
+                _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                        icon: const Icon(
+                          Icons.close_rounded,
+                        ),
+                      ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmpty() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(30),
+      children: [
+        const SizedBox(height: 80),
+        Icon(
+          Icons.storefront_outlined,
+          size: 65,
+          color: Colors.grey.shade400,
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Belum ada hasil panen',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: padiInk,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Belum ada listing yang tersedia di toko.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: padiMuted,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildError() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(30),
+      children: [
+        const SizedBox(height: 70),
+        Icon(
+          Icons.cloud_off_rounded,
+          size: 60,
+          color: Colors.grey.shade500,
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Gagal mengambil data toko',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: padiInk,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _error!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: padiMuted,
+              fontSize: 13,
+            ),
+          ),
+        ],
+        const SizedBox(height: 18),
+        Center(
+          child: FilledButton(
+            onPressed: _loadListings,
+            child: const Text(
+              'Coba Lagi',
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

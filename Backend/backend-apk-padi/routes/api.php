@@ -29,6 +29,7 @@ use App\Http\Controllers\PplValidationController;
 use App\Http\Controllers\PurchaseContractController;
 use App\Http\Controllers\RiceVarietyController;
 use App\Http\Controllers\WeatherSnapshotController;
+use App\Http\Controllers\AdminBroadcastController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -37,7 +38,7 @@ use Illuminate\Support\Facades\Route;
 | API Routes - P.A.D.I. Smart Farming System
 |--------------------------------------------------------------------------
 |
-| API V1 endpoints for mobile, web, GIS, weather, soil detection, 
+| API V1 endpoints for mobile, web, GIS, weather, soil detection,
 | marketplace, and administrative features.
 |
 */
@@ -134,6 +135,7 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('farm-activities/{farmActivity}', [ApiV1FarmActivityController::class, 'update']);
         Route::delete('farm-activities/{farmActivity}', [ApiV1FarmActivityController::class, 'destroy']);
         Route::get('harvests', [HarvestController::class, 'index']);
+        Route::post('harvests', [HarvestController::class, 'store']);
         Route::get('rice-varieties', [RiceVarietyController::class, 'index']);
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
         Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
@@ -160,14 +162,53 @@ Route::prefix('v1')->group(function (): void {
         Route::get('crop-seasons', [CropSeasonController::class, 'index']);
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
 
-        // Marketplace API
-        Route::get('market-listings', [MarketListingController::class, 'index']);
-        Route::get('listing-images', [ListingImageController::class, 'index']);
-        Route::get('market-offers', [MarketOfferController::class, 'index']);
-        Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
-        Route::get('contract-payments', [ContractPaymentController::class, 'index']);
+        Route::get(
+            'market-listings',
+            [MarketListingController::class, 'index']
+        );
+
+        Route::post(
+            'market-listings',
+            [MarketListingController::class, 'store']
+        );
+
+        Route::get(
+            'market-listings/{marketListing}',
+            [MarketListingController::class, 'show']
+        );
+
+        Route::get(
+            'market-listings/{marketListing}/offers',
+            [MarketOfferController::class, 'listingOffers']
+        );
+
+        Route::get(
+            'market-offers',
+            [MarketOfferController::class, 'index']
+        );
+
+        Route::post(
+            'market-offers',
+            [MarketOfferController::class, 'store']
+        );
+
+        Route::put(
+            'market-offers/{marketOffer}',
+            [MarketOfferController::class, 'update']
+        );
+
+        Route::get(
+            'purchase-contracts',
+            [PurchaseContractController::class, 'index']
+        );
+
+        Route::get(
+            'contract-payments',
+            [ContractPaymentController::class, 'index']
+        );
 
         // System Services & Notifications
+        Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/send-push', [NotificationController::class, 'sendPush']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);

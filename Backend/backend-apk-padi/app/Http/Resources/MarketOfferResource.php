@@ -17,6 +17,26 @@ class MarketOfferResource extends JsonResource
             'quantity' => $this->quantity,
             'message' => $this->message,
             'status' => $this->status,
+
+            'partner' => $this->whenLoaded('partner', function () {
+                return [
+                    'id' => $this->partner->id,
+                    'name' => $this->partner->name,
+                    'email' => $this->partner->email,
+                    'phone' => $this->partner->phone,
+                ];
+            }),
+
+            'listing' => $this->whenLoaded('listing', function () {
+                return [
+                    'id' => $this->listing->id,
+                    'commodity' => $this->listing->commodity,
+                    'quantity' => $this->listing->quantity,
+                    'unit' => $this->listing->unit,
+                    'price_per_unit' => $this->listing->price_per_unit,
+                    'status' => $this->listing->status,
+                ];
+            }),
         ];
     }
 }

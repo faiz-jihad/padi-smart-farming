@@ -21,30 +21,6 @@ class PlantingCalendarModel {
     this.region,
   });
 
-  factory PlantingCalendarModel.fromJson(Map<String, dynamic> json) {
-    return PlantingCalendarModel(
-      id: json['id'] as int,
-      season: json['season'] as String? ?? 'rainy',
-      seasonLabel: json['season_label'] as String? ?? 'Musim Hujan',
-      seasonCode: json['season_code'] as String?,
-      year: json['year'] as int? ?? DateTime.now().year,
-      plantingStart: json['planting_start'] as String? ?? '',
-      plantingEnd: json['planting_end'] as String? ?? '',
-      plantingPattern: json['planting_pattern'] as String?,
-      riceVariety: json['rice_variety'] as String?,
-      recommendedArea: (json['recommended_area'] as num?)?.toDouble(),
-      status: json['status'] as String? ?? 'active',
-      source: json['source'] as String?,
-      notes: json['notes'] as String?,
-      resolvedLevel: json['resolved_level'] as String?,
-      isFallback: json['is_fallback'] as bool? ?? false,
-      isPlantingWindow: json['is_planting_window'] as bool? ?? false,
-      daysUntilStart: json['days_until_start'] as int? ?? 0,
-      daysUntilEnd: json['days_until_end'] as int? ?? 0,
-      region: json['region'] as Map<String, dynamic>?,
-    );
-  }
-
   final int id;
   final String season;
   final String seasonLabel;
@@ -65,15 +41,69 @@ class PlantingCalendarModel {
   final int daysUntilEnd;
   final Map<String, dynamic>? region;
 
+  factory PlantingCalendarModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return PlantingCalendarModel(
+      id: (json['id'] as num).toInt(),
+      season: json['season']?.toString() ?? 'rainy',
+      seasonLabel:
+          json['season_label']?.toString() ?? 'Musim Hujan',
+      seasonCode: json['season_code']?.toString(),
+      year: (json['year'] as num?)?.toInt() ??
+          DateTime.now().year,
+      plantingStart:
+          json['planting_start']?.toString() ?? '',
+      plantingEnd:
+          json['planting_end']?.toString() ?? '',
+      plantingPattern:
+          json['planting_pattern']?.toString(),
+      riceVariety:
+          json['rice_variety']?.toString(),
+      recommendedArea:
+          (json['recommended_area'] as num?)?.toDouble(),
+      status:
+          json['status']?.toString() ?? 'active',
+      source:
+          json['source']?.toString(),
+      notes:
+          json['notes']?.toString(),
+      resolvedLevel:
+          json['resolved_level']?.toString(),
+      isFallback:
+          json['is_fallback'] as bool? ?? false,
+      isPlantingWindow:
+          json['is_planting_window'] as bool? ?? false,
+      daysUntilStart:
+          (json['days_until_start'] as num?)?.toInt() ?? 0,
+      daysUntilEnd:
+          (json['days_until_end'] as num?)?.toInt() ?? 0,
+      region:
+          json['region'] is Map
+              ? Map<String, dynamic>.from(
+                  json['region'] as Map,
+                )
+              : null,
+    );
+  }
+
   String get regionTitle {
     if (region != null) {
-      final district = region!['district'] as String?;
-      final regency = region!['regency'] as String?;
-      if (district != null && regency != null) {
+      final district = region!['district']?.toString();
+      final regency = region!['regency']?.toString();
+
+      if (district != null &&
+          district.isNotEmpty &&
+          regency != null &&
+          regency.isNotEmpty) {
         return 'Kec. $district, $regency';
       }
-      if (regency != null) return regency;
+
+      if (regency != null && regency.isNotEmpty) {
+        return regency;
+      }
     }
-    return 'Wilayah';
+
+    return 'Wilayah Anda';
   }
 }

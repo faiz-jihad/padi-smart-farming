@@ -6,42 +6,76 @@ class PlantingCalendarApiService {
 
   final ApiClient _apiClient;
 
-  Future<PlantingCalendarModel?> getCalendarByDistrict(int districtId, {String? season, int? year}) async {
-    try {
-      final queryParams = <String, dynamic>{};
-      if (season != null) queryParams['season'] = season;
-      if (year != null) queryParams['year'] = year;
+  Future<PlantingCalendarModel?> getCalendarForFarm(
+    int farmId, {
+    String? season,
+    int? year,
+  }) async {
+    final queryParams = <String, dynamic>{};
 
-      final res = await _apiClient.dio.get(
-        '/districts/$districtId/planting-calendar',
-        queryParameters: queryParams.isEmpty ? null : queryParams,
-      );
-      if (res.data['success'] == true && res.data['data'] != null) {
-        return PlantingCalendarModel.fromJson(res.data['data'] as Map<String, dynamic>);
-      }
-      return null;
-    } catch (_) {
+    if (season != null) {
+      queryParams['season'] = season;
+    }
+
+    if (year != null) {
+      queryParams['year'] = year;
+    }
+
+    final response = await _apiClient.dio.get(
+      '/farms/$farmId/planting-calendar',
+      queryParameters:
+          queryParams.isEmpty ? null : queryParams,
+    );
+
+    final responseData = response.data;
+
+    if (responseData is! Map<String, dynamic>) {
       return null;
     }
+
+    final data = responseData['data'];
+
+    if (data is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return PlantingCalendarModel.fromJson(data);
   }
 
-  Future<PlantingCalendarModel?> getCalendarForFarm(int farmId, {String? season, int? year}) async {
-    try {
-      final queryParams = <String, dynamic>{};
-      if (season != null) queryParams['season'] = season;
-      if (year != null) queryParams['year'] = year;
+  Future<PlantingCalendarModel?> getCalendarByDistrict(
+    int districtId, {
+    String? season,
+    int? year,
+  }) async {
+    final queryParams = <String, dynamic>{};
 
-      final res = await _apiClient.dio.get(
-        '/farms/$farmId/planting-calendar',
-        queryParameters: queryParams.isEmpty ? null : queryParams,
-      );
-      if (res.data['success'] == true && res.data['data'] != null) {
-        return PlantingCalendarModel.fromJson(res.data['data'] as Map<String, dynamic>);
-      }
-      return null;
-    } catch (_) {
+    if (season != null) {
+      queryParams['season'] = season;
+    }
+
+    if (year != null) {
+      queryParams['year'] = year;
+    }
+
+    final response = await _apiClient.dio.get(
+      '/districts/$districtId/planting-calendar',
+      queryParameters:
+          queryParams.isEmpty ? null : queryParams,
+    );
+
+    final responseData = response.data;
+
+    if (responseData is! Map<String, dynamic>) {
       return null;
     }
+
+    final data = responseData['data'];
+
+    if (data is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return PlantingCalendarModel.fromJson(data);
   }
 
   Future<List<PlantingCalendarModel>> fetchCalendars({
@@ -52,17 +86,51 @@ class PlantingCalendarApiService {
     int? year,
   }) async {
     final queryParams = <String, dynamic>{};
-    if (provinceId != null) queryParams['province_id'] = provinceId;
-    if (regencyId != null) queryParams['regency_id'] = regencyId;
-    if (districtId != null) queryParams['district_id'] = districtId;
-    if (season != null) queryParams['season'] = season;
-    if (year != null) queryParams['year'] = year;
 
-    final res = await _apiClient.dio.get(
+    if (provinceId != null) {
+      queryParams['province_id'] = provinceId;
+    }
+
+    if (regencyId != null) {
+      queryParams['regency_id'] = regencyId;
+    }
+
+    if (districtId != null) {
+      queryParams['district_id'] = districtId;
+    }
+
+    if (season != null) {
+      queryParams['season'] = season;
+    }
+
+    if (year != null) {
+      queryParams['year'] = year;
+    }
+
+    final response = await _apiClient.dio.get(
       '/planting-calendars',
-      queryParameters: queryParams.isEmpty ? null : queryParams,
+      queryParameters:
+          queryParams.isEmpty ? null : queryParams,
     );
-    final data = res.data['data'] as List<dynamic>? ?? [];
-    return data.map((e) => PlantingCalendarModel.fromJson(e as Map<String, dynamic>)).toList();
+
+    final responseData = response.data;
+
+    if (responseData is! Map<String, dynamic>) {
+      return [];
+    }
+
+    final data = responseData['data'];
+
+    if (data is! List) {
+      return [];
+    }
+
+    return data
+        .map(
+          (item) => PlantingCalendarModel.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
   }
 }

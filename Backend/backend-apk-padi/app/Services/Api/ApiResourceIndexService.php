@@ -21,6 +21,7 @@ use App\Models\PplValidation;
 use App\Models\PurchaseContract;
 use App\Models\RiceVariety;
 use App\Models\WeatherSnapshot;
+
 use Illuminate\Database\Eloquent\Collection;
 
 class ApiResourceIndexService
@@ -31,9 +32,28 @@ class ApiResourceIndexService
     }
 
     public function adminBroadcasts(): Collection
-    {
-        return AdminBroadcast::query()->with('admin')->latest()->get();
-    }
+{
+    return AdminBroadcast::query()
+        ->with('admin')
+        ->where('status', 'published')
+        ->where(function ($query): void {
+            $query
+                ->whereNull('published_at')
+                ->orWhere('published_at', '<=', now());
+        })
+        ->where(function ($query): void {
+            $query
+                ->whereNull('expires_at')
+                ->orWhere('expires_at', '>=', now());
+        })
+        ->where(function ($query): void {
+            $query
+                ->whereNull('target_role')
+                ->orWhere('target_role', 'farmer');
+        })
+        ->latest('published_at')
+        ->get();
+}
 
     public function auditLogs(): Collection
     {

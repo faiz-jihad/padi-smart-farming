@@ -20,6 +20,30 @@ class PurchaseContractResource extends JsonResource
             'total_amount' => $this->total_amount,
             'status' => $this->status,
             'contracted_at' => $this->contracted_at,
+
+            'listing' => $this->whenLoaded('listing', function () {
+                return [
+                    'id' => $this->listing->id,
+                    'commodity' => $this->listing->commodity,
+                    'unit' => $this->listing->unit,
+                ];
+            }),
+
+            'farmer' => $this->whenLoaded('farmer', function () {
+                return [
+                    'id' => $this->farmer->id,
+                    'name' => $this->farmer->name,
+                    'email' => $this->farmer->email,
+                ];
+            }),
+
+            'partner' => $this->whenLoaded('partner', function () {
+                return [
+                    'id' => $this->partner->id,
+                    'name' => $this->partner->name,
+                    'email' => $this->partner->email,
+                ];
+            }),
         ];
     }
 }

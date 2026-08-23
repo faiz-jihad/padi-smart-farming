@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:padi/core/network/api_client.dart';
+import 'package:padi/core/storage/token_storage.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
-import 'package:padi/features/community_alert/presentation/widgets/alert_card.dart';
-import 'package:padi/features/community_alert/presentation/widgets/alert_filter.dart';
-import 'package:padi/features/community_alert/presentation/widgets/alert_summary_card.dart';
+import 'package:padi/features/community_alert/data/models/community_alert_model.dart';
+import 'package:padi/features/community_alert/data/services/community_alert_api_service.dart';
+import 'package:padi/features/community_alert/presentation/widgets/community_alert_card.dart';
 
 class CommunityAlertScreen extends StatefulWidget {
   const CommunityAlertScreen({super.key});
@@ -13,49 +16,53 @@ class CommunityAlertScreen extends StatefulWidget {
 }
 
 class _CommunityAlertScreenState extends State<CommunityAlertScreen> {
-  String _selectedFilter = 'Semua';
+  late final CommunityAlertApiService _apiService;
 
-  final List<Map<String, dynamic>> _alerts = [
-    {
-      'title': 'Waspada Penyakit Hawar Daun',
-      'description':
-          'Ditemukan laporan tanaman padi mengalami gejala hawar daun di sekitar wilayah Anda.',
-      'location': 'Desa Karanganyar',
-      'date': 'Hari ini',
-      'type': 'Penyakit',
-      'level': 'Waspada',
-      'icon': Icons.coronavirus_rounded,
-    },
-    {
-      'title': 'Peringatan Hujan Lebat',
-      'description':
-          'Petani disarankan memperhatikan kondisi sawah dan saluran air setelah hujan.',
-      'location': 'Kec. Indramayu',
-      'date': 'Hari ini',
-      'type': 'Cuaca',
-      'level': 'Informasi',
-      'icon': Icons.cloud_rounded,
-    },
-    {
-      'title': 'Waspada Serangan Wereng',
-      'description':
-          'Terdapat laporan peningkatan populasi wereng pada beberapa lahan padi.',
-      'location': 'Desa Sukamaju',
-      'date': 'Kemarin',
-      'type': 'Hama',
-      'level': 'Waspada',
-      'icon': Icons.bug_report_rounded,
-    },
-  ];
+  List<CommunityAlertModel> _alerts = [];
 
-  List<Map<String, dynamic>> get _filteredAlerts {
-    if (_selectedFilter == 'Semua') {
-      return _alerts;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _apiService = CommunityAlertApiService(
+      ApiClient(
+        const SecureTokenStorage(),
+      ),
+    );
+
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
     }
 
-    return _alerts
-        .where((alert) => alert['type'] == _selectedFilter)
-        .toList();
+    try {
+      final alerts = await _apiService.fetchAlerts();
+
+      if (!mounted) return;
+
+      setState(() {
+        _alerts = alerts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Community Alert Error: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal mengambil data peringatan.';
+      });
+    }
   }
 
   @override
@@ -94,13 +101,181 @@ class _CommunityAlertScreenState extends State<CommunityAlertScreen> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.redAccent,
+                size: 60,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Gagal mengambil data peringatan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: padiInk,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loadAlerts,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: padiGreen,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    'Coba Lagi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_alerts.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _loadAlerts,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            30,
+            20,
+            120,
+          ),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: const Column(
+                children: [
+                  Icon(
+                    Icons.notifications_none_rounded,
+                    color: padiGreen,
+                    size: 60,
+                  ),
+                  SizedBox(height: 14),
+                  Text(
+                    'Belum ada peringatan',
+                    style: TextStyle(
+                      color: padiInk,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Belum ada informasi peringatan untuk petani.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: padiMuted,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadAlerts,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          8,
+          20,
+          120,
+        ),
         children: [
-          const AlertSummaryCard(),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: padiGreen,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Peringatan Pertanian',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_alerts.length} peringatan tersedia',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 22),
           const Text(
-            'Peringatan di Sekitar Anda',
+            'Peringatan untuk Anda',
             style: TextStyle(
               color: padiInk,
               fontSize: 19,
@@ -108,26 +283,11 @@ class _CommunityAlertScreenState extends State<CommunityAlertScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          AlertFilter(
-            selectedFilter: _selectedFilter,
-            onChanged: (value) {
-              setState(() {
-                _selectedFilter = value;
-              });
-            },
-          ),
-          const SizedBox(height: 14),
-          ..._filteredAlerts.map(
+          ..._alerts.map(
             (alert) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: AlertCard(
-                title: alert['title'],
-                description: alert['description'],
-                location: alert['location'],
-                date: alert['date'],
-                type: alert['type'],
-                level: alert['level'],
-                icon: alert['icon'],
+              padding: const EdgeInsets.only(bottom: 12),
+              child: CommunityAlertCard(
+                alert: alert,
               ),
             ),
           ),

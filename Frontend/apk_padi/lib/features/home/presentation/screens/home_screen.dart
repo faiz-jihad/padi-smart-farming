@@ -20,7 +20,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _handleNavigation(int index) {
     if (index == 1) {
-      context.go('/land');
+      context.go('/farms');
       return;
     }
     if (index == 2) {
@@ -105,7 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 sliver: SliverToBoxAdapter(
                   child: _HomeMenu(
                     onFarmTap: () {
-                      context.go('/land');
+                      context.go('/farms');
                     },
                     onSeasonTap: () {
                       context.push('/land/season/start');
@@ -116,19 +116,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onHarvestTap: () {
                       context.push('/harvest');
                     },
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                sliver: SliverToBoxAdapter(
-                  child: _FinanceButton(
-                    onTap: () {
-                      context.push('/finance');
+                    onCalendarTap: () {
+                      context.push('/planting-calendar');
                     },
                   ),
                 ),
               ),
+
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 sliver: SliverToBoxAdapter(
@@ -504,48 +498,126 @@ class _HomeMenu extends StatelessWidget {
     required this.onSeasonTap,
     required this.onFertilizerTap,
     required this.onHarvestTap,
+    required this.onCalendarTap,
   });
 
   final VoidCallback onFarmTap;
   final VoidCallback onSeasonTap;
   final VoidCallback onFertilizerTap;
   final VoidCallback onHarvestTap;
+  final VoidCallback onCalendarTap;
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.0,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return Column(
       children: [
-        _MenuCard(
-          icon: Icons.grass_rounded,
-          title: 'Lahan Saya',
-          subtitle: 'Kelola sawah',
-          onTap: onFarmTap,
+        GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.0,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _MenuCard(
+              icon: Icons.grass_rounded,
+              title: 'Lahan Saya',
+              subtitle: 'Kelola sawah',
+              onTap: onFarmTap,
+            ),
+            _MenuCard(
+              icon: Icons.spa_rounded,
+              title: 'Musim Tanam',
+              subtitle: 'Pantau tanaman',
+              onTap: onSeasonTap,
+            ),
+            _MenuCard(
+              icon: Icons.calculate_rounded,
+              title: 'Hitung Pupuk',
+              subtitle: 'Kebutuhan pupuk',
+              onTap: onFertilizerTap,
+            ),
+            _MenuCard(
+              icon: Icons.agriculture_rounded,
+              title: 'Catatan Panen',
+              subtitle: 'Kelola hasil panen',
+              onTap: onHarvestTap,
+            ),
+          ],
         ),
-        _MenuCard(
-          icon: Icons.spa_rounded,
-          title: 'Musim Tanam',
-          subtitle: 'Pantau tanaman',
-          onTap: onSeasonTap,
-        ),
-        _MenuCard(
-          icon: Icons.calculate_rounded,
-          title: 'Hitung Pupuk',
-          subtitle: 'Kebutuhan pupuk',
-          onTap: onFertilizerTap,
-        ),
-        _MenuCard(
-          icon: Icons.agriculture_rounded,
-          title: 'Catatan Panen',
-          subtitle: 'Kelola hasil panen',
-          onTap: onHarvestTap,
+        const SizedBox(height: 14),
+        _CalendarMenuCard(
+          onTap: onCalendarTap,
         ),
       ],
+    );
+  }
+}
+class _CalendarMenuCard extends StatelessWidget {
+  const _CalendarMenuCard({
+    required this.onTap,
+  });
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(17),
+          child: Row(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF5EF),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: primaryGreen,
+                  size: 31,
+                ),
+              ),
+              const SizedBox(width: 15),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kalender Tanam',
+                      style: TextStyle(
+                        color: textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Lihat waktu tanam yang dianjurkan',
+                      style: TextStyle(
+                        color: Color(0xFF69766F),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: primaryGreen,
+                size: 17,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -612,73 +684,6 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
-class _FinanceButton extends StatelessWidget {
-  const _FinanceButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: primaryGreen.withValues(alpha: 0.08)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: primaryGreen,
-                  size: 27,
-                ),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Keuangan',
-                      style: TextStyle(
-                        color: textDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Catat pemasukan dan pengeluaran',
-                      style: TextStyle(color: Color(0xFF69766F), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: primaryGreen,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _CommunityAlertButton extends StatelessWidget {
   const _CommunityAlertButton({required this.onTap});
