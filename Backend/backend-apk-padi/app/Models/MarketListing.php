@@ -34,31 +34,46 @@ class MarketListing extends Model
 
     public function farmer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'farmer_id');
+        return $this->belongsTo(
+            User::class,
+            'farmer_id'
+        );
     }
 
     public function farm(): BelongsTo
     {
-        return $this->belongsTo(Farm::class);
+        return $this->belongsTo(
+            Farm::class
+        );
     }
 
     public function cropSeason(): BelongsTo
     {
-        return $this->belongsTo(CropSeason::class);
+        return $this->belongsTo(
+            CropSeason::class
+        );
     }
 
     public function harvest(): BelongsTo
     {
-        return $this->belongsTo(Harvest::class);
+        return $this->belongsTo(
+            Harvest::class
+        );
     }
 
     public function images(): HasMany
     {
-        return $this->hasMany(ListingImage::class, 'listing_id');
+        return $this->hasMany(
+            ListingImage::class,
+            'listing_id'
+        );
     }
 
     public function offers(): HasMany
     {
-        return $this->hasMany(MarketOffer::class, 'listing_id');
+        return $this->hasMany(
+            MarketOffer::class,
+            'listing_id'
+        );
     }
 }

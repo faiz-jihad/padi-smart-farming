@@ -42,7 +42,7 @@ class StoreMarketListingRequest extends FormRequest
             'unit' => [
                 'required',
                 'string',
-                'max:20',
+                'max:30',
             ],
             'price_per_unit' => [
                 'required',
@@ -62,6 +62,11 @@ class StoreMarketListingRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:2048',
+            ],
+            'expires_at' => [
+                'nullable',
+                'date',
+                'after:published_at',
             ],
         ];
     }

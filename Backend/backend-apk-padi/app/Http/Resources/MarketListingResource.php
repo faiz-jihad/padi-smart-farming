@@ -9,6 +9,14 @@ class MarketListingResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $imageUrl = null;
+
+        if ($this->image_url) {
+            $imageUrl = url(
+                'storage/' . ltrim($this->image_url, '/')
+            );
+        }
+
         return [
             'id' => $this->id,
             'farmer_id' => $this->farmer_id,
@@ -20,9 +28,15 @@ class MarketListingResource extends JsonResource
             'unit' => $this->unit,
             'price_per_unit' => $this->price_per_unit,
             'description' => $this->description,
+            'sales_link' => $this->sales_link,
+            'image_url' => $imageUrl,
             'status' => $this->status,
             'published_at' => $this->published_at,
             'expires_at' => $this->expires_at,
+
+            'is_owner' => $request->user()
+                ? (int) $this->farmer_id === (int) $request->user()->id
+                : false,
         ];
     }
 }

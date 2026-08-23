@@ -23,19 +23,33 @@ class FarmListScreen extends ConsumerWidget {
     final farmsAsync = ref.watch(userFarmsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lahan Pertanian Saya'),
-        backgroundColor: const Color(0xFF16A34A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map_outlined),
-            tooltip: 'Peta GIS & Kalender',
-            onPressed: () => context.push('/map/calendar'),
-          ),
-        ],
+    appBar: AppBar(
+      title: const Text('Lahan Pertanian Saya'),
+      backgroundColor: const Color(0xFF16A34A),
+      foregroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_rounded,
+          size: 32,
+        ),
+        tooltip: 'Kembali',
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        },
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.map_outlined),
+          tooltip: 'Peta GIS & Kalender',
+          onPressed: () => context.push('/map/calendar'),
+        ),
+      ],
+    ),
       body: farmsAsync.when(
         data: (farms) {
           if (farms.isEmpty) {
@@ -201,7 +215,7 @@ class _FarmCard extends ConsumerWidget {
                             ),
                             const SizedBox(height: 12),
                             if (calendar != null)
-                              PlantingCalendarCard(calendar: calendar, farmName: farm.name)
+                              PlantingCalendarCard(calendar: calendar)
                             else
                               Container(
                                 padding: const EdgeInsets.all(16),
