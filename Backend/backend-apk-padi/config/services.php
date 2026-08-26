@@ -43,4 +43,9 @@ return [
         'timeout' => env('WEATHER_TIMEOUT', 10),
     ],
 
+    'ai' => [
+        'base_url' => env('AI_SERVICE_URL', 'http://127.0.0.1:8001/api/v1'),
+        'timeout' => env('AI_SERVICE_TIMEOUT', 30),
+    ],
+
 ];

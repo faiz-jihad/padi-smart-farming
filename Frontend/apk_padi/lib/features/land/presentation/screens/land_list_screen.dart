@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/features/home/presentation/screens/home_screen.dart';
 
 const Color landPrimary = Color(0xFF075C3D);
 const Color landBackground = Color(0xFFF7F9F4);
@@ -26,7 +25,7 @@ class LandListScreen extends StatelessWidget {
             }
           },
           icon: const Icon(Icons.arrow_back_rounded, size: 34),
-          color: primaryGreen,
+          color: landPrimary,
           tooltip: 'Kembali',
         ),
         title: const Text(

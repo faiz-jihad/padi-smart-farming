@@ -19,6 +19,7 @@ class FarmResource extends JsonResource
             'area_ha'          => (float) $this->area_ha,
             'latitude'         => (float) $this->latitude,
             'longitude'        => (float) $this->longitude,
+            'boundary_coordinates' => $this->boundary_coordinates,
             'irrigation_type'  => $this->irrigation_type,
             'irrigation_notes' => $this->irrigation_notes,
             'soil_type'        => $this->soil_type,

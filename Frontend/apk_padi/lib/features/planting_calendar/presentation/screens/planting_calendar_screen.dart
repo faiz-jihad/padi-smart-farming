@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:padi/core/network/api_client.dart';
 import 'package:padi/core/storage/token_storage.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
@@ -10,9 +11,11 @@ class PlantingCalendarScreen extends StatefulWidget {
   const PlantingCalendarScreen({
     super.key,
     this.farmId,
+    this.setupFlow = false,
   });
 
   final int? farmId;
+  final bool setupFlow;
 
   @override
   State<PlantingCalendarScreen> createState() =>
@@ -93,7 +96,13 @@ class _PlantingCalendarScreenState
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
           icon: const Icon(
             Icons.arrow_back_rounded,
             color: padiInk,
@@ -188,6 +197,10 @@ class _PlantingCalendarScreenState
             PlantingCalendarCard(
               calendar: _farmCalendar!,
             ),
+            if (widget.setupFlow) ...[
+              const SizedBox(height: 16),
+              _MapAction(onPressed: () => context.go('/map/calendar')),
+            ],
           ],
         ),
       );
@@ -235,6 +248,10 @@ class _PlantingCalendarScreenState
               ),
             ),
           ),
+          if (widget.setupFlow) ...[
+            const SizedBox(height: 4),
+            _MapAction(onPressed: () => context.go('/map/calendar')),
+          ],
         ],
       ),
     );
@@ -262,7 +279,33 @@ class _PlantingCalendarScreenState
                 fontWeight: FontWeight.w800,
               ),
             ),
+            if (widget.setupFlow) ...[
+              const SizedBox(height: 18),
+              _MapAction(onPressed: () => context.go('/map/calendar')),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapAction extends StatelessWidget {
+  const _MapAction({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.map_outlined),
+        label: const Text(
+          'Lanjut ke Peta',
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
     );

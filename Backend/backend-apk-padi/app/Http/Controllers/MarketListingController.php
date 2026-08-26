@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\MarketListingResource;
 use App\Models\CropSeason;
 use App\Models\MarketListing;
+use App\Services\Admin\AdminNotificationService;
+use App\Services\PadiCacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -12,10 +14,18 @@ class MarketListingController extends Controller
 {
     public function index()
     {
-        $listings = MarketListing::query()
-            ->where('status', 'published')
-            ->latest('published_at')
-            ->get();
+        $listings = PadiCacheService::remember('padi:market:published_listings', 120, function () {
+            return MarketListing::query()
+                ->with([
+                    'farmer:id,name,phone,email',
+                    'farm:id,name,area_ha,latitude,longitude',
+                    'cropSeason.variety:id,name',
+                    'harvest:id,moisture_percent,quality_grade',
+                ])
+                ->where('status', 'published')
+                ->latest('published_at')
+                ->get();
+        });
 
         return MarketListingResource::collection($listings);
     }
@@ -25,7 +35,7 @@ class MarketListingController extends Controller
         return new MarketListingResource($marketListing);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AdminNotificationService $notificationService)
     {
         $validated = $request->validate([
             'farm_id' => ['required', 'integer', 'exists:farms,id'],
@@ -71,9 +81,23 @@ class MarketListingController extends Controller
             'published_at' => now(),
         ]);
 
+        // 1. Invalidate Redis & Marketplace Cache
+        PadiCacheService::invalidateMarketCache();
+
+        // 2. Real-time Notification: Notify buyers about new grain harvest listing
+        $farmerName = $request->user()->name ?? 'Petani Hamparan';
+        $formattedPrice = number_format($listing->price_per_unit, 0, ',', '.');
+
+        $notificationService->notifyBuyers(
+            "🌾 Gabah Siap Tebas: {$listing->commodity}",
+            "{$farmerName} menerbitkan penawaran {$listing->quantity} {$listing->unit} seharga Rp {$formattedPrice}/{$listing->unit}.",
+            'marketplace_deal',
+            ['listing_id' => $listing->id, 'price' => $listing->price_per_unit]
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Hasil panen berhasil dipublikasikan.',
+            'message' => 'Hasil panen berhasil dipublikasikan secara real-time.',
             'data' => new MarketListingResource($listing),
         ], 201);
     }

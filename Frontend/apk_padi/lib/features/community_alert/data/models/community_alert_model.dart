@@ -11,7 +11,7 @@ class CommunityAlertModel {
 
   factory CommunityAlertModel.fromJson(Map<String, dynamic> json) {
     return CommunityAlertModel(
-      id: (json['id'] as num).toInt(),
+      id: _toInt(json['id']),
       title: json['title']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
       type: json['type']?.toString() ?? 'info',
@@ -41,4 +41,10 @@ class CommunityAlertModel {
         return 'Peringatan';
     }
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
 }

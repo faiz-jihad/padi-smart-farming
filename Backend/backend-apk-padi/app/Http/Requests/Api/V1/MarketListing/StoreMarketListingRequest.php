@@ -63,10 +63,16 @@ class StoreMarketListingRequest extends FormRequest
                 'string',
                 'max:2048',
             ],
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
             'expires_at' => [
                 'nullable',
                 'date',
-                'after:published_at',
+                'after:today',
             ],
         ];
     }

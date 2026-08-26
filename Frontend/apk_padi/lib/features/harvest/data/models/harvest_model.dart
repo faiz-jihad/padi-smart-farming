@@ -21,24 +21,33 @@ class HarvestModel {
 
   factory HarvestModel.fromJson(Map<String, dynamic> json) {
     return HarvestModel(
-      id: int.parse(json['id'].toString()),
-      cropSeasonId: int.parse(
-        json['crop_season_id'].toString(),
-      ),
+      id: _toInt(json['id']),
+      cropSeasonId: _toInt(json['crop_season_id']),
       harvestDate: json['harvest_date']?.toString() ?? '',
-      quantity: double.parse(
-        json['quantity'].toString(),
-      ),
+      quantity: _toDouble(json['quantity']),
       unit: json['unit']?.toString() ?? 'kg',
       qualityGrade: json['quality_grade']?.toString(),
-      moisturePercent:
-          json['moisture_percent'] == null
-              ? null
-              : double.tryParse(
-                  json['moisture_percent'].toString(),
-                ),
-      verificationStatus:
-          json['verification_status']?.toString(),
+      moisturePercent: _toNullableDouble(json['moisture_percent']),
+      verificationStatus: json['verification_status']?.toString(),
     );
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.')) ?? 0.0;
+  return 0.0;
+}
+
+double? _toNullableDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.'));
+  return null;
 }

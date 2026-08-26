@@ -22,7 +22,7 @@ class DeviceTokenController extends Controller
     {
         $validated = $request->validate([
             'token'    => ['required', 'string', 'max:1000'],
-            'platform' => ['nullable', 'string', 'in:web,android,ios', 'max:20'],
+            'platform' => ['nullable', 'string', 'in:web,android,ios,flutter', 'max:20'],
         ]);
 
         $user = $request->user();

@@ -14,7 +14,7 @@ class AppUserModel extends AppUser {
 
   factory AppUserModel.fromJson(Map<String, dynamic> json) {
     return AppUserModel(
-      id: json['id'] as int,
+      id: _toInt(json['id']),
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString(),
@@ -24,4 +24,10 @@ class AppUserModel extends AppUser {
       statusLabel: json['status_label']?.toString(),
     );
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
 }

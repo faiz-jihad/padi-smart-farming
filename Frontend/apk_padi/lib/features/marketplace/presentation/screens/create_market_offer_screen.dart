@@ -27,8 +27,7 @@ class CreateMarketOfferScreen extends StatefulWidget {
       _CreateMarketOfferScreenState();
 }
 
-class _CreateMarketOfferScreenState
-    extends State<CreateMarketOfferScreen> {
+class _CreateMarketOfferScreenState extends State<CreateMarketOfferScreen> {
   late final MarketplaceApiService _service;
 
   final _formKey = GlobalKey<FormState>();
@@ -43,17 +42,11 @@ class _CreateMarketOfferScreenState
   void initState() {
     super.initState();
 
-    _service = MarketplaceApiService(
-      ApiClient(
-        const SecureTokenStorage(),
-      ),
-    );
+    _service = MarketplaceApiService(ApiClient(const SecureTokenStorage()));
 
-    _priceController.text =
-        widget.referencePrice.toStringAsFixed(0);
+    _priceController.text = widget.referencePrice.toStringAsFixed(0);
 
-    _quantityController.text =
-        widget.maxQuantity.toStringAsFixed(0);
+    _quantityController.text = widget.maxQuantity.toStringAsFixed(0);
   }
 
   @override
@@ -65,13 +58,13 @@ class _CreateMarketOfferScreenState
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
+    final formState = _formKey.currentState;
+
+    if (formState == null || !formState.validate()) {
       return;
     }
 
-    final price = double.parse(
-      _priceController.text.replaceAll(',', '.'),
-    );
+    final price = double.parse(_priceController.text.replaceAll(',', '.'));
 
     final quantity = double.parse(
       _quantityController.text.replaceAll(',', '.'),
@@ -96,11 +89,7 @@ class _CreateMarketOfferScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Penawaran berhasil dikirim.',
-          ),
-        ),
+        const SnackBar(content: Text('Penawaran berhasil dikirim.')),
       );
 
       context.pop(true);
@@ -110,14 +99,7 @@ class _CreateMarketOfferScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString().replaceFirst(
-              'Exception: ',
-              '',
-            ),
-          ),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) {
@@ -136,11 +118,20 @@ class _CreateMarketOfferScreenState
         backgroundColor: padiGreen,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          tooltip: 'Kembali',
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/marketplace');
+            }
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text(
           'Ajukan Penawaran',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
       body: Form(
@@ -164,8 +155,7 @@ class _CreateMarketOfferScreenState
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Ajukan Penawaran',
@@ -192,8 +182,7 @@ class _CreateMarketOfferScreenState
             const SizedBox(height: 24),
             TextFormField(
               controller: _priceController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(
+              keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
               decoration: const InputDecoration(
@@ -208,9 +197,7 @@ class _CreateMarketOfferScreenState
                   return 'Harga penawaran wajib diisi.';
                 }
 
-                final price = double.tryParse(
-                  text.replaceAll(',', '.'),
-                );
+                final price = double.tryParse(text.replaceAll(',', '.'));
 
                 if (price == null || price <= 0) {
                   return 'Masukkan harga yang valid.';
@@ -222,8 +209,7 @@ class _CreateMarketOfferScreenState
             const SizedBox(height: 18),
             TextFormField(
               controller: _quantityController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(
+              keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
               decoration: InputDecoration(
@@ -237,9 +223,7 @@ class _CreateMarketOfferScreenState
                   return 'Jumlah wajib diisi.';
                 }
 
-                final quantity = double.tryParse(
-                  text.replaceAll(',', '.'),
-                );
+                final quantity = double.tryParse(text.replaceAll(',', '.'));
 
                 if (quantity == null || quantity <= 0) {
                   return 'Masukkan jumlah yang valid.';
@@ -258,8 +242,7 @@ class _CreateMarketOfferScreenState
               maxLines: 5,
               decoration: const InputDecoration(
                 labelText: 'Pesan',
-                hintText:
-                    'Contoh: Saya berminat membeli hasil panen ini.',
+                hintText: 'Contoh: Saya berminat membeli hasil panen ini.',
                 alignLabelWithHint: true,
               ),
             ),
@@ -272,18 +255,12 @@ class _CreateMarketOfferScreenState
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    color: padiGreen,
-                  ),
+                  const Icon(Icons.info_outline_rounded, color: padiGreen),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Harga patokan petani: Rp${widget.referencePrice.toStringAsFixed(0)} / ${widget.unit}',
-                      style: const TextStyle(
-                        color: padiMuted,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: padiMuted, fontSize: 14),
                     ),
                   ),
                 ],
@@ -301,9 +278,7 @@ class _CreateMarketOfferScreenState
                         color: Colors.white,
                       ),
                     )
-                  : const Text(
-                      'Kirim Penawaran',
-                    ),
+                  : const Text('Kirim Penawaran'),
             ),
           ],
         ),

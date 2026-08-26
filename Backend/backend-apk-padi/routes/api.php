@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\FarmActivityController as ApiV1FarmActivityController;
 use App\Http\Controllers\Api\V1\FarmController as ApiV1FarmController;
+use App\Http\Controllers\Api\V1\DiseaseScanController;
+use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\PlantingCalendarController;
@@ -33,7 +35,7 @@ use App\Http\Controllers\AdminBroadcastController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function (): void {
+Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::get('health', function (): JsonResponse {
         return response()->json([
             'status' => 'ok',
@@ -60,7 +62,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('villages', [MapController::class, 'villages']);
     });
 
-    Route::prefix('auth')->group(function (): void {
+    Route::prefix('auth')->middleware('throttle:auth-strict')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
         Route::post('forgot-password', [PasswordResetController::class, 'forgot']);
@@ -155,15 +157,24 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
-        Route::post('notifications/send-push', [NotificationController::class, 'sendPush']);
+        Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])->middleware('throttle:push-notifications');
+        Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+        Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream']);
         Route::get('ppl-validations', [PplValidationController::class, 'index']);
+        Route::get('disease-scans', [DiseaseScanController::class, 'index']);
+        Route::post('disease-scans', [DiseaseScanController::class, 'store'])->middleware('throttle:ai-scans');
+        Route::get('disease-scans/{diseaseScan}', [DiseaseScanController::class, 'show']);
         Route::get('community-reports', [CommunityReportController::class, 'index']);
+        Route::post('community-reports', [CommunityReportController::class, 'store']);
         Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
         Route::get('device-tokens', [DeviceTokenController::class, 'index']);
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
-        Route::get('partner-favorites', [PartnerFavoriteController::class, 'index']);
+        Route::get('events', [EventController::class, 'index']);
+        Route::post('events', [EventController::class, 'store']);
+        Route::get('events/{event}', [EventController::class, 'show']);
+        Route::post('events/{event}/register', [EventController::class, 'register']);
 
         Route::middleware('role:admin')->group(function (): void {
             Route::match(['get', 'post', 'patch', 'delete'], 'admin/{resource?}/{id?}', AdminOverviewController::class);

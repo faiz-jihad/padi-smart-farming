@@ -40,5 +40,8 @@ class DatabaseSeeder extends Seeder
         $admin->assignRole(UserRole::Admin->value);
 
         $this->call(CropSeasonSeeder::class);
+        $this->call(FertilizerRuleSeeder::class);
+        $this->call(MarketListingSeeder::class);
+        $this->call(EventSeeder::class);
     }
 }

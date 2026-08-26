@@ -11,6 +11,7 @@ class PadiTextField extends StatelessWidget {
     this.errorText,
     this.prefixIcon,
     this.suffixIcon,
+    this.decoration,
   });
 
   final TextEditingController controller;
@@ -21,20 +22,29 @@ class PadiTextField extends StatelessWidget {
   final String? errorText;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
+  final InputDecoration? decoration;
 
   @override
   Widget build(BuildContext context) {
+    final defaultDecoration = InputDecoration(
+      labelText: label,
+      prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+      suffixIcon: suffixIcon,
+    );
+
+    final effectiveDecoration = (decoration ?? defaultDecoration).copyWith(
+      errorText: errorText,
+      prefixIcon: decoration?.prefixIcon ??
+          (decoration == null && prefixIcon != null ? Icon(prefixIcon) : null),
+      suffixIcon: decoration?.suffixIcon ?? (decoration == null ? suffixIcon : null),
+    );
+
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        errorText: errorText,
-        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
-        suffixIcon: suffixIcon,
-      ),
+      decoration: effectiveDecoration,
     );
   }
 }
@@ -59,7 +69,10 @@ class ErrorBanner extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: const TextStyle(color: Color(0xFF9A3412), fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Color(0xFF9A3412),
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

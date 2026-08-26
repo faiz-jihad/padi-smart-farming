@@ -12,8 +12,18 @@ class AuthHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const PadiLogo(size: 62),
-        const SizedBox(height: 22),
+        Center(
+          child: Image.asset(
+            'assets/images/padi-logo.png',
+            width: 172,
+            height: 92,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const PadiLogo(size: 62);
+            },
+          ),
+        ),
+        const SizedBox(height: 18),
         Text(
           title,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -25,10 +35,9 @@ class AuthHeader extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           subtitle,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: padiMuted,
-            height: 1.4,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: padiMuted, height: 1.4),
         ),
       ],
     );
@@ -47,10 +56,10 @@ class PadiLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -66,7 +75,10 @@ class PadiLogo extends StatelessWidget {
             child: Container(
               width: size * 0.18,
               height: size * 0.18,
-              decoration: const BoxDecoration(color: padiLeaf, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: padiLeaf,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
         ],

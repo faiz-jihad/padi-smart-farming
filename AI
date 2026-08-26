@@ -1,0 +1,663 @@
+{
+  "Bacterial Leaf Blight (Hawar Daun Bakteri)": {
+    "nama_lokal": "Kresek",
+    "nama_ilmiah": "Xanthomonas oryzae pv. oryzae",
+    "kategori": "Bakteri",
+    "fase_rentan": ["anakan", "berbunga", "pengisian"],
+    "kondisi_pemicu": {
+      "cuaca": ["hujan", "angin kencang", "lembab tinggi"],
+      "suhu": "25-34 derajat Celcius",
+      "kelembaban": ">80%",
+      "tanah": "tergenang, drainase buruk",
+      "pemupukan": "kelebihan Nitrogen"
+    },
+    "gejala": "Bercak kuning pucat di tepi daun, berkembang menjadi hawar kecoklatan. Pada pagi hari terlihat lendir bakteri seperti susu kental. Daun mengering seperti terbakar (kresek).",
+    "gejala_awal": "Bercak kecil basah di tepi daun bawah",
+    "gejala_lanjut": "Daun mengering abu-abu, tanaman seperti terbakar",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Tanam varietas tahan: Inpari 32 HDB, Inpara 8, atau Ciherang",
+        "Terapkan sistem tanam legowo 4:1 untuk sirkulasi udara optimal",
+        "Jarak tanam minimal 25x25 cm",
+        "Pemupukan berimbang N:P:K = 200:100:100 kg/ha",
+        "Hindari pemupukan nitrogen saat cuaca mendung"
+      ],
+      "pengendalian": [
+        "Aplikasi bakterisida tembaga hidroksida dosis 2-3 ml/liter air",
+        "Semprotkan streptomisin sulfat 20% saat gejala awal muncul",
+        "Gunakan PGPR (Plant Growth Promoting Rhizobacteria) untuk meningkatkan ketahanan",
+        "Rotasi bakterisida setiap 2 minggu untuk mencegah resistensi"
+      ],
+      "interval_semprot": "7-10 hari sekali saat musim hujan",
+      "waktu_aplikasi": "Pagi hari, sebelum jam 9 atau sore setelah jam 3"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Ekstrak daun sirih",
+          "cara": "Rebus 1 kg daun sirih dalam 5 liter air, saring, encerkan 1:5",
+          "frekuensi": "Semprotkan setiap 5 hari sekali",
+          "efektivitas": "Menekan perkembangan bakteri 50-60%"
+        },
+        {
+          "nama": "Abu sabut kelapa",
+          "cara": "Rendam 2 kg abu dalam 10 liter air semalaman, gunakan air rendaman",
+          "frekuensi": "Semprotkan setiap minggu",
+          "efektivitas": "Mengurangi kelembaban daun, menghambat bakteri"
+        },
+        {
+          "nama": "Larutan garam dapur",
+          "cara": "Larutkan 100 gram garam dalam 1 liter air, semprotkan ke tanaman",
+          "frekuensi": "Maksimal 2 kali dalam semusim",
+          "efektivitas": "Mengurangi populasi bakteri di permukaan daun"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Penurunan hasil 50-70%, risiko puso tinggi",
+      "fase_berbunga": "Gabah hampa mencapai 60%",
+      "fase_pengisian": "Penurunan kualitas gabah, bobot rendah",
+      "kerugian_ekonomi": "Kehilangan pendapatan hingga Rp 15-20 juta per hektar"
+    },
+    "ambang_ekonomi": "5% luas daun terserang",
+    "siklus_hidup": "7-14 hari dari infeksi ke gejala",
+    "penularan": ["air irigasi", "percikan hujan", "benih terinfeksi", "alat pertanian"],
+    "predator_alami": "Tidak ada predator spesifik, fokus pada pencegahan dan ketahanan tanaman"
+  },
+  
+  "Blast (Penyakit Blas)": {
+    "nama_lokal": "Blas / Gulu Padi Patah",
+    "nama_ilmiah": "Pyricularia oryzae (Magnaporthe oryzae)",
+    "kategori": "Jamur",
+    "fase_rentan": ["semai", "anakan", "berbunga", "matang susu"],
+    "kondisi_pemicu": {
+      "cuaca": ["mendung", "hujan ringan", "kabut"],
+      "suhu": "22-28 derajat Celcius",
+      "kelembaban": ">90% selama 8 jam",
+      "tanah": "kekeringan bergantian dengan air berlebih",
+      "pemupukan": "kelebihan Nitrogen, kekurangan Silika"
+    },
+    "gejala": "Bercak belah ketupat/khas mata pada daun dengan pusat abu-abu dan tepi coklat. Pada leher malai membusuk dan patah (potong leher). Gabah menjadi gabuk dan berwarna hitam.",
+    "gejala_awal": "Bintik kecil coklat pada daun atau pelepah",
+    "gejala_lanjut": "Bercak berbentuk belah ketupat dengan pusat putih, malai patah",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Tanam varietas tahan blas: Inpari 42, Inpari 45, atau Situ Bagendit",
+        "Aplikasi pupuk Silika (SiO2) 250 kg/ha untuk memperkuat dinding sel",
+        "Pengelolaan air berselang (intermittent irrigation): 2 hari kering, 2 hari basah",
+        "Hindari penanaman terlalu rapat, gunakan sistem legowo 2:1",
+        "Bersihkan sisa tanaman terinfeksi dari musim sebelumnya"
+      ],
+      "pengendalian": [
+        "Fungisida sistemik berbahan aktif trisiklazol dosis 1-2 ml/liter",
+        "Difenokonazol + propikonazol untuk blas leher, dosis 1-2 ml/liter",
+        "Isoprotiolan 400 g/l dosis 1-2 ml/liter air",
+        "Aplikasi fungisida pada fase bunting dan awal berbunga 50%",
+        "Gunakan Trichoderma spp. sebagai agen hayati di tanah"
+      ],
+      "interval_semprot": "10-14 hari, lebih sering saat musim hujan",
+      "waktu_aplikasi": "Pagi setelah embun mengering atau sore hari"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Ekstrak lengkuas + daun mimba",
+          "cara": "Haluskan 1 kg lengkuas + 0.5 kg daun mimba, rendam dalam 5 liter air 24 jam, saring",
+          "frekuensi": "Semprotkan setiap 7 hari",
+          "efektivitas": "Menghambat pertumbuhan spora jamur 40-55%"
+        },
+        {
+          "nama": "Larutan kunyit dan bawang putih",
+          "cara": "Blender 200g kunyit + 200g bawang putih, campur dengan 2 liter air, diamkan semalam",
+          "frekuensi": "Aplikasikan setiap 5-7 hari",
+          "efektivitas": "Anti-fungal alami, memperkuat imunitas tanaman"
+        },
+        {
+          "nama": "Air rendaman tembakau",
+          "cara": "Rendam 250g tembakau dalam 1 liter air panas, dinginkan, encerkan 1:10",
+          "frekuensi": "Semprotkan 2 minggu sekali",
+          "efektivitas": "Mengandung nikotin yang menghambat jamur"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Pertumbuhan terhambat, anakan berkurang 30-40%",
+      "fase_berbunga": "Blas leher menyebabkan gabah hampa 80-100%",
+      "fase_pengisian": "Gabah tidak terisi penuh, bobot turun 50%",
+      "kerugian_ekonomi": "Kehilangan hasil hingga Rp 25 juta per hektar pada serangan berat"
+    },
+    "ambang_ekonomi": "10% tanaman menunjukkan gejala",
+    "siklus_hidup": "5-7 hari dari infeksi ke gejala baru",
+    "penularan": ["spora udara", "benih", "sisa tanaman sakit", "inang alternatif (rumput-rumputan)"],
+    "predator_alami": "Trichoderma spp., Pseudomonas fluorescens (bakteri antagonis)"
+  },
+  
+  "Tungro (Penyakit Tungro)": {
+    "nama_lokal": "Tungro",
+    "nama_ilmiah": "Rice Tungro Bacilliform Virus (RTBV) + Rice Tungro Spherical Virus (RTSV)",
+    "kategori": "Virus",
+    "fase_rentan": ["semai", "anakan awal", "anakan maksimum"],
+    "kondisi_pemicu": {
+      "cuaca": ["kering berkepanjangan", "peralihan musim"],
+      "suhu": "28-35 derajat Celcius",
+      "kelembaban": "rendah hingga sedang",
+      "tanah": "retak, kekurangan air",
+      "pemupukan": "tanaman stres karena kekurangan hara"
+    },
+    "gejala": "Tanaman kerdil parah, daun menguning oranye dari ujung, jumlah anakan sedikit, malai kecil dan hampa. Ditularkan oleh wereng hijau (Nephotettix virescens).",
+    "gejala_awal": "Daun muda menguning pucat dan agak menggulung",
+    "gejala_lanjut": "Tanaman kerdil, semua daun kuning kemerahan, akar busuk",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Tanam serempak dalam satu hamparan minimal 500 hektar",
+        "Gunakan varietas tahan: Inpari 9 Elo, Inpari 36 Lanrang, Tukad Unda",
+        "Rotasi tanaman dengan palawija untuk memutus siklus vektor",
+        "Pengelolaan pembibitan terpusat untuk pengawasan ketat",
+        "Pasang perangkap lampu untuk memantau populasi wereng hijau"
+      ],
+      "pengendalian": [
+        "Kendalikan vektor wereng hijau dengan insektisida sistemik: buprofezin 100 g/l dosis 2 ml/liter",
+        "BPMC (Bassa) 500 g/l dosis 1-2 ml/liter pada populasasi wereng tinggi",
+        "Imidakloprid 200 g/l dosis 0.5-1 ml/liter untuk area pembibitan",
+        "Cabut dan musnahkan tanaman terinfeksi untuk mengurangi sumber inokulum",
+        "Aplikasi insektisida granular (karbofuran) di area persemaian"
+      ],
+      "interval_semprot": "7 hari saat populasi wereng tinggi",
+      "waktu_aplikasi": "Pagi atau sore, saat wereng aktif di pangkal tanaman"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Tanam serempak adat Subak",
+          "cara": "Seluruh petani dalam satu hamparan menanam dalam rentang 2 minggu",
+          "frekuensi": "Diterapkan setiap musim tanam",
+          "efektivitas": "Mengurangi sumber makanan wereng, memutus siklus 70-80%"
+        },
+        {
+          "nama": "Perangkap alami wereng",
+          "cara": "Taburkan daun gamal (Gliricidia) di pematang sebagai tanaman perangkap",
+          "frekuensi": "Perbarui setiap 2 minggu",
+          "efektivitas": "Menarik wereng menjauh dari padi"
+        },
+        {
+          "nama": "Pelepasan musuh alami",
+          "cara": "Tanam bunga kenikir dan kacang-kacangan untuk mendatangkan laba-laba dan kumbang Carabidae",
+          "frekuensi": "Tanam di pematang sepanjang musim",
+          "efektivitas": "Predator alami mengurangi populasi wereng 40-60%"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Tanaman kerdil total, produktivitas 0%",
+      "fase_berbunga": "Sudah jarang terinfeksi, tapi jika ya malai tetap hampa",
+      "fase_pengisian": "Terlambat terdeteksi, biasanya sudah pada fase vegetatif",
+      "kerugian_ekonomi": "Puso total, kerugian Rp 30-40 juta per hektar"
+    },
+    "ambang_ekonomi": "2 ekor wereng hijau per rumpun",
+    "siklus_hidup": "Virus ditularkan dalam 30 menit penghisapan wereng",
+    "penularan": ["wereng hijau dewasa dan nimfa", "tidak melalui benih", "tidak melalui tanah"],
+    "predator_alami": "Laba-laba serigala (Lycosa), kumbang Carabidae, capung, parasitoid telur wereng"
+  },
+  
+  "Dead Heart (Penggerek Batang)": {
+    "nama_lokal": "Sundep (Awal) / Beluk (Fase Malai) / Ulat penggerek",
+    "nama_ilmiah": "Scirpophaga incertulas (Penggerek batang padi kuning)",
+    "kategori": "Hama (Serangga)",
+    "fase_rentan": ["anakan", "berbunga", "pengisian"],
+    "kondisi_pemicu": {
+      "cuaca": ["kemarau basah", "transisi musim"],
+      "suhu": "24-29 derajat Celcius",
+      "kelembaban": "sedang-tinggi",
+      "tanah": "sawah tergenang terus",
+      "pemupukan": "kelebihan Nitrogen, tanaman terlalu subur"
+    },
+    "gejala": "Larva masuk ke batang dan menggerek ke atas. Pucuk menguning dan mati (sundep). Pada fase generatif, malai putih kosong (beluk). Terdapat lubang kecil di batang dengan serbuk.",
+    "gejala_awal": "Ngengat kecil putih/kuning terlihat di sawah sore hari",
+    "gejala_lanjut": "Pucuk tengah mati mudah dicabut, malai putih tidak berisi",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Gunakan perangkap lampu (light trap) 1 unit per hektar untuk menangkap ngengat",
+        "Pasang feromon trap 5-8 unit per hektar sejak 2 minggu setelah tanam",
+        "Tanam varietas tahan: Inpari 13, Inpari 33, atau Ciherang",
+        "Penggenangan sawah setinggi 10 cm saat fase pupa untuk membunuh kepompong",
+        "Lakukan sanitasi: bersihkan tunggul dan jerami sisa panen"
+      ],
+      "pengendalian": [
+        "Insektisida sistemik klorantraniliprol 50 g/l dosis 0.5 ml/liter air",
+        "Fipronil 50 g/l dosis 1-2 ml/liter pada serangan berat",
+        "Karbofuran butiran 3% di lubang tanam saat pindah tanam",
+        "Aplikasi insektisida saat ngengat terbang (cahaya redup sore/malam)",
+        "Semprotkan Bacillus thuringiensis (Bt) sebagai bioinsektisida"
+      ],
+      "interval_semprot": "Setiap 10 hari, sesuaikan dengan hasil monitoring perangkap",
+      "waktu_aplikasi": "Sore hari pukul 16:00-18:00 saat ngengat aktif"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Pelepasan itik/bebek",
+          "cara": "Lepaskan bebek 5-10 ekor per hektar pada fase anakan (bukan saat berbunga)",
+          "frekuensi": "Setiap hari selama fase vegetatif",
+          "efektivitas": "Memakan larva dan ngengat, mengurangi populasi 40-50%"
+        },
+        {
+          "nama": "Ekstrak daun sirsak dan tembakau",
+          "cara": "Tumbuk 1 kg daun sirsak + 250g tembakau, rendam dalam 5 liter air 24 jam",
+          "frekuensi": "Semprotkan setiap 7 hari",
+          "efektivitas": "Mengandung acetogenin dan nikotin, larvasida alami"
+        },
+        {
+          "nama": "Tanaman refugia",
+          "cara": "Tanam bunga matahari, kenikir, dan kacang panjang di pematang",
+          "frekuensi": "Sepanjang musim",
+          "efektivitas": "Mengundang parasitoid Trichogramma yang memarasit telur ngengat"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Sundep: setiap rumpun terserang kehilangan 1-3 anakan produktif",
+      "fase_berbunga": "Beluk: malai putih berkurang 100% pada rumpun terserang",
+      "fase_pengisian": "Serangan terlambat, tapi batang lemah mudah roboh",
+      "kerugian_ekonomi": "Kehilangan hasil 10-50%, setara Rp 5-25 juta per hektar"
+    },
+    "ambang_ekonomi": "10% sundep atau 1 kelompok telur per meter persegi",
+    "siklus_hidup": "35-55 hari dari telur ke ngengat",
+    "penularan": ["ngengat terbang", "telur di daun", "larva dalam batang"],
+    "predator_alami": "Trichogramma spp. (parasitoid telur), Braconidae (parasitoid larva), laba-laba predator"
+  },
+  
+  "Brown Spot (Bercak Cokelat)": {
+    "nama_lokal": "Bercak coklat / Bintik coklat nang godhong",
+    "nama_ilmiah": "Bipolaris oryzae (Cochliobolus miyabeanus)",
+    "kategori": "Jamur",
+    "fase_rentan": ["anakan", "pengisian"],
+    "kondisi_pemicu": {
+      "cuaca": ["kemarau", "kekeringan"],
+      "suhu": "25-32 derajat Celcius",
+      "kelembaban": "rendah-sedang",
+      "tanah": "kekurangan Silika, Kalium, Mangan, dan unsur hara mikro",
+      "pemupukan": "defisiensi hara, tanah tidak subur"
+    },
+    "gejala": "Bercak coklat bundar hingga oval pada daun, berukuran 2-5 mm dengan pusat abu-abu. Gabah terinfeksi menjadi hitam dan keriput (pecky rice). Tanaman terserang tampak tidak sehat dan menguning.",
+    "gejala_awal": "Bintik coklat kecil pada daun tua bagian bawah",
+    "gejala_lanjut": "Seluruh daun dipenuhi bercak, mengering, tanaman mati prematur",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Aplikasi pupuk Silika (SiO2) 200-300 kg/ha untuk memperkuat daun",
+        "Pemupukan berimbang: tambahkan KCl 100 kg/ha dan pupuk mikro",
+        "Perbaiki drainase dan hindari kekeringan berkepanjangan",
+        "Gunakan benih bersertifikat dan lakukan seed treatment dengan fungisida",
+        "Rotasi dengan tanaman leguminosa untuk memperbaiki kesuburan tanah"
+      ],
+      "pengendalian": [
+        "Fungisida mankozeb 80% dosis 2-3 g/liter air",
+        "Difenokonazol 250 g/l dosis 1 ml/liter air",
+        "Aplikasi pupuk cair mikro (Mn, Zn, Cu) melalui daun",
+        "Propikonazol + triklosan untuk gabah, dosis 1-2 ml/liter",
+        "Penyemprotan urea 2% ke daun untuk pemulihan (bukan pencegahan)"
+      ],
+      "interval_semprot": "10-14 hari, tergantung keparahan",
+      "waktu_aplikasi": "Pagi atau sore, hindari saat panas terik"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Abu sekam padi",
+          "cara": "Taburkan abu sekam 1-2 ton/ha pada lahan saat pengolahan tanah",
+          "frekuensi": "Sekali sebelum tanam",
+          "efektivitas": "Meningkatkan Silika tanah, dinding sel daun lebih kuat 50-60%"
+        },
+        {
+          "nama": "Air rendaman kompos jerami",
+          "cara": "Rendam jerami busuk dalam air 1 minggu, encerkan 1:4, siramkan ke tanah",
+          "frekuensi": "Aplikasikan setiap 2 minggu",
+          "efektivitas": "Mengembalikan mikroba tanah dan unsur hara, mengurangi stres tanaman"
+        },
+        {
+          "nama": "Pupuk kandang fermentasi",
+          "cara": "Campur kotoran sapi + sekam + EM4, fermentasi 2 minggu, aplikasi 5 ton/ha",
+          "frekuensi": "Saat pengolahan tanah",
+          "efektivitas": "Memperbaiki struktur tanah, meningkatkan ketersediaan hara mikro"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Fotosintesis menurun, pertumbuhan lambat",
+      "fase_berbunga": "Gabah tidak terisi penuh, kualitas rendah",
+      "fase_pengisian": "Gabah keriput, berwarna gelap, harga jual turun 20-30%",
+      "kerugian_ekonomi": "Penurunan hasil 15-30%, kerugian Rp 5-15 juta per hektar"
+    },
+    "ambang_ekonomi": "15% luas daun terinfeksi",
+    "siklus_hidup": "7-14 hari dari spora ke gejala",
+    "penularan": ["benih", "sisa tanaman", "tanah", "udara"],
+    "predator_alami": "Trichoderma harzianum (jamur antagonis tanah)"
+  },
+  
+  "Bacterial Leaf Streak (Bercak Daun Bakteri)": {
+    "nama_lokal": "Godhong garis bakteri / Kresek Garis",
+    "nama_ilmiah": "Xanthomonas oryzae pv. oryzicola",
+    "kategori": "Bakteri",
+    "fase_rentan": ["anakan maksimum", "berbunga"],
+    "kondisi_pemicu": {
+      "cuaca": ["hujan lebat", "angin", "badai"],
+      "suhu": "26-30 derajat Celcius",
+      "kelembaban": ">85%",
+      "tanah": "tergenang, basah",
+      "pemupukan": "kelebihan Nitrogen, tanaman terlalu lebat"
+    },
+    "gejala": "Garis-garis memanjang berwarna kuning transparan diantara tulang daun, berubah menjadi coklat gelap. Bakteri mengeluarkan eksudat kuning saat lembab. Berbeda dengan Kresek yang hawar lebar.",
+    "gejala_awal": "Garis basah sempit memanjang di daun bawah",
+    "gejala_lanjut": "Garis berubah coklat, daun sobek, tanaman tampak terbakar",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Kurangi dosis pupuk Nitrogen menjadi 150 kg/ha, tingkatkan Kalium",
+        "Atur jarak tanam 30x30 cm untuk mengurangi kelembaban",
+        "Hindari pemupukan urea saat daun masih basah",
+        "Gunakan varietas agak tahan: Inpari 30 Ciherang Sub-1",
+        "Sanitasi gulma sekitar sawah yang bisa jadi inang alternatif"
+      ],
+      "pengendalian": [
+        "Bakterisida tembaga oksida 56% dosis 3-4 g/liter air",
+        "Streptomisin 20% + oksitetrasiklin untuk infeksi awal",
+        "Kurangi input air, keringkan sawah 2-3 hari untuk mengurangi kelembaban",
+        "Aplikasi kaporit 1-2 ppm di air irigasi untuk mengurangi populasi bakteri",
+        "Semprot dengan air bersih bertekanan rendah untuk membersihkan eksudat"
+      ],
+      "interval_semprot": "7 hari sekali saat musim hujan",
+      "waktu_aplikasi": "Pagi setelah embun kering, hindari sore karena kelembaban tinggi"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Fermentasi air cucian beras (leri)",
+          "cara": "Fermentasi air cucian beras pertama + EM4 selama 3-5 hari, encerkan 1:3",
+          "frekuensi": "Semprotkan setiap 5 hari ke daun",
+          "efektivitas": "Mengandung bakteri asam laktat yang menghambat patogen 30-40%"
+        },
+        {
+          "nama": "Ekstrak bawang putih + lengkuas",
+          "cara": "Blender 500g bawang putih + 500g lengkuas, campur 5 liter air, saring",
+          "frekuensi": "Aplikasikan setiap 4-5 hari",
+          "efektivitas": "Allicin dan minyak atsiri sebagai antibakteri alami"
+        },
+        {
+          "nama": "Perasan daun pepaya",
+          "cara": "Tumbuk 1 kg daun pepaya, peras airnya, campur dengan 2 liter air",
+          "frekuensi": "Semprotkan setiap minggu",
+          "efektivitas": "Enzim papain dan alkaloid menekan pertumbuhan bakteri"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Luas daun fotosintesis berkurang 20-30%",
+      "fase_berbunga": "Energi untuk pengisian gabah menurun",
+      "fase_pengisian": "Gabah kurang berisi, penurunan hasil 20-30%",
+      "kerugian_ekonomi": "Kehilangan hasil 15-25%, setara Rp 7-12 juta per hektar"
+    },
+    "ambang_ekonomi": "10% luas daun menunjukkan gejala garis",
+    "siklus_hidup": "5-10 hari dari infeksi ke gejala",
+    "penularan": ["percikan air", "angin", "alat pertanian", "benih"],
+    "predator_alami": "Bakteriofag alami di tanah sehat"
+  },
+  
+  "Bacterial Panicle Blight (Hawar Malai Bakteri)": {
+    "nama_lokal": "Hawar malai / Malai bosok",
+    "nama_ilmiah": "Burkholderia glumae + Burkholderia gladioli",
+    "kategori": "Bakteri",
+    "fase_rentan": ["berbunga", "pengisian awal"],
+    "kondisi_pemicu": {
+      "cuaca": ["panas ekstrem siang", "hujan malam", "fluktuasi suhu tinggi"],
+      "suhu": "siang >34 derajat, malam >26 derajat Celcius",
+      "kelembaban": "tinggi malam hari",
+      "tanah": "sawah dalam, tergenang",
+      "pemupukan": "Nitrogen tinggi, tanaman sukulen"
+    },
+    "gejala": "Malai berubah coklat kemerahan, gabah hampa atau setengah isi. Terdapat lendir bakteri pada malai saat lembab. Biji gabah berubah menjadi coklat gelap hingga hitam, berkerut.",
+    "gejala_awal": "Ujung malai kecoklatan saat berbunga",
+    "gejala_lanjut": "Seluruh malai busuk, gabah hitam dan keriput",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Gunakan benih sehat dan lakukan seed treatment air panas 55 derajat Celcius 15 menit",
+        "Aplikasi bakterisida tembaga pada fase bunting (sebelum malai keluar)",
+        "Kurangi dosis pupuk Nitrogen, tingkatkan Kalium untuk ketahanan",
+        "Pengeringan sawah 3-5 hari sebelum fase berbunga untuk mengurangi kelembaban",
+        "Rotasi varietas untuk memutus siklus penyakit"
+      ],
+      "pengendalian": [
+        "Aplikasi oksitetrasiklin + streptomisin saat 5% malai muncul",
+        "Tembaga hidroksida + mankozeb, dosis 3-5 g/liter, semprotkan ke malai",
+        "Asam oksolinik 20% dosis 1-2 g/liter, khusus untuk bakteri gram negatif",
+        "Semprotkan bakterisida langsung ke malai yang baru keluar",
+        "Panen lebih awal jika serangan sudah parah untuk menyelamatkan sebagian hasil"
+      ],
+      "interval_semprot": "5-7 hari selama fase berbunga hingga pengisian",
+      "waktu_aplikasi": "Pagi hari saat malai mulai keluar, ulangi jika hujan"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Perendaman benih air garam",
+          "cara": "Larutkan 200g garam dalam 1 liter air, rendam benih 15 menit, cuci bersih, semai",
+          "frekuensi": "Sekali sebelum semai",
+          "efektivitas": "Memisahkan benih terinfeksi (mengapung), mengurangi insiden 40-50%"
+        },
+        {
+          "nama": "Ekstrak kunyit fermentasi",
+          "cara": "Parut 1 kg kunyit, fermentasi dengan air gula merah 3 hari, saring, encerkan 1:10",
+          "frekuensi": "Semprotkan saat malai mulai muncul, setiap 5 hari",
+          "efektivitas": "Curcumin sebagai antibakteri dan anti-inflamasi pada tanaman"
+        },
+        {
+          "nama": "Larutan kapur sirih",
+          "cara": "Campur 50g kapur sirih dalam 10 liter air, aduk rata, semprotkan ke malai",
+          "frekuensi": "Sekali seminggu saat pembungaan",
+          "efektivitas": "Meningkatkan pH permukaan malai, menghambat bakteri"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_berbunga": "Pembuahan gagal, gabah hampa 75-90%",
+      "fase_pengisian": "Gabah setengah isi, berwarna gelap, tidak laku dijual",
+      "kerugian_ekonomi": "Kerugian 50-75% hasil, setara Rp 20-35 juta per hektar"
+    },
+    "ambang_ekonomi": "5% malai menunjukkan gejala",
+    "siklus_hidup": "3-7 hari dari infeksi ke gejala malai",
+    "penularan": ["benih terinfeksi", "percikan air", "angin", "serangga"],
+    "predator_alami": "Pseudomonas fluorescens (bakteri antagonis)"
+  },
+  
+  "Downy Mildew (Bulu Embun)": {
+    "nama_lokal": "Embun bulu / Jamur alus",
+    "nama_ilmiah": "Sclerophthora macrospora (sin. Peronosclerospora)",
+    "kategori": "Jamur",
+    "fase_rentan": ["semai", "anakan awal"],
+    "kondisi_pemicu": {
+      "cuaca": ["hujan terus menerus", "mendung berkepanjangan"],
+      "suhu": "20-28 derajat Celcius",
+      "kelembaban": ">90%",
+      "tanah": "tergenang, drainase sangat buruk",
+      "pemupukan": "kelebihan Nitrogen"
+    },
+    "gejala": "Bulu-bulu putih keabuan di permukaan bawah daun saat pagi hari lembab. Daun menguning, pertumbuhan terhambat, tanaman menjadi kerdil. Sering disalahartikan sebagai embun biasa.",
+    "gejala_awal": "Bercak kuning pucat di permukaan atas daun",
+    "gejala_lanjut": "Bulu putih tebal di bawah daun, daun mengering dari bawah",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Pastikan drainase sempurna, hindari genangan lebih dari 24 jam",
+        "Terapkan pengairan berselang (2 hari kering, 3 hari basah)",
+        "Jangan menanam terlalu rapat, maksimal 25x25 cm",
+        "Bersihkan gulma dan tanaman inang alternatif",
+        "Seed treatment dengan fungisida metalaksil 35% dosis 2 g/kg benih"
+      ],
+      "pengendalian": [
+        "Fungisida sistemik metalaksil + mankozeb 64% dosis 2-3 g/liter",
+        "Fosetyl-aluminium 80% dosis 2-3 g/liter air",
+        "Cymoxanil + famoxadone untuk infeksi akut, dosis 1-2 g/liter",
+        "Aplikasi fungisida harus sampai ke bawah daun",
+        "Jika parah, keringkan sawah total 5-7 hari"
+      ],
+      "interval_semprot": "7-10 hari saat musim hujan",
+      "waktu_aplikasi": "Pagi hari, pastikan semprotan mencapai bawah daun"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Bubuk kunyit + air sabun",
+          "cara": "Campur 200g bubuk kunyit + 50 ml sabun cair dalam 10 liter air, aduk rata",
+          "frekuensi": "Semprotkan setiap 5 hari",
+          "efektivitas": "Sabun mengurangi tegangan permukaan, kunyit anti-fungal"
+        },
+        {
+          "nama": "Air rendaman kulit bawang",
+          "cara": "Rendam 500g kulit bawang merah dalam 3 liter air 48 jam, saring",
+          "frekuensi": "Semprotkan setiap 3-4 hari",
+          "efektivitas": "Quercetin dalam kulit bawang menghambat spora jamur"
+        },
+        {
+          "nama": "Pengapuran ringan",
+          "cara": "Taburkan kapur pertanian (dolomit) 500 kg/ha pada lahan",
+          "frekuensi": "Sekali sebelum tanam",
+          "efektivitas": "Meningkatkan pH tanah, mengurangi kelembaban dan jamur"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_semai": "Bibit mati, perlu penyulaman",
+      "fase_vegetatif": "Pertumbuhan terhambat, anakan sedikit",
+      "kerugian_ekonomi": "Penurunan hasil 30-50%, kerugian Rp 10-20 juta per hektar"
+    },
+    "ambang_ekonomi": "5% tanaman menunjukkan bulu embun",
+    "siklus_hidup": "4-7 hari dari spora ke gejala",
+    "penularan": ["spora udara", "air irigasi", "tanah", "benih"],
+    "predator_alami": "Trichoderma asperellum (jamur antagonis)"
+  },
+  
+  "Hispa (Hama Hispa)": {
+    "nama_lokal": "Kumbang hispa / Kumbang daun",
+    "nama_ilmiah": "Dicladispa armigera",
+    "kategori": "Hama (Serangga)",
+    "fase_rentan": ["anakan", "anakan maksimum"],
+    "kondisi_pemicu": {
+      "cuaca": ["kemarau", "kering"],
+      "suhu": "27-35 derajat Celcius",
+      "kelembaban": "rendah-sedang",
+      "tanah": "sawah kering",
+      "pemupukan": "tanaman stres karena air kurang"
+    },
+    "gejala": "Kumbang kecil (5mm) berwarna gelap metalik memakan jaringan daun hingga tersisa tulang daun (epidermis). Larva mengorok di dalam lapisan daun. Daun tampak bergaris putih transparan.",
+    "gejala_awal": "Bintik-bintik putih kecil pada daun, kumbang kecil terlihat",
+    "gejala_lanjut": "Daun tinggal tulang, kering, tanaman seperti terbakar",
+    "agronomi_modern": {
+      "pencegahan": [
+        "Potong ujung daun bibit sebelum pindah tanam untuk membuang telur hispa",
+        "Genangi sawah setinggi 5-10 cm untuk menenggelamkan larva",
+        "Lakukan pemantauan rutin dengan jaring serangga (sweep net)",
+        "Tanam serempak dalam satu hamparan",
+        "Hindari pemupukan nitrogen berlebih"
+      ],
+      "pengendalian": [
+        "Insektisida kontak klorpirifos 200 g/l dosis 1-2 ml/liter",
+        "BPMC 500 g/l dosis 1-2 ml/liter untuk larva pengorok daun",
+        "Fipronil 50 g/l dosis 0.5-1 ml/liter pada populasi tinggi",
+        "Aplikasi insektisida granular (karbofuran 3%) di lubang tanam",
+        "Semprotkan insektisida langsung ke bagian tanaman yang terserang"
+      ],
+      "interval_semprot": "7-10 hari jika populasi >5 kumbang per rumpun",
+      "waktu_aplikasi": "Pagi atau sore, saat kumbang aktif di permukaan daun"
+    },
+    "kearifan_lokal": {
+      "bahan": [
+        {
+          "nama": "Potong ujung daun bibit",
+          "cara": "Potong 1/3 bagian ujung daun bibit sebelum tanam pindah",
+          "frekuensi": "Sekali saat pindah tanam",
+          "efektivitas": "Membuang 90% telur hispa pada ujung daun"
+        },
+        {
+          "nama": "Ekstrak daun sirsak + serai",
+          "cara": "Tumbuk 1 kg daun sirsak + 500g serai, rebus dalam 5 liter air, dinginkan, saring",
+          "frekuensi": "Semprotkan setiap 5 hari",
+          "efektivitas": "Acetogenin dan sitronella sebagai insektisida dan repellent"
+        },
+        {
+          "nama": "Perangkap warna kuning",
+          "cara": "Pasang perangkap kuning berperekat (lem tikus) di pematang, 20 unit/ha",
+          "frekuensi": "Ganti setiap 2 minggu",
+          "efektivitas": "Menangkap kumbang dewasa, mengurangi populasi 30-40%"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "fase_vegetatif": "Fotosintesis terganggu, pertumbuhan lambat, anakan berkurang",
+      "fase_berbunga": "Jarang, tapi bisa mengurangi energi untuk pengisian gabah",
+      "kerugian_ekonomi": "Penurunan hasil 10-25%, kerugian Rp 5-12 juta per hektar"
+    },
+    "ambang_ekonomi": "5 kumbang dewasa per rumpun padi",
+    "siklus_hidup": "30-45 hari dari telur ke dewasa",
+    "penularan": ["kumbang terbang", "bibit terinfeksi"],
+    "predator_alami": "Laba-laba, kumbang kubah (Coccinellidae), tawon parasitoid"
+  },
+  
+  "Normal (Padi Sehat)": {
+    "nama_lokal": "Padi Sehat / Waras",
+    "nama_ilmiah": "Oryza sativa (sehat)",
+    "kategori": "Sehat",
+    "fase_rentan": "semua fase",
+    "kondisi_pemicu": {
+      "cuaca": "semua kondisi, selama tidak ekstrem",
+      "suhu": "25-33 derajat Celcius",
+      "kelembaban": "60-80%",
+      "tanah": "subur, drainase baik",
+      "pemupukan": "berimbang sesuai rekomendasi"
+    },
+    "gejala": "Tanaman hijau segar, daun tegak, pertumbuhan seragam, anakan banyak dan produktif, malai keluar serempak, gabah bernas.",
+    "gejala_awal": "Tidak ada gejala abnormal",
+    "gejala_lanjut": "Tanaman terus tumbuh sehat hingga panen",
+    "agronomi_modern": {
+      "pemeliharaan": [
+        "Lanjutkan pemupukan sesuai fase: 200 kg Urea, 100 kg SP-36, 100 kg KCl per hektar",
+        "Monitoring hama dan penyakit setiap minggu (hari yang sama)",
+        "Penyiangan gulma setiap 2-4 minggu tergantung pertumbuhan",
+        "Pertahankan pengairan berselang untuk efisiensi air",
+        "Catat perkembangan tanaman dalam buku harian tani"
+      ],
+      "pengendalian": [
+        "Tidak ada tindakan pengendalian khusus",
+        "Lakukan pencegahan rutin dengan pestisida nabati setiap 2 minggu",
+        "Pasang perangkap lampu untuk memantau hama malam",
+        "Aplikasi pupuk mikro melalui daun untuk hasil optimal"
+      ]
+    },
+    "kearifan_lokal": {
+      "tradisi": [
+        {
+          "nama": "Upacara syukuran sawah",
+          "cara": "Mengadakan doa bersama dan selamatan di sawah sebagai ungkapan syukur",
+          "frekuensi": "Saat tanaman sehat dan akan berbunga",
+          "efektivitas": "Mempererat kelompok tani, meningkatkan semangat gotong royong"
+        },
+        {
+          "nama": "Gotong royong pengairan",
+          "cara": "Kelompok tani secara bergiliran mengatur air irigasi",
+          "frekuensi": "Sepanjang musim",
+          "efektivitas": "Distribusi air merata, konflik antar petani berkurang"
+        },
+        {
+          "nama": "Penanaman tanaman tolak bala",
+          "cara": "Tanam pandan atau tanaman wangi di sudut sawah",
+          "frekuensi": "Sekali di awal musim",
+          "efektivitas": "Simbolis penolak hama, sekaligus mengundang predator alami"
+        }
+      ]
+    },
+    "potensi_dampak": {
+      "semua_fase": "Tidak ada dampak negatif, tanaman tumbuh optimal",
+      "hasil_panen": "Potensi hasil 6-8 ton/ha GKP",
+      "keuntungan": "Pendapatan bersih Rp 15-25 juta per hektar per musim"
+    },
+    "ambang_ekonomi": "Tidak berlaku pada tanaman sehat",
+    "siklus_hidup": "Siklus normal padi 105-120 hari",
+    "penularan": "Tidak ada",
+    "predator_alami": "Populasi predator dan hama seimbang"
+  }
+}

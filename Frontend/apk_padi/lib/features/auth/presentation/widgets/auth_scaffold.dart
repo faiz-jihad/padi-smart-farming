@@ -11,33 +11,57 @@ class AuthScaffold extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(child: _FarmBackdrop()),
+          const Positioned.fill(child: _SplashBackdrop()),
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - 48,
+                    ),
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
                         width: double.infinity,
                         constraints: const BoxConstraints(maxWidth: 440),
-                        padding: const EdgeInsets.all(22),
+                        padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(28),
+                          color: Colors.white.withOpacity(0.94),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.72),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.13),
-                              blurRadius: 26,
-                              offset: const Offset(0, 16),
+                              color: Colors.black.withOpacity(0.13),
+                              blurRadius: 24,
+                              offset: const Offset(0, 14),
                             ),
                           ],
                         ),
-                        child: child,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 70,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF2C94C),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 17),
+                            child,
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -51,58 +75,40 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-class _FarmBackdrop extends StatelessWidget {
-  const _FarmBackdrop();
+class _SplashBackdrop extends StatelessWidget {
+  const _SplashBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _FarmBackdropPainter(),
-      child: Container(color: padiGreen),
-    );
-  }
-}
-
-class _FarmBackdropPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final sky = Paint()..color = const Color(0xFFBDEBDC);
-    final hillFar = Paint()..color = const Color(0xFF8DD664);
-    final hillNear = Paint()..color = const Color(0xFF41B956);
-    final water = Paint()..color = const Color(0xFF71C9C8);
-    final sun = Paint()..color = padiCream;
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height * 0.44), sky);
-    canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.2), 46, sun);
-
-    final far = Path()
-      ..moveTo(0, size.height * 0.38)
-      ..quadraticBezierTo(size.width * 0.28, size.height * 0.22, size.width * 0.55, size.height * 0.34)
-      ..quadraticBezierTo(size.width * 0.82, size.height * 0.46, size.width, size.height * 0.28)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(far, hillFar);
-
-    final near = Path()
-      ..moveTo(0, size.height * 0.52)
-      ..quadraticBezierTo(size.width * 0.32, size.height * 0.38, size.width * 0.62, size.height * 0.5)
-      ..quadraticBezierTo(size.width * 0.84, size.height * 0.6, size.width, size.height * 0.44)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(near, hillNear);
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.5, size.height * 0.62),
-        width: size.width * 1.1,
-        height: size.height * 0.28,
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: padiCream),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/splash_background.jpeg',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(color: const Color(0xFFF8FAF3));
+            },
+          ),
+          Container(color: Colors.white.withOpacity(0.38)),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.05),
+                  padiGreen.withOpacity(0.22),
+                  padiInk.withOpacity(0.18),
+                ],
+                stops: const [0.0, 0.58, 1.0],
+              ),
+            ),
+          ),
+        ],
       ),
-      water,
     );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

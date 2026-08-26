@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\CommunityReport;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCommunityReportRequest extends FormRequest
 {
@@ -17,7 +18,9 @@ class StoreCommunityReportRequest extends FormRequest
             'scan_id' => [
                 'required',
                 'integer',
-                'exists:disease_scans,id',
+                Rule::exists('disease_scans', 'id')->where(
+                    fn ($query) => $query->where('farmer_id', $this->user()?->id)
+                ),
             ],
             'latitude' => [
                 'required',

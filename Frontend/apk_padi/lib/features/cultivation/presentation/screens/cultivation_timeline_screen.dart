@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
-import 'package:padi/core/network/api_client.dart';
-import 'package:padi/core/storage/token_storage.dart';
-
-const Color timelineGreen = Color(0xFF075C3D);
-const Color timelineBackground = Color(0xFFF7F9F4);
-const Color timelineText = Color(0xFF183D2D);
-const Color timelineYellow = Color(0xFFF2C94C);
-
-class CultivationTimelineScreen extends StatefulWidget {
+class CultivationTimelineScreen extends ConsumerStatefulWidget {
   const CultivationTimelineScreen({
     super.key,
     this.cropSeasonId,
@@ -18,530 +14,275 @@ class CultivationTimelineScreen extends StatefulWidget {
   final int? cropSeasonId;
 
   @override
-  State<CultivationTimelineScreen> createState() =>
+  ConsumerState<CultivationTimelineScreen> createState() =>
       _CultivationTimelineScreenState();
 }
 
 class _CultivationTimelineScreenState
-    extends State<CultivationTimelineScreen> {
-  late final ApiClient _apiClient;
+    extends ConsumerState<CultivationTimelineScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  bool isLoading = true;
-  String? errorMessage;
+  List<Map<String, dynamic>> _seasons = [];
+  Map<String, dynamic>? _selectedSeason;
+  Map<String, dynamic>? _farm;
+  List<Map<String, dynamic>> _activities = [];
 
-  Map<String, dynamic>? cropSeason;
-  Map<String, dynamic>? farm;
-
-  List<Map<String, dynamic>> activities = [];
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
     super.initState();
-
-    _apiClient = ApiClient(
-      const SecureTokenStorage(),
-    );
-
     _loadData();
   }
 
   Future<void> _loadData() async {
-    if (!mounted) {
-      return;
-    }
-
+    if (!mounted) return;
     setState(() {
-      isLoading = true;
-      errorMessage = null;
+      _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-      final seasonResponse = await _apiClient.dio.get(
-        '/crop-seasons',
-      );
+      final apiClient = ref.read(apiClientProvider);
+      final seasonRes = await apiClient.dio.get('/crop-seasons');
+      final seasonData = seasonRes.data;
 
-      final seasons = _extractList(
-        seasonResponse.data,
-        'crop_seasons',
-      );
-
-      if (seasons.isEmpty) {
-        if (!mounted) {
-          return;
+      List<Map<String, dynamic>> list = [];
+      if (seasonData is Map) {
+        final inner = seasonData['data'];
+        if (inner is Map && inner['crop_seasons'] is List) {
+          list = (inner['crop_seasons'] as List)
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else if (inner is List) {
+          list = inner
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
         }
+      }
 
+      if (list.isEmpty) {
+        if (!mounted) return;
         setState(() {
-          cropSeason = null;
-          farm = null;
-          activities = [];
-          isLoading = false;
+          _seasons = [];
+          _selectedSeason = null;
+          _farm = null;
+          _activities = [];
+          _isLoading = false;
         });
-
         return;
       }
 
-      Map<String, dynamic>? selectedSeason;
-
+      Map<String, dynamic>? current;
       if (widget.cropSeasonId != null) {
-        for (final item in seasons) {
-          final id = _toInt(item['id']);
-
-          if (id == widget.cropSeasonId) {
-            selectedSeason = item;
-            break;
-          }
-        }
-      }
-
-      selectedSeason ??= _findLatestSeason(seasons);
-
-      if (selectedSeason == null) {
-        throw Exception(
-          'Musim tanam tidak ditemukan.',
+        current = list.firstWhere(
+          (s) => int.tryParse(s['id']?.toString() ?? '') == widget.cropSeasonId,
+          orElse: () => list.first,
+        );
+      } else {
+        current = list.firstWhere(
+          (s) => s['status'] == 'active',
+          orElse: () => list.first,
         );
       }
 
-      final seasonId = _toInt(
-        selectedSeason['id'],
-      );
+      final seasonId = int.tryParse(current['id']?.toString() ?? '');
+      final farmId = int.tryParse(current['farm_id']?.toString() ?? '');
 
-      final farmId = _toInt(
-        selectedSeason['farm_id'],
-      );
+      // Load activities for this season
+      List<Map<String, dynamic>> activities = [];
+      if (seasonId != null) {
+        try {
+          final actRes = await apiClient.dio.get('/farm-activities');
+          final actData = actRes.data;
+          List<Map<String, dynamic>> allActs = [];
+          if (actData is Map) {
+            final raw = actData['data'];
+            if (raw is List) {
+              allActs = raw
+                  .whereType<Map>()
+                  .map((e) => Map<String, dynamic>.from(e))
+                  .toList();
+            } else if (raw is Map && raw['farm_activities'] is List) {
+              allActs = (raw['farm_activities'] as List)
+                  .whereType<Map>()
+                  .map((e) => Map<String, dynamic>.from(e))
+                  .toList();
+            }
+          }
+          activities = allActs.where((a) {
+            final actSeasonId = int.tryParse(a['crop_season_id']?.toString() ?? '');
+            return actSeasonId == seasonId;
+          }).toList();
 
-      final loadedActivities = seasonId == null
-          ? <Map<String, dynamic>>[]
-          : await _loadActivities(seasonId);
+          // Sort descending by date
+          activities.sort((a, b) {
+            final dateA = DateTime.tryParse(a['occurred_at']?.toString() ?? '') ?? DateTime(2000);
+            final dateB = DateTime.tryParse(b['occurred_at']?.toString() ?? '') ?? DateTime(2000);
+            return dateB.compareTo(dateA);
+          });
+        } catch (_) {}
+      }
 
-      Map<String, dynamic>? loadedFarm;
-
+      // Load Farm details
+      Map<String, dynamic>? farm;
       if (farmId != null) {
-        loadedFarm = await _loadFarm(farmId);
+        try {
+          final farmRes = await apiClient.dio.get('/farms/$farmId');
+          final fData = farmRes.data;
+          if (fData is Map) {
+            final rawF = fData['data'];
+            if (rawF is Map) {
+              farm = Map<String, dynamic>.from(rawF);
+            }
+          }
+        } catch (_) {}
       }
 
-      if (!mounted) {
-        return;
-      }
-
+      if (!mounted) return;
       setState(() {
-        cropSeason = selectedSeason;
-        activities = loadedActivities;
-        farm = loadedFarm;
-        isLoading = false;
+        _seasons = list;
+        _selectedSeason = current;
+        _farm = farm;
+        _activities = activities;
+        _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
+      if (!mounted) return;
       setState(() {
-        isLoading = false;
-        errorMessage = _cleanErrorMessage(e);
+        _isLoading = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
-  Future<List<Map<String, dynamic>>> _loadActivities(
-    int cropSeasonId,
-  ) async {
-    final response = await _apiClient.dio.get(
-      '/farm-activities',
+  Future<void> _deleteActivity(int activityId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Catatan Kegiatan?'),
+        content: const Text(
+          'Kegiatan ini akan dihapus dari riwayat timeline budidaya.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: HomeColors.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
     );
 
-    final items = _extractList(
-      response.data,
-      'farm_activities',
-    );
+    if (confirmed != true) return;
 
-    final result = items.where((item) {
-      final activitySeasonId = _toInt(
-        item['crop_season_id'],
-      );
-
-      return activitySeasonId == cropSeasonId;
-    }).toList();
-
-    result.sort((a, b) {
-      final dateA =
-          DateTime.tryParse(
-            a['occurred_at']?.toString() ?? '',
-          ) ??
-          DateTime(2000);
-
-      final dateB =
-          DateTime.tryParse(
-            b['occurred_at']?.toString() ?? '',
-          ) ??
-          DateTime(2000);
-
-      return dateB.compareTo(dateA);
-    });
-
-    return result;
-  }
-
-  Future<Map<String, dynamic>?> _loadFarm(
-    int farmId,
-  ) async {
     try {
-      final response = await _apiClient.dio.get(
-        '/farms/$farmId',
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.dio.delete('/farm-activities/$activityId');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kegiatan berhasil dihapus.'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-
-      return _extractMap(response.data);
-    } catch (_) {
-      return null;
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus kegiatan: $e'),
+          backgroundColor: HomeColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
-  List<Map<String, dynamic>> _extractList(
-    dynamic responseData,
-    String key,
-  ) {
-    dynamic data = responseData;
-
-    if (data is Map<String, dynamic>) {
-      data = data['data'];
-    }
-
-    if (data is Map<String, dynamic>) {
-      data = data[key];
-    }
-
-    if (data is List) {
-      return data
-          .whereType<Map>()
-          .map(
-            (item) => Map<String, dynamic>.from(item),
-          )
-          .toList();
-    }
-
-    return [];
-  }
-
-  Map<String, dynamic>? _extractMap(
-    dynamic responseData,
-  ) {
-    dynamic data = responseData;
-
-    if (data is Map<String, dynamic>) {
-      data = data['data'];
-    }
-
-    if (data is Map<String, dynamic>) {
-      if (data.containsKey('farm')) {
-        data = data['farm'];
-      }
-    }
-
-    if (data is Map) {
-      return Map<String, dynamic>.from(data);
-    }
-
-    return null;
-  }
-
-  Map<String, dynamic>? _findLatestSeason(
-    List<Map<String, dynamic>> seasons,
-  ) {
-    final validSeasons = seasons.where(
-      (item) => item['id'] != null,
-    );
-
-    if (validSeasons.isEmpty) {
-      return null;
-    }
-
-    final sorted = validSeasons.toList();
-
-    sorted.sort((a, b) {
-      final idA = _toInt(a['id']) ?? 0;
-      final idB = _toInt(b['id']) ?? 0;
-
-      return idB.compareTo(idA);
-    });
-
-    return sorted.first;
-  }
-
-  int? _toInt(dynamic value) {
-    if (value is int) {
-      return value;
-    }
-
-    if (value is num) {
-      return value.toInt();
-    }
-
-    return int.tryParse(
-      value?.toString() ?? '',
-    );
-  }
-
-  String _cleanErrorMessage(dynamic error) {
-    final message = error.toString();
-
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
-    }
-
-    return message;
+  List<Map<String, dynamic>> get _filteredActivities {
+    if (_selectedFilter == 'all') return _activities;
+    return _activities.where((a) => a['type'] == _selectedFilter).toList();
   }
 
   String _formatDate(dynamic value) {
-    if (value == null ||
-        value.toString().trim().isEmpty) {
-      return '-';
-    }
-
-    final date = DateTime.tryParse(
-      value.toString(),
-    );
-
-    if (date == null) {
-      return value.toString();
-    }
-
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-
-    return '${date.day} '
-        '${months[date.month - 1]} '
-        '${date.year}';
+    if (value == null) return '-';
+    final date = DateTime.tryParse(value.toString());
+    if (date == null) return value.toString();
+    return DateFormat('d MMMM yyyy', 'id_ID').format(date);
   }
 
-  String _formatDateTime(dynamic value) {
-    if (value == null ||
-        value.toString().trim().isEmpty) {
-      return '-';
-    }
-
-    final date = DateTime.tryParse(
-      value.toString(),
-    );
-
-    if (date == null) {
-      return value.toString();
-    }
-
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-
-    final hour =
-        date.hour.toString().padLeft(2, '0');
-
-    final minute =
-        date.minute.toString().padLeft(2, '0');
-
-    return '${date.day} '
-        '${months[date.month - 1]} '
-        '${date.year}, '
-        '$hour:$minute';
-  }
-
-  String _statusLabel(String? status) {
-    switch (status) {
-      case 'planned':
-        return 'Direncanakan';
-      case 'active':
-        return 'Sedang berjalan';
-      case 'completed':
-        return 'Selesai';
-      case 'cancelled':
-        return 'Dibatalkan';
-      default:
-        return status ?? '-';
-    }
-  }
-
-  String _activityLabel(String? type) {
-    switch (type) {
-      case 'land_preparation':
-        return 'Persiapan Lahan';
-      case 'planting':
-        return 'Penanaman';
-      case 'fertilizing':
-        return 'Pemupukan';
-      case 'spraying':
-        return 'Penyemprotan';
-      case 'irrigation':
-        return 'Pengairan';
-      case 'other':
-        return 'Kegiatan Lainnya';
-      default:
-        return type ?? 'Kegiatan';
-    }
-  }
-
-  IconData _activityIcon(String? type) {
-    switch (type) {
-      case 'land_preparation':
-        return Icons.agriculture_rounded;
-      case 'planting':
-        return Icons.spa_rounded;
-      case 'fertilizing':
-        return Icons.science_rounded;
-      case 'spraying':
-        return Icons.sanitizer_rounded;
-      case 'irrigation':
-        return Icons.water_drop_rounded;
-      case 'other':
-        return Icons.edit_note_rounded;
-      default:
-        return Icons.edit_note_rounded;
-    }
-  }
-
-  int _calculateDay() {
+  int _calculateHst() {
     final plantingDate = DateTime.tryParse(
-      cropSeason?['planting_date']?.toString() ?? '',
+      _selectedSeason?['planting_date']?.toString() ??
+          _selectedSeason?['planned_planting_date']?.toString() ??
+          '',
     );
-
-    final plannedDate = DateTime.tryParse(
-      cropSeason?['planned_planting_date']?.toString() ?? '',
-    );
-
-    final startDate =
-        plantingDate ?? plannedDate;
-
-    if (startDate == null) {
-      return 0;
-    }
-
-    final start = DateTime(
-      startDate.year,
-      startDate.month,
-      startDate.day,
-    );
-
-    final today = DateTime.now();
-
-    final current = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    );
-
-    final difference =
-        current.difference(start).inDays;
-
-    if (difference < 0) {
-      return 0;
-    }
-
-    return difference + 1;
-  }
-
-  String _farmName() {
-    final name = farm?['name']?.toString();
-
-    if (name != null &&
-        name.trim().isNotEmpty) {
-      return name;
-    }
-
-    final seasonFarm =
-        cropSeason?['farm'];
-
-    if (seasonFarm is Map) {
-      final name =
-          seasonFarm['name']?.toString();
-
-      if (name != null &&
-          name.trim().isNotEmpty) {
-        return name;
-      }
-    }
-
-    return 'Lahan Pertanian';
-  }
-
-  Future<void> _openAddActivity() async {
-    final id = _toInt(
-      cropSeason?['id'],
-    );
-
-    if (id == null) {
-      return;
-    }
-
-    await context.push(
-      '/land/activity/add?cropSeasonId=$id',
-    );
-
-    await _loadData();
+    if (plantingDate == null) return 0;
+    final diff = DateTime.now().difference(plantingDate).inDays;
+    return diff < 0 ? 0 : diff + 1;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: timelineBackground,
+      backgroundColor: const Color(0xFFF5F7F4),
       appBar: AppBar(
-        backgroundColor: timelineBackground,
+        backgroundColor: HomeColors.primaryGreen,
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: () {
-            context.go('/land/season/start');
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
           },
           icon: const Icon(
             Icons.arrow_back_rounded,
-            size: 34,
+            size: 22,
+            color: Colors.white,
           ),
-          color: timelineGreen,
           tooltip: 'Kembali',
         ),
         title: const Text(
           'Kegiatan Sawah',
           style: TextStyle(
-            color: timelineText,
-            fontSize: 23,
-            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Segarkan Data',
+            onPressed: _loadData,
+          ),
+        ],
       ),
-      floatingActionButton:
-          FloatingActionButton.extended(
-        onPressed:
-            isLoading || cropSeason == null
-                ? null
-                : _openAddActivity,
-        backgroundColor: timelineGreen,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _selectedSeason == null
+            ? null
+            : () async {
+                final id = int.tryParse(_selectedSeason?['id']?.toString() ?? '');
+                if (id == null) return;
+                await context.push('/land/activity/add?cropSeasonId=$id');
+                _loadData();
+              },
+        backgroundColor: HomeColors.primaryGreen,
         foregroundColor: Colors.white,
-        icon: const Icon(
-          Icons.add_rounded,
-          size: 26,
-        ),
+        icon: const Icon(Icons.add_rounded, size: 22),
         label: const Text(
-          'Tambah Kegiatan',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
+          'Catat Kegiatan',
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: _buildBody(),
@@ -549,15 +290,15 @@ class _CultivationTimelineScreenState
   }
 
   Widget _buildBody() {
-    if (isLoading) {
+    if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          color: timelineGreen,
+          color: HomeColors.primaryGreen,
         ),
       );
     }
 
-    if (errorMessage != null) {
+    if (_errorMessage != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -565,40 +306,31 @@ class _CultivationTimelineScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.error_outline_rounded,
-                color: Colors.red,
-                size: 50,
+                Icons.cloud_off_rounded,
+                color: HomeColors.danger,
+                size: 48,
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
               const Text(
-                'Gagal mengambil data',
+                'Gagal Memuat Kegiatan',
                 style: TextStyle(
-                  color: timelineText,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                errorMessage!,
+                _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF69766F),
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: Color(0xFF68766E), fontSize: 12),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 16),
+              FilledButton(
                 onPressed: _loadData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      timelineGreen,
-                  foregroundColor:
-                      Colors.white,
+                style: FilledButton.styleFrom(
+                  backgroundColor: HomeColors.primaryGreen,
                 ),
-                child: const Text(
-                  'Coba Lagi',
-                ),
+                child: const Text('Coba Lagi'),
               ),
             ],
           ),
@@ -606,35 +338,38 @@ class _CultivationTimelineScreenState
       );
     }
 
-    if (cropSeason == null) {
+    if (_selectedSeason == null) {
       return RefreshIndicator(
         onRefresh: _loadData,
-        color: timelineGreen,
+        color: HomeColors.primaryGreen,
         child: ListView(
-          children: const [
-            SizedBox(height: 180),
-            Icon(
-              Icons.spa_outlined,
-              color: timelineGreen,
-              size: 70,
-            ),
-            SizedBox(height: 15),
-            Center(
+          padding: const EdgeInsets.all(24),
+          children: [
+            const SizedBox(height: 100),
+            const Icon(Icons.spa_outlined, color: HomeColors.primaryGreen, size: 64),
+            const SizedBox(height: 16),
+            const Center(
               child: Text(
-                'Belum ada musim tanam',
-                style: TextStyle(
-                  color: timelineText,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
+                'Belum Ada Musim Tanam Aktif',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
               ),
             ),
-            SizedBox(height: 8),
-            Center(
+            const SizedBox(height: 8),
+            const Center(
               child: Text(
-                'Mulai musim tanam terlebih dahulu.',
-                style: TextStyle(
-                  color: Color(0xFF69766F),
+                'Mulai musim tanam terlebih dahulu untuk mencatat kegiatan perawatan sawah.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF68766E), fontSize: 13),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: FilledButton.icon(
+                onPressed: () => context.push('/land/season/start'),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('Mulai Musim Tanam'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: HomeColors.primaryGreen,
                 ),
               ),
             ),
@@ -643,454 +378,323 @@ class _CultivationTimelineScreenState
       );
     }
 
+    final hst = _calculateHst();
+    final farmName = _farm?['name']?.toString() ??
+        _selectedSeason?['farm']?['name']?.toString() ??
+        'Lahan Sawah';
+    final variety = _selectedSeason?['variety_name']?.toString() ??
+        _selectedSeason?['variety']?['name']?.toString() ??
+        'Varietas Padi';
+    final filtered = _filteredActivities;
+
     return RefreshIndicator(
       onRefresh: _loadData,
-      color: timelineGreen,
+      color: HomeColors.primaryGreen,
       child: ListView(
-        padding:
-            const EdgeInsets.fromLTRB(
-          20,
-          8,
-          20,
-          110,
-        ),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 90),
         children: [
-          _buildSeasonHeader(),
-          const SizedBox(height: 25),
-          const Text(
-            'Informasi Musim Tanam',
-            style: TextStyle(
-              color: timelineText,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 15),
-          _InfoCard(
-            icon: Icons.calendar_month_rounded,
-            title: 'Rencana mulai tanam',
-            value: _formatDate(
-              cropSeason?[
-                'planned_planting_date'
+          // 1. Season Hero Summary Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF042F1E), Color(0xFF075E3B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF042F1E).withOpacity(0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
-          ),
-          _InfoCard(
-            icon: Icons.spa_rounded,
-            title: 'Tanggal tanam',
-            value: _formatDate(
-              cropSeason?['planting_date'],
-            ),
-          ),
-          _InfoCard(
-            icon: Icons.agriculture_rounded,
-            title: 'Perkiraan panen',
-            value: _formatDate(
-              cropSeason?[
-                'estimated_harvest_date'
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Kegiatan Musim Tanam',
-                  style: TextStyle(
-                    color: timelineText,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.eco_rounded, color: Color(0xFFFDE68A), size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            variety,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBBF24),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Hari ke-$hst HST',
+                        style: const TextStyle(
+                          color: Color(0xFF042F1E),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  farmName,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-              ),
-              if (activities.isNotEmpty)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        const Color(0xFFEAF5EF),
-                    borderRadius:
-                        BorderRadius.circular(
-                      20,
-                    ),
-                  ),
-                  child: Text(
-                    '${activities.length} kegiatan',
-                    style: const TextStyle(
-                      color: timelineGreen,
-                      fontSize: 12,
-                      fontWeight:
-                          FontWeight.w800,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          if (activities.isEmpty)
-            _buildEmptyActivities()
-          else
-            ...activities
-                .asMap()
-                .entries
-                .map((entry) {
-              final index = entry.key;
-              final activity = entry.value;
-
-              final type =
-                  activity['type']?.toString();
-
-              final notes =
-                  activity['notes']
-                      ?.toString()
-                      .trim();
-
-              return _TimelineItem(
-                icon: _activityIcon(type),
-                title: _activityLabel(type),
-                description:
-                    notes != null &&
-                            notes.isNotEmpty
-                        ? notes
-                        : 'Tidak ada catatan tambahan.',
-                date: _formatDateTime(
-                  activity['occurred_at'],
-                ),
-                completed: true,
-                isLast:
-                    index ==
-                        activities.length - 1,
-              );
-            }),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(17),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8DF),
-              borderRadius:
-                  BorderRadius.circular(20),
-            ),
-            child: const Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.lightbulb_outline_rounded,
-                  color: Color(0xFF946E00),
-                  size: 29,
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Catat kegiatan setiap kali merawat sawah agar perjalanan musim tanam mudah dipantau.',
-                    style: TextStyle(
-                      color: Color(0xFF5B4808),
-                      fontSize: 14,
-                      height: 1.4,
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tanam: ${_formatDate(_selectedSeason?['planting_date'])} • Panen: ${_formatDate(_selectedSeason?['estimated_harvest_date'])}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 11.5,
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSeasonHeader() {
-    final status =
-        cropSeason?['status']?.toString();
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: timelineGreen,
-        borderRadius:
-            BorderRadius.circular(25),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.grass_rounded,
-                color: timelineYellow,
-                size: 35,
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Text(
-                  _farmName(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight:
-                        FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 14),
-          Text(
-            'Status: ${_statusLabel(status)}',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Hari ke-${_calculateDay()}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildEmptyActivities() {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(20),
-      ),
-      child: const Column(
-        children: [
-          Icon(
-            Icons.edit_note_rounded,
-            color: timelineGreen,
-            size: 45,
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Belum ada kegiatan',
-            style: TextStyle(
-              color: timelineText,
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'Tambahkan kegiatan pertama untuk musim tanam ini.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF69766F),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin:
-          const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAF5EF),
-              borderRadius:
-                  BorderRadius.circular(18),
-            ),
-            child: Icon(
-              icon,
-              color: timelineGreen,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+          // 2. Filter Category Tabs
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF69766F),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: timelineText,
-                    fontSize: 17,
-                    fontWeight:
-                        FontWeight.w900,
-                  ),
-                ),
+                _buildFilterChip('all', 'Semua (${_activities.length})'),
+                _buildFilterChip('fertilizing', 'Pemupukan'),
+                _buildFilterChip('irrigation', 'Pengairan'),
+                _buildFilterChip('spraying', 'Penyemprotan'),
+                _buildFilterChip('planting', 'Penanaman'),
+                _buildFilterChip('land_preparation', 'Olah Lahan'),
+                _buildFilterChip('other', 'Lainnya'),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
 
-class _TimelineItem extends StatelessWidget {
-  const _TimelineItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.completed,
-    required this.isLast,
-  });
+          const SizedBox(height: 14),
 
-  final IconData icon;
-  final String title;
-  final String description;
-  final String date;
-  final bool completed;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 56,
-            child: Column(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: completed
-                        ? timelineGreen
-                        : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: completed
-                          ? timelineGreen
-                          : const Color(
-                              0xFFD7DED8,
-                            ),
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: completed
-                        ? Colors.white
-                        : const Color(
-                            0xFF7C8781,
-                          ),
-                    size: 24,
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: const Color(
-                        0xFFB7D5C5,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              margin:
-                  const EdgeInsets.only(
-                bottom: 18,
-              ),
-              padding:
-                  const EdgeInsets.all(17),
+          // 3. Activity Timeline List
+          if (filtered.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius:
-                    BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE5ECE3)),
               ),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: timelineText,
-                      fontSize: 16,
-                      fontWeight:
-                          FontWeight.w900,
+                  const Icon(
+                    Icons.event_note_rounded,
+                    size: 48,
+                    color: Color(0xFFB0BDB5),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Belum Ada Catatan Kegiatan',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF17251E),
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      color: Color(0xFF69766F),
-                      fontSize: 13,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      color: timelineGreen,
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Catat setiap kali melakukan pemupukan, pengairan, atau penyemprotan.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
                       fontSize: 12,
-                      fontWeight:
-                          FontWeight.w800,
+                      color: Color(0xFF68766E),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
+            )
+          else
+            ...List.generate(filtered.length, (idx) {
+              final item = filtered[idx];
+              final isLast = idx == filtered.length - 1;
+              return _buildActivityCard(item, isLast: isLast);
+            }),
         ],
       ),
     );
+  }
+
+  Widget _buildFilterChip(String key, String label) {
+    final isSel = _selectedFilter == key;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: ChoiceChip(
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: isSel ? Colors.white : const Color(0xFF425247),
+          ),
+        ),
+        selected: isSel,
+        selectedColor: HomeColors.primaryGreen,
+        backgroundColor: Colors.white,
+        showCheckmark: false,
+        side: BorderSide(
+          color: isSel ? HomeColors.primaryGreen : const Color(0xFFE5ECE3),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        onSelected: (_) => setState(() => _selectedFilter = key),
+      ),
+    );
+  }
+
+  Widget _buildActivityCard(Map<String, dynamic> act, {required bool isLast}) {
+    final id = int.tryParse(act['id']?.toString() ?? '') ?? 0;
+    final type = act['type']?.toString() ?? 'other';
+    final notes = act['notes']?.toString();
+    final cost = int.tryParse(act['cost']?.toString() ?? '') ?? 0;
+    final dateStr = act['occurred_at']?.toString();
+    final parsedDate = DateTime.tryParse(dateStr ?? '');
+    final dateFormatted = parsedDate != null
+        ? DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(parsedDate)
+        : dateStr ?? '-';
+
+    final (label, icon, color) = _getActivityMeta(type);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5ECE3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF17251E),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dateFormatted,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF68766E),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFB0BDB5)),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Hapus Kegiatan',
+                  onPressed: () => _deleteActivity(id),
+                ),
+              ],
+            ),
+            if (notes != null && notes.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAF8),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  notes.trim(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2C3E33),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+            if (cost > 0) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.payments_outlined, size: 14, color: HomeColors.primaryGreen),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Biaya: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(cost)}',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: HomeColors.primaryGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  (String, IconData, Color) _getActivityMeta(String type) {
+    switch (type) {
+      case 'fertilizing':
+        return ('Pemupukan', Icons.science_rounded, const Color(0xFF0284C7));
+      case 'irrigation':
+        return ('Pengairan & Irigasi', Icons.water_drop_rounded, const Color(0xFF0EA5E9));
+      case 'spraying':
+        return ('Penyemprotan Hama', Icons.sanitizer_rounded, const Color(0xFFF59E0B));
+      case 'planting':
+        return ('Penanaman Bibit', Icons.spa_rounded, const Color(0xFF10B981));
+      case 'land_preparation':
+        return ('Pengolahan Lahan', Icons.agriculture_rounded, const Color(0xFF047857));
+      default:
+        return ('Penyiangan & Perawatan', Icons.grass_rounded, const Color(0xFF059669));
+    }
   }
 }

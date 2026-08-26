@@ -14,8 +14,8 @@ class DistrictResource extends JsonResource
             'regency_id'  => $this->regency_id,
             'code'        => $this->code,
             'name'        => $this->name,
-            'latitude'    => $this->latitude,
-            'longitude'   => $this->longitude,
+            'latitude'    => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude'   => $this->longitude !== null ? (float) $this->longitude : null,
             'has_boundary' => $this->whenLoaded('boundary', fn () => $this->boundary !== null, false),
         ];
     }

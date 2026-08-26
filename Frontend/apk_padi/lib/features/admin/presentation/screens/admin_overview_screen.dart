@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/core/router/app_router.dart';
+import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/admin/data/models/admin_overview.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
 
@@ -499,7 +499,7 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.black.withOpacity(0.06)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +574,7 @@ class _OptionMenu extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.14)),
+          border: Border.all(color: Colors.black.withOpacity(0.14)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -604,7 +604,7 @@ class _MetricTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.black.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,7 +649,7 @@ class _Section extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.black.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

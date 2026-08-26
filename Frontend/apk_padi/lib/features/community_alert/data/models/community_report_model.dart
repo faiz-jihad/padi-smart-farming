@@ -8,19 +8,25 @@ class CommunityReportModel {
     required this.radiusKm,
     required this.consentGiven,
     required this.status,
-    required this.reportedAt,
+    this.farmerName,
+    this.diseaseName,
+    this.imageUrl,
+    this.reportedAt,
   });
 
   factory CommunityReportModel.fromJson(Map<String, dynamic> json) {
     return CommunityReportModel(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      scanId: (json['scan_id'] as num?)?.toInt() ?? 0,
-      farmerId: (json['farmer_id'] as num?)?.toInt() ?? 0,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-      radiusKm: (json['radius_km'] as num?)?.toDouble() ?? 0,
-      consentGiven: json['consent_given'] as bool? ?? false,
-      status: json['status']?.toString() ?? 'pending',
+      id: _toInt(json['id']),
+      scanId: _toInt(json['scan_id']),
+      farmerId: _toInt(json['farmer_id']),
+      farmerName: json['farmer_name']?.toString() ?? 'Petani Hamparan',
+      diseaseName: json['disease_name']?.toString() ?? 'Penyakit Padi',
+      imageUrl: json['image_url']?.toString(),
+      latitude: _toDouble(json['latitude']),
+      longitude: _toDouble(json['longitude']),
+      radiusKm: _toDouble(json['radius_km']),
+      consentGiven: json['consent_given'] == true,
+      status: json['status']?.toString() ?? 'verified',
       reportedAt: json['reported_at']?.toString(),
     );
   }
@@ -28,6 +34,9 @@ class CommunityReportModel {
   final int id;
   final int scanId;
   final int farmerId;
+  final String? farmerName;
+  final String? diseaseName;
+  final String? imageUrl;
   final double latitude;
   final double longitude;
   final double radiusKm;
@@ -44,7 +53,19 @@ class CommunityReportModel {
       case 'rejected':
         return 'Ditolak';
       default:
-        return status;
+        return 'Aktif';
     }
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.')) ?? 0.0;
+  return 0.0;
 }

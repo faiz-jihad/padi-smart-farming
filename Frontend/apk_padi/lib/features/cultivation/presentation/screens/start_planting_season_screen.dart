@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/core/router/app_router.dart';
+import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/cultivation/data/services/crop_season_api_service.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
@@ -11,7 +11,16 @@ const Color seasonBackground = Color(0xFFF7F9F4);
 const Color seasonText = Color(0xFF183D2D);
 
 class StartPlantingSeasonScreen extends ConsumerStatefulWidget {
-  const StartPlantingSeasonScreen({super.key});
+  const StartPlantingSeasonScreen({
+    super.key,
+    this.farmId,
+    this.setupFlow = false,
+    this.returnTo,
+  });
+
+  final int? farmId;
+  final bool setupFlow;
+  final String? returnTo;
 
   @override
   ConsumerState<StartPlantingSeasonScreen> createState() =>
@@ -59,7 +68,7 @@ class _StartPlantingSeasonScreenState
         isLoadingFarms = false;
 
         if (result.isNotEmpty) {
-          selectedFarm = result.first;
+          selectedFarm = _preferredFarm(result);
         }
       });
     } catch (error) {
@@ -114,10 +123,14 @@ class _StartPlantingSeasonScreenState
 
       final service = CropSeasonApiService(apiClient);
 
-      await service.createCropSeason(
+      final cropSeason = await service.createCropSeason(
         farmId: selectedFarm!.id,
         plannedPlantingDate: _formatApiDate(selectedDate),
-        status: 'planned',
+        plantingDate: _formatApiDate(selectedDate),
+        estimatedHarvestDate: _formatApiDate(
+          selectedDate.add(const Duration(days: 109)),
+        ),
+        status: 'active',
       );
 
       if (!mounted) {
@@ -132,7 +145,15 @@ class _StartPlantingSeasonScreenState
         ),
       );
 
-      context.go('/land/timeline');
+      if (widget.returnTo != null && widget.returnTo!.trim().isNotEmpty) {
+        context.go(widget.returnTo!);
+      } else if (widget.setupFlow) {
+        context.go(
+          '/fertilizer?farmId=${selectedFarm!.id}&cropSeasonId=${cropSeason.id}&flow=setup',
+        );
+      } else {
+        context.go('/land/timeline?cropSeasonId=${cropSeason.id}');
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -157,6 +178,17 @@ class _StartPlantingSeasonScreenState
     final day = date.day.toString().padLeft(2, '0');
 
     return '${date.year}-$month-$day';
+  }
+
+  FarmModel _preferredFarm(List<FarmModel> result) {
+    if (widget.farmId == null) {
+      return result.first;
+    }
+
+    return result.firstWhere(
+      (farm) => farm.id == widget.farmId,
+      orElse: () => result.first,
+    );
   }
 
   String _formatDate(DateTime date) {
@@ -188,7 +220,13 @@ class _StartPlantingSeasonScreenState
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            context.go('/home');
+            if (widget.returnTo != null && widget.returnTo!.trim().isNotEmpty) {
+              context.go(widget.returnTo!);
+            } else if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
           },
           icon: const Icon(
             Icons.arrow_back_rounded,
@@ -373,7 +411,8 @@ class _StartPlantingSeasonScreenState
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Setelah dimulai, Anda bisa mencatat kegiatan seperti pemupukan, penyemprotan, dan panen.',
+                      'Setelah dimulai, alur akan lanjut ke rekomendasi pupuk, '
+                      'catatan panen, kalender tanam, lalu peta.',
                       style: TextStyle(
                         color: Color(0xFF5B4808),
                         fontSize: 14,

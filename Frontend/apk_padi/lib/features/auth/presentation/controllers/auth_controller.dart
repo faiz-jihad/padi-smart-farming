@@ -75,7 +75,9 @@ class AuthController extends ChangeNotifier {
       final user = await _repository.me();
       _setState(AuthState.authenticated(user));
     } catch (error) {
-      await _tokenStorage.clearToken();
+      if (_isInvalidSessionError(error)) {
+        await _tokenStorage.clearToken();
+      }
       _setState(AuthState.unauthenticated(message: _messageFromError(error)));
     }
   }
@@ -219,6 +221,11 @@ class AuthController extends ChangeNotifier {
 
   String _messageFromError(Object error) {
     return error is ApiException ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
+  }
+
+  bool _isInvalidSessionError(Object error) {
+    return error is ApiException &&
+        (error.statusCode == 401 || error.statusCode == 403);
   }
 
   void _setState(AuthState state) {

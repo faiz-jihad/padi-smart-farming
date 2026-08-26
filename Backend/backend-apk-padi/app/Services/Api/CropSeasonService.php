@@ -12,7 +12,9 @@ class CropSeasonService
     {
         return CropSeason::query()
             ->whereHas('farm', function ($query) use ($user): void {
-                $query->where('farmer_user_id', $user->id);
+                if (! $user->hasRole('admin')) {
+                    $query->where('farmer_user_id', $user->id);
+                }
             })
             ->latest('id')
             ->get();

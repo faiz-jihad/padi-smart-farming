@@ -16,6 +16,7 @@ class FarmModel {
     this.regencyId,
     this.districtId,
     this.villageId,
+    this.boundaryCoordinates = const [],
     this.province,
     this.regency,
     this.district,
@@ -24,31 +25,42 @@ class FarmModel {
 
   factory FarmModel.fromJson(Map<String, dynamic> json) {
     return FarmModel(
-      id: json['id'] as int,
-      farmerUserId: json['farmer_user_id'] as int? ?? 0,
-      name: json['name'] as String? ?? '',
-      areaHa: (json['area_ha'] as num?)?.toDouble() ?? 0.0,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      irrigationType: json['irrigation_type'] as String? ?? 'irrigated',
-      irrigationNotes: json['irrigation_notes'] as String?,
-      soilType: json['soil_type'] as String?,
-      status: json['status'] as String? ?? 'active',
-      provinceId: json['province_id'] as int?,
-      regencyId: json['regency_id'] as int?,
-      districtId: json['district_id'] as int?,
-      villageId: json['village_id'] as int?,
-      province: json['province'] != null
-          ? ProvinceModel.fromJson(json['province'] as Map<String, dynamic>)
+      id: _toInt(json['id']),
+      farmerUserId: _toInt(json['farmer_user_id']),
+      name: json['name']?.toString() ?? '',
+      areaHa: _toDouble(json['area_ha']),
+      latitude: _toDouble(json['latitude']),
+      longitude: _toDouble(json['longitude']),
+      irrigationType: json['irrigation_type']?.toString() ?? 'irrigated',
+      irrigationNotes: json['irrigation_notes']?.toString(),
+      soilType: json['soil_type']?.toString(),
+      status: json['status']?.toString() ?? 'active',
+      provinceId: _toNullableInt(json['province_id']),
+      regencyId: _toNullableInt(json['regency_id']),
+      districtId: _toNullableInt(json['district_id']),
+      villageId: _toNullableInt(json['village_id']),
+      boundaryCoordinates: _parseBoundaryCoordinates(
+        json['boundary_coordinates'],
+      ),
+      province: json['province'] is Map
+          ? ProvinceModel.fromJson(
+              Map<String, dynamic>.from(json['province'] as Map),
+            )
           : null,
-      regency: json['regency'] != null
-          ? RegencyModel.fromJson(json['regency'] as Map<String, dynamic>)
+      regency: json['regency'] is Map
+          ? RegencyModel.fromJson(
+              Map<String, dynamic>.from(json['regency'] as Map),
+            )
           : null,
-      district: json['district'] != null
-          ? DistrictModel.fromJson(json['district'] as Map<String, dynamic>)
+      district: json['district'] is Map
+          ? DistrictModel.fromJson(
+              Map<String, dynamic>.from(json['district'] as Map),
+            )
           : null,
-      village: json['village'] != null
-          ? VillageModel.fromJson(json['village'] as Map<String, dynamic>)
+      village: json['village'] is Map
+          ? VillageModel.fromJson(
+              Map<String, dynamic>.from(json['village'] as Map),
+            )
           : null,
     );
   }
@@ -67,6 +79,7 @@ class FarmModel {
   final int? regencyId;
   final int? districtId;
   final int? villageId;
+  final List<FarmBoundaryPoint> boundaryCoordinates;
   final ProvinceModel? province;
   final RegencyModel? regency;
   final DistrictModel? district;
@@ -80,4 +93,68 @@ class FarmModel {
     ];
     return parts.isEmpty ? 'Lokasi belum terdata' : parts.join(', ');
   }
+
+  static List<FarmBoundaryPoint> _parseBoundaryCoordinates(Object? value) {
+    if (value is! List) {
+      return const [];
+    }
+
+    return value
+        .whereType<Map>()
+        .map(
+          (e) => FarmBoundaryPoint.fromJson(
+            Map<String, dynamic>.from(e),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  static double _toDouble(Object? value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    if (value is String) {
+      return double.tryParse(value.trim().replaceAll(',', '.')) ?? 0.0;
+    }
+
+    return 0.0;
+  }
+
+  static int _toInt(Object? value) {
+    return _toNullableInt(value) ?? 0;
+  }
+
+  static int? _toNullableInt(Object? value) {
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    if (value is String) {
+      return int.tryParse(value.trim());
+    }
+
+    return null;
+  }
+}
+
+class FarmBoundaryPoint {
+  const FarmBoundaryPoint({
+    required this.lat,
+    required this.lng,
+  });
+
+  factory FarmBoundaryPoint.fromJson(Map<String, dynamic> json) {
+    return FarmBoundaryPoint(
+      lat: FarmModel._toDouble(json['lat'] ?? json['latitude']),
+      lng: FarmModel._toDouble(json['lng'] ?? json['longitude']),
+    );
+  }
+
+  final double lat;
+  final double lng;
 }

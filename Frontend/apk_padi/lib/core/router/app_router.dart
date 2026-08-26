@@ -1,24 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:go_router/go_router.dart';
 
-import 'package:padi/core/network/api_client.dart';
-import 'package:padi/core/storage/token_storage.dart';
+import 'package:padi/core/providers/app_providers.dart';
 
-import 'package:padi/features/admin/data/models/admin_overview.dart';
-import 'package:padi/features/admin/data/services/admin_api_service.dart';
 import 'package:padi/features/admin/presentation/screens/admin_overview_screen.dart';
 
-import 'package:padi/features/auth/data/repositories/auth_repository_impl.dart';
-import 'package:padi/features/auth/data/services/auth_api_service.dart';
-import 'package:padi/features/auth/domain/repositories/auth_repository.dart';
-import 'package:padi/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:padi/features/auth/presentation/screens/change_password_screen.dart';
 import 'package:padi/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:padi/features/auth/presentation/screens/language_selection_screen.dart';
 import 'package:padi/features/auth/presentation/screens/login_screen.dart';
 import 'package:padi/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:padi/features/auth/presentation/screens/profile_screen.dart';
@@ -26,6 +16,8 @@ import 'package:padi/features/auth/presentation/screens/register_screen.dart';
 import 'package:padi/features/auth/presentation/screens/splash_screen.dart';
 
 import 'package:padi/features/home/presentation/screens/home_screen.dart';
+import 'package:padi/features/home/presentation/widgets/home_bottom_navigation.dart';
+import 'package:padi/features/notifications/presentation/screens/notification_screen.dart';
 import 'package:padi/features/community_alert/presentation/screens/community_alert_screen.dart';
 import 'package:padi/features/community_alert/presentation/screens/report_condition_screen.dart';
 import 'package:padi/features/cultivation/presentation/screens/add_activity_screen.dart';
@@ -46,63 +38,77 @@ import 'package:padi/features/plant_check/presentation/screens/plant_check_scree
 import 'package:padi/features/planting_calendar/presentation/screens/planting_calendar_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/create_market_offer_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/market_offers_screen.dart';
+import 'package:padi/features/event/data/models/event_model.dart';
+import 'package:padi/features/event/data/providers/event_providers.dart';
+import 'package:padi/features/event/presentation/screens/create_event_screen.dart';
+import 'package:padi/features/event/presentation/screens/event_detail_screen.dart';
+import 'package:padi/features/event/presentation/screens/event_list_screen.dart';
 
-final tokenStorageProvider = Provider<TokenStorage>(
-  (ref) => const SecureTokenStorage(),
-);
-
-final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(ref.read(tokenStorageProvider));
-});
-
-final authApiServiceProvider = Provider<AuthApiService>(
-  (ref) => AuthApiService(ref.read(apiClientProvider)),
-);
-
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepositoryImpl(ref.read(authApiServiceProvider)),
-);
-
-final adminApiServiceProvider = Provider<AdminApiService>(
-  (ref) => AdminApiService(ref.read(apiClientProvider)),
-);
-
-final adminOverviewProvider = FutureProvider.autoDispose<AdminOverview>(
-  (ref) => ref.read(adminApiServiceProvider).fetchOverview(),
-);
-
-final adminUsersProvider = FutureProvider.autoDispose<List<AdminUserPreview>>(
-  (ref) => ref.read(adminApiServiceProvider).fetchUsers(),
-);
-
-final adminBroadcastsProvider =
-    FutureProvider.autoDispose<List<AdminBroadcastPreview>>(
-      (ref) => ref.read(adminApiServiceProvider).fetchBroadcasts(),
-    );
-
-final adminAuditLogsProvider =
-    FutureProvider.autoDispose<List<AdminAuditLogPreview>>(
-      (ref) => ref.read(adminApiServiceProvider).fetchAuditLogs(),
-    );
-
-final authControllerProvider = ChangeNotifierProvider<AuthController>((ref) {
-  final controller = AuthController(
-    ref.read(authRepositoryProvider),
-    ref.read(tokenStorageProvider),
-  );
-
-  unawaited(controller.restoreSession());
-
-  return controller;
-});
+export 'package:padi/core/providers/app_providers.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authControllerProvider);
+  final auth = ref.read(authControllerProvider);
 
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: auth,
+    errorBuilder: (context, state) => Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text('P.A.D.I. Navigasi'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFECFDF5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.navigation_rounded, size: 44, color: Color(0xFF059669)),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Halaman Tidak Ditemukan',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Rute ${state.uri} sedang dialihkan.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => context.go('/home'),
+                icon: const Icon(Icons.home_rounded),
+                label: const Text('Kembali ke Beranda'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF059669),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
     routes: [
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => '/home',
+      ),
+      GoRoute(
+        path: '/timeline',
+        redirect: (context, state) => '/land/timeline',
+      ),
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
@@ -120,26 +126,48 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/home',
+        builder: (context, state) =>
+            const _MainTabScaffold(currentIndex: 0, child: HomeScreen()),
+      ),
       GoRoute(
         path: '/admin',
         builder: (context, state) => const AdminOverviewScreen(),
       ),
       GoRoute(
         path: '/plant-check',
-        builder: (context, state) => const PlantCheckScreen(),
-      ),
-      GoRoute(
-        path: '/farms',
-        builder: (context, state) => const FarmListScreen(),
+        builder: (context, state) =>
+            const _MainTabScaffold(currentIndex: 2, child: PlantCheckScreen()),
       ),
       GoRoute(
         path: '/farms/add',
-        builder: (context, state) => const AddFarmScreen(),
+        builder: (context, state) {
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
+
+          return AddFarmScreen(setupFlow: setupFlow);
+        },
+      ),
+      GoRoute(
+        path: '/farms',
+        builder: (context, state) =>
+            const _MainTabScaffold(currentIndex: 1, child: FarmListScreen()),
       ),
       GoRoute(
         path: '/land/season/start',
-        builder: (context, state) => const StartPlantingSeasonScreen(),
+        builder: (context, state) {
+          final farmId = int.tryParse(
+            state.uri.queryParameters['farmId'] ?? '',
+          );
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
+          final returnTo = state.uri.queryParameters['returnTo'];
+
+          return StartPlantingSeasonScreen(
+            farmId: farmId,
+            setupFlow: setupFlow,
+            returnTo: returnTo,
+          );
+        },
       ),
       GoRoute(
         path: '/land/timeline',
@@ -163,12 +191,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/fertilizer',
-        builder: (context, state) => const FertilizerCalculatorScreen(),
+        builder: (context, state) {
+          final farmId = int.tryParse(
+            state.uri.queryParameters['farmId'] ?? '',
+          );
+          final cropSeasonId = int.tryParse(
+            state.uri.queryParameters['cropSeasonId'] ?? '',
+          );
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
+
+          return FertilizerCalculatorScreen(
+            farmId: farmId,
+            cropSeasonId: cropSeasonId,
+            setupFlow: setupFlow,
+          );
+        },
       ),
       GoRoute(
         path: '/planting-calendar',
         builder: (context, state) {
-          return const PlantingCalendarScreen();
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
+
+          return PlantingCalendarScreen(setupFlow: setupFlow);
         },
       ),
       GoRoute(
@@ -185,19 +229,58 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/harvest/add',
-        builder: (context, state) => const AddHarvestScreen(),
+        builder: (context, state) {
+          final farmId = int.tryParse(
+            state.uri.queryParameters['farmId'] ?? '',
+          );
+          final cropSeasonId = int.tryParse(
+            state.uri.queryParameters['cropSeasonId'] ?? '',
+          );
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
+
+          return AddHarvestScreen(
+            farmId: farmId,
+            cropSeasonId: cropSeasonId,
+            setupFlow: setupFlow,
+          );
+        },
       ),
       GoRoute(
         path: '/planting-calendar/:farmId',
         builder: (context, state) {
           final farmId = int.tryParse(state.pathParameters['farmId'] ?? '');
+          final setupFlow = state.uri.queryParameters['flow'] == 'setup';
 
           if (farmId == null) {
-            return const PlantingCalendarScreen();
+            return PlantingCalendarScreen(setupFlow: setupFlow);
           }
 
-          return PlantingCalendarScreen(farmId: farmId);
+          return PlantingCalendarScreen(farmId: farmId, setupFlow: setupFlow);
         },
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: '/notification',
+        redirect: (context, state) => '/notifications',
+      ),
+      GoRoute(
+        path: '/notif',
+        redirect: (context, state) => '/notifications',
+      ),
+      GoRoute(
+        path: '/notifikasi',
+        redirect: (context, state) => '/notifications',
+      ),
+      GoRoute(
+        path: '/radar',
+        redirect: (context, state) => '/community-alert',
+      ),
+      GoRoute(
+        path: '/alerts',
+        redirect: (context, state) => '/community-alert',
       ),
       GoRoute(
         path: '/community-alert',
@@ -216,7 +299,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/marketplace',
         builder: (context, state) {
-          return const MarketplaceScreen();
+          return const _MainTabScaffold(
+            currentIndex: 3,
+            child: MarketplaceScreen(),
+          );
         },
       ),
 
@@ -228,58 +314,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: '/marketplace/offers',
+        builder: (context, state) {
+          return const MarketOffersScreen();
+        },
+      ),
+
+      GoRoute(
         path: '/marketplace/:id/offers',
         builder: (context, state) {
-          final listingId = int.tryParse(
-            state.pathParameters['id'] ?? '',
-          );
+          final listingId = int.tryParse(state.pathParameters['id'] ?? '');
 
           if (listingId == null) {
             return const Scaffold(
-              body: Center(
-                child: Text(
-                  'Data hasil panen tidak valid.',
-                ),
-              ),
+              body: Center(child: Text('Data hasil panen tidak valid.')),
             );
           }
 
-          return MarketOffersScreen(
-            listingId: listingId,
-          );
+          return MarketOffersScreen(listingId: listingId);
         },
       ),
 
       GoRoute(
         path: '/marketplace/:id/offer',
         builder: (context, state) {
-          final listingId = int.tryParse(
-            state.pathParameters['id'] ?? '',
-          );
+          final listingId = int.tryParse(state.pathParameters['id'] ?? '');
 
-          final extra =
-              state.extra as Map<String, dynamic>?;
+          final extra = state.extra as Map<String, dynamic>?;
 
           if (listingId == null || extra == null) {
             return const Scaffold(
-              body: Center(
-                child: Text(
-                  'Data listing tidak valid.',
-                ),
-              ),
+              body: Center(child: Text('Data listing tidak valid.')),
             );
           }
 
           return CreateMarketOfferScreen(
             listingId: listingId,
-            commodity:
-                extra['commodity']?.toString() ?? '',
-            unit:
-                extra['unit']?.toString() ?? 'kg',
-            maxQuantity:
-                (extra['quantity'] as num?)?.toDouble() ?? 0,
-            referencePrice:
-                (extra['pricePerUnit'] as num?)?.toDouble() ?? 0,
+            commodity: extra['commodity']?.toString() ?? '',
+            unit: extra['unit']?.toString() ?? 'kg',
+            maxQuantity: (extra['quantity'] as num?)?.toDouble() ?? 0,
+            referencePrice: (extra['pricePerUnit'] as num?)?.toDouble() ?? 0,
           );
         },
       ),
@@ -287,30 +361,91 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/marketplace/:id',
         builder: (context, state) {
-          final id = int.tryParse(
-            state.pathParameters['id'] ?? '',
-          );
+          final id = int.tryParse(state.pathParameters['id'] ?? '');
 
           if (id == null) {
             return const MarketplaceScreen();
           }
 
-          return MarketListingDetailScreen(
-            listingId: id,
-          );
+          return MarketListingDetailScreen(listingId: id);
         },
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        builder: (context, state) =>
+            const _MainTabScaffold(currentIndex: 4, child: ProfileScreen()),
+      ),
+      GoRoute(
+        path: '/profile/language',
+        builder: (context, state) => const LanguageSelectionScreen(),
+      ),
+      GoRoute(
+        path: '/language-selection',
+        builder: (context, state) => const LanguageSelectionScreen(),
       ),
       GoRoute(
         path: '/profile/password',
         builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
         path: '/map/calendar',
         builder: (context, state) => const PlantingCalendarMapPage(),
+      ),
+      GoRoute(
+        path: '/events',
+        builder: (context, state) => const EventListScreen(),
+      ),
+      GoRoute(
+        path: '/events/detail',
+        builder: (context, state) {
+          final event = state.extra as EventModel?;
+          if (event != null) {
+            return EventDetailScreen(event: event);
+          }
+          final events = ref.read(eventsProvider);
+          if (events.isNotEmpty) {
+            return EventDetailScreen(event: events.first);
+          }
+          return const EventListScreen();
+        },
+      ),
+      GoRoute(
+        path: '/events/:id',
+        builder: (context, state) {
+          final extraEvent = state.extra as EventModel?;
+          if (extraEvent != null) {
+            return EventDetailScreen(event: extraEvent);
+          }
+          final id = int.tryParse(state.pathParameters['id'] ?? '');
+          final events = ref.read(eventsProvider);
+          final event = events.firstWhere(
+            (e) => e.id == id,
+            orElse: () => events.isNotEmpty
+                ? events.first
+                : EventModel(
+                    id: id ?? 1,
+                    title: 'Acara Pertanian P.A.D.I.',
+                    description: 'Informasi dan agenda pelatihan pertanian.',
+                    category: 'workshop',
+                    eventDate: DateTime.now().add(const Duration(days: 3)),
+                    eventTime: '08:30 - 12:00 WIB',
+                    locationName: 'Balai Pertanian Indramayu',
+                    organizer: 'Dinas Pertanian',
+                    quota: 50,
+                    registeredCount: 20,
+                    assetImage: 'assets/images/onboarding_1.jpeg',
+                  ),
+          );
+          return EventDetailScreen(event: event);
+        },
+      ),
+      GoRoute(
+        path: '/events/create',
+        builder: (context, state) => const CreateEventScreen(),
       ),
     ],
     redirect: (context, state) {
@@ -326,7 +461,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (auth.isAuthenticated) {
-        if (location == '/splash' || location == '/onboarding' || isAuthRoute) {
+        if (location == '/register') {
+          return auth.state.user?.role == 'farmer'
+              ? '/farms/add?flow=setup'
+              : '/home';
+        }
+
+        if (location == '/splash' ||
+            location == '/onboarding' ||
+            location == '/login' ||
+            location == '/forgot-password') {
           return '/home';
         }
 
@@ -353,3 +497,48 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+class _MainTabScaffold extends StatelessWidget {
+  const _MainTabScaffold({required this.currentIndex, required this.child});
+
+  static const double _navReservedHeight = 106;
+
+  final int currentIndex;
+  final Widget child;
+
+  void _onTabSelected(BuildContext context, int index) {
+    final route = switch (index) {
+      0 => '/home',
+      1 => '/farms',
+      2 => '/plant-check',
+      3 => '/marketplace',
+      4 => '/profile',
+      _ => '/home',
+    };
+
+    if (index == currentIndex) return;
+
+    context.go(route);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      body: Stack(
+        children: [
+          Positioned.fill(bottom: _navReservedHeight, child: child),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: HomeBottomNavigation(
+              currentIndex: currentIndex,
+              onTap: (index) => _onTabSelected(context, index),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

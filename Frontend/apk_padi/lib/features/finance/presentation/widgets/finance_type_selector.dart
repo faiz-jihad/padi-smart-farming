@@ -57,7 +57,7 @@ class _TypeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? color.withValues(alpha: 0.10) : Colors.white,
+      color: selected ? color.withOpacity(0.10) : Colors.white,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -72,7 +72,7 @@ class _TypeCard extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? color
-                  : Colors.black.withValues(alpha: 0.06),
+                  : Colors.black.withOpacity(0.06),
               width: selected ? 1.5 : 1,
             ),
           ),

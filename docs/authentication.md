@@ -89,10 +89,14 @@ Lokasi project:
 ```bash
 cd Frontend/apk_padi
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
+flutter run
 ```
 
-Gunakan `10.0.2.2` untuk emulator Android saat Laravel berjalan di komputer pengembang.
+Default Flutter otomatis memakai `http://10.0.2.2:8000/api/v1` untuk emulator Android dan `http://localhost:8000/api/v1` untuk web/desktop. Jika backend berjalan di host lain, gunakan:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://IP-BACKEND:8000/api/v1
+```
 
 Pada Windows, `flutter_secure_storage` membutuhkan symlink plugin. Aktifkan Developer Mode bila `flutter pub get` menampilkan pesan:
 

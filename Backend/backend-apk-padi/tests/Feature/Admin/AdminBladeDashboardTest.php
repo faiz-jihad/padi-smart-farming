@@ -146,7 +146,7 @@ class AdminBladeDashboardTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Dashboard')
-            ->assertSee('Pantau kondisi operasional dan aktivitas terbaru P.A.D.I.')
+            ->assertSee('Dashboard Operasional P.A.D.I.')
             ->assertDontSee('Dashboard Admin P.A.D.I.')
             ->assertSee('Admin Demo')
             ->assertSee('Total Pengguna')
@@ -188,9 +188,9 @@ class AdminBladeDashboardTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Radar Ancaman Bencana Pertanian')
+            ->assertSee('Radar Ancaman Bencana')
             ->assertSee('Potensi Banjir & Curah Hujan')
             ->assertSee('Ancaman Ledakan Hama Wereng')
-            ->assertSee('Rekomendasi:');
+            ->assertSee('Prosedur Standar Operasional');
     }
 }

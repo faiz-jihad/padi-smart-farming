@@ -8,6 +8,7 @@ use App\Models\Harvest;
 use App\Models\MarketListing;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 
 class MarketListingService
 {
@@ -55,10 +56,13 @@ class MarketListingService
             }
         }
 
+        $listingData = $this->prepareListingData($data);
+
         $listing = MarketListing::query()->create([
-            ...$data,
+            ...$listingData,
             'farmer_id' => $user->id,
-            'status' => 'draft',
+            'status' => 'published',
+            'published_at' => now(),
         ]);
 
         return $listing->load([
@@ -75,7 +79,7 @@ class MarketListingService
         User $user,
         MarketListing $listing
     ): MarketListing {
-        $this->authorizeListing($user, $listing);
+        $this->authorizeListing($user, $listing, allowPublicListing: true);
 
         return $listing->load([
             'farmer',
@@ -115,7 +119,7 @@ class MarketListingService
             }
         }
 
-        $listing->update($data);
+        $listing->update($this->prepareListingData($data));
 
         return $listing->load([
             'farmer',
@@ -178,10 +182,36 @@ class MarketListingService
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function prepareListingData(array $data): array
+    {
+        if (($data['image'] ?? null) instanceof UploadedFile) {
+            $data['image_url'] = $data['image']->store(
+                'marketplace',
+                'public'
+            );
+        }
+
+        unset($data['image']);
+
+        return $data;
+    }
+
     private function authorizeListing(
         User $user,
-        MarketListing $listing
+        MarketListing $listing,
+        bool $allowPublicListing = false
     ): void {
+        if (
+            $allowPublicListing
+            && in_array($listing->status, ['published', 'sold'], true)
+        ) {
+            return;
+        }
+
         if (
             ! $user->hasRole('admin')
             && $listing->farmer_id !== $user->id

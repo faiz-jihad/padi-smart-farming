@@ -19,9 +19,9 @@ class CropSeasonModel {
 
   factory CropSeasonModel.fromJson(Map<String, dynamic> json) {
     return CropSeasonModel(
-      id: (json['id'] as num).toInt(),
-      farmId: (json['farm_id'] as num).toInt(),
-      varietyId: (json['variety_id'] as num?)?.toInt(),
+      id: _toInt(json['id']),
+      farmId: _toInt(json['farm_id']),
+      varietyId: _toNullableInt(json['variety_id']),
       plannedPlantingDate:
           json['planned_planting_date']?.toString(),
       plantingDate: json['planting_date']?.toString(),
@@ -85,4 +85,17 @@ class CropSeasonModel {
 
     return difference + 1;
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+int? _toNullableInt(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim());
+  return null;
 }

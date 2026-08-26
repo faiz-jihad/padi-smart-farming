@@ -25,7 +25,9 @@ class FarmController extends Controller
         $user = $request->user();
 
         $farms = Farm::query()
-            ->where('farmer_user_id', $user->id)
+            ->when(! $user->hasRole('admin'), function ($query) use ($user): void {
+                $query->where('farmer_user_id', $user->id);
+            })
             ->with(['province', 'regency', 'district', 'village'])
             ->latest('id')
             ->get();

@@ -773,8 +773,8 @@
 </div>
 
 {{-- Initial Dashboard State for Interactive Client Engine --}}
-<script>
-    window.dashboardData = @json([
+@php
+    $dashboardDataPayload = [
         'farmsForMap' => $farmsForMap,
         'hourlyTelemetry' => $hourlyTelemetry,
         'monthlyTrends' => $monthlyTrends,
@@ -782,7 +782,10 @@
         'liveWeather' => $liveWeather,
         'disasterThreats' => $disasterThreats,
         'disasterSummary' => $disasterSummary,
-    ]);
+    ];
+@endphp
+<script>
+    window.dashboardData = @js($dashboardDataPayload);
 </script>
 
 {{-- Interactive Client Scripts --}}

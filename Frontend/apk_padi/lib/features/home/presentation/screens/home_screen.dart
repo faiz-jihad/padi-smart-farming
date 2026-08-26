@@ -1,13 +1,273 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/features/auth/presentation/controllers/auth_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:padi/core/localization/app_language.dart';
+import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/features/cultivation/data/models/crop_season_model.dart';
+import 'package:padi/features/farm/data/models/farm_model.dart';
+import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
+import 'package:padi/features/home/presentation/widgets/community_alert_card.dart';
+import 'package:padi/features/home/presentation/widgets/crop_journey_card.dart';
+import 'package:padi/features/home/presentation/widgets/farm_hero_card.dart';
+import 'package:padi/features/home/presentation/widgets/harvest_marketplace_cta.dart';
+import 'package:padi/features/home/presentation/widgets/home_header.dart';
+import 'package:padi/features/home/presentation/widgets/home_skeleton.dart';
+import 'package:padi/features/home/presentation/widgets/market_price_card.dart';
+import 'package:padi/features/home/presentation/widgets/quick_action_grid.dart';
+import 'package:padi/features/home/presentation/widgets/smart_insight_card.dart';
+import 'package:padi/features/home/presentation/widgets/today_activity_section.dart';
+import 'package:padi/features/home/presentation/widgets/upcoming_events_banner.dart';
+import 'package:padi/features/home/presentation/widgets/weather_card.dart';
 
-const Color primaryGreen = Color(0xFF075C3D);
-const Color backgroundColor = Color(0xFFF7F9F4);
-const Color textDark = Color(0xFF183D2D);
-const Color yellow = Color(0xFFF2C94C);
+// --- Global Data Provider for Smart Home Dashboard ---
+final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((ref) async {
+  final apiClient = ref.read(apiClientProvider);
 
+  dynamic farmsResponse;
+  dynamic seasonsResponse;
+  dynamic activitiesResponse;
+  dynamic reportsResponse;
+  dynamic listingsResponse;
+
+  try {
+    final res = await apiClient.dio.get('/farms');
+    farmsResponse = res.data;
+  } catch (_) {}
+
+  try {
+    final res = await apiClient.dio.get('/crop-seasons');
+    seasonsResponse = res.data;
+  } catch (_) {}
+
+  try {
+    final res = await apiClient.dio.get('/farm-activities');
+    activitiesResponse = res.data;
+  } catch (_) {}
+
+  try {
+    final res = await apiClient.dio.get('/community-reports');
+    reportsResponse = res.data;
+  } catch (_) {}
+
+  try {
+    final res = await apiClient.dio.get('/market-listings');
+    listingsResponse = res.data;
+  } catch (_) {}
+
+  final farms = _parseFarms(farmsResponse);
+  final seasons = _parseSeasons(seasonsResponse);
+  final activities = _parseActivities(activitiesResponse);
+  final alertData = _parseLatestAlert(reportsResponse);
+  final marketPrices = _parseMarketPrices(listingsResponse);
+
+  return _HomeDashboardData(
+    farms: farms,
+    seasons: seasons,
+    activities: activities,
+    alertTitle: alertData.$1,
+    alertSubtitle: alertData.$2,
+    alertSeverity: alertData.$3,
+    gkpPrice: marketPrices.$1,
+    gkgPrice: marketPrices.$2,
+  );
+});
+
+List<FarmModel> _parseFarms(dynamic response) {
+  if (response is! Map) return const [];
+  final data = response['data'];
+  if (data is! List) return const [];
+
+  return data
+      .whereType<Map>()
+      .map((item) => FarmModel.fromJson(Map<String, dynamic>.from(item)))
+      .toList();
+}
+
+List<CropSeasonModel> _parseSeasons(dynamic response) {
+  if (response is! Map) return const [];
+  final data = response['data'];
+  if (data is! Map) return const [];
+  final items = data['crop_seasons'];
+  if (items is! List) return const [];
+
+  return items
+      .whereType<Map>()
+      .map((item) => CropSeasonModel.fromJson(Map<String, dynamic>.from(item)))
+      .toList();
+}
+
+CropSeasonModel? _selectCurrentSeason(List<CropSeasonModel> seasons) {
+  if (seasons.isEmpty) return null;
+
+  final today = DateTime.now();
+  final active = seasons.where((season) {
+    final status = season.status?.toLowerCase();
+    if (status == 'completed' || status == 'cancelled') {
+      return false;
+    }
+
+    final start = season.startDate;
+    if (start == null) {
+      return status == 'active';
+    }
+
+    final harvest = _parseDate(season.estimatedHarvestDate) ??
+        start.add(const Duration(days: 109));
+
+    return !today.isBefore(start) &&
+        !today.isAfter(harvest.add(const Duration(days: 7)));
+  }).toList();
+
+  final candidates = active.isNotEmpty ? active : seasons;
+
+  candidates.sort((a, b) {
+    final aStart = a.startDate ?? DateTime(1900);
+    final bStart = b.startDate ?? DateTime(1900);
+    return bStart.compareTo(aStart);
+  });
+
+  return candidates.first;
+}
+
+bool _isNearHarvest(CropSeasonModel? season) {
+  if (season == null) return false;
+
+  final start = season.startDate;
+  if (start == null) return false;
+
+  final harvest = _parseDate(season.estimatedHarvestDate) ??
+      start.add(const Duration(days: 109));
+  final today = DateTime.now();
+  final daysUntilHarvest = harvest.difference(today).inDays;
+
+  return daysUntilHarvest <= 21 && daysUntilHarvest >= -7;
+}
+
+DateTime? _parseDate(String? value) {
+  if (value == null || value.trim().isEmpty) return null;
+  return DateTime.tryParse(value.trim());
+}
+
+List<dynamic> _parseActivities(dynamic response) {
+  if (response is! Map) return const [];
+  final data = response['data'];
+  if (data is List) return data;
+  return const [];
+}
+
+(String, String, AlertSeverity) _parseLatestAlert(dynamic response) {
+  if (response is Map &&
+      response['data'] is List &&
+      (response['data'] as List).isNotEmpty) {
+    final first = (response['data'] as List).first;
+    if (first is Map) {
+      final pestName = first['pest_name']?.toString() ??
+          first['title']?.toString() ??
+          'Wereng Batang Cokelat';
+      final location = first['location_name']?.toString() ??
+          first['village_name']?.toString() ??
+          'Kecamatan Tetangga';
+      final severityStr = first['severity']?.toString().toLowerCase() ?? '';
+
+      final severity =
+          severityStr.contains('high') || severityStr.contains('critical')
+          ? AlertSeverity.high
+          : severityStr.contains('low')
+              ? AlertSeverity.low
+              : AlertSeverity.medium;
+
+      return (
+        '$pestName Terdeteksi',
+        'Laporan terkonfirmasi di sekitar $location.',
+        severity,
+      );
+    }
+  }
+
+  return (
+    'Wereng Batang Cokelat Terdeteksi',
+    '3 laporan terkonfirmasi dari kelompok tani tetangga dalam 24 jam.',
+    AlertSeverity.medium,
+  );
+}
+
+(String, String) _parseMarketPrices(dynamic response) {
+  final currencyFmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+  if (response is Map) {
+    final list = _extractMarketItems(response).whereType<Map>().toList();
+    if (list.isNotEmpty) {
+      double totalGkp = 0;
+      int countGkp = 0;
+      for (final item in list) {
+        final price =
+            double.tryParse(item['price_per_unit']?.toString() ?? '0') ?? 0;
+        if (price > 1000) {
+          totalGkp += price;
+          countGkp++;
+        }
+      }
+      if (countGkp > 0) {
+        final avgGkp = totalGkp / countGkp;
+        final avgGkg = avgGkp * 1.09;
+        return (currencyFmt.format(avgGkp.round()), currencyFmt.format(avgGkg.round()));
+      }
+    }
+  }
+
+  return ('Rp 6.800', 'Rp 7.400');
+}
+
+List<dynamic> _extractMarketItems(Map<dynamic, dynamic> response) {
+  final data = response['data'];
+
+  if (data is List) {
+    return data;
+  }
+
+  if (data is Map) {
+    for (final key in ['data', 'market_listings', 'listings', 'items']) {
+      final nested = data[key];
+      if (nested is List) {
+        return nested;
+      }
+    }
+  }
+
+  for (final key in ['market_listings', 'listings', 'items']) {
+    final nested = response[key];
+    if (nested is List) {
+      return nested;
+    }
+  }
+
+  return const [];
+}
+
+class _HomeDashboardData {
+  const _HomeDashboardData({
+    required this.farms,
+    required this.seasons,
+    required this.activities,
+    required this.alertTitle,
+    required this.alertSubtitle,
+    required this.alertSeverity,
+    required this.gkpPrice,
+    required this.gkgPrice,
+  });
+
+  final List<FarmModel> farms;
+  final List<CropSeasonModel> seasons;
+  final List<dynamic> activities;
+  final String alertTitle;
+  final String alertSubtitle;
+  final AlertSeverity alertSeverity;
+  final String gkpPrice;
+  final String gkgPrice;
+}
+
+// --- Main Home Screen ---
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -16,1013 +276,306 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 0;
+  int _selectedFarmIndex = 0;
 
-  void _handleNavigation(int index) {
-    if (index == 1) {
-      context.go('/farms');
-      return;
-    }
-    if (index == 2) {
-      context.go('/plant-check');
-      return;
-    }
-
-    if (index == 3) {
-      context.go('/marketplace');
-      return;
-    }
-
-    if (index == 4) {
-      context.go('/profile');
-      return;
-    }
-
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
-  void _openPlantCheck() {
-    context.go('/plant-check');
+  Future<void> _handleRefresh() async {
+    try {
+      await Future.wait([
+        ref.refresh(_homeDashboardProvider.future),
+        ref.read(authControllerProvider).restoreSession(),
+      ]);
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
+    final dashboardAsync = ref.watch(_homeDashboardProvider);
     final user = auth.state.user;
-
-    final userName = user?.name.trim().isNotEmpty == true
-        ? user!.name.trim()
-        : 'Petani';
+    final rawName = user?.name.trim();
+    final userName = rawName != null && rawName.isNotEmpty ? rawName : s.defaultUserName;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: HomeColors.background,
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
-          color: primaryGreen,
-          onRefresh: () async {
-            await ref.read(authControllerProvider).restoreSession();
-          },
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                sliver: SliverToBoxAdapter(
-                  child: _HomeHeader(name: userName, onNotificationTap: () {}),
+          color: HomeColors.primaryGreen,
+          backgroundColor: HomeColors.surface,
+          onRefresh: _handleRefresh,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 580),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                sliver: SliverToBoxAdapter(child: _WelcomeCard(name: userName)),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                sliver: SliverToBoxAdapter(
-                  child: _PlantCheckCard(onTap: _openPlantCheck),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: HomeSpacing.screenHorizontal,
+                  vertical: HomeSpacing.xs,
                 ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                sliver: const SliverToBoxAdapter(child: _SummaryCard()),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                sliver: const SliverToBoxAdapter(
-                  child: Text(
-                    'Yang ingin dilakukan?',
-                    style: TextStyle(
-                      color: textDark,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                sliver: SliverToBoxAdapter(
-                  child: _HomeMenu(
-                    onFarmTap: () {
-                      context.go('/farms');
-                    },
-                    onSeasonTap: () {
-                      context.push('/land/season/start');
-                    },
-                    onFertilizerTap: () {
-                      context.push('/fertilizer');
-                    },
-                    onHarvestTap: () {
-                      context.push('/harvest');
-                    },
-                    onCalendarTap: () {
-                      context.push('/planting-calendar');
-                    },
-                  ),
-                ),
-              ),
-
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                sliver: SliverToBoxAdapter(
-                  child: _CommunityAlertButton(
-                    onTap: () {
-                      context.push('/community-alert');
-                    },
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                sliver: SliverToBoxAdapter(
-                  child: _ReportConditionButton(
-                    onTap: () {
-                      context.push('/community-alert/report');
-                    },
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                sliver: const SliverToBoxAdapter(child: _HelpCard()),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _BottomNavigation(
-        currentIndex: _currentIndex,
-        onTap: _handleNavigation,
-        onCameraTap: _openPlantCheck,
-      ),
-    );
-  }
-}
-
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.name, required this.onNotificationTap});
-
-  final String name;
-  final VoidCallback onNotificationTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 62,
-          height: 62,
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Image.asset(
-            'assets/images/padi-logo.png',
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(
-                Icons.eco_rounded,
-                color: primaryGreen,
-                size: 38,
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'P.A.D.I.',
-                style: TextStyle(
-                  color: primaryGreen,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Halo, $name 👋',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF617068),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            onTap: onNotificationTap,
-            borderRadius: BorderRadius.circular(20),
-            child: const SizedBox(
-              width: 62,
-              height: 62,
-              child: Icon(
-                Icons.notifications_none_rounded,
-                color: primaryGreen,
-                size: 34,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WelcomeCard extends StatelessWidget {
-  const _WelcomeCard({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF5EF),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(
-              Icons.agriculture_rounded,
-              color: primaryGreen,
-              size: 34,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Selamat datang,',
-                  style: TextStyle(
-                    color: Color(0xFF69766F),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF123C2B),
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Mari rawat sawah bersama P.A.D.I.',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Color(0xFF617068), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PlantCheckCard extends StatelessWidget {
-  const _PlantCheckCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: primaryGreen,
-      borderRadius: BorderRadius.circular(26),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(26),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
                 children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: yellow,
-                      size: 32,
-                    ),
+                  // A. Top App Bar Header
+                  HomeHeader(
+                    name: userName,
+                    onNotificationTap: () => context.push('/notifications'),
                   ),
-                  const SizedBox(width: 15),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Periksa Kondisi Padi',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Foto daun padi untuk mengetahui kondisi tanaman.',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
+
+                  const SizedBox(height: HomeSpacing.md),
+
+                  // Dashboard Content with State Management
+                  dashboardAsync.when(
+                    data: (data) => _buildDashboardContent(data, s),
+                    loading: () => const HomeSkeleton(),
+                    error: (error, stack) => _buildErrorFallback(s),
                   ),
+
+                  const SizedBox(height: HomeSpacing.xxxl),
                 ],
               ),
-              const SizedBox(height: 17),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton.icon(
-                  onPressed: onTap,
-                  icon: const Icon(Icons.camera_alt_rounded, size: 23),
-                  label: const Text(
-                    'Periksa Padi',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: yellow,
-                    foregroundColor: textDark,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
-}
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard();
+  Widget _buildDashboardContent(_HomeDashboardData data, AppStrings s) {
+    final hasFarms = data.farms.isNotEmpty;
+    final farmIndex = _selectedFarmIndex.clamp(
+      0,
+      data.farms.isNotEmpty ? data.farms.length - 1 : 0,
+    );
+    final selectedFarm = hasFarms ? data.farms[farmIndex] : null;
 
-  @override
-  Widget build(BuildContext context) {
+    final activeSeason = _selectSeason(data.seasons, selectedFarm?.id);
+    final isNearHarvest = _isNearHarvest(activeSeason);
+
+    final districtName = selectedFarm?.district?.name;
+    final regencyName = selectedFarm?.regency?.name;
+    final weatherLocation = districtName != null && districtName.isNotEmpty
+        ? (regencyName != null && regencyName.isNotEmpty
+            ? '$districtName, $regencyName'
+            : districtName)
+        : (selectedFarm?.name.isNotEmpty == true
+            ? selectedFarm!.name
+            : 'Indramayu, Jawa Barat');
+
+    final farmName = selectedFarm?.name ?? 'Lahan';
+    final insightTitle = hasFarms
+        ? switch (s.lang) {
+            AppLanguage.id => 'Pemeriksaan Daun $farmName',
+            AppLanguage.jv => 'Priksa Godhong $farmName',
+            AppLanguage.en => 'Leaf Scan $farmName',
+          }
+        : switch (s.lang) {
+            AppLanguage.id => 'Mulai Pantau Kesehatan Tanaman',
+            AppLanguage.jv => 'Mulai Pantau Kasarasan Tanduran',
+            AppLanguage.en => 'Start Monitoring Crop Health',
+          };
+
+    final insightDesc = hasFarms
+        ? switch (s.lang) {
+            AppLanguage.id =>
+              'Perubahan kelembaban sore berpotensi memicu bercak daun pada $farmName. Lakukan foto sampel daun.',
+            AppLanguage.jv =>
+              'Owahan hawa sore isa marakake penyakit godhong. Foto godhong kanggo priksa.',
+            AppLanguage.en =>
+              'Humidity changes may trigger leaf spots. Take a leaf sample photo.',
+          }
+        : switch (s.lang) {
+            AppLanguage.id =>
+              'Ambil foto daun padi Anda untuk diagnosa instan berbasis kecerdasan buatan.',
+            AppLanguage.jv =>
+              'Jupuk foto godhong pari panjenengan kanggo priksa nganggo AI.',
+            AppLanguage.en =>
+              'Take a photo of your rice leaf for instant AI-powered crop diagnosis.',
+          };
+
+    final insightAction = switch (s.lang) {
+      AppLanguage.id => 'Periksa Tanaman Sekarang',
+      AppLanguage.jv => 'Priksa Tanduran Saiki',
+      AppLanguage.en => 'Check Crops Now',
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // B. Smart Farm Hero Overview Card
+        FarmHeroCard(
+          farms: data.farms,
+          seasons: data.seasons,
+          selectedIndex: farmIndex,
+          onFarmIndexChanged: (index) {
+            setState(() => _selectedFarmIndex = index);
+          },
+          onFarmTap: (farm) => context.go('/farms'),
+          onAddFarmTap: () => context.push('/farms/add'),
+        ),
+
+        const SizedBox(height: HomeSpacing.md),
+
+        // C. Smart Contextual Insight (Single Priority Attention)
+        SmartInsightCard(
+          title: insightTitle,
+          description: insightDesc,
+          actionLabel: insightAction,
+          onActionTap: () => context.push('/plant-check'),
+        ),
+
+        const SizedBox(height: HomeSpacing.md),
+
+        // D. Modern Weather & Agroklimat Card
+        WeatherCard(
+          locationName: weatherLocation,
+          onTapCalendar: () => context.push('/planting-calendar'),
+        ),
+
+        const SizedBox(height: HomeSpacing.lg),
+
+        // E. Curated Super-App Quick Actions Grid (8 Core Tools)
+        QuickActionGrid(
+          onScanTap: () => context.push('/plant-check'),
+          onActivityTap: () => context.push('/land/activity/add'),
+          onFarmTap: () => context.go('/farms'),
+          onMarketTap: () => context.push('/marketplace'),
+          onFertilizerTap: () => context.push('/fertilizer'),
+          onCalendarTap: () => context.push('/planting-calendar'),
+          onAlertTap: () => context.push('/community-alert'),
+          onTimelineTap: () => context.push('/land/timeline'),
+        ),
+
+        const SizedBox(height: HomeSpacing.lg),
+
+        // F. Today's Farm Activity List
+        TodayActivitySection(
+          activities: data.activities,
+          onAddActivity: () => context.push('/land/activity/add'),
+          onViewTimeline: () => context.push('/land/timeline'),
+        ),
+
+        const SizedBox(height: HomeSpacing.lg),
+
+        // G. Upcoming Agriculture Events Banner Carousel
+        UpcomingEventsBanner(
+          onEventTap: (event) => context.push('/events/detail', extra: event),
+          onCreateEventTap: () => context.push('/events/create'),
+          onViewAllTap: () => context.push('/events'),
+        ),
+
+        const SizedBox(height: HomeSpacing.lg),
+
+        // H. Crop Journey Lifecycle
+        if (hasFarms) ...[
+          CropJourneyCard(
+            season: activeSeason,
+            farms: data.farms,
+            selectedFarm: selectedFarm,
+            onSelectFarm: (farm) {
+              final idx = data.farms.indexOf(farm);
+              if (idx != -1) {
+                setState(() => _selectedFarmIndex = idx);
+              }
+            },
+            onTapTimeline: () => context.push('/land/timeline'),
+          ),
+          const SizedBox(height: HomeSpacing.lg),
+        ],
+
+        // I. Harvest & Marketplace CTA (Prioritized if near harvest)
+        if (isNearHarvest || !hasFarms) ...[
+          HarvestMarketplaceCta(
+            onTapMarketplace: () => context.push('/marketplace'),
+            onTapCreateListing: () => context.push('/marketplace/create'),
+          ),
+          const SizedBox(height: HomeSpacing.lg),
+        ],
+
+        // J. Community Radar & Pests Alert (Dynamic from backend reports)
+        CommunityAlertCard(
+          title: data.alertTitle,
+          subtitle: data.alertSubtitle,
+          distanceKm: 3.2,
+          severity: data.alertSeverity,
+          onTapAlerts: () => context.push('/community-alert'),
+        ),
+
+        const SizedBox(height: HomeSpacing.lg),
+
+        // K. Compact Commodity Market Price Index (Dynamic from marketplace)
+        MarketPriceCard(
+          onTapMarket: () => context.push('/marketplace'),
+          gkpPrice: data.gkpPrice,
+          gkgPrice: data.gkgPrice,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorFallback(AppStrings s) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 19),
+      padding: const EdgeInsets.all(HomeSpacing.cardPadding),
       decoration: BoxDecoration(
-        color: primaryGreen,
-        borderRadius: BorderRadius.circular(26),
+        color: HomeColors.surface,
+        borderRadius: BorderRadius.circular(HomeRadius.xl),
+        border: Border.all(color: HomeColors.border),
       ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ringkasan Pertanian',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _SummaryItem(
-                  icon: Icons.grass_rounded,
-                  value: '0',
-                  label: 'Lahan',
-                ),
-              ),
-              Expanded(
-                child: _SummaryItem(
-                  icon: Icons.spa_rounded,
-                  value: '0',
-                  label: 'Musim Tanam',
-                ),
-              ),
-              Expanded(
-                child: _SummaryItem(
-                  icon: Icons.check_circle_outline_rounded,
-                  value: '0',
-                  label: 'Aktivitas',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: yellow, size: 31),
-        const SizedBox(height: 7),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 27,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HomeMenu extends StatelessWidget {
-  const _HomeMenu({
-    required this.onFarmTap,
-    required this.onSeasonTap,
-    required this.onFertilizerTap,
-    required this.onHarvestTap,
-    required this.onCalendarTap,
-  });
-
-  final VoidCallback onFarmTap;
-  final VoidCallback onSeasonTap;
-  final VoidCallback onFertilizerTap;
-  final VoidCallback onHarvestTap;
-  final VoidCallback onCalendarTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.0,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _MenuCard(
-              icon: Icons.grass_rounded,
-              title: 'Lahan Saya',
-              subtitle: 'Kelola sawah',
-              onTap: onFarmTap,
-            ),
-            _MenuCard(
-              icon: Icons.spa_rounded,
-              title: 'Musim Tanam',
-              subtitle: 'Pantau tanaman',
-              onTap: onSeasonTap,
-            ),
-            _MenuCard(
-              icon: Icons.calculate_rounded,
-              title: 'Hitung Pupuk',
-              subtitle: 'Kebutuhan pupuk',
-              onTap: onFertilizerTap,
-            ),
-            _MenuCard(
-              icon: Icons.agriculture_rounded,
-              title: 'Catatan Panen',
-              subtitle: 'Kelola hasil panen',
-              onTap: onHarvestTap,
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        _CalendarMenuCard(
-          onTap: onCalendarTap,
-        ),
-      ],
-    );
-  }
-}
-class _CalendarMenuCard extends StatelessWidget {
-  const _CalendarMenuCard({
-    required this.onTap,
-  });
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(17),
-          child: Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EF),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(
-                  Icons.calendar_month_rounded,
-                  color: primaryGreen,
-                  size: 31,
-                ),
-              ),
-              const SizedBox(width: 15),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Kalender Tanam',
-                      style: TextStyle(
-                        color: textDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Lihat waktu tanam yang dianjurkan',
-                      style: TextStyle(
-                        color: Color(0xFF69766F),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: primaryGreen,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuCard extends StatelessWidget {
-  const _MenuCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(17),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EF),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(icon, color: primaryGreen, size: 31),
-              ),
-              const SizedBox(height: 11),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: textDark,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF69766F), fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-class _CommunityAlertButton extends StatelessWidget {
-  const _CommunityAlertButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: primaryGreen.withValues(alpha: 0.08)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7DC),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(0xFF946E00),
-                  size: 27,
-                ),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Community Alert',
-                      style: TextStyle(
-                        color: textDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Lihat peringatan di sekitar Anda',
-                      style: TextStyle(color: Color(0xFF69766F), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: primaryGreen,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReportConditionButton extends StatelessWidget {
-  const _ReportConditionButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: primaryGreen.withValues(alpha: 0.08)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.campaign_rounded,
-                  color: primaryGreen,
-                  size: 27,
-                ),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Lapor Kondisi',
-                      style: TextStyle(
-                        color: textDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Laporkan kondisi atau masalah di sawah',
-                      style: TextStyle(color: Color(0xFF69766F), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: primaryGreen,
-                size: 17,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HelpCard extends StatelessWidget {
-  const _HelpCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFFFF7DC),
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(22),
-        child: const Padding(
-          padding: EdgeInsets.all(17),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 52,
-                height: 52,
-                child: Icon(
-                  Icons.volume_up_rounded,
-                  color: Color(0xFF946E00),
-                  size: 29,
-                ),
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Butuh bantuan?',
-                      style: TextStyle(
-                        color: Color(0xFF5B4808),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Dengarkan panduan suara untuk menggunakan P.A.D.I.',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Color(0xFF75652B),
-                        fontSize: 12,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 17,
-                color: Color(0xFF946E00),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNavigation extends StatelessWidget {
-  const _BottomNavigation({
-    required this.currentIndex,
-    required this.onTap,
-    required this.onCameraTap,
-  });
-
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  final VoidCallback onCameraTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 78,
-          child: Row(
-            children: [
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.home_rounded,
-                  label: 'Beranda',
-                  active: currentIndex == 0,
-                  onTap: () => onTap(0),
-                ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.grass_rounded,
-                  label: 'Lahan',
-                  active: currentIndex == 1,
-                  onTap: () => onTap(1),
-                ),
-              ),
-              Expanded(child: _CameraNavItem(onTap: onCameraTap)),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.storefront_rounded,
-                  label: 'Toko',
-                  active: currentIndex == 3,
-                  onTap: () => onTap(3),
-                ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Profil',
-                  active: currentIndex == 4,
-                  onTap: () => onTap(4),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            color: active ? primaryGreen : const Color(0xFF59645E),
-            size: 27,
+          const Icon(
+            Icons.cloud_off_rounded,
+            color: HomeColors.textSecondary,
+            size: 36,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: HomeSpacing.xs),
           Text(
-            label,
-            style: TextStyle(
-              color: active ? primaryGreen : const Color(0xFF59645E),
-              fontSize: 11,
-              fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+            s.friendlyErrorMessage,
+            style: HomeTypography.cardTitle,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: HomeSpacing.md),
+          FilledButton.icon(
+            onPressed: () => ref.refresh(_homeDashboardProvider.future),
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: Text(s.tryAgain),
+            style: FilledButton.styleFrom(
+              backgroundColor: HomeColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(HomeRadius.sm),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _CameraNavItem extends StatelessWidget {
-  const _CameraNavItem({required this.onTap});
+  CropSeasonModel? _selectSeason(List<CropSeasonModel> seasons, int? farmId) {
+    if (seasons.isEmpty) return null;
+    if (farmId != null) {
+      for (final s in seasons) {
+        if (s.farmId == farmId && s.status == 'active') return s;
+      }
+      for (final s in seasons) {
+        if (s.farmId == farmId) return s;
+      }
+    }
+    for (final s in seasons) {
+      if (s.status == 'active') return s;
+    }
+    return seasons.first;
+  }
 
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 58,
-            height: 48,
-            decoration: BoxDecoration(
-              color: primaryGreen,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.camera_alt_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 3),
-          const Text(
-            'Periksa',
-            style: TextStyle(
-              color: primaryGreen,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
+  bool _isNearHarvest(CropSeasonModel? season) {
+    if (season == null) return false;
+    final harvestDateStr = season.estimatedHarvestDate;
+    if (harvestDateStr == null || harvestDateStr.isEmpty) return false;
+    final harvestDate = DateTime.tryParse(harvestDateStr);
+    if (harvestDate == null) return false;
+    final diff = harvestDate.difference(DateTime.now()).inDays;
+    return diff <= 14;
   }
 }

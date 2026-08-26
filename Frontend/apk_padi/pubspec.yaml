@@ -10,6 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   flutter_tts: ^4.2.5
   camera: ^0.11.2
   image_picker: ^1.2.1
@@ -45,6 +48,17 @@ dev_dependencies:
 
   # Mocking untuk unit test
   mocktail: ^1.0.4
+
+  # Launcher Icons Generator
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/padi-logo.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#0E3E28"
+  adaptive_icon_foreground: "assets/images/padi-logo.png"
 
 flutter:
   uses-material-design: true

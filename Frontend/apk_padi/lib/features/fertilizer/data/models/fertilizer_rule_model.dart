@@ -19,14 +19,25 @@ class FertilizerRuleModel {
 
   factory FertilizerRuleModel.fromJson(Map<String, dynamic> json) {
     return FertilizerRuleModel(
-      id: json['id'] as int,
-      varietyId: json['variety_id'] as int,
+      id: _toInt(json['id']),
+      varietyId: _toInt(json['variety_id']),
       phase: json['phase']?.toString() ?? '',
       nutrient: json['nutrient']?.toString() ?? '',
-      kgPerHa:
-          double.tryParse(json['kg_per_ha']?.toString() ?? '0') ?? 0,
+      kgPerHa: _toDouble(json['kg_per_ha']),
       source: json['source']?.toString() ?? '',
       version: json['version']?.toString() ?? '',
     );
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.')) ?? 0.0;
+  return 0.0;
 }

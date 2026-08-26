@@ -21,7 +21,10 @@ class RegionController extends Controller
      */
     public function provinces(): JsonResponse
     {
-        $provinces = Province::query()->orderBy('name')->get();
+        $provinces = Province::query()
+            ->select(['id', 'code', 'name', 'latitude', 'longitude'])
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -40,6 +43,7 @@ class RegionController extends Controller
         ]);
 
         $regencies = Regency::query()
+            ->select(['id', 'province_id', 'code', 'name', 'type', 'latitude', 'longitude'])
             ->where('province_id', $validated['province_id'])
             ->orderBy('name')
             ->get();
@@ -61,6 +65,7 @@ class RegionController extends Controller
         ]);
 
         $districts = District::query()
+            ->select(['id', 'regency_id', 'code', 'name', 'latitude', 'longitude'])
             ->where('regency_id', $validated['regency_id'])
             ->orderBy('name')
             ->get();
@@ -82,6 +87,7 @@ class RegionController extends Controller
         ]);
 
         $villages = Village::query()
+            ->select(['id', 'district_id', 'code', 'name', 'type', 'latitude', 'longitude'])
             ->where('district_id', $validated['district_id'])
             ->orderBy('name')
             ->get();
@@ -106,7 +112,12 @@ class RegionController extends Controller
         $query = $validated['q'];
         $limit = $validated['limit'] ?? 20;
 
-        $districts = District::with('regency.province')
+        $districts = District::query()
+            ->select(['id', 'regency_id', 'name', 'latitude', 'longitude'])
+            ->with([
+                'regency:id,province_id,name',
+                'regency.province:id,name',
+            ])
             ->where('name', 'like', "%{$query}%")
             ->limit($limit)
             ->get()
@@ -124,7 +135,13 @@ class RegionController extends Controller
                 ];
             });
 
-        $villages = Village::with('district.regency.province')
+        $villages = Village::query()
+            ->select(['id', 'district_id', 'name', 'latitude', 'longitude'])
+            ->with([
+                'district:id,regency_id,name',
+                'district.regency:id,province_id,name',
+                'district.regency.province:id,name',
+            ])
             ->where('name', 'like', "%{$query}%")
             ->limit($limit)
             ->get()

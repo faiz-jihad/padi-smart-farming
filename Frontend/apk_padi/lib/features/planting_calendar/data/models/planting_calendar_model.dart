@@ -45,12 +45,12 @@ class PlantingCalendarModel {
     Map<String, dynamic> json,
   ) {
     return PlantingCalendarModel(
-      id: (json['id'] as num).toInt(),
+      id: _toInt(json['id']),
       season: json['season']?.toString() ?? 'rainy',
       seasonLabel:
           json['season_label']?.toString() ?? 'Musim Hujan',
       seasonCode: json['season_code']?.toString(),
-      year: (json['year'] as num?)?.toInt() ??
+      year: _toNullableInt(json['year']) ??
           DateTime.now().year,
       plantingStart:
           json['planting_start']?.toString() ?? '',
@@ -61,7 +61,7 @@ class PlantingCalendarModel {
       riceVariety:
           json['rice_variety']?.toString(),
       recommendedArea:
-          (json['recommended_area'] as num?)?.toDouble(),
+          _toNullableDouble(json['recommended_area']),
       status:
           json['status']?.toString() ?? 'active',
       source:
@@ -75,9 +75,9 @@ class PlantingCalendarModel {
       isPlantingWindow:
           json['is_planting_window'] as bool? ?? false,
       daysUntilStart:
-          (json['days_until_start'] as num?)?.toInt() ?? 0,
+          _toInt(json['days_until_start']),
       daysUntilEnd:
-          (json['days_until_end'] as num?)?.toInt() ?? 0,
+          _toInt(json['days_until_end']),
       region:
           json['region'] is Map
               ? Map<String, dynamic>.from(
@@ -106,4 +106,24 @@ class PlantingCalendarModel {
 
     return 'Wilayah Anda';
   }
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+int? _toNullableInt(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim());
+  return null;
+}
+
+double? _toNullableDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.'));
+  return null;
 }

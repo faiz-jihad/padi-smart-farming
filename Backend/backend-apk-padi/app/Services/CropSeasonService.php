@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CropSeason;
+use App\Models\Farm;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -12,7 +13,9 @@ class CropSeasonService
     {
         return CropSeason::query()
             ->whereHas('farm', function ($query) use ($user): void {
-                $query->where('farmer_user_id', $user->id);
+                if (! $user->hasRole('admin')) {
+                    $query->where('farmer_user_id', $user->id);
+                }
             })
             ->latest('id')
             ->get();
@@ -23,9 +26,13 @@ class CropSeasonService
      */
     public function createCropSeason(User $user, array $data): CropSeason
     {
-        $farm = $user->farms()
-            ->whereKey($data['farm_id'])
-            ->firstOrFail();
+        $farmQuery = Farm::query()->whereKey($data['farm_id']);
+
+        if (! $user->hasRole('admin')) {
+            $farmQuery->where('farmer_user_id', $user->id);
+        }
+
+        $farm = $farmQuery->firstOrFail();
 
         $status = $data['status'] ?? 'planned';
 

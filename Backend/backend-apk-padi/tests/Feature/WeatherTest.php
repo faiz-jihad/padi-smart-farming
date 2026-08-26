@@ -80,7 +80,7 @@ class WeatherTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('admin.weather.map'));
         $response->assertStatus(200);
-        $response->assertSee('Geolocation Tanah');
-        $response->assertSee('Sawah Map Karawang');
+        $response->assertSee('P.A.D.I Geo Intelligence Map');
+        $response->assertSee('Polygon Lahan');
     }
 }

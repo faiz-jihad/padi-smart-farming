@@ -149,11 +149,26 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-planting-calendars">
                                 <a href="#endpoints-GETapi-v1-planting-calendars">List all planting calendars with optional filters</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-planting-calendars--plantingCalendar_id-">
+                                <a href="#endpoints-GETapi-v1-planting-calendars--plantingCalendar_id-">Display the specified planting calendar.</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-districts--district_id--planting-calendar">
                                 <a href="#endpoints-GETapi-v1-districts--district_id--planting-calendar">Get active planting calendar for a specific district (with hierarchical fallback)</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-planting-calendar-recommend-planting-window">
                                 <a href="#endpoints-POSTapi-v1-planting-calendar-recommend-planting-window">Calculate interactive Best Planting Window & Growth Stage Timeline</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-planting-calendars">
+                                <a href="#endpoints-POSTapi-v1-planting-calendars">Store a newly created planting calendar / recommendation.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-planting-calendars--plantingCalendar_id-">
+                                <a href="#endpoints-PATCHapi-v1-planting-calendars--plantingCalendar_id-">Update the specified planting calendar in storage.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-v1-planting-calendars--plantingCalendar_id-">
+                                <a href="#endpoints-PUTapi-v1-planting-calendars--plantingCalendar_id-">Update the specified planting calendar in storage.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-planting-calendars--plantingCalendar_id-">
+                                <a href="#endpoints-DELETEapi-v1-planting-calendars--plantingCalendar_id-">Remove the specified planting calendar from storage.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-knowledge-base">
                                 <a href="#endpoints-GETapi-v1-knowledge-base">GET api/v1/knowledge-base</a>
@@ -165,22 +180,34 @@
                                 <a href="#endpoints-GETapi-v1-farmers">GET api/v1/farmers</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-farm-activities">
-                                <a href="#endpoints-GETapi-v1-farm-activities">List current user's farm activities (with optional crop_season_id filter)</a>
+                                <a href="#endpoints-GETapi-v1-farm-activities">GET api/v1/farm-activities</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-farm-activities">
-                                <a href="#endpoints-POSTapi-v1-farm-activities">Store a new farm activity</a>
+                                <a href="#endpoints-POSTapi-v1-farm-activities">POST api/v1/farm-activities</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-farm-activities--farmActivity_id-">
-                                <a href="#endpoints-GETapi-v1-farm-activities--farmActivity_id-">Show farm activity detail</a>
+                                <a href="#endpoints-GETapi-v1-farm-activities--farmActivity_id-">GET api/v1/farm-activities/{farmActivity_id}</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">
-                                <a href="#endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">Update farm activity</a>
+                                <a href="#endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">PATCH api/v1/farm-activities/{farmActivity_id}</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">
-                                <a href="#endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">Delete farm activity</a>
+                                <a href="#endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">DELETE api/v1/farm-activities/{farmActivity_id}</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-harvests">
                                 <a href="#endpoints-GETapi-v1-harvests">GET api/v1/harvests</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-harvests">
+                                <a href="#endpoints-POSTapi-v1-harvests">POST api/v1/harvests</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-harvests--harvest_id-">
+                                <a href="#endpoints-GETapi-v1-harvests--harvest_id-">GET api/v1/harvests/{harvest_id}</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-harvests--harvest_id-">
+                                <a href="#endpoints-PATCHapi-v1-harvests--harvest_id-">PATCH api/v1/harvests/{harvest_id}</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-harvests--harvest_id-">
+                                <a href="#endpoints-DELETEapi-v1-harvests--harvest_id-">DELETE api/v1/harvests/{harvest_id}</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-rice-varieties">
                                 <a href="#endpoints-GETapi-v1-rice-varieties">GET api/v1/rice-varieties</a>
@@ -230,17 +257,41 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-market-listings">
                                 <a href="#endpoints-GETapi-v1-market-listings">GET api/v1/market-listings</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-market-listings">
+                                <a href="#endpoints-POSTapi-v1-market-listings">POST api/v1/market-listings</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-market-listings--marketListing_id-">
+                                <a href="#endpoints-GETapi-v1-market-listings--marketListing_id-">GET api/v1/market-listings/{marketListing_id}</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PATCHapi-v1-market-listings--marketListing_id-">
+                                <a href="#endpoints-PATCHapi-v1-market-listings--marketListing_id-">PATCH api/v1/market-listings/{marketListing_id}</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-market-listings--marketListing_id-">
+                                <a href="#endpoints-DELETEapi-v1-market-listings--marketListing_id-">DELETE api/v1/market-listings/{marketListing_id}</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-listing-images">
                                 <a href="#endpoints-GETapi-v1-listing-images">GET api/v1/listing-images</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-market-listings--marketListing_id--offers">
+                                <a href="#endpoints-GETapi-v1-market-listings--marketListing_id--offers">GET api/v1/market-listings/{marketListing_id}/offers</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-market-offers">
                                 <a href="#endpoints-GETapi-v1-market-offers">GET api/v1/market-offers</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-market-offers">
+                                <a href="#endpoints-POSTapi-v1-market-offers">POST api/v1/market-offers</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-v1-market-offers--marketOffer_id-">
+                                <a href="#endpoints-PUTapi-v1-market-offers--marketOffer_id-">PUT api/v1/market-offers/{marketOffer_id}</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-purchase-contracts">
                                 <a href="#endpoints-GETapi-v1-purchase-contracts">GET api/v1/purchase-contracts</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-contract-payments">
                                 <a href="#endpoints-GETapi-v1-contract-payments">GET api/v1/contract-payments</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-admin-broadcasts">
+                                <a href="#endpoints-GETapi-v1-admin-broadcasts">GET api/v1/admin-broadcasts</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-notifications">
                                 <a href="#endpoints-GETapi-v1-notifications">GET api/v1/notifications</a>
@@ -254,8 +305,20 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-ppl-validations">
                                 <a href="#endpoints-GETapi-v1-ppl-validations">GET api/v1/ppl-validations</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-disease-scans">
+                                <a href="#endpoints-GETapi-v1-disease-scans">GET api/v1/disease-scans</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-disease-scans">
+                                <a href="#endpoints-POSTapi-v1-disease-scans">POST api/v1/disease-scans</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-disease-scans--diseaseScan_id-">
+                                <a href="#endpoints-GETapi-v1-disease-scans--diseaseScan_id-">GET api/v1/disease-scans/{diseaseScan_id}</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-community-reports">
                                 <a href="#endpoints-GETapi-v1-community-reports">GET api/v1/community-reports</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-community-reports">
+                                <a href="#endpoints-POSTapi-v1-community-reports">POST api/v1/community-reports</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-alert-subscriptions">
                                 <a href="#endpoints-GETapi-v1-alert-subscriptions">GET api/v1/alert-subscriptions</a>
@@ -269,8 +332,17 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-device-tokens">
                                 <a href="#endpoints-DELETEapi-v1-device-tokens">Remove a device token when user logs out or revokes permission.</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-partner-favorites">
-                                <a href="#endpoints-GETapi-v1-partner-favorites">GET api/v1/partner-favorites</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-events">
+                                <a href="#endpoints-GETapi-v1-events">Display a listing of upcoming & active agriculture events.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-events">
+                                <a href="#endpoints-POSTapi-v1-events">Store a newly created event (Admin / Officer).</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-events--event_id-">
+                                <a href="#endpoints-GETapi-v1-events--event_id-">Display the specified event.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-events--event_id--register">
+                                <a href="#endpoints-POSTapi-v1-events--event_id--register">Register the authenticated user for an event.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-admin--resource----id--">
                                 <a href="#endpoints-GETapi-v1-admin--resource----id--">GET api/v1/admin/{resource?}/{id?}</a>
@@ -286,7 +358,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: August 20, 2026</li>
+        <li>Last updated: August 26, 2026</li>
     </ul>
 </div>
 
@@ -362,7 +434,7 @@ access-control-allow-origin: *
     &quot;status&quot;: &quot;ok&quot;,
     &quot;system&quot;: &quot;P.A.D.I. Smart Farming API&quot;,
     &quot;version&quot;: &quot;1.0.0&quot;,
-    &quot;timestamp&quot;: &quot;2026-08-20T01:33:34+00:00&quot;
+    &quot;timestamp&quot;: &quot;2026-08-26T01:33:58+00:00&quot;
 }</code>
  </pre>
     </span>
@@ -477,7 +549,7 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-regions-provinces">
             <blockquote>
-            <p>Example response (500):</p>
+            <p>Example response (200):</p>
         </blockquote>
                 <details class="annotation">
             <summary style="cursor: pointer;">
@@ -489,7 +561,276 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Server Error&quot;
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daftar provinsi berhasil diambil&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 2,
+            &quot;code&quot;: &quot;11&quot;,
+            &quot;name&quot;: &quot;Aceh&quot;,
+            &quot;latitude&quot;: 5.570547,
+            &quot;longitude&quot;: 95.3408085
+        },
+        {
+            &quot;id&quot;: 17,
+            &quot;code&quot;: &quot;51&quot;,
+            &quot;name&quot;: &quot;Bali&quot;,
+            &quot;latitude&quot;: -8.6677871,
+            &quot;longitude&quot;: 115.2340873
+        },
+        {
+            &quot;id&quot;: 16,
+            &quot;code&quot;: &quot;36&quot;,
+            &quot;name&quot;: &quot;Banten&quot;,
+            &quot;latitude&quot;: -6.1737074,
+            &quot;longitude&quot;: 106.1566347
+        },
+        {
+            &quot;id&quot;: 8,
+            &quot;code&quot;: &quot;17&quot;,
+            &quot;name&quot;: &quot;Bengkulu&quot;,
+            &quot;latitude&quot;: -3.8209404,
+            &quot;longitude&quot;: 102.2839894
+        },
+        {
+            &quot;id&quot;: 14,
+            &quot;code&quot;: &quot;34&quot;,
+            &quot;name&quot;: &quot;Daerah Istimewa Yogyakarta&quot;,
+            &quot;latitude&quot;: -7.7947431,
+            &quot;longitude&quot;: 110.3672816
+        },
+        {
+            &quot;id&quot;: 12,
+            &quot;code&quot;: &quot;31&quot;,
+            &quot;name&quot;: &quot;Daerah Khusus Ibukota Jakarta&quot;,
+            &quot;latitude&quot;: -6.1778016,
+            &quot;longitude&quot;: 106.8284444
+        },
+        {
+            &quot;id&quot;: 29,
+            &quot;code&quot;: &quot;75&quot;,
+            &quot;name&quot;: &quot;Gorontalo&quot;,
+            &quot;latitude&quot;: 0.5239062,
+            &quot;longitude&quot;: 123.0774559
+        },
+        {
+            &quot;id&quot;: 6,
+            &quot;code&quot;: &quot;15&quot;,
+            &quot;name&quot;: &quot;Jambi&quot;,
+            &quot;latitude&quot;: -1.6039983,
+            &quot;longitude&quot;: 103.5835797
+        },
+        {
+            &quot;id&quot;: 1,
+            &quot;code&quot;: &quot;32&quot;,
+            &quot;name&quot;: &quot;Jawa Barat&quot;,
+            &quot;latitude&quot;: -6.9022247,
+            &quot;longitude&quot;: 107.6187598
+        },
+        {
+            &quot;id&quot;: 13,
+            &quot;code&quot;: &quot;33&quot;,
+            &quot;name&quot;: &quot;Jawa Tengah&quot;,
+            &quot;latitude&quot;: -6.9934809,
+            &quot;longitude&quot;: 110.4202434
+        },
+        {
+            &quot;id&quot;: 15,
+            &quot;code&quot;: &quot;35&quot;,
+            &quot;name&quot;: &quot;Jawa Timur&quot;,
+            &quot;latitude&quot;: -7.2455671,
+            &quot;longitude&quot;: 112.7391661
+        },
+        {
+            &quot;id&quot;: 20,
+            &quot;code&quot;: &quot;61&quot;,
+            &quot;name&quot;: &quot;Kalimantan Barat&quot;,
+            &quot;latitude&quot;: -0.0610031,
+            &quot;longitude&quot;: 109.3533483
+        },
+        {
+            &quot;id&quot;: 22,
+            &quot;code&quot;: &quot;63&quot;,
+            &quot;name&quot;: &quot;Kalimantan Selatan&quot;,
+            &quot;latitude&quot;: -3.484313,
+            &quot;longitude&quot;: 114.8338012
+        },
+        {
+            &quot;id&quot;: 21,
+            &quot;code&quot;: &quot;62&quot;,
+            &quot;name&quot;: &quot;Kalimantan Tengah&quot;,
+            &quot;latitude&quot;: -2.2168389,
+            &quot;longitude&quot;: 113.9187507
+        },
+        {
+            &quot;id&quot;: 23,
+            &quot;code&quot;: &quot;64&quot;,
+            &quot;name&quot;: &quot;Kalimantan Timur&quot;,
+            &quot;latitude&quot;: -0.500806,
+            &quot;longitude&quot;: 117.1393523
+        },
+        {
+            &quot;id&quot;: 24,
+            &quot;code&quot;: &quot;65&quot;,
+            &quot;name&quot;: &quot;Kalimantan Utara&quot;,
+            &quot;latitude&quot;: 2.8422263,
+            &quot;longitude&quot;: 117.3740417
+        },
+        {
+            &quot;id&quot;: 10,
+            &quot;code&quot;: &quot;19&quot;,
+            &quot;name&quot;: &quot;Kepulauan Bangka Belitung&quot;,
+            &quot;latitude&quot;: -2.1529208,
+            &quot;longitude&quot;: 106.1578881
+        },
+        {
+            &quot;id&quot;: 11,
+            &quot;code&quot;: &quot;21&quot;,
+            &quot;name&quot;: &quot;Kepulauan Riau&quot;,
+            &quot;latitude&quot;: 0.8761626,
+            &quot;longitude&quot;: 104.4452226
+        },
+        {
+            &quot;id&quot;: 9,
+            &quot;code&quot;: &quot;18&quot;,
+            &quot;name&quot;: &quot;Lampung&quot;,
+            &quot;latitude&quot;: -5.4412059,
+            &quot;longitude&quot;: 105.2582898
+        },
+        {
+            &quot;id&quot;: 31,
+            &quot;code&quot;: &quot;81&quot;,
+            &quot;name&quot;: &quot;Maluku&quot;,
+            &quot;latitude&quot;: -3.6944134,
+            &quot;longitude&quot;: 128.1827028
+        },
+        {
+            &quot;id&quot;: 32,
+            &quot;code&quot;: &quot;82&quot;,
+            &quot;name&quot;: &quot;Maluku Utara&quot;,
+            &quot;latitude&quot;: 0.7558581,
+            &quot;longitude&quot;: 127.6098024
+        },
+        {
+            &quot;id&quot;: 18,
+            &quot;code&quot;: &quot;52&quot;,
+            &quot;name&quot;: &quot;Nusa Tenggara Barat&quot;,
+            &quot;latitude&quot;: -8.5814762,
+            &quot;longitude&quot;: 116.1097517
+        },
+        {
+            &quot;id&quot;: 19,
+            &quot;code&quot;: &quot;53&quot;,
+            &quot;name&quot;: &quot;Nusa Tenggara Timur&quot;,
+            &quot;latitude&quot;: -10.1713148,
+            &quot;longitude&quot;: 123.6074369
+        },
+        {
+            &quot;id&quot;: 33,
+            &quot;code&quot;: &quot;91&quot;,
+            &quot;name&quot;: &quot;Papua&quot;,
+            &quot;latitude&quot;: -2.5363009,
+            &quot;longitude&quot;: 140.715024
+        },
+        {
+            &quot;id&quot;: 34,
+            &quot;code&quot;: &quot;92&quot;,
+            &quot;name&quot;: &quot;Papua Barat&quot;,
+            &quot;latitude&quot;: -0.9183508,
+            &quot;longitude&quot;: 134.0304875
+        },
+        {
+            &quot;id&quot;: 38,
+            &quot;code&quot;: &quot;96&quot;,
+            &quot;name&quot;: &quot;Papua Barat Daya&quot;,
+            &quot;latitude&quot;: -0.8811245,
+            &quot;longitude&quot;: 131.2876396
+        },
+        {
+            &quot;id&quot;: 37,
+            &quot;code&quot;: &quot;95&quot;,
+            &quot;name&quot;: &quot;Papua Pegunungan&quot;,
+            &quot;latitude&quot;: -4.0993068,
+            &quot;longitude&quot;: 138.943149
+        },
+        {
+            &quot;id&quot;: 35,
+            &quot;code&quot;: &quot;93&quot;,
+            &quot;name&quot;: &quot;Papua Selatan&quot;,
+            &quot;latitude&quot;: -8.5086962,
+            &quot;longitude&quot;: 140.4096764
+        },
+        {
+            &quot;id&quot;: 36,
+            &quot;code&quot;: &quot;94&quot;,
+            &quot;name&quot;: &quot;Papua Tengah&quot;,
+            &quot;latitude&quot;: -3.3633659,
+            &quot;longitude&quot;: 135.5038911
+        },
+        {
+            &quot;id&quot;: 5,
+            &quot;code&quot;: &quot;14&quot;,
+            &quot;name&quot;: &quot;Riau&quot;,
+            &quot;latitude&quot;: 0.5177096,
+            &quot;longitude&quot;: 101.4458396
+        },
+        {
+            &quot;id&quot;: 30,
+            &quot;code&quot;: &quot;76&quot;,
+            &quot;name&quot;: &quot;Sulawesi Barat&quot;,
+            &quot;latitude&quot;: -2.6649138,
+            &quot;longitude&quot;: 118.8527956
+        },
+        {
+            &quot;id&quot;: 27,
+            &quot;code&quot;: &quot;73&quot;,
+            &quot;name&quot;: &quot;Sulawesi Selatan&quot;,
+            &quot;latitude&quot;: -5.1390844,
+            &quot;longitude&quot;: 119.4523697
+        },
+        {
+            &quot;id&quot;: 26,
+            &quot;code&quot;: &quot;72&quot;,
+            &quot;name&quot;: &quot;Sulawesi Tengah&quot;,
+            &quot;latitude&quot;: -0.890609,
+            &quot;longitude&quot;: 119.8710738
+        },
+        {
+            &quot;id&quot;: 28,
+            &quot;code&quot;: &quot;74&quot;,
+            &quot;name&quot;: &quot;Sulawesi Tenggara&quot;,
+            &quot;latitude&quot;: -4.0247397,
+            &quot;longitude&quot;: 122.5404592
+        },
+        {
+            &quot;id&quot;: 25,
+            &quot;code&quot;: &quot;71&quot;,
+            &quot;name&quot;: &quot;Sulawesi Utara&quot;,
+            &quot;latitude&quot;: 1.470128,
+            &quot;longitude&quot;: 124.844811
+        },
+        {
+            &quot;id&quot;: 4,
+            &quot;code&quot;: &quot;13&quot;,
+            &quot;name&quot;: &quot;Sumatera Barat&quot;,
+            &quot;latitude&quot;: -0.9376701,
+            &quot;longitude&quot;: 100.3604439
+        },
+        {
+            &quot;id&quot;: 7,
+            &quot;code&quot;: &quot;16&quot;,
+            &quot;name&quot;: &quot;Sumatera Selatan&quot;,
+            &quot;latitude&quot;: -2.9771571,
+            &quot;longitude&quot;: 104.7505301
+        },
+        {
+            &quot;id&quot;: 3,
+            &quot;code&quot;: &quot;12&quot;,
+            &quot;name&quot;: &quot;Sumatera Utara&quot;,
+            &quot;latitude&quot;: 3.5806305,
+            &quot;longitude&quot;: 98.672
+        }
+    ]
 }</code>
  </pre>
     </span>
@@ -634,8 +975,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Cilegon&quot;,
             &quot;type&quot;: &quot;city&quot;,
             &quot;type_label&quot;: &quot;Kota&quot;,
-            &quot;latitude&quot;: &quot;-6.0098090&quot;,
-            &quot;longitude&quot;: &quot;106.0421287&quot;
+            &quot;latitude&quot;: -6.009809,
+            &quot;longitude&quot;: 106.0421287
         },
         {
             &quot;id&quot;: 267,
@@ -644,8 +985,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Lebak&quot;,
             &quot;type&quot;: &quot;regency&quot;,
             &quot;type_label&quot;: &quot;Kabupaten&quot;,
-            &quot;latitude&quot;: &quot;-6.3607671&quot;,
-            &quot;longitude&quot;: &quot;106.2461870&quot;
+            &quot;latitude&quot;: -6.3607671,
+            &quot;longitude&quot;: 106.246187
         },
         {
             &quot;id&quot;: 266,
@@ -654,8 +995,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Pandeglang&quot;,
             &quot;type&quot;: &quot;regency&quot;,
             &quot;type_label&quot;: &quot;Kabupaten&quot;,
-            &quot;latitude&quot;: &quot;-6.3168554&quot;,
-            &quot;longitude&quot;: &quot;106.1147945&quot;
+            &quot;latitude&quot;: -6.3168554,
+            &quot;longitude&quot;: 106.1147945
         },
         {
             &quot;id&quot;: 269,
@@ -664,8 +1005,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Serang&quot;,
             &quot;type&quot;: &quot;regency&quot;,
             &quot;type_label&quot;: &quot;Kabupaten&quot;,
-            &quot;latitude&quot;: &quot;-6.1153025&quot;,
-            &quot;longitude&quot;: &quot;106.1520151&quot;
+            &quot;latitude&quot;: -6.1153025,
+            &quot;longitude&quot;: 106.1520151
         },
         {
             &quot;id&quot;: 272,
@@ -674,8 +1015,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Serang&quot;,
             &quot;type&quot;: &quot;city&quot;,
             &quot;type_label&quot;: &quot;Kota&quot;,
-            &quot;latitude&quot;: &quot;-6.1196976&quot;,
-            &quot;longitude&quot;: &quot;106.1734607&quot;
+            &quot;latitude&quot;: -6.1196976,
+            &quot;longitude&quot;: 106.1734607
         },
         {
             &quot;id&quot;: 268,
@@ -684,8 +1025,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Tangerang&quot;,
             &quot;type&quot;: &quot;regency&quot;,
             &quot;type_label&quot;: &quot;Kabupaten&quot;,
-            &quot;latitude&quot;: &quot;-6.2696305&quot;,
-            &quot;longitude&quot;: &quot;106.4844047&quot;
+            &quot;latitude&quot;: -6.2696305,
+            &quot;longitude&quot;: 106.4844047
         },
         {
             &quot;id&quot;: 270,
@@ -694,8 +1035,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Tangerang&quot;,
             &quot;type&quot;: &quot;city&quot;,
             &quot;type_label&quot;: &quot;Kota&quot;,
-            &quot;latitude&quot;: &quot;-6.1643616&quot;,
-            &quot;longitude&quot;: &quot;106.6410711&quot;
+            &quot;latitude&quot;: -6.1643616,
+            &quot;longitude&quot;: 106.6410711
         },
         {
             &quot;id&quot;: 273,
@@ -704,8 +1045,8 @@ access-control-allow-origin: *
             &quot;name&quot;: &quot;Tangerang Selatan&quot;,
             &quot;type&quot;: &quot;city&quot;,
             &quot;type_label&quot;: &quot;Kota&quot;,
-            &quot;latitude&quot;: &quot;-6.3215680&quot;,
-            &quot;longitude&quot;: &quot;106.7077421&quot;
+            &quot;latitude&quot;: -6.321568,
+            &quot;longitude&quot;: 106.7077421
         }
     ]
 }</code>
@@ -863,8 +1204,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111504&quot;,
             &quot;name&quot;: &quot;Beutong&quot;,
-            &quot;latitude&quot;: &quot;4.2863225&quot;,
-            &quot;longitude&quot;: &quot;96.5007402&quot;,
+            &quot;latitude&quot;: 4.2863225,
+            &quot;longitude&quot;: 96.5007402,
             &quot;has_boundary&quot;: false
         },
         {
@@ -872,8 +1213,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111510&quot;,
             &quot;name&quot;: &quot;Beutong Ateuh Banggalang&quot;,
-            &quot;latitude&quot;: &quot;4.4816846&quot;,
-            &quot;longitude&quot;: &quot;96.5754659&quot;,
+            &quot;latitude&quot;: 4.4816846,
+            &quot;longitude&quot;: 96.5754659,
             &quot;has_boundary&quot;: false
         },
         {
@@ -881,8 +1222,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111505&quot;,
             &quot;name&quot;: &quot;Darul Makmur&quot;,
-            &quot;latitude&quot;: &quot;4.0381916&quot;,
-            &quot;longitude&quot;: &quot;96.5950504&quot;,
+            &quot;latitude&quot;: 4.0381916,
+            &quot;longitude&quot;: 96.5950504,
             &quot;has_boundary&quot;: false
         },
         {
@@ -890,8 +1231,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111501&quot;,
             &quot;name&quot;: &quot;Kuala&quot;,
-            &quot;latitude&quot;: &quot;4.0961760&quot;,
-            &quot;longitude&quot;: &quot;96.2970947&quot;,
+            &quot;latitude&quot;: 4.096176,
+            &quot;longitude&quot;: 96.2970947,
             &quot;has_boundary&quot;: false
         },
         {
@@ -899,8 +1240,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111507&quot;,
             &quot;name&quot;: &quot;Kuala Pesisir&quot;,
-            &quot;latitude&quot;: &quot;4.0526889&quot;,
-            &quot;longitude&quot;: &quot;96.2644004&quot;,
+            &quot;latitude&quot;: 4.0526889,
+            &quot;longitude&quot;: 96.2644004,
             &quot;has_boundary&quot;: false
         },
         {
@@ -908,8 +1249,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111502&quot;,
             &quot;name&quot;: &quot;Seunagan&quot;,
-            &quot;latitude&quot;: &quot;4.2336346&quot;,
-            &quot;longitude&quot;: &quot;96.2949769&quot;,
+            &quot;latitude&quot;: 4.2336346,
+            &quot;longitude&quot;: 96.2949769,
             &quot;has_boundary&quot;: false
         },
         {
@@ -917,8 +1258,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111503&quot;,
             &quot;name&quot;: &quot;Seunagan Timur&quot;,
-            &quot;latitude&quot;: &quot;4.3367108&quot;,
-            &quot;longitude&quot;: &quot;96.3680986&quot;,
+            &quot;latitude&quot;: 4.3367108,
+            &quot;longitude&quot;: 96.3680986,
             &quot;has_boundary&quot;: false
         },
         {
@@ -926,8 +1267,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111506&quot;,
             &quot;name&quot;: &quot;Suka Makmue&quot;,
-            &quot;latitude&quot;: &quot;4.1848571&quot;,
-            &quot;longitude&quot;: &quot;96.3250418&quot;,
+            &quot;latitude&quot;: 4.1848571,
+            &quot;longitude&quot;: 96.3250418,
             &quot;has_boundary&quot;: false
         },
         {
@@ -935,8 +1276,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111508&quot;,
             &quot;name&quot;: &quot;Tadu Raya&quot;,
-            &quot;latitude&quot;: &quot;4.0711036&quot;,
-            &quot;longitude&quot;: &quot;96.3898458&quot;,
+            &quot;latitude&quot;: 4.0711036,
+            &quot;longitude&quot;: 96.3898458,
             &quot;has_boundary&quot;: false
         },
         {
@@ -944,8 +1285,8 @@ access-control-allow-origin: *
             &quot;regency_id&quot;: 16,
             &quot;code&quot;: &quot;111509&quot;,
             &quot;name&quot;: &quot;Tripa Makmur&quot;,
-            &quot;latitude&quot;: &quot;3.9323305&quot;,
-            &quot;longitude&quot;: &quot;96.4099493&quot;,
+            &quot;latitude&quot;: 3.9323305,
+            &quot;longitude&quot;: 96.4099493,
             &quot;has_boundary&quot;: false
         }
     ]
@@ -1422,18 +1763,24 @@ access-control-allow-origin: *
         &quot;province&quot;: {
             &quot;id&quot;: 19,
             &quot;code&quot;: &quot;53&quot;,
-            &quot;name&quot;: &quot;Nusa Tenggara Timur&quot;
+            &quot;name&quot;: &quot;Nusa Tenggara Timur&quot;,
+            &quot;latitude&quot;: -10.1713148,
+            &quot;longitude&quot;: 123.6074369
         },
         &quot;regency&quot;: {
             &quot;id&quot;: 306,
             &quot;code&quot;: &quot;5314&quot;,
             &quot;name&quot;: &quot;Rote Ndao&quot;,
-            &quot;type&quot;: &quot;regency&quot;
+            &quot;type&quot;: &quot;regency&quot;,
+            &quot;latitude&quot;: -10.7578032,
+            &quot;longitude&quot;: 123.0625908
         },
         &quot;district&quot;: {
             &quot;id&quot;: 4508,
             &quot;code&quot;: &quot;531401&quot;,
-            &quot;name&quot;: &quot;Rote Barat Daya&quot;
+            &quot;name&quot;: &quot;Rote Barat Daya&quot;,
+            &quot;latitude&quot;: -10.8763178,
+            &quot;longitude&quot;: 122.9555167
         },
         &quot;village&quot;: null,
         &quot;formatted_address&quot;: &quot;Kec. Rote Barat Daya, Kab. Rote Ndao, Prov. Nusa Tenggara Timur&quot;,
@@ -4030,7 +4377,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"email\": \"zbailey@example.net\",
     \"phone\": \"iyvdljnikhwaykcm\",
     \"password\": \"architecto\",
-    \"account_type\": \"farmer\",
+    \"account_type\": \"buyer\",
     \"device_name\": \"n\"
 }"
 </code></pre></div>
@@ -4051,7 +4398,7 @@ let body = {
     "email": "zbailey@example.net",
     "phone": "iyvdljnikhwaykcm",
     "password": "architecto",
-    "account_type": "farmer",
+    "account_type": "buyer",
     "device_name": "n"
 };
 
@@ -4192,10 +4539,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="account_type"                data-endpoint="POSTapi-v1-auth-register"
-               value="farmer"
+               value="buyer"
                data-component="body">
     <br>
-<p>Example: <code>farmer</code></p>
+<p>Example: <code>buyer</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>farmer</code></li> <li><code>buyer</code></li></ul>
         </div>
@@ -5591,7 +5938,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"active\"
+    \"status\": \"inactive\",
+    \"boundary_coordinates\": [
+        {
+            \"lat\": -90,
+            \"lng\": -179
+        }
+    ]
 }"
 </code></pre></div>
 
@@ -5618,7 +5971,13 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "active"
+    "status": "inactive",
+    "boundary_coordinates": [
+        {
+            "lat": -90,
+            "lng": -179
+        }
+    ]
 };
 
 fetch(url, {
@@ -5752,6 +6111,42 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must be between -180 and 180. Example: <code>-180</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>boundary_coordinates</code></b>&nbsp;&nbsp;
+<small>object[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+<p>Must have at least 3 items.</p>
+            </summary>
+                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>lat</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="boundary_coordinates.0.lat"                data-endpoint="POSTapi-v1-farms"
+               value="-90"
+               data-component="body">
+    <br>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-90</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>lng</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="boundary_coordinates.0.lng"                data-endpoint="POSTapi-v1-farms"
+               value="-179"
+               data-component="body">
+    <br>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-179</code></p>
+                    </div>
+                                    </details>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>irrigation_type</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
  &nbsp;
@@ -5842,10 +6237,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-farms"
-               value="active"
+               value="inactive"
                data-component="body">
     <br>
-<p>Example: <code>active</code></p>
+<p>Example: <code>inactive</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -6020,7 +6415,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"active\"
+    \"status\": \"active\",
+    \"boundary_coordinates\": [
+        {
+            \"lat\": -90,
+            \"lng\": -179
+        }
+    ]
 }"
 </code></pre></div>
 
@@ -6047,7 +6448,13 @@ let body = {
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "active"
+    "status": "active",
+    "boundary_coordinates": [
+        {
+            "lat": -90,
+            "lng": -179
+        }
+    ]
 };
 
 fetch(url, {
@@ -6192,6 +6599,42 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Must be between -180 and 180. Example: <code>-180</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>boundary_coordinates</code></b>&nbsp;&nbsp;
+<small>object[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+<p>Must have at least 3 items.</p>
+            </summary>
+                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>lat</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="boundary_coordinates.0.lat"                data-endpoint="PUTapi-v1-farms--farm_id-"
+               value="-90"
+               data-component="body">
+    <br>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-90</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>lng</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="boundary_coordinates.0.lng"                data-endpoint="PUTapi-v1-farms--farm_id-"
+               value="-179"
+               data-component="body">
+    <br>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-179</code></p>
+                    </div>
+                                    </details>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>irrigation_type</code></b>&nbsp;&nbsp;
@@ -6795,6 +7238,147 @@ Must be one of:
         </div>
         </form>
 
+                    <h2 id="endpoints-GETapi-v1-planting-calendars--plantingCalendar_id-">Display the specified planting calendar.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-planting-calendars--plantingCalendar_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/planting-calendars/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/planting-calendars/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-planting-calendars--plantingCalendar_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-planting-calendars--plantingCalendar_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-planting-calendars--plantingCalendar_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-planting-calendars--plantingCalendar_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-planting-calendars--plantingCalendar_id-" data-method="GET"
+      data-path="api/v1/planting-calendars/{plantingCalendar_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-planting-calendars--plantingCalendar_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="tryItOut('GETapi-v1-planting-calendars--plantingCalendar_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="cancelTryOut('GETapi-v1-planting-calendars--plantingCalendar_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-planting-calendars--plantingCalendar_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/planting-calendars/{plantingCalendar_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>plantingCalendar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plantingCalendar_id"                data-endpoint="GETapi-v1-planting-calendars--plantingCalendar_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the plantingCalendar. Example: <code>1</code></p>
+            </div>
+                    </form>
+
                     <h2 id="endpoints-GETapi-v1-districts--district_id--planting-calendar">Get active planting calendar for a specific district (with hierarchical fallback)</h2>
 
 <p>
@@ -6954,7 +7538,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"planned_date\": \"2026-08-20T01:35:33\",
+    \"planned_date\": \"2026-08-26T01:34:25\",
     \"variety_id\": 16
 }"
 </code></pre></div>
@@ -6972,7 +7556,7 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "planned_date": "2026-08-20T01:35:33",
+    "planned_date": "2026-08-26T01:34:25",
     "variety_id": 16
 };
 
@@ -7077,10 +7661,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_date"                data-endpoint="POSTapi-v1-planting-calendar-recommend-planting-window"
-               value="2026-08-20T01:35:33"
+               value="2026-08-26T01:34:25"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:33</code></p>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:25</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>variety_id</code></b>&nbsp;&nbsp;
@@ -7095,6 +7679,1110 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must match an existing stored value. Example: <code>16</code></p>
         </div>
         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-planting-calendars">Store a newly created planting calendar / recommendation.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-planting-calendars">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/planting-calendars" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"province_id\": 16,
+    \"regency_id\": 16,
+    \"district_id\": 16,
+    \"village_id\": 16,
+    \"season\": \"dry\",
+    \"year\": 22,
+    \"planting_start\": \"2026-08-26T01:34:25\",
+    \"planting_end\": \"2052-09-18\",
+    \"planting_pattern\": \"n\",
+    \"rice_variety\": \"g\",
+    \"recommended_area\": 12,
+    \"status\": \"active\",
+    \"source\": \"m\",
+    \"notes\": \"i\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/planting-calendars"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "province_id": 16,
+    "regency_id": 16,
+    "district_id": 16,
+    "village_id": 16,
+    "season": "dry",
+    "year": 22,
+    "planting_start": "2026-08-26T01:34:25",
+    "planting_end": "2052-09-18",
+    "planting_pattern": "n",
+    "rice_variety": "g",
+    "recommended_area": 12,
+    "status": "active",
+    "source": "m",
+    "notes": "i"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-planting-calendars">
+</span>
+<span id="execution-results-POSTapi-v1-planting-calendars" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-planting-calendars"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-planting-calendars"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-planting-calendars" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-planting-calendars">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-planting-calendars" data-method="POST"
+      data-path="api/v1/planting-calendars"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-planting-calendars', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-planting-calendars"
+                    onclick="tryItOut('POSTapi-v1-planting-calendars');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-planting-calendars"
+                    onclick="cancelTryOut('POSTapi-v1-planting-calendars');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-planting-calendars"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/planting-calendars</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>province_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="province_id"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>regency_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="regency_id"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>district_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="district_id"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>village_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="village_id"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>season</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="season"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="dry"
+               data-component="body">
+    <br>
+<p>Example: <code>dry</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>year</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="year"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="22"
+               data-component="body">
+    <br>
+<p>Must be at least 2020. Must not be greater than 2035. Example: <code>22</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_start</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_start"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="2026-08-26T01:34:25"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:25</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_end"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="2052-09-18"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-18</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_pattern"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>rice_variety</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="rice_variety"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>recommended_area</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="recommended_area"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="12"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="active"
+               data-component="body">
+    <br>
+<p>Example: <code>active</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>active</code></li> <li><code>inactive</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="POSTapi-v1-planting-calendars"
+               value="i"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>i</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-PATCHapi-v1-planting-calendars--plantingCalendar_id-">Update the specified planting calendar in storage.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-planting-calendars--plantingCalendar_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost/api/v1/planting-calendars/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"province_id\": 16,
+    \"regency_id\": 16,
+    \"district_id\": 16,
+    \"village_id\": 16,
+    \"season\": \"dry\",
+    \"year\": 22,
+    \"planting_start\": \"2026-08-26T01:34:25\",
+    \"planting_end\": \"2052-09-18\",
+    \"planting_pattern\": \"n\",
+    \"rice_variety\": \"g\",
+    \"recommended_area\": 12,
+    \"status\": \"active\",
+    \"source\": \"m\",
+    \"notes\": \"i\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/planting-calendars/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "province_id": 16,
+    "regency_id": 16,
+    "district_id": 16,
+    "village_id": 16,
+    "season": "dry",
+    "year": 22,
+    "planting_start": "2026-08-26T01:34:25",
+    "planting_end": "2052-09-18",
+    "planting_pattern": "n",
+    "rice_variety": "g",
+    "recommended_area": 12,
+    "status": "active",
+    "source": "m",
+    "notes": "i"
+};
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-planting-calendars--plantingCalendar_id-">
+</span>
+<span id="execution-results-PATCHapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-planting-calendars--plantingCalendar_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-planting-calendars--plantingCalendar_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-planting-calendars--plantingCalendar_id-" data-method="PATCH"
+      data-path="api/v1/planting-calendars/{plantingCalendar_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-planting-calendars--plantingCalendar_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="tryItOut('PATCHapi-v1-planting-calendars--plantingCalendar_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="cancelTryOut('PATCHapi-v1-planting-calendars--plantingCalendar_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/planting-calendars/{plantingCalendar_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>plantingCalendar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plantingCalendar_id"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the plantingCalendar. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>province_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="province_id"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>regency_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="regency_id"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>district_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="district_id"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>village_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="village_id"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>season</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="season"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="dry"
+               data-component="body">
+    <br>
+<p>Example: <code>dry</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>year</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="year"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="22"
+               data-component="body">
+    <br>
+<p>Must be at least 2020. Must not be greater than 2035. Example: <code>22</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_start</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_start"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="2026-08-26T01:34:25"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:25</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_end"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="2052-09-18"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-18</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_pattern"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>rice_variety</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="rice_variety"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>recommended_area</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="recommended_area"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="12"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="active"
+               data-component="body">
+    <br>
+<p>Example: <code>active</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>active</code></li> <li><code>inactive</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
+               value="i"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>i</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-PUTapi-v1-planting-calendars--plantingCalendar_id-">Update the specified planting calendar in storage.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PUTapi-v1-planting-calendars--plantingCalendar_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "http://localhost/api/v1/planting-calendars/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"province_id\": 16,
+    \"regency_id\": 16,
+    \"district_id\": 16,
+    \"village_id\": 16,
+    \"season\": \"rainy\",
+    \"year\": 22,
+    \"planting_start\": \"2026-08-26T01:34:25\",
+    \"planting_end\": \"2052-09-18\",
+    \"planting_pattern\": \"n\",
+    \"rice_variety\": \"g\",
+    \"recommended_area\": 12,
+    \"status\": \"draft\",
+    \"source\": \"m\",
+    \"notes\": \"i\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/planting-calendars/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "province_id": 16,
+    "regency_id": 16,
+    "district_id": 16,
+    "village_id": 16,
+    "season": "rainy",
+    "year": 22,
+    "planting_start": "2026-08-26T01:34:25",
+    "planting_end": "2052-09-18",
+    "planting_pattern": "n",
+    "rice_variety": "g",
+    "recommended_area": 12,
+    "status": "draft",
+    "source": "m",
+    "notes": "i"
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-v1-planting-calendars--plantingCalendar_id-">
+</span>
+<span id="execution-results-PUTapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-v1-planting-calendars--plantingCalendar_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-v1-planting-calendars--plantingCalendar_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-v1-planting-calendars--plantingCalendar_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-v1-planting-calendars--plantingCalendar_id-" data-method="PUT"
+      data-path="api/v1/planting-calendars/{plantingCalendar_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-v1-planting-calendars--plantingCalendar_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="tryItOut('PUTapi-v1-planting-calendars--plantingCalendar_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="cancelTryOut('PUTapi-v1-planting-calendars--plantingCalendar_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-v1-planting-calendars--plantingCalendar_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/v1/planting-calendars/{plantingCalendar_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>plantingCalendar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plantingCalendar_id"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the plantingCalendar. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>province_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="province_id"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>regency_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="regency_id"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>district_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="district_id"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>village_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="village_id"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>season</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="season"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="rainy"
+               data-component="body">
+    <br>
+<p>Example: <code>rainy</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>year</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="year"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="22"
+               data-component="body">
+    <br>
+<p>Must be at least 2020. Must not be greater than 2035. Example: <code>22</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_start</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_start"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="2026-08-26T01:34:25"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:25</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_end"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="2052-09-18"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-18</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="planting_pattern"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>rice_variety</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="rice_variety"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>recommended_area</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="recommended_area"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="12"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="draft"
+               data-component="body">
+    <br>
+<p>Example: <code>draft</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>active</code></li> <li><code>inactive</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
+               value="i"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>i</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-DELETEapi-v1-planting-calendars--plantingCalendar_id-">Remove the specified planting calendar from storage.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-planting-calendars--plantingCalendar_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/planting-calendars/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/planting-calendars/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-planting-calendars--plantingCalendar_id-">
+</span>
+<span id="execution-results-DELETEapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-planting-calendars--plantingCalendar_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-planting-calendars--plantingCalendar_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-planting-calendars--plantingCalendar_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-planting-calendars--plantingCalendar_id-" data-method="DELETE"
+      data-path="api/v1/planting-calendars/{plantingCalendar_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-planting-calendars--plantingCalendar_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="tryItOut('DELETEapi-v1-planting-calendars--plantingCalendar_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+                    onclick="cancelTryOut('DELETEapi-v1-planting-calendars--plantingCalendar_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/planting-calendars/{plantingCalendar_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>plantingCalendar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plantingCalendar_id"                data-endpoint="DELETEapi-v1-planting-calendars--plantingCalendar_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the plantingCalendar. Example: <code>1</code></p>
+            </div>
+                    </form>
 
                     <h2 id="endpoints-GETapi-v1-knowledge-base">GET api/v1/knowledge-base</h2>
 
@@ -7493,7 +9181,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-GETapi-v1-farm-activities">List current user&#039;s farm activities (with optional crop_season_id filter)</h2>
+                    <h2 id="endpoints-GETapi-v1-farm-activities">GET api/v1/farm-activities</h2>
 
 <p>
 </p>
@@ -7621,7 +9309,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-POSTapi-v1-farm-activities">Store a new farm activity</h2>
+                    <h2 id="endpoints-POSTapi-v1-farm-activities">POST api/v1/farm-activities</h2>
 
 <p>
 </p>
@@ -7639,8 +9327,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
-    \"type\": \"spraying\",
-    \"occurred_at\": \"2026-08-20T01:35:34\",
+    \"type\": \"land_preparation\",
+    \"occurred_at\": \"2026-08-26T01:34:26\",
     \"notes\": \"architecto\",
     \"cost\": 39
 }"
@@ -7659,8 +9347,8 @@ const headers = {
 
 let body = {
     "crop_season_id": 16,
-    "type": "spraying",
-    "occurred_at": "2026-08-20T01:35:34",
+    "type": "land_preparation",
+    "occurred_at": "2026-08-26T01:34:26",
     "notes": "architecto",
     "cost": 39
 };
@@ -7766,10 +9454,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="type"                data-endpoint="POSTapi-v1-farm-activities"
-               value="spraying"
+               value="land_preparation"
                data-component="body">
     <br>
-<p>Example: <code>spraying</code></p>
+<p>Example: <code>land_preparation</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>land_preparation</code></li> <li><code>planting</code></li> <li><code>fertilizing</code></li> <li><code>spraying</code></li> <li><code>irrigation</code></li> <li><code>other</code></li></ul>
         </div>
@@ -7780,10 +9468,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="occurred_at"                data-endpoint="POSTapi-v1-farm-activities"
-               value="2026-08-20T01:35:34"
+               value="2026-08-26T01:34:26"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:34</code></p>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:26</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -7811,7 +9499,7 @@ Must be one of:
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-v1-farm-activities--farmActivity_id-">Show farm activity detail</h2>
+                    <h2 id="endpoints-GETapi-v1-farm-activities--farmActivity_id-">GET api/v1/farm-activities/{farmActivity_id}</h2>
 
 <p>
 </p>
@@ -7824,14 +9512,14 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/farm-activities/16" \
+    --get "http://localhost/api/v1/farm-activities/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/farm-activities/16"
+    "http://localhost/api/v1/farm-activities/1"
 );
 
 const headers = {
@@ -7945,14 +9633,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="farmActivity_id"                data-endpoint="GETapi-v1-farm-activities--farmActivity_id-"
-               value="16"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the farmActivity. Example: <code>16</code></p>
+<p>The ID of the farmActivity. Example: <code>1</code></p>
             </div>
                     </form>
 
-                    <h2 id="endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">Update farm activity</h2>
+                    <h2 id="endpoints-PATCHapi-v1-farm-activities--farmActivity_id-">PATCH api/v1/farm-activities/{farmActivity_id}</h2>
 
 <p>
 </p>
@@ -7965,13 +9653,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost/api/v1/farm-activities/16" \
+    "http://localhost/api/v1/farm-activities/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
     \"type\": \"planting\",
-    \"occurred_at\": \"2026-08-20T01:35:34\",
+    \"occurred_at\": \"2026-08-26T01:34:26\",
     \"notes\": \"architecto\",
     \"cost\": 39
 }"
@@ -7980,7 +9668,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/farm-activities/16"
+    "http://localhost/api/v1/farm-activities/1"
 );
 
 const headers = {
@@ -7991,7 +9679,7 @@ const headers = {
 let body = {
     "crop_season_id": 16,
     "type": "planting",
-    "occurred_at": "2026-08-20T01:35:34",
+    "occurred_at": "2026-08-26T01:34:26",
     "notes": "architecto",
     "cost": 39
 };
@@ -8085,10 +9773,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="farmActivity_id"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
-               value="16"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the farmActivity. Example: <code>16</code></p>
+<p>The ID of the farmActivity. Example: <code>1</code></p>
             </div>
                             <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
@@ -8124,10 +9812,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="occurred_at"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
-               value="2026-08-20T01:35:34"
+               value="2026-08-26T01:34:26"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:34</code></p>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:26</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -8155,7 +9843,7 @@ Must be one of:
         </div>
         </form>
 
-                    <h2 id="endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">Delete farm activity</h2>
+                    <h2 id="endpoints-DELETEapi-v1-farm-activities--farmActivity_id-">DELETE api/v1/farm-activities/{farmActivity_id}</h2>
 
 <p>
 </p>
@@ -8168,14 +9856,14 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost/api/v1/farm-activities/16" \
+    "http://localhost/api/v1/farm-activities/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/farm-activities/16"
+    "http://localhost/api/v1/farm-activities/1"
 );
 
 const headers = {
@@ -8272,10 +9960,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="farmActivity_id"                data-endpoint="DELETEapi-v1-farm-activities--farmActivity_id-"
-               value="16"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the farmActivity. Example: <code>16</code></p>
+<p>The ID of the farmActivity. Example: <code>1</code></p>
             </div>
                     </form>
 
@@ -8406,6 +10094,688 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-harvests">POST api/v1/harvests</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-harvests">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/harvests" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"crop_season_id\": 16,
+    \"harvest_date\": \"2026-08-26T01:34:26\",
+    \"quantity\": 4326.41688,
+    \"unit\": \"miyvdljnikhwaykc\",
+    \"quality_grade\": \"m\",
+    \"moisture_percent\": 0
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/harvests"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "crop_season_id": 16,
+    "harvest_date": "2026-08-26T01:34:26",
+    "quantity": 4326.41688,
+    "unit": "miyvdljnikhwaykc",
+    "quality_grade": "m",
+    "moisture_percent": 0
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-harvests">
+</span>
+<span id="execution-results-POSTapi-v1-harvests" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-harvests"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-harvests"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-harvests" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-harvests">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-harvests" data-method="POST"
+      data-path="api/v1/harvests"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-harvests', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-harvests"
+                    onclick="tryItOut('POSTapi-v1-harvests');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-harvests"
+                    onclick="cancelTryOut('POSTapi-v1-harvests');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-harvests"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/harvests</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-harvests"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-harvests"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>crop_season_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="crop_season_id"                data-endpoint="POSTapi-v1-harvests"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>harvest_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="harvest_date"                data-endpoint="POSTapi-v1-harvests"
+               value="2026-08-26T01:34:26"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:26</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quantity"                data-endpoint="POSTapi-v1-harvests"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>unit</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="unit"                data-endpoint="POSTapi-v1-harvests"
+               value="miyvdljnikhwaykc"
+               data-component="body">
+    <br>
+<p>Must not be greater than 20 characters. Example: <code>miyvdljnikhwaykc</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quality_grade</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="quality_grade"                data-endpoint="POSTapi-v1-harvests"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>moisture_percent</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="moisture_percent"                data-endpoint="POSTapi-v1-harvests"
+               value="0"
+               data-component="body">
+    <br>
+<p>Must be between 0 and 100. Example: <code>0</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-GETapi-v1-harvests--harvest_id-">GET api/v1/harvests/{harvest_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-harvests--harvest_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/harvests/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/harvests/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-harvests--harvest_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-harvests--harvest_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-harvests--harvest_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-harvests--harvest_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-harvests--harvest_id-" data-method="GET"
+      data-path="api/v1/harvests/{harvest_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-harvests--harvest_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-harvests--harvest_id-"
+                    onclick="tryItOut('GETapi-v1-harvests--harvest_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-harvests--harvest_id-"
+                    onclick="cancelTryOut('GETapi-v1-harvests--harvest_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-harvests--harvest_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/harvests/{harvest_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>harvest_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="harvest_id"                data-endpoint="GETapi-v1-harvests--harvest_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the harvest. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="endpoints-PATCHapi-v1-harvests--harvest_id-">PATCH api/v1/harvests/{harvest_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-harvests--harvest_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost/api/v1/harvests/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"crop_season_id\": 16,
+    \"harvest_date\": \"2026-08-26T01:34:26\",
+    \"quantity\": 4326.41688,
+    \"unit\": \"miyvdljnikhwaykc\",
+    \"quality_grade\": \"m\",
+    \"moisture_percent\": 0
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/harvests/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "crop_season_id": 16,
+    "harvest_date": "2026-08-26T01:34:26",
+    "quantity": 4326.41688,
+    "unit": "miyvdljnikhwaykc",
+    "quality_grade": "m",
+    "moisture_percent": 0
+};
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-harvests--harvest_id-">
+</span>
+<span id="execution-results-PATCHapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-harvests--harvest_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-harvests--harvest_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-harvests--harvest_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-harvests--harvest_id-" data-method="PATCH"
+      data-path="api/v1/harvests/{harvest_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-harvests--harvest_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-harvests--harvest_id-"
+                    onclick="tryItOut('PATCHapi-v1-harvests--harvest_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-harvests--harvest_id-"
+                    onclick="cancelTryOut('PATCHapi-v1-harvests--harvest_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-harvests--harvest_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/harvests/{harvest_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>harvest_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="harvest_id"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the harvest. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>crop_season_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="crop_season_id"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>harvest_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="harvest_date"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="2026-08-26T01:34:26"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:26</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quantity"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>unit</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="unit"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="miyvdljnikhwaykc"
+               data-component="body">
+    <br>
+<p>Must not be greater than 20 characters. Example: <code>miyvdljnikhwaykc</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quality_grade</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="quality_grade"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>moisture_percent</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="moisture_percent"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
+               value="0"
+               data-component="body">
+    <br>
+<p>Must be between 0 and 100. Example: <code>0</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-DELETEapi-v1-harvests--harvest_id-">DELETE api/v1/harvests/{harvest_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-harvests--harvest_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/harvests/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/harvests/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-harvests--harvest_id-">
+</span>
+<span id="execution-results-DELETEapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-harvests--harvest_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-harvests--harvest_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-harvests--harvest_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-harvests--harvest_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-harvests--harvest_id-" data-method="DELETE"
+      data-path="api/v1/harvests/{harvest_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-harvests--harvest_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-harvests--harvest_id-"
+                    onclick="tryItOut('DELETEapi-v1-harvests--harvest_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-harvests--harvest_id-"
+                    onclick="cancelTryOut('DELETEapi-v1-harvests--harvest_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-harvests--harvest_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/harvests/{harvest_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-harvests--harvest_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>harvest_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="harvest_id"                data-endpoint="DELETEapi-v1-harvests--harvest_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the harvest. Example: <code>1</code></p>
+            </div>
+                    </form>
 
                     <h2 id="endpoints-GETapi-v1-rice-varieties">GET api/v1/rice-varieties</h2>
 
@@ -8809,9 +11179,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"units\": \"imperial\",
+    \"units\": \"metric\",
     \"lang\": \"ngzmiy\",
-    \"force_refresh\": true
+    \"force_refresh\": false
 }"
 </code></pre></div>
 
@@ -8828,9 +11198,9 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "units": "imperial",
+    "units": "metric",
     "lang": "ngzmiy",
-    "force_refresh": true
+    "force_refresh": false
 };
 
 fetch(url, {
@@ -8934,10 +11304,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="units"                data-endpoint="POSTapi-v1-weather-current"
-               value="imperial"
+               value="metric"
                data-component="body">
     <br>
-<p>Example: <code>imperial</code></p>
+<p>Example: <code>metric</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>metric</code></li> <li><code>imperial</code></li></ul>
         </div>
@@ -8973,7 +11343,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
         </form>
 
@@ -8997,7 +11367,7 @@ Must be one of:
     \"farm_id\": 16,
     \"units\": \"metric\",
     \"lang\": \"ngzmiy\",
-    \"force_refresh\": false
+    \"force_refresh\": true
 }"
 </code></pre></div>
 
@@ -9016,7 +11386,7 @@ let body = {
     "farm_id": 16,
     "units": "metric",
     "lang": "ngzmiy",
-    "force_refresh": false
+    "force_refresh": true
 };
 
 fetch(url, {
@@ -9159,7 +11529,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
         </form>
 
@@ -9518,7 +11888,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"city\": \"b\",
-    \"units\": \"metric\",
+    \"units\": \"imperial\",
     \"lang\": \"ngzmiy\"
 }"
 </code></pre></div>
@@ -9536,7 +11906,7 @@ const headers = {
 
 let body = {
     "city": "b",
-    "units": "metric",
+    "units": "imperial",
     "lang": "ngzmiy"
 };
 
@@ -9641,10 +12011,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="units"                data-endpoint="POSTapi-v1-weather-city"
-               value="metric"
+               value="imperial"
                data-component="body">
     <br>
-<p>Example: <code>metric</code></p>
+<p>Example: <code>imperial</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>metric</code></li> <li><code>imperial</code></li></ul>
         </div>
@@ -9851,8 +12221,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"moisture_percentage\": 8,
     \"organic_matter_percentage\": 1,
     \"soil_temp_celsius\": 1,
-    \"soil_type\": \"latosol\",
-    \"tested_at\": \"2026-08-20T01:35:35\",
+    \"soil_type\": \"sandy_loam\",
+    \"tested_at\": \"2026-08-26T01:34:27\",
     \"notes\": \"l\",
     \"sync_agromonitoring\": true
 }"
@@ -9879,8 +12249,8 @@ let body = {
     "moisture_percentage": 8,
     "organic_matter_percentage": 1,
     "soil_temp_celsius": 1,
-    "soil_type": "latosol",
-    "tested_at": "2026-08-20T01:35:35",
+    "soil_type": "sandy_loam",
+    "tested_at": "2026-08-26T01:34:27",
     "notes": "l",
     "sync_agromonitoring": true
 };
@@ -10082,10 +12452,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="soil_type"                data-endpoint="POSTapi-v1-soil-detections"
-               value="latosol"
+               value="sandy_loam"
                data-component="body">
     <br>
-<p>Example: <code>latosol</code></p>
+<p>Example: <code>sandy_loam</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>alluvial</code></li> <li><code>clay</code></li> <li><code>loam</code></li> <li><code>sandy_loam</code></li> <li><code>peat</code></li> <li><code>latosol</code></li></ul>
         </div>
@@ -10096,10 +12466,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="tested_at"                data-endpoint="POSTapi-v1-soil-detections"
-               value="2026-08-20T01:35:35"
+               value="2026-08-26T01:34:27"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:27</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -10715,10 +13085,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"farm_id\": 16,
     \"variety_id\": 16,
-    \"planned_planting_date\": \"2026-08-20T01:35:35\",
-    \"planting_date\": \"2026-08-20T01:35:35\",
-    \"estimated_harvest_date\": \"2026-08-20T01:35:35\",
-    \"status\": \"cancelled\"
+    \"planned_planting_date\": \"2026-08-26T01:34:27\",
+    \"planting_date\": \"2052-09-18\",
+    \"estimated_harvest_date\": \"2052-09-18\",
+    \"status\": \"planned\"
 }"
 </code></pre></div>
 
@@ -10736,10 +13106,10 @@ const headers = {
 let body = {
     "farm_id": 16,
     "variety_id": 16,
-    "planned_planting_date": "2026-08-20T01:35:35",
-    "planting_date": "2026-08-20T01:35:35",
-    "estimated_harvest_date": "2026-08-20T01:35:35",
-    "status": "cancelled"
+    "planned_planting_date": "2026-08-26T01:34:27",
+    "planting_date": "2052-09-18",
+    "estimated_harvest_date": "2052-09-18",
+    "status": "planned"
 };
 
 fetch(url, {
@@ -10855,10 +13225,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-20T01:35:35"
+               value="2026-08-26T01:34:27"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:27</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_date</code></b>&nbsp;&nbsp;
@@ -10867,10 +13237,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-20T01:35:35"
+               value="2052-09-18"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planned_planting_date</code>. Example: <code>2052-09-18</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>estimated_harvest_date</code></b>&nbsp;&nbsp;
@@ -10879,10 +13249,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="estimated_harvest_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-08-20T01:35:35"
+               value="2052-09-18"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-08-20T01:35:35</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_date</code>. Example: <code>2052-09-18</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -10891,10 +13261,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="cancelled"
+               value="planned"
                data-component="body">
     <br>
-<p>Example: <code>cancelled</code></p>
+<p>Example: <code>planned</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>planned</code></li> <li><code>active</code></li> <li><code>completed</code></li> <li><code>cancelled</code></li></ul>
         </div>
@@ -11028,6 +13398,772 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="endpoints-POSTapi-v1-market-listings">POST api/v1/market-listings</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-market-listings">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/market-listings" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"farm_id\": 16,
+    \"crop_season_id\": 16,
+    \"harvest_id\": 16,
+    \"commodity\": \"n\",
+    \"quantity\": 4326.41688,
+    \"unit\": \"m\",
+    \"price_per_unit\": 4326.41688,
+    \"description\": \"Eius et animi quos velit et.\",
+    \"sales_link\": \"v\",
+    \"image_url\": \"http:\\/\\/www.dach.com\\/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html\",
+    \"expires_at\": \"2045-07-19\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-listings"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "farm_id": 16,
+    "crop_season_id": 16,
+    "harvest_id": 16,
+    "commodity": "n",
+    "quantity": 4326.41688,
+    "unit": "m",
+    "price_per_unit": 4326.41688,
+    "description": "Eius et animi quos velit et.",
+    "sales_link": "v",
+    "image_url": "http:\/\/www.dach.com\/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html",
+    "expires_at": "2045-07-19"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-market-listings">
+</span>
+<span id="execution-results-POSTapi-v1-market-listings" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-market-listings"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-market-listings"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-market-listings" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-market-listings">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-market-listings" data-method="POST"
+      data-path="api/v1/market-listings"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-market-listings', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-market-listings"
+                    onclick="tryItOut('POSTapi-v1-market-listings');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-market-listings"
+                    onclick="cancelTryOut('POSTapi-v1-market-listings');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-market-listings"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/market-listings</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-market-listings"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-market-listings"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>farm_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farm_id"                data-endpoint="POSTapi-v1-market-listings"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>crop_season_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="crop_season_id"                data-endpoint="POSTapi-v1-market-listings"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>harvest_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="harvest_id"                data-endpoint="POSTapi-v1-market-listings"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>commodity</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="commodity"                data-endpoint="POSTapi-v1-market-listings"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quantity"                data-endpoint="POSTapi-v1-market-listings"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>unit</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="unit"                data-endpoint="POSTapi-v1-market-listings"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 30 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>price_per_unit</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="price_per_unit"                data-endpoint="POSTapi-v1-market-listings"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="description"                data-endpoint="POSTapi-v1-market-listings"
+               value="Eius et animi quos velit et."
+               data-component="body">
+    <br>
+<p>Example: <code>Eius et animi quos velit et.</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>sales_link</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sales_link"                data-endpoint="POSTapi-v1-market-listings"
+               value="v"
+               data-component="body">
+    <br>
+<p>Must not be greater than 2048 characters. Example: <code>v</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image_url</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image_url"                data-endpoint="POSTapi-v1-market-listings"
+               value="http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html"
+               data-component="body">
+    <br>
+<p>Must not be greater than 2048 characters. Example: <code>http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>expires_at</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="expires_at"                data-endpoint="POSTapi-v1-market-listings"
+               value="2045-07-19"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Must be a date after <code>published_at</code>. Example: <code>2045-07-19</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-GETapi-v1-market-listings--marketListing_id-">GET api/v1/market-listings/{marketListing_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-market-listings--marketListing_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/market-listings/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-listings/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-market-listings--marketListing_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-market-listings--marketListing_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-market-listings--marketListing_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-market-listings--marketListing_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-market-listings--marketListing_id-" data-method="GET"
+      data-path="api/v1/market-listings/{marketListing_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-market-listings--marketListing_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-market-listings--marketListing_id-"
+                    onclick="tryItOut('GETapi-v1-market-listings--marketListing_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-market-listings--marketListing_id-"
+                    onclick="cancelTryOut('GETapi-v1-market-listings--marketListing_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-market-listings--marketListing_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/market-listings/{marketListing_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>marketListing_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="marketListing_id"                data-endpoint="GETapi-v1-market-listings--marketListing_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the marketListing. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="endpoints-PATCHapi-v1-market-listings--marketListing_id-">PATCH api/v1/market-listings/{marketListing_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-market-listings--marketListing_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost/api/v1/market-listings/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"commodity\": \"b\",
+    \"quantity\": 4326.41688,
+    \"unit\": \"miyvdljnikhwaykc\",
+    \"price_per_unit\": 4326.41688,
+    \"description\": \"Eius et animi quos velit et.\",
+    \"sales_link\": \"v\",
+    \"image_url\": \"http:\\/\\/www.dach.com\\/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-listings/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "commodity": "b",
+    "quantity": 4326.41688,
+    "unit": "miyvdljnikhwaykc",
+    "price_per_unit": 4326.41688,
+    "description": "Eius et animi quos velit et.",
+    "sales_link": "v",
+    "image_url": "http:\/\/www.dach.com\/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html"
+};
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-market-listings--marketListing_id-">
+</span>
+<span id="execution-results-PATCHapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-market-listings--marketListing_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-market-listings--marketListing_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-market-listings--marketListing_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-market-listings--marketListing_id-" data-method="PATCH"
+      data-path="api/v1/market-listings/{marketListing_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-market-listings--marketListing_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-market-listings--marketListing_id-"
+                    onclick="tryItOut('PATCHapi-v1-market-listings--marketListing_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-market-listings--marketListing_id-"
+                    onclick="cancelTryOut('PATCHapi-v1-market-listings--marketListing_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-market-listings--marketListing_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/market-listings/{marketListing_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>marketListing_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="marketListing_id"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the marketListing. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>commodity</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="commodity"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>b</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quantity"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>unit</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="unit"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="miyvdljnikhwaykc"
+               data-component="body">
+    <br>
+<p>Must not be greater than 20 characters. Example: <code>miyvdljnikhwaykc</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>price_per_unit</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="price_per_unit"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="description"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="Eius et animi quos velit et."
+               data-component="body">
+    <br>
+<p>Example: <code>Eius et animi quos velit et.</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>sales_link</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sales_link"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="v"
+               data-component="body">
+    <br>
+<p>Must not be greater than 2048 characters. Example: <code>v</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image_url</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image_url"                data-endpoint="PATCHapi-v1-market-listings--marketListing_id-"
+               value="http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html"
+               data-component="body">
+    <br>
+<p>Must not be greater than 2048 characters. Example: <code>http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-DELETEapi-v1-market-listings--marketListing_id-">DELETE api/v1/market-listings/{marketListing_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-market-listings--marketListing_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/market-listings/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-listings/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-market-listings--marketListing_id-">
+</span>
+<span id="execution-results-DELETEapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-market-listings--marketListing_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-market-listings--marketListing_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-market-listings--marketListing_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-market-listings--marketListing_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-market-listings--marketListing_id-" data-method="DELETE"
+      data-path="api/v1/market-listings/{marketListing_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-market-listings--marketListing_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-market-listings--marketListing_id-"
+                    onclick="tryItOut('DELETEapi-v1-market-listings--marketListing_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-market-listings--marketListing_id-"
+                    onclick="cancelTryOut('DELETEapi-v1-market-listings--marketListing_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-market-listings--marketListing_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/market-listings/{marketListing_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-market-listings--marketListing_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>marketListing_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="marketListing_id"                data-endpoint="DELETEapi-v1-market-listings--marketListing_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the marketListing. Example: <code>1</code></p>
+            </div>
+                    </form>
+
                     <h2 id="endpoints-GETapi-v1-listing-images">GET api/v1/listing-images</h2>
 
 <p>
@@ -11156,6 +14292,147 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="endpoints-GETapi-v1-market-listings--marketListing_id--offers">GET api/v1/market-listings/{marketListing_id}/offers</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-market-listings--marketListing_id--offers">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/market-listings/1/offers" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-listings/1/offers"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-market-listings--marketListing_id--offers">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-market-listings--marketListing_id--offers" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-market-listings--marketListing_id--offers"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-market-listings--marketListing_id--offers"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-market-listings--marketListing_id--offers" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-market-listings--marketListing_id--offers">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-market-listings--marketListing_id--offers" data-method="GET"
+      data-path="api/v1/market-listings/{marketListing_id}/offers"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-market-listings--marketListing_id--offers', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-market-listings--marketListing_id--offers"
+                    onclick="tryItOut('GETapi-v1-market-listings--marketListing_id--offers');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-market-listings--marketListing_id--offers"
+                    onclick="cancelTryOut('GETapi-v1-market-listings--marketListing_id--offers');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-market-listings--marketListing_id--offers"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/market-listings/{marketListing_id}/offers</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-market-listings--marketListing_id--offers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-market-listings--marketListing_id--offers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>marketListing_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="marketListing_id"                data-endpoint="GETapi-v1-market-listings--marketListing_id--offers"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the marketListing. Example: <code>1</code></p>
+            </div>
+                    </form>
+
                     <h2 id="endpoints-GETapi-v1-market-offers">GET api/v1/market-offers</h2>
 
 <p>
@@ -11283,6 +14560,327 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-market-offers">POST api/v1/market-offers</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-market-offers">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/market-offers" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"listing_id\": 16,
+    \"offered_price\": 39,
+    \"quantity\": 84,
+    \"message\": \"z\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-offers"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "listing_id": 16,
+    "offered_price": 39,
+    "quantity": 84,
+    "message": "z"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-market-offers">
+</span>
+<span id="execution-results-POSTapi-v1-market-offers" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-market-offers"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-market-offers"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-market-offers" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-market-offers">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-market-offers" data-method="POST"
+      data-path="api/v1/market-offers"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-market-offers', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-market-offers"
+                    onclick="tryItOut('POSTapi-v1-market-offers');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-market-offers"
+                    onclick="cancelTryOut('POSTapi-v1-market-offers');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-market-offers"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/market-offers</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-market-offers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-market-offers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>listing_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="listing_id"                data-endpoint="POSTapi-v1-market-offers"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>offered_price</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="offered_price"                data-endpoint="POSTapi-v1-market-offers"
+               value="39"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>39</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quantity"                data-endpoint="POSTapi-v1-market-offers"
+               value="84"
+               data-component="body">
+    <br>
+<p>Must be at least 0.01. Example: <code>84</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>message</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="message"                data-endpoint="POSTapi-v1-market-offers"
+               value="z"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>z</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-PUTapi-v1-market-offers--marketOffer_id-">PUT api/v1/market-offers/{marketOffer_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-PUTapi-v1-market-offers--marketOffer_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "http://localhost/api/v1/market-offers/16" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"status\": \"rejected\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/market-offers/16"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "status": "rejected"
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-v1-market-offers--marketOffer_id-">
+</span>
+<span id="execution-results-PUTapi-v1-market-offers--marketOffer_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-v1-market-offers--marketOffer_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-v1-market-offers--marketOffer_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-v1-market-offers--marketOffer_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-v1-market-offers--marketOffer_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-v1-market-offers--marketOffer_id-" data-method="PUT"
+      data-path="api/v1/market-offers/{marketOffer_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-v1-market-offers--marketOffer_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-v1-market-offers--marketOffer_id-"
+                    onclick="tryItOut('PUTapi-v1-market-offers--marketOffer_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-v1-market-offers--marketOffer_id-"
+                    onclick="cancelTryOut('PUTapi-v1-market-offers--marketOffer_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-v1-market-offers--marketOffer_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/v1/market-offers/{marketOffer_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-v1-market-offers--marketOffer_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-v1-market-offers--marketOffer_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>marketOffer_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="marketOffer_id"                data-endpoint="PUTapi-v1-market-offers--marketOffer_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>The ID of the marketOffer. Example: <code>16</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="PUTapi-v1-market-offers--marketOffer_id-"
+               value="rejected"
+               data-component="body">
+    <br>
+<p>Example: <code>rejected</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>accepted</code></li> <li><code>rejected</code></li></ul>
+        </div>
+        </form>
 
                     <h2 id="endpoints-GETapi-v1-purchase-contracts">GET api/v1/purchase-contracts</h2>
 
@@ -11533,6 +15131,134 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Accept"                data-endpoint="GETapi-v1-contract-payments"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-v1-admin-broadcasts">GET api/v1/admin-broadcasts</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-admin-broadcasts">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/admin-broadcasts" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/admin-broadcasts"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-admin-broadcasts">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-admin-broadcasts" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-admin-broadcasts"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-admin-broadcasts"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-admin-broadcasts" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-admin-broadcasts">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-admin-broadcasts" data-method="GET"
+      data-path="api/v1/admin-broadcasts"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-admin-broadcasts', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-admin-broadcasts"
+                    onclick="tryItOut('GETapi-v1-admin-broadcasts');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-admin-broadcasts"
+                    onclick="cancelTryOut('GETapi-v1-admin-broadcasts');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-admin-broadcasts"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/admin-broadcasts</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-admin-broadcasts"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-admin-broadcasts"
                value="application/json"
                data-component="header">
     <br>
@@ -12134,6 +15860,459 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="endpoints-GETapi-v1-disease-scans">GET api/v1/disease-scans</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-disease-scans">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/disease-scans" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/disease-scans"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-disease-scans">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-disease-scans" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-disease-scans"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-disease-scans"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-disease-scans" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-disease-scans">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-disease-scans" data-method="GET"
+      data-path="api/v1/disease-scans"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-disease-scans', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-disease-scans"
+                    onclick="tryItOut('GETapi-v1-disease-scans');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-disease-scans"
+                    onclick="cancelTryOut('GETapi-v1-disease-scans');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-disease-scans"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/disease-scans</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-disease-scans"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-disease-scans"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-POSTapi-v1-disease-scans">POST api/v1/disease-scans</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-disease-scans">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/disease-scans" \
+    --header "Content-Type: multipart/form-data" \
+    --header "Accept: application/json" \
+    --form "farm_id=16"\
+    --form "plant_age_days=22"\
+    --form "latitude=-90"\
+    --form "longitude=-179"\
+    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\php9190.tmp" </code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/disease-scans"
+);
+
+const headers = {
+    "Content-Type": "multipart/form-data",
+    "Accept": "application/json",
+};
+
+const body = new FormData();
+body.append('farm_id', '16');
+body.append('plant_age_days', '22');
+body.append('latitude', '-90');
+body.append('longitude', '-179');
+body.append('image', document.querySelector('input[name="image"]').files[0]);
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-disease-scans">
+</span>
+<span id="execution-results-POSTapi-v1-disease-scans" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-disease-scans"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-disease-scans"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-disease-scans" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-disease-scans">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-disease-scans" data-method="POST"
+      data-path="api/v1/disease-scans"
+      data-authed="0"
+      data-hasfiles="1"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-disease-scans', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-disease-scans"
+                    onclick="tryItOut('POSTapi-v1-disease-scans');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-disease-scans"
+                    onclick="cancelTryOut('POSTapi-v1-disease-scans');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-disease-scans"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/disease-scans</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-disease-scans"
+               value="multipart/form-data"
+               data-component="header">
+    <br>
+<p>Example: <code>multipart/form-data</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-disease-scans"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>farm_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farm_id"                data-endpoint="POSTapi-v1-disease-scans"
+               value="16"
+               data-component="body">
+    <br>
+<p>Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>file</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="file" style="display: none"
+                              name="image"                data-endpoint="POSTapi-v1-disease-scans"
+               value=""
+               data-component="body">
+    <br>
+<p>Must be a file. Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\php9190.tmp</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>plant_age_days</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plant_age_days"                data-endpoint="POSTapi-v1-disease-scans"
+               value="22"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Must not be greater than 180. Example: <code>22</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>latitude</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="latitude"                data-endpoint="POSTapi-v1-disease-scans"
+               value="-90"
+               data-component="body">
+    <br>
+<p>Must be between -90 and 90. Example: <code>-90</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>longitude</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="longitude"                data-endpoint="POSTapi-v1-disease-scans"
+               value="-179"
+               data-component="body">
+    <br>
+<p>Must be between -180 and 180. Example: <code>-179</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-GETapi-v1-disease-scans--diseaseScan_id-">GET api/v1/disease-scans/{diseaseScan_id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-disease-scans--diseaseScan_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/disease-scans/16" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/disease-scans/16"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-disease-scans--diseaseScan_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-disease-scans--diseaseScan_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-disease-scans--diseaseScan_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-disease-scans--diseaseScan_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-disease-scans--diseaseScan_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-disease-scans--diseaseScan_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-disease-scans--diseaseScan_id-" data-method="GET"
+      data-path="api/v1/disease-scans/{diseaseScan_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-disease-scans--diseaseScan_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-disease-scans--diseaseScan_id-"
+                    onclick="tryItOut('GETapi-v1-disease-scans--diseaseScan_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-disease-scans--diseaseScan_id-"
+                    onclick="cancelTryOut('GETapi-v1-disease-scans--diseaseScan_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-disease-scans--diseaseScan_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/disease-scans/{diseaseScan_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-disease-scans--diseaseScan_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-disease-scans--diseaseScan_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>diseaseScan_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="diseaseScan_id"                data-endpoint="GETapi-v1-disease-scans--diseaseScan_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>The ID of the diseaseScan. Example: <code>16</code></p>
+            </div>
+                    </form>
+
                     <h2 id="endpoints-GETapi-v1-community-reports">GET api/v1/community-reports</h2>
 
 <p>
@@ -12261,6 +16440,204 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-community-reports">POST api/v1/community-reports</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-community-reports">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/community-reports" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"scan_id\": 16,
+    \"latitude\": -89,
+    \"longitude\": -180,
+    \"radius_km\": 16,
+    \"consent_given\": true
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/community-reports"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "scan_id": 16,
+    "latitude": -89,
+    "longitude": -180,
+    "radius_km": 16,
+    "consent_given": true
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-community-reports">
+</span>
+<span id="execution-results-POSTapi-v1-community-reports" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-community-reports"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-community-reports"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-community-reports" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-community-reports">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-community-reports" data-method="POST"
+      data-path="api/v1/community-reports"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-community-reports', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-community-reports"
+                    onclick="tryItOut('POSTapi-v1-community-reports');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-community-reports"
+                    onclick="cancelTryOut('POSTapi-v1-community-reports');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-community-reports"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/community-reports</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-community-reports"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-community-reports"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>scan_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="scan_id"                data-endpoint="POSTapi-v1-community-reports"
+               value="16"
+               data-component="body">
+    <br>
+<p>Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>latitude</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="latitude"                data-endpoint="POSTapi-v1-community-reports"
+               value="-89"
+               data-component="body">
+    <br>
+<p>Must be between -90 and 90. Example: <code>-89</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>longitude</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="longitude"                data-endpoint="POSTapi-v1-community-reports"
+               value="-180"
+               data-component="body">
+    <br>
+<p>Must be between -180 and 180. Example: <code>-180</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>radius_km</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="radius_km"                data-endpoint="POSTapi-v1-community-reports"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Must not be greater than 100. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>consent_given</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-v1-community-reports" style="display: none">
+            <input type="radio" name="consent_given"
+                   value="true"
+                   data-endpoint="POSTapi-v1-community-reports"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-v1-community-reports" style="display: none">
+            <input type="radio" name="consent_given"
+                   value="false"
+                   data-endpoint="POSTapi-v1-community-reports"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Must be accepted. Example: <code>true</code></p>
+        </div>
+        </form>
 
                     <h2 id="endpoints-GETapi-v1-alert-subscriptions">GET api/v1/alert-subscriptions</h2>
 
@@ -12798,27 +17175,27 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-v1-partner-favorites">GET api/v1/partner-favorites</h2>
+                    <h2 id="endpoints-GETapi-v1-events">Display a listing of upcoming &amp; active agriculture events.</h2>
 
 <p>
 </p>
 
 
 
-<span id="example-requests-GETapi-v1-partner-favorites">
+<span id="example-requests-GETapi-v1-events">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/partner-favorites" \
+    --get "http://localhost/api/v1/events" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/partner-favorites"
+    "http://localhost/api/v1/events"
 );
 
 const headers = {
@@ -12834,7 +17211,7 @@ fetch(url, {
 
 </span>
 
-<span id="example-responses-GETapi-v1-partner-favorites">
+<span id="example-responses-GETapi-v1-events">
             <blockquote>
             <p>Example response (401):</p>
         </blockquote>
@@ -12853,43 +17230,43 @@ access-control-allow-origin: *
 }</code>
  </pre>
     </span>
-<span id="execution-results-GETapi-v1-partner-favorites" hidden>
+<span id="execution-results-GETapi-v1-events" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-GETapi-v1-partner-favorites"></span>:
+                id="execution-response-status-GETapi-v1-events"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-v1-partner-favorites"
+    <pre class="json"><code id="execution-response-content-GETapi-v1-events"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-GETapi-v1-partner-favorites" hidden>
+<span id="execution-error-GETapi-v1-events" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-v1-partner-favorites">
+    <pre><code id="execution-error-message-GETapi-v1-events">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-GETapi-v1-partner-favorites" data-method="GET"
-      data-path="api/v1/partner-favorites"
+<form id="form-GETapi-v1-events" data-method="GET"
+      data-path="api/v1/events"
       data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-partner-favorites', this);">
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-events', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-v1-partner-favorites"
-                    onclick="tryItOut('GETapi-v1-partner-favorites');">Try it out ⚡
+                    id="btn-tryout-GETapi-v1-events"
+                    onclick="tryItOut('GETapi-v1-events');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-v1-partner-favorites"
-                    onclick="cancelTryOut('GETapi-v1-partner-favorites');" hidden>Cancel 🛑
+                    id="btn-canceltryout-GETapi-v1-events"
+                    onclick="cancelTryOut('GETapi-v1-events');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-v1-partner-favorites"
+                    id="btn-executetryout-GETapi-v1-events"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -12897,7 +17274,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-green">GET</small>
-            <b><code>api/v1/partner-favorites</code></b>
+            <b><code>api/v1/events</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -12906,7 +17283,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-v1-partner-favorites"
+                              name="Content-Type"                data-endpoint="GETapi-v1-events"
                value="application/json"
                data-component="header">
     <br>
@@ -12918,13 +17295,606 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-v1-partner-favorites"
+                              name="Accept"                data-endpoint="GETapi-v1-events"
                value="application/json"
                data-component="header">
     <br>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                    <h2 id="endpoints-POSTapi-v1-events">Store a newly created event (Admin / Officer).</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-events">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/events" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"title\": \"b\",
+    \"description\": \"Eius et animi quos velit et.\",
+    \"category\": \"workshop\",
+    \"event_date\": \"2026-08-26T01:34:30\",
+    \"event_time\": \"v\",
+    \"location_name\": \"d\",
+    \"location_address\": \"l\",
+    \"is_online\": true,
+    \"organizer\": \"j\",
+    \"speaker\": \"n\",
+    \"quota\": 35,
+    \"price_type\": \"paid\",
+    \"asset_image\": \"architecto\",
+    \"contact_person\": \"n\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/events"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "title": "b",
+    "description": "Eius et animi quos velit et.",
+    "category": "workshop",
+    "event_date": "2026-08-26T01:34:30",
+    "event_time": "v",
+    "location_name": "d",
+    "location_address": "l",
+    "is_online": true,
+    "organizer": "j",
+    "speaker": "n",
+    "quota": 35,
+    "price_type": "paid",
+    "asset_image": "architecto",
+    "contact_person": "n"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-events">
+</span>
+<span id="execution-results-POSTapi-v1-events" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-events"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-events"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-events" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-events">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-events" data-method="POST"
+      data-path="api/v1/events"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-events', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-events"
+                    onclick="tryItOut('POSTapi-v1-events');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-events"
+                    onclick="cancelTryOut('POSTapi-v1-events');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-events"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/events</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-events"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-events"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>title</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="title"                data-endpoint="POSTapi-v1-events"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>b</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="description"                data-endpoint="POSTapi-v1-events"
+               value="Eius et animi quos velit et."
+               data-component="body">
+    <br>
+<p>Example: <code>Eius et animi quos velit et.</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>category</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="category"                data-endpoint="POSTapi-v1-events"
+               value="workshop"
+               data-component="body">
+    <br>
+<p>Example: <code>workshop</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>workshop</code></li> <li><code>field_day</code></li> <li><code>bazaar</code></li> <li><code>irrigation</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>event_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="event_date"                data-endpoint="POSTapi-v1-events"
+               value="2026-08-26T01:34:30"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2026-08-26T01:34:30</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>event_time</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="event_time"                data-endpoint="POSTapi-v1-events"
+               value="v"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters. Example: <code>v</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>location_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="location_name"                data-endpoint="POSTapi-v1-events"
+               value="d"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>d</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>location_address</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="location_address"                data-endpoint="POSTapi-v1-events"
+               value="l"
+               data-component="body">
+    <br>
+<p>Must not be greater than 500 characters. Example: <code>l</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>is_online</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-v1-events" style="display: none">
+            <input type="radio" name="is_online"
+                   value="true"
+                   data-endpoint="POSTapi-v1-events"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-v1-events" style="display: none">
+            <input type="radio" name="is_online"
+                   value="false"
+                   data-endpoint="POSTapi-v1-events"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>organizer</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="organizer"                data-endpoint="POSTapi-v1-events"
+               value="j"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>j</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>speaker</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="speaker"                data-endpoint="POSTapi-v1-events"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>quota</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="quota"                data-endpoint="POSTapi-v1-events"
+               value="35"
+               data-component="body">
+    <br>
+<p>Must be at least 1. Example: <code>35</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>price_type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="price_type"                data-endpoint="POSTapi-v1-events"
+               value="paid"
+               data-component="body">
+    <br>
+<p>Example: <code>paid</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>free</code></li> <li><code>paid</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>asset_image</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="asset_image"                data-endpoint="POSTapi-v1-events"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>contact_person</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="contact_person"                data-endpoint="POSTapi-v1-events"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>n</code></p>
+        </div>
+        </form>
+
+                    <h2 id="endpoints-GETapi-v1-events--event_id-">Display the specified event.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-events--event_id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/events/1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/events/1"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-events--event_id-">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-events--event_id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-events--event_id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-events--event_id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-events--event_id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-events--event_id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-events--event_id-" data-method="GET"
+      data-path="api/v1/events/{event_id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-events--event_id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-events--event_id-"
+                    onclick="tryItOut('GETapi-v1-events--event_id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-events--event_id-"
+                    onclick="cancelTryOut('GETapi-v1-events--event_id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-events--event_id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/events/{event_id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-events--event_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-events--event_id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="event_id"                data-endpoint="GETapi-v1-events--event_id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the event. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="endpoints-POSTapi-v1-events--event_id--register">Register the authenticated user for an event.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-events--event_id--register">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/events/1/register" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/events/1/register"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-events--event_id--register">
+</span>
+<span id="execution-results-POSTapi-v1-events--event_id--register" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-events--event_id--register"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-events--event_id--register"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-events--event_id--register" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-events--event_id--register">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-events--event_id--register" data-method="POST"
+      data-path="api/v1/events/{event_id}/register"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-events--event_id--register', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-events--event_id--register"
+                    onclick="tryItOut('POSTapi-v1-events--event_id--register');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-events--event_id--register"
+                    onclick="cancelTryOut('POSTapi-v1-events--event_id--register');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-events--event_id--register"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/events/{event_id}/register</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-events--event_id--register"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-events--event_id--register"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="event_id"                data-endpoint="POSTapi-v1-events--event_id--register"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the event. Example: <code>1</code></p>
+            </div>
+                    </form>
 
                     <h2 id="endpoints-GETapi-v1-admin--resource----id--">GET api/v1/admin/{resource?}/{id?}</h2>
 

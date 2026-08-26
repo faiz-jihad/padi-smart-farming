@@ -1,4 +1,4 @@
-import 'package:padi/core/router/app_router.dart';
+import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/auth/presentation/widgets/auth_header.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                border: Border.all(color: Colors.black.withOpacity(0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

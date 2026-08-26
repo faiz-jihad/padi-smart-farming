@@ -1,0 +1,7 @@
+{
+  "version": "v2_finetuned",
+  "base_model": "MobileNetV2",
+  "input_shape": [224, 224, 3],
+  "num_classes": 10,
+  "accuracy": 0.95
+}

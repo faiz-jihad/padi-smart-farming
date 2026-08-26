@@ -33,4 +33,9 @@ class DiseaseScan extends Model
     {
         return $this->belongsTo(Farm::class);
     }
+
+    public function recommendation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(DiseaseRecommendation::class, 'scan_id');
+    }
 }

@@ -23,6 +23,7 @@ class FarmApiService {
     required double latitude,
     required double longitude,
     required String irrigationType,
+    List<Map<String, double>>? boundaryCoordinates,
     String? irrigationNotes,
     String? soilType,
     int? provinceId,
@@ -40,6 +41,9 @@ class FarmApiService {
       'soil_type': soilType,
     };
 
+    if (boundaryCoordinates != null && boundaryCoordinates.isNotEmpty) {
+      payload['boundary_coordinates'] = boundaryCoordinates;
+    }
     if (provinceId != null) payload['province_id'] = provinceId;
     if (regencyId != null) payload['regency_id'] = regencyId;
     if (districtId != null) payload['district_id'] = districtId;

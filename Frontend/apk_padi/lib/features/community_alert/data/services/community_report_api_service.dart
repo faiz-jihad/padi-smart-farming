@@ -6,6 +6,22 @@ class CommunityReportApiService {
 
   final ApiClient _apiClient;
 
+  Future<List<CommunityReportModel>> fetchReports() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/community-reports');
+      final data = response.data?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map>()
+            .map((e) => CommunityReportModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<CommunityReportModel> createReport({
     required int scanId,
     required double latitude,
@@ -30,14 +46,14 @@ class CommunityReportApiService {
       throw Exception('Respons server tidak valid.');
     }
 
-    if (responseData['success'] != true) {
+    if (responseData['success'] != true && responseData['data'] == null) {
       throw Exception(
         responseData['message']?.toString() ??
             'Gagal mengirim laporan.',
       );
     }
 
-    final data = responseData['data'];
+    final data = responseData['data'] ?? responseData;
 
     if (data is! Map<String, dynamic>) {
       throw Exception('Data laporan tidak ditemukan.');

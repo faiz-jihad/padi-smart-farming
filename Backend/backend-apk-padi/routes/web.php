@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
 use App\Http\Controllers\Admin\EarlyWarningController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
 use App\Http\Controllers\Admin\MarketplaceController;
 use App\Http\Controllers\Admin\SoilController;
@@ -124,6 +125,15 @@ Route::middleware(['auth', 'admin.web'])
             Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
             Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
             Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
+
+            // Agriculture Events Management (Admin)
+            Route::get('/events', [AdminEventController::class, 'index'])->name('events.index');
+            Route::get('/events/create', [AdminEventController::class, 'create'])->name('events.create');
+            Route::post('/events', [AdminEventController::class, 'store'])->name('events.store');
+            Route::get('/events/{event}', [AdminEventController::class, 'show'])->name('events.show');
+            Route::get('/events/{event}/edit', [AdminEventController::class, 'edit'])->name('events.edit');
+            Route::patch('/events/{event}', [AdminEventController::class, 'update'])->name('events.update');
+            Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
 
             Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
             Route::post('/broadcast', [BroadcastController::class, 'store'])->middleware('throttle:broadcast-alert')->name('broadcast.store');

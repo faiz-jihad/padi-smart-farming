@@ -13,12 +13,15 @@ class CommunityReportResource extends JsonResource
             'id' => $this->id,
             'scan_id' => $this->scan_id,
             'farmer_id' => $this->farmer_id,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
-            'radius_km' => $this->radius_km,
-            'consent_given' => $this->consent_given,
-            'status' => $this->status,
-            'reported_at' => $this->reported_at,
+            'farmer_name' => $this->farmer?->name ?? 'Petani Hamparan',
+            'disease_name' => $this->scan?->predicted_class ?? 'Penyakit Padi',
+            'image_url' => $this->scan?->image_url,
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
+            'radius_km' => $this->radius_km !== null ? (float) $this->radius_km : null,
+            'consent_given' => (bool) $this->consent_given,
+            'status' => $this->status ?? 'verified',
+            'reported_at' => $this->reported_at ? (is_string($this->reported_at) ? $this->reported_at : $this->reported_at->toIso8601String()) : optional($this->created_at)->toIso8601String(),
         ];
     }
 }

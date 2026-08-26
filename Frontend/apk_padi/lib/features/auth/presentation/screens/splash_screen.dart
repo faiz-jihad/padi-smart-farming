@@ -9,119 +9,103 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _progressController;
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    _progressController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    );
+      duration: const Duration(milliseconds: 2000),
+    )..forward();
 
-    _progressController.forward();
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   void dispose() {
-    _progressController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/images/splash_background.jpeg',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFFF8FAF3),
-              );
-            },
-          ),
-          Container(
-            color: Colors.white.withValues(alpha: 0.38),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                const Spacer(
-                  flex: 4,
-                ),
-                _buildLogo(),
-                const SizedBox(height: 42),
-                _buildProgress(),
-                const Spacer(
-                  flex: 5,
-                ),
-              ],
-            ),
-          ),
-          const Positioned(
-            right: 20,
-            bottom: 16,
-            child: Text(
-              'V1.0',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF075C3B),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      backgroundColor: const Color(0xFFF9FBF8),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              const Spacer(flex: 3),
 
-  Widget _buildLogo() {
-    return SizedBox(
-      width: 500,
-      height: 280,
-      child: Image.asset(
-        'assets/images/padi-logo.png',
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Icon(
-            Icons.image_not_supported_outlined,
-            size: 80,
-            color: Color(0xFF075C3B),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildProgress() {
-    return AnimatedBuilder(
-      animation: _progressController,
-      builder: (context, child) {
-        return Container(
-          width: 260,
-          height: 8,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: _progressController.value,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2C94C),
-                  borderRadius: BorderRadius.circular(20),
+              // Logo Utama
+              Center(
+                child: Image.asset(
+                  'assets/images/padi-logo.png',
+                  width: 220,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.eco_rounded,
+                    color: Color(0xFF0E7C53),
+                    size: 80,
+                  ),
                 ),
               ),
-            ),
+
+              const SizedBox(height: 36),
+
+              // Minimalist Loading Bar
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Container(
+                    width: 140,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: _controller.value.clamp(0.08, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0E7C53),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              const Spacer(flex: 3),
+
+              // Footer Versi Simple
+              const Padding(
+                padding: EdgeInsets.only(bottom: 24),
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF94A3B8),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

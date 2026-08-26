@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
-const padiGreen = Color(0xFF37A447);
-const padiLeaf = Color(0xFF76C043);
-const padiInk = Color(0xFF18251E);
-const padiMuted = Color(0xFF6D776F);
-const padiField = Color(0xFFF2F6F0);
-const padiCream = Color(0xFFFFF8E8);
+const padiGreen = Color(0xFF075C3D);
+const padiLeaf = Color(0xFF2F8C62);
+const padiInk = Color(0xFF1A2F25);
+const padiMuted = Color(0xFF66756D);
+const padiField = Color(0xFFF5F7F2);
+const padiSurface = Color(0xFFFFFFFF);
+const padiBorder = Color(0xFFE1E8DF);
+const padiSoftGreen = Color(0xFFEAF2EC);
+const padiCream = Color(0xFFFFFAEA);
+const padiWarning = Color(0xFF946E00);
+const padiControlRadius = 18.0;
+const padiControlHeight = 56.0;
 
 ThemeData buildPadiTheme() {
   final scheme = ColorScheme.fromSeed(
@@ -16,33 +22,70 @@ ThemeData buildPadiTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme.copyWith(primary: padiGreen, secondary: padiLeaf),
-    scaffoldBackgroundColor: Colors.white,
-    fontFamily: 'Roboto',
+    scaffoldBackgroundColor: padiField,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: padiField,
+      foregroundColor: padiInk,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        color: padiInk,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: padiSurface,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: padiBorder),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: padiField,
+      fillColor: padiSurface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(padiControlRadius),
+        borderSide: const BorderSide(color: padiBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+        borderRadius: BorderRadius.circular(padiControlRadius),
+        borderSide: const BorderSide(color: padiBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(padiControlRadius),
         borderSide: const BorderSide(color: padiGreen, width: 1.4),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(padiControlRadius),
         borderSide: const BorderSide(color: Color(0xFFC2410C)),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(padiControlRadius),
+        borderSide: const BorderSide(color: Color(0xFFC2410C), width: 1.4),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        minimumSize: const Size(0, padiControlHeight),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(padiControlRadius),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: padiGreen,
+        minimumSize: const Size(0, padiControlHeight),
+        side: const BorderSide(color: padiBorder),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(padiControlRadius),
+        ),
         textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
     ),

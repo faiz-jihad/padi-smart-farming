@@ -1,96 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
+import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends ConsumerWidget {
   const HomeHeader({
     super.key,
     required this.name,
     required this.onNotificationTap,
+    this.hasUnreadNotifications = true,
   });
 
   final String name;
   final VoidCallback onNotificationTap;
+  final bool hasUnreadNotifications;
+
+  String _getTimeGreeting(AppLanguage lang) {
+    final hour = DateTime.now().hour;
+    if (hour < 11) {
+      return switch (lang) {
+        AppLanguage.id => 'Selamat pagi 🌅',
+        AppLanguage.jv => 'Sugeng enjang 🌅',
+        AppLanguage.en => 'Good morning 🌅',
+      };
+    }
+    if (hour < 15) {
+      return switch (lang) {
+        AppLanguage.id => 'Selamat siang ☀️',
+        AppLanguage.jv => 'Sugeng siang ☀️',
+        AppLanguage.en => 'Good afternoon ☀️',
+      };
+    }
+    if (hour < 18) {
+      return switch (lang) {
+        AppLanguage.id => 'Selamat sore 🌤️',
+        AppLanguage.jv => 'Sugeng sonten 🌤️',
+        AppLanguage.en => 'Good evening 🌤️',
+      };
+    }
+    return switch (lang) {
+      AppLanguage.id => 'Selamat malam 🌙',
+      AppLanguage.jv => 'Sugeng dalu 🌙',
+      AppLanguage.en => 'Good night 🌙',
+    };
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              'assets/images/padi-logo.jpeg',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.eco_rounded,
-                  color: Color(0xFF075C3D),
-                  size: 38,
-                );
-              },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
+    final displayName = name.trim().isNotEmpty ? name.trim() : 'Petani';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: HomeSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // P.A.D.I. Smart Avatar Emblem
+          Container(
+            width: 48,
+            height: 48,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: HomeColors.surface,
+              borderRadius: BorderRadius.circular(HomeRadius.md),
+              border: Border.all(color: HomeColors.border, width: 1.2),
+              boxShadow: HomeShadows.subtle,
             ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'P.A.D.I.',
-                style: TextStyle(
-                  color: Color(0xFF075C3D),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(HomeRadius.sm),
+              child: Image.asset(
+                'assets/images/padi-logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: HomeColors.lightGreen,
+                  child: const Icon(
+                    Icons.eco_rounded,
+                    color: HomeColors.primaryGreen,
+                    size: 24,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Halo, ${name.isEmpty ? 'Petani' : name} 👋',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF5F6C65),
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            onTap: onNotificationTap,
-            borderRadius: BorderRadius.circular(20),
-            child: const SizedBox(
-              width: 64,
-              height: 64,
-              child: Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xFF075C3D),
-                size: 34,
               ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: HomeSpacing.sm),
+
+          // Dynamic Greeting & Farmer Name
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _getTimeGreeting(lang),
+                  style: HomeTypography.caption.copyWith(
+                    color: HomeColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  s.helloUser(displayName),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HomeTypography.greeting.copyWith(
+                    fontSize: 20,
+                    color: HomeColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: HomeSpacing.xs),
+
+          // Notification Button with Accessible Touch Target (44x44px minimum)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onNotificationTap,
+              borderRadius: BorderRadius.circular(HomeRadius.pill),
+              child: Ink(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: HomeColors.surface,
+                  borderRadius: BorderRadius.circular(HomeRadius.pill),
+                  border: Border.all(color: HomeColors.border),
+                  boxShadow: HomeShadows.subtle,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      color: HomeColors.textPrimary,
+                      size: 22,
+                    ),
+                    if (hasUnreadNotifications)
+                      Positioned(
+                        top: 10,
+                        right: 11,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: HomeColors.danger,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:padi/core/network/api_client.dart';
@@ -8,20 +9,15 @@ import 'package:padi/features/marketplace/data/models/market_offer_model.dart';
 import 'package:padi/features/marketplace/data/services/marketplace_api_service.dart';
 
 class MarketOffersScreen extends StatefulWidget {
-  const MarketOffersScreen({
-    super.key,
-    required this.listingId,
-  });
+  const MarketOffersScreen({super.key, this.listingId});
 
-  final int listingId;
+  final int? listingId;
 
   @override
-  State<MarketOffersScreen> createState() =>
-      _MarketOffersScreenState();
+  State<MarketOffersScreen> createState() => _MarketOffersScreenState();
 }
 
-class _MarketOffersScreenState
-    extends State<MarketOffersScreen> {
+class _MarketOffersScreenState extends State<MarketOffersScreen> {
   late final MarketplaceApiService _service;
 
   List<MarketOfferModel> _offers = [];
@@ -34,11 +30,7 @@ class _MarketOffersScreenState
   void initState() {
     super.initState();
 
-    _service = MarketplaceApiService(
-      ApiClient(
-        const SecureTokenStorage(),
-      ),
-    );
+    _service = MarketplaceApiService(ApiClient(const SecureTokenStorage()));
 
     _loadOffers();
   }
@@ -52,10 +44,10 @@ class _MarketOffersScreenState
     }
 
     try {
-      final offers =
-          await _service.fetchListingOffers(
-        widget.listingId,
-      );
+      final listingId = widget.listingId;
+      final offers = listingId == null
+          ? await _service.fetchMyOffers()
+          : await _service.fetchListingOffers(listingId);
 
       if (!mounted) {
         return;
@@ -72,18 +64,12 @@ class _MarketOffersScreenState
 
       setState(() {
         _isLoading = false;
-        _error = e.toString().replaceFirst(
-              'Exception: ',
-              '',
-            );
+        _error = e.toString().replaceFirst('Exception: ', '');
       });
     }
   }
 
-  Future<void> _updateStatus(
-    MarketOfferModel offer,
-    String status,
-  ) async {
+  Future<void> _updateStatus(MarketOfferModel offer, String status) async {
     if (_processingOfferId != null) {
       return;
     }
@@ -93,8 +79,7 @@ class _MarketOffersScreenState
     });
 
     try {
-      final result =
-          await _service.updateOfferStatus(
+      final result = await _service.updateOfferStatus(
         offerId: offer.id,
         status: status,
       );
@@ -112,17 +97,11 @@ class _MarketOffersScreenState
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Penawaran diterima. Membuka WhatsApp pembeli...',
-            ),
+            content: Text('Penawaran diterima. Membuka WhatsApp pembeli...'),
           ),
         );
 
-        await Future.delayed(
-          const Duration(
-            milliseconds: 700,
-          ),
-        );
+        await Future.delayed(const Duration(milliseconds: 700));
 
         if (!mounted) {
           return;
@@ -140,11 +119,7 @@ class _MarketOffersScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Penawaran berhasil ditolak.',
-          ),
-        ),
+        const SnackBar(content: Text('Penawaran berhasil ditolak.')),
       );
     } catch (e) {
       if (!mounted) {
@@ -152,14 +127,7 @@ class _MarketOffersScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString().replaceFirst(
-              'Exception: ',
-              '',
-            ),
-          ),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) {
@@ -170,10 +138,7 @@ class _MarketOffersScreenState
     }
   }
 
-  Future<void> _confirmAction(
-    MarketOfferModel offer,
-    String status,
-  ) async {
+  Future<void> _confirmAction(MarketOfferModel offer, String status) async {
     final isAccept = status == 'accepted';
 
     final result = await showDialog<bool>(
@@ -181,12 +146,8 @@ class _MarketOffersScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            isAccept
-                ? 'Terima Penawaran?'
-                : 'Tolak Penawaran?',
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-            ),
+            isAccept ? 'Terima Penawaran?' : 'Tolak Penawaran?',
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
           content: Text(
             isAccept
@@ -196,27 +157,18 @@ class _MarketOffersScreenState
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(false);
+                Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
-                'Batal',
-              ),
+              child: const Text('Batal'),
             ),
             FilledButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(true);
+                Navigator.of(dialogContext).pop(true);
               },
               style: FilledButton.styleFrom(
-                backgroundColor:
-                    isAccept ? padiGreen : Colors.red,
+                backgroundColor: isAccept ? padiGreen : Colors.red,
               ),
-              child: Text(
-                isAccept ? 'Terima' : 'Tolak',
-              ),
+              child: Text(isAccept ? 'Terima' : 'Tolak'),
             ),
           ],
         );
@@ -227,17 +179,11 @@ class _MarketOffersScreenState
       return;
     }
 
-    await _updateStatus(
-      offer,
-      status,
-    );
+    await _updateStatus(offer, status);
   }
 
-  Future<void> _openWhatsApp(
-    MarketOfferModel offer,
-  ) async {
-    var phone =
-        offer.partnerPhone?.trim() ?? '';
+  Future<void> _openWhatsApp(MarketOfferModel offer) async {
+    var phone = offer.partnerPhone?.trim() ?? '';
 
     if (phone.isEmpty) {
       if (!mounted) {
@@ -245,27 +191,20 @@ class _MarketOffersScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Nomor WhatsApp pembeli tidak tersedia.',
-          ),
-        ),
+        const SnackBar(content: Text('Nomor WhatsApp pembeli tidak tersedia.')),
       );
 
       return;
     }
 
-    phone = phone.replaceAll(
-      RegExp(r'[^0-9]'),
-      '',
-    );
+    phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (phone.startsWith('0')) {
-      phone =
-          '62${phone.substring(1)}';
+      phone = '62${phone.substring(1)}';
     }
 
-    final message = '''
+    final message =
+        '''
 Halo ${offer.partnerName ?? 'Pembeli'},
 
 Penawaran Anda telah saya terima.
@@ -281,18 +220,11 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
       'https://wa.me/$phone?text=${Uri.encodeComponent(message)}',
     );
 
-    final success = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'WhatsApp tidak dapat dibuka.',
-          ),
-        ),
+        const SnackBar(content: Text('WhatsApp tidak dapat dibuka.')),
       );
     }
   }
@@ -305,12 +237,20 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
         backgroundColor: padiGreen,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Penawaran Masuk',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-          ),
+        leading: IconButton(
+          tooltip: 'Kembali',
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/marketplace');
+            }
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(
+          widget.listingId == null ? 'Penawaran Saya' : 'Penawaran Masuk',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
         ),
       ),
       body: _buildBody(),
@@ -319,11 +259,7 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: padiGreen,
-        ),
-      );
+      return const Center(child: CircularProgressIndicator(color: padiGreen));
     }
 
     if (_error != null) {
@@ -338,55 +274,35 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
       onRefresh: _loadOffers,
       color: padiGreen,
       child: ListView.separated(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(
-          20,
-          20,
-          20,
-          30,
-        ),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         itemCount: _offers.length,
-        separatorBuilder: (
-          context,
-          index,
-        ) {
-          return const SizedBox(
-            height: 16,
-          );
+        separatorBuilder: (context, index) {
+          return const SizedBox(height: 16);
         },
-        itemBuilder: (
-          context,
-          index,
-        ) {
-          return _buildOfferCard(
-            _offers[index],
-          );
+        itemBuilder: (context, index) {
+          return _buildOfferCard(_offers[index]);
         },
       ),
     );
   }
 
-  Widget _buildOfferCard(
-    MarketOfferModel offer,
-  ) {
-    final isPending = offer.isPending;
+  Widget _buildOfferCard(MarketOfferModel offer) {
+    final canProcessOffer = widget.listingId != null;
+    final isPending = offer.isPending && canProcessOffer;
     final isAccepted = offer.isAccepted;
     final isRejected = offer.isRejected;
 
-    final isProcessing =
-        _processingOfferId == offer.id;
+    final isProcessing = _processingOfferId == offer.id;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -395,51 +311,39 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
                 height: 48,
                 decoration: BoxDecoration(
                   color: padiGreen,
-                  borderRadius:
-                      BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.person_rounded, color: Colors.white),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      offer.partnerName ??
-                          'Pembeli',
+                      offer.partnerName ?? 'Pembeli',
                       style: const TextStyle(
                         color: padiInk,
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    if (offer.partnerEmail != null)
+                    if ((offer.partnerEmail ?? '').trim().isNotEmpty)
                       Text(
-                        offer.partnerEmail!,
-                        style: const TextStyle(
-                          color: padiMuted,
-                          fontSize: 13,
-                        ),
+                        offer.partnerEmail ?? '',
+                        style: const TextStyle(color: padiMuted, fontSize: 13),
                       ),
                   ],
                 ),
               ),
-              _buildStatusBadge(
-                offer.status,
-              ),
+              _buildStatusBadge(offer.status),
             ],
           ),
           const SizedBox(height: 18),
           _buildInfoRow(
             Icons.grass_rounded,
             'Hasil Panen',
-            offer.commodity ??
-                'Hasil Panen',
+            offer.commodity ?? 'Hasil Panen',
           ),
           const SizedBox(height: 10),
           _buildInfoRow(
@@ -454,21 +358,17 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
             'Rp${_formatNumber(offer.offeredPrice)} / ${offer.unit ?? ''}',
             valueColor: padiGreen,
           ),
-          if (offer.message != null &&
-              offer.message!.trim().isNotEmpty) ...[
+          if ((offer.message ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: padiField,
-                borderRadius:
-                    BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Pesan Pembeli',
@@ -480,11 +380,8 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    offer.message!,
-                    style: const TextStyle(
-                      color: padiInk,
-                      fontSize: 14,
-                    ),
+                    offer.message ?? '',
+                    style: const TextStyle(color: padiInk, fontSize: 14),
                   ),
                 ],
               ),
@@ -496,88 +393,48 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed:
-                        _processingOfferId == null
-                            ? () => _confirmAction(
-                                  offer,
-                                  'rejected',
-                                )
-                            : null,
-                    style:
-                        OutlinedButton.styleFrom(
-                      foregroundColor:
-                          Colors.red,
-                      side:
-                          const BorderSide(
-                        color: Colors.red,
-                      ),
-                      minimumSize:
-                          const Size(
-                        0,
-                        50,
-                      ),
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(
-                          14,
-                        ),
+                    onPressed: _processingOfferId == null
+                        ? () => _confirmAction(offer, 'rejected')
+                        : null,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      minimumSize: const Size(0, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     child: const Text(
                       'Tolak',
-                      style: TextStyle(
-                        fontWeight:
-                            FontWeight.w900,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed:
-                        _processingOfferId == null
-                            ? () => _confirmAction(
-                                  offer,
-                                  'accepted',
-                                )
-                            : null,
-                    style:
-                        FilledButton.styleFrom(
-                      backgroundColor:
-                          padiGreen,
-                      minimumSize:
-                          const Size(
-                        0,
-                        50,
-                      ),
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(
-                          14,
-                        ),
+                    onPressed: _processingOfferId == null
+                        ? () => _confirmAction(offer, 'accepted')
+                        : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: padiGreen,
+                      minimumSize: const Size(0, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     child: isProcessing
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child:
-                                CircularProgressIndicator(
+                            child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color:
-                                  Colors.white,
+                              color: Colors.white,
                             ),
                           )
                         : const Text(
                             'Terima',
-                            style:
-                                TextStyle(
-                              fontWeight:
-                                  FontWeight.w900,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w900),
                           ),
                   ),
                 ),
@@ -588,27 +445,21 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
             const SizedBox(height: 18),
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: padiField,
-                borderRadius:
-                    BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: const Row(
                 children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: padiGreen,
-                  ),
+                  Icon(Icons.check_circle_rounded, color: padiGreen),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Penawaran diterima. Silakan lanjutkan kontrak dan pembayaran melalui WhatsApp.',
                       style: TextStyle(
                         color: padiInk,
-                        fontWeight:
-                            FontWeight.w700,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -620,27 +471,21 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
             const SizedBox(height: 18),
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.red.shade50,
-                borderRadius:
-                    BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: const Row(
                 children: [
-                  Icon(
-                    Icons.cancel_rounded,
-                    color: Colors.red,
-                  ),
+                  Icon(Icons.cancel_rounded, color: Colors.red),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Penawaran ini ditolak.',
                       style: TextStyle(
                         color: Colors.red,
-                        fontWeight:
-                            FontWeight.w700,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -661,19 +506,12 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
   }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: padiGreen,
-          size: 22,
-        ),
+        Icon(icon, color: padiGreen, size: 22),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              color: padiMuted,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: padiMuted, fontSize: 14),
           ),
         ),
         Text(
@@ -689,9 +527,7 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
     );
   }
 
-  Widget _buildStatusBadge(
-    String status,
-  ) {
+  Widget _buildStatusBadge(String status) {
     String text;
     Color color;
 
@@ -710,17 +546,10 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
     }
 
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(
-          alpha: 0.12,
-        ),
-        borderRadius:
-            BorderRadius.circular(20),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
@@ -738,35 +567,31 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
       onRefresh: _loadOffers,
       color: padiGreen,
       child: ListView(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 220),
-          Icon(
-            Icons.inbox_outlined,
-            size: 70,
-            color: padiMuted,
-          ),
-          SizedBox(height: 18),
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: 220),
+          const Icon(Icons.inbox_outlined, size: 70, color: padiMuted),
+          const SizedBox(height: 18),
           Center(
             child: Text(
-              'Belum ada penawaran',
-              style: TextStyle(
+              widget.listingId == null
+                  ? 'Belum ada penawaran'
+                  : 'Belum ada penawaran masuk',
+              style: const TextStyle(
                 color: padiInk,
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Center(
             child: Text(
-              'Penawaran untuk hasil panen ini akan muncul di sini.',
+              widget.listingId == null
+                  ? 'Riwayat penawaran marketplace akan muncul di sini.'
+                  : 'Penawaran untuk hasil panen ini akan muncul di sini.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: padiMuted,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: padiMuted, fontSize: 14),
             ),
           ),
         ],
@@ -779,17 +604,11 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
       onRefresh: _loadOffers,
       color: padiGreen,
       child: ListView(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
-        padding:
-            const EdgeInsets.all(30),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(30),
         children: [
           const SizedBox(height: 180),
-          const Icon(
-            Icons.cloud_off_rounded,
-            size: 70,
-            color: padiMuted,
-          ),
+          const Icon(Icons.cloud_off_rounded, size: 70, color: padiMuted),
           const SizedBox(height: 18),
           const Text(
             'Gagal mengambil penawaran',
@@ -800,32 +619,24 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
               fontWeight: FontWeight.w900,
             ),
           ),
-          if (_error != null) ...[
+          if ((_error ?? '').trim().isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              _error!,
+              _error ?? '',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: padiMuted,
-                fontSize: 13,
-              ),
+              style: const TextStyle(color: padiMuted, fontSize: 13),
             ),
           ],
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _loadOffers,
             style: FilledButton.styleFrom(
-              backgroundColor:
-                  padiGreen,
-              minimumSize:
-                  const Size.fromHeight(54),
+              backgroundColor: padiGreen,
+              minimumSize: const Size.fromHeight(54),
             ),
             child: const Text(
               'Coba Lagi',
-              style: TextStyle(
-                fontWeight:
-                    FontWeight.w900,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
         ],
@@ -833,11 +644,8 @@ Hasil panen sudah terjual kepada Anda. Mari lanjutkan proses kontrak dan pembaya
     );
   }
 
-  String _formatNumber(
-    double value,
-  ) {
-    if (value ==
-        value.roundToDouble()) {
+  String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
       return value.toInt().toString();
     }
 

@@ -62,7 +62,11 @@ class ApiResourceIndexService
 
     public function communityReports(): Collection
     {
-        return CommunityReport::query()->with('farmer')->get();
+        return CommunityReport::query()
+            ->with(['farmer:id,name,phone', 'scan:id,predicted_class,confidence,image_url'])
+            ->latest('reported_at')
+            ->limit(50)
+            ->get();
     }
 
     public function contractPayments(): Collection

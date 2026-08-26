@@ -29,7 +29,47 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('id');
 
-        // Rate Limiter: Dashboard AJAX sync & Polling (Maks 60 requests per menit)
+        // 1. Rate Limiter: General API Traffic (Maks 120 requests/menit)
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terlalu banyak permintaan API. Harap perlambat laju request Anda.',
+                ], 429);
+            });
+        });
+
+        // 2. Rate Limiter: Auth Endpoints (Maks 10 percobaan/menit per IP)
+        RateLimiter::for('auth-strict', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terlalu banyak percobaan autentikasi. Demi keamanan, silakan coba lagi dalam 1 menit.',
+                ], 429);
+            });
+        });
+
+        // 3. Rate Limiter: AI Disease Scanner & Vision Model (Maks 15 requests/menit)
+        RateLimiter::for('ai-scans', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batas kuota pemindaian AI tercapai (maks 15/menit). Harap tunggu sejenak.',
+                ], 429);
+            });
+        });
+
+        // 4. Rate Limiter: Device Push Notifications (Maks 20 requests/menit)
+        RateLimiter::for('push-notifications', function (Request $request) {
+            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batas siaran notifikasi tercapai (maks 20/menit).',
+                ], 429);
+            });
+        });
+
+        // 5. Rate Limiter: Dashboard AJAX sync & Polling (Maks 60 requests/menit)
         RateLimiter::for('admin-sync', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip())->response(function () {
                 return response()->json([
@@ -39,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
-        // Rate Limiter: Weather & Soil External API Refresh (Maks 30 requests per menit)
+        // 6. Rate Limiter: Weather & Soil External API Refresh (Maks 30 requests/menit)
         RateLimiter::for('weather-refresh', function (Request $request) {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip())->response(function () {
                 return response()->json([
@@ -49,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
-        // Rate Limiter: Broadcast Peringatan Dini (Maks 15 requests per menit)
+        // 7. Rate Limiter: Broadcast Peringatan Dini (Maks 15 requests/menit)
         RateLimiter::for('broadcast-alert', function (Request $request) {
             return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip())->response(function () {
                 return response()->json([

@@ -10,7 +10,16 @@ import 'package:padi/features/cultivation/data/services/crop_season_api_service.
 import 'package:padi/features/harvest/data/services/harvest_api_service.dart';
 
 class AddHarvestScreen extends StatefulWidget {
-  const AddHarvestScreen({super.key});
+  const AddHarvestScreen({
+    super.key,
+    this.farmId,
+    this.cropSeasonId,
+    this.setupFlow = false,
+  });
+
+  final int? farmId;
+  final int? cropSeasonId;
+  final bool setupFlow;
 
   @override
   State<AddHarvestScreen> createState() => _AddHarvestScreenState();
@@ -76,8 +85,9 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
 
       setState(() {
         _cropSeasons = seasons;
-        _selectedCropSeason =
-            seasons.isNotEmpty ? seasons.first : null;
+        _selectedCropSeason = seasons.isNotEmpty
+            ? _preferredCropSeason(seasons)
+            : null;
         _isLoadingSeasons = false;
       });
     } catch (e) {
@@ -201,7 +211,11 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         ),
       );
 
-      context.pop(true);
+      if (widget.setupFlow) {
+        _goToCalendar();
+      } else {
+        context.pop(true);
+      }
     } on DioException catch (e) {
       if (!mounted) return;
 
@@ -286,6 +300,28 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 5),
       ),
+    );
+  }
+
+  void _goToCalendar() {
+    final farmId = widget.farmId ?? _selectedCropSeason?.farmId;
+
+    if (farmId == null) {
+      context.go('/planting-calendar?flow=setup');
+      return;
+    }
+
+    context.go('/planting-calendar/$farmId?flow=setup');
+  }
+
+  CropSeasonModel _preferredCropSeason(List<CropSeasonModel> seasons) {
+    if (widget.cropSeasonId == null) {
+      return seasons.first;
+    }
+
+    return seasons.firstWhere(
+      (season) => season.id == widget.cropSeasonId,
+      orElse: () => seasons.first,
     );
   }
 
@@ -532,6 +568,21 @@ class _AddHarvestScreenState extends State<AddHarvestScreen> {
               ),
             ),
           ),
+          if (widget.setupFlow) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                onPressed: _isSaving ? null : _goToCalendar,
+                icon: const Icon(Icons.calendar_month_outlined),
+                label: const Text(
+                  'Lewati ke Kalender',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

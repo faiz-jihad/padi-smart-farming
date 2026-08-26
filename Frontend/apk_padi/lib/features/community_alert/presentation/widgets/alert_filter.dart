@@ -42,7 +42,7 @@ class AlertFilter extends StatelessWidget {
               side: BorderSide(
                 color: selected
                     ? padiGreen
-                    : Colors.black.withValues(alpha: 0.06),
+                    : Colors.black.withOpacity(0.06),
               ),
             ),
           );

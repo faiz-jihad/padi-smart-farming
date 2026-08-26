@@ -9,11 +9,11 @@ class ProvinceModel {
 
   factory ProvinceModel.fromJson(Map<String, dynamic> json) {
     return ProvinceModel(
-      id: json['id'] as int,
-      code: json['code'] as String,
-      name: json['name'] as String,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      id: _toInt(json['id']),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      latitude: _toNullableDouble(json['latitude']),
+      longitude: _toNullableDouble(json['longitude']),
     );
   }
 
@@ -38,14 +38,14 @@ class RegencyModel {
 
   factory RegencyModel.fromJson(Map<String, dynamic> json) {
     return RegencyModel(
-      id: json['id'] as int,
-      provinceId: json['province_id'] as int,
-      code: json['code'] as String,
-      name: json['name'] as String,
-      type: json['type'] as String?,
-      typeLabel: json['type_label'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      id: _toInt(json['id']),
+      provinceId: _toInt(json['province_id']),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      type: json['type']?.toString(),
+      typeLabel: json['type_label']?.toString(),
+      latitude: _toNullableDouble(json['latitude']),
+      longitude: _toNullableDouble(json['longitude']),
     );
   }
 
@@ -72,13 +72,13 @@ class DistrictModel {
 
   factory DistrictModel.fromJson(Map<String, dynamic> json) {
     return DistrictModel(
-      id: json['id'] as int,
-      regencyId: json['regency_id'] as int,
-      code: json['code'] as String,
-      name: json['name'] as String,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
-      hasBoundary: json['has_boundary'] as bool? ?? false,
+      id: _toInt(json['id']),
+      regencyId: _toInt(json['regency_id']),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      latitude: _toNullableDouble(json['latitude']),
+      longitude: _toNullableDouble(json['longitude']),
+      hasBoundary: json['has_boundary'] == true,
     );
   }
 
@@ -105,14 +105,14 @@ class VillageModel {
 
   factory VillageModel.fromJson(Map<String, dynamic> json) {
     return VillageModel(
-      id: json['id'] as int,
-      districtId: json['district_id'] as int,
-      code: json['code'] as String,
-      name: json['name'] as String,
-      type: json['type'] as String?,
-      typeLabel: json['type_label'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      id: _toInt(json['id']),
+      districtId: _toInt(json['district_id']),
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      type: json['type']?.toString(),
+      typeLabel: json['type_label']?.toString(),
+      latitude: _toNullableDouble(json['latitude']),
+      longitude: _toNullableDouble(json['longitude']),
     );
   }
 
@@ -138,20 +138,28 @@ class ResolvedLocationModel {
 
   factory ResolvedLocationModel.fromJson(Map<String, dynamic> json) {
     return ResolvedLocationModel(
-      province: json['province'] != null
-          ? ProvinceModel.fromJson(json['province'] as Map<String, dynamic>)
+      province: json['province'] is Map
+          ? ProvinceModel.fromJson(
+              Map<String, dynamic>.from(json['province'] as Map),
+            )
           : null,
-      regency: json['regency'] != null
-          ? RegencyModel.fromJson(json['regency'] as Map<String, dynamic>)
+      regency: json['regency'] is Map
+          ? RegencyModel.fromJson(
+              Map<String, dynamic>.from(json['regency'] as Map),
+            )
           : null,
-      district: json['district'] != null
-          ? DistrictModel.fromJson(json['district'] as Map<String, dynamic>)
+      district: json['district'] is Map
+          ? DistrictModel.fromJson(
+              Map<String, dynamic>.from(json['district'] as Map),
+            )
           : null,
-      village: json['village'] != null
-          ? VillageModel.fromJson(json['village'] as Map<String, dynamic>)
+      village: json['village'] is Map
+          ? VillageModel.fromJson(
+              Map<String, dynamic>.from(json['village'] as Map),
+            )
           : null,
-      formattedAddress: json['formatted_address'] as String? ?? '',
-      resolutionMethod: json['resolution_method'] as String? ?? '',
+      formattedAddress: json['formatted_address']?.toString() ?? '',
+      resolutionMethod: json['resolution_method']?.toString() ?? '',
     );
   }
 
@@ -161,4 +169,17 @@ class ResolvedLocationModel {
   final VillageModel? village;
   final String formattedAddress;
   final String resolutionMethod;
+}
+
+int _toInt(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value.trim()) ?? 0;
+  return 0;
+}
+
+double? _toNullableDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim().replaceAll(',', '.'));
+  return null;
 }

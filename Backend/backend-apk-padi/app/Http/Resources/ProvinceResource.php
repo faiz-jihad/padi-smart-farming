@@ -13,8 +13,8 @@ class ProvinceResource extends JsonResource
             'id'        => $this->id,
             'code'      => $this->code,
             'name'      => $this->name,
-            'latitude'  => $this->latitude,
-            'longitude' => $this->longitude,
+            'latitude'  => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
         ];
     }
 }

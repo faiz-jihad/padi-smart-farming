@@ -1,4 +1,4 @@
-import 'package:padi/core/router/app_router.dart';
+import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/auth/presentation/widgets/auth_fields.dart';
 import 'package:padi/features/auth/presentation/widgets/auth_header.dart';
 import 'package:padi/features/auth/presentation/widgets/auth_scaffold.dart';

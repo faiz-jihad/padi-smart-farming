@@ -73,7 +73,7 @@ class FertilizerResultCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: Colors.white.withOpacity(0.12),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(

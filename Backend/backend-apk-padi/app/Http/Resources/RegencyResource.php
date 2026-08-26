@@ -16,8 +16,8 @@ class RegencyResource extends JsonResource
             'name'        => $this->name,
             'type'        => $this->type?->value,
             'type_label'  => $this->type?->label(),
-            'latitude'    => $this->latitude,
-            'longitude'   => $this->longitude,
+            'latitude'    => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude'   => $this->longitude !== null ? (float) $this->longitude : null,
         ];
     }
 }

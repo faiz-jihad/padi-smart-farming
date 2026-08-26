@@ -7,16 +7,12 @@ import 'package:padi/features/marketplace/data/models/market_offer_model.dart';
 import 'package:padi/features/marketplace/data/models/purchase_contract_model.dart';
 
 class MarketplaceApiService {
-  const MarketplaceApiService(
-    this._apiClient,
-  );
+  const MarketplaceApiService(this._apiClient);
 
   final ApiClient _apiClient;
 
   Future<List<MarketListingModel>> fetchListings() async {
-    final response = await _apiClient.dio.get(
-      '/market-listings',
-    );
+    final response = await _apiClient.dio.get('/market-listings');
 
     final responseData = response.data;
 
@@ -24,36 +20,72 @@ class MarketplaceApiService {
       return [];
     }
 
-    final data = responseData['data'];
+    final data = _extractList(responseData);
 
-    if (data is! List) {
+    if (data.isEmpty) {
       return [];
     }
 
     return data
         .whereType<Map>()
         .map(
-          (item) => MarketListingModel.fromJson(
-            Map<String, dynamic>.from(item),
-          ),
+          (item) =>
+              MarketListingModel.fromJson(Map<String, dynamic>.from(item)),
         )
         .toList();
   }
 
-  Future<MarketListingModel> getListing(
-    int id,
-  ) async {
+  List<dynamic> _extractList(Map<dynamic, dynamic> responseData) {
+    final data = responseData['data'];
+
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map) {
+      for (final key in [
+        'data',
+        'market_listings',
+        'listings',
+        'market_offers',
+        'offers',
+        'purchase_contracts',
+        'contracts',
+        'items',
+      ]) {
+        final nested = data[key];
+        if (nested is List) {
+          return nested;
+        }
+      }
+    }
+
+    for (final key in [
+      'market_listings',
+      'listings',
+      'market_offers',
+      'offers',
+      'purchase_contracts',
+      'contracts',
+      'items',
+    ]) {
+      final nested = responseData[key];
+      if (nested is List) {
+        return nested;
+      }
+    }
+
+    return const [];
+  }
+
+  Future<MarketListingModel> getListing(int id) async {
     try {
-      final response = await _apiClient.dio.get(
-        '/market-listings/$id',
-      );
+      final response = await _apiClient.dio.get('/market-listings/$id');
 
       final responseData = response.data;
 
       if (responseData is! Map) {
-        throw Exception(
-          'Respons server tidak valid.',
-        );
+        throw Exception('Respons server tidak valid.');
       }
 
       final data = responseData['data'];
@@ -65,22 +97,17 @@ class MarketplaceApiService {
         );
       }
 
-      return MarketListingModel.fromJson(
-        Map<String, dynamic>.from(data),
-      );
+      return MarketListingModel.fromJson(Map<String, dynamic>.from(data));
     } on DioException catch (e) {
       final data = e.response?.data;
 
       if (data is Map) {
         throw Exception(
-          data['message']?.toString() ??
-              'Gagal mengambil detail hasil panen.',
+          data['message']?.toString() ?? 'Gagal mengambil detail hasil panen.',
         );
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
@@ -96,10 +123,10 @@ class MarketplaceApiService {
     String? salesLink,
   }) async {
     try {
-      final imageFile =
-          await MultipartFile.fromFile(
-        image.path,
-        filename: image.name,
+      final imageBytes = await image.readAsBytes();
+      final imageFile = MultipartFile.fromBytes(
+        imageBytes,
+        filename: image.name.isEmpty ? 'listing-image.jpg' : image.name,
       );
 
       final formData = FormData.fromMap({
@@ -114,22 +141,16 @@ class MarketplaceApiService {
         'image': imageFile,
       });
 
-      final response =
-          await _apiClient.dio.post(
+      final response = await _apiClient.dio.post(
         '/market-listings',
         data: formData,
-        options: Options(
-          contentType:
-              'multipart/form-data',
-        ),
+        options: Options(contentType: 'multipart/form-data'),
       );
 
       final responseData = response.data;
 
       if (responseData is! Map) {
-        throw Exception(
-          'Respons server tidak valid.',
-        );
+        throw Exception('Respons server tidak valid.');
       }
 
       if (responseData['success'] == false) {
@@ -142,61 +163,40 @@ class MarketplaceApiService {
       final data = responseData['data'];
 
       if (data is! Map) {
-        throw Exception(
-          'Data listing tidak ditemukan.',
-        );
+        throw Exception('Data listing tidak ditemukan.');
       }
 
-      return MarketListingModel.fromJson(
-        Map<String, dynamic>.from(data),
-      );
+      return MarketListingModel.fromJson(Map<String, dynamic>.from(data));
     } on DioException catch (e) {
-      final responseData =
-          e.response?.data;
+      final responseData = e.response?.data;
 
       if (responseData is Map) {
-        final message =
-            responseData['message'];
+        final message = responseData['message'];
 
-        if (message != null &&
-            message.toString().trim().isNotEmpty) {
-          throw Exception(
-            message.toString(),
-          );
+        if (message != null && message.toString().trim().isNotEmpty) {
+          throw Exception(message.toString());
         }
 
-        final errors =
-            responseData['errors'];
+        final errors = responseData['errors'];
 
         if (errors is Map) {
           final messages = <String>[];
 
-          for (final value
-              in errors.values) {
+          for (final value in errors.values) {
             if (value is List) {
-              messages.addAll(
-                value.map(
-                  (item) => item.toString(),
-                ),
-              );
+              messages.addAll(value.map((item) => item.toString()));
             } else {
-              messages.add(
-                value.toString(),
-              );
+              messages.add(value.toString());
             }
           }
 
           if (messages.isNotEmpty) {
-            throw Exception(
-              messages.join('\n'),
-            );
+            throw Exception(messages.join('\n'));
           }
         }
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
@@ -207,8 +207,7 @@ class MarketplaceApiService {
     String? message,
   }) async {
     try {
-      final response =
-          await _apiClient.dio.post(
+      final response = await _apiClient.dio.post(
         '/market-offers',
         data: {
           'listing_id': listingId,
@@ -218,69 +217,51 @@ class MarketplaceApiService {
         },
       );
 
-      final responseData =
-          response.data;
+      final responseData = response.data;
 
       if (responseData is! Map) {
-        throw Exception(
-          'Respons server tidak valid.',
-        );
+        throw Exception('Respons server tidak valid.');
       }
 
       if (responseData['success'] != true) {
         throw Exception(
-          responseData['message']?.toString() ??
-              'Gagal mengirim penawaran.',
+          responseData['message']?.toString() ?? 'Gagal mengirim penawaran.',
         );
       }
 
-      final data =
-          responseData['data'];
+      final data = responseData['data'];
 
       if (data is! Map) {
-        throw Exception(
-          'Data penawaran tidak ditemukan.',
-        );
+        throw Exception('Data penawaran tidak ditemukan.');
       }
 
-      return MarketOfferModel.fromJson(
-        Map<String, dynamic>.from(data),
-      );
+      return MarketOfferModel.fromJson(Map<String, dynamic>.from(data));
     } on DioException catch (e) {
-      final data =
-          e.response?.data;
+      final data = e.response?.data;
 
       if (data is Map) {
         throw Exception(
-          data['message']?.toString() ??
-              'Server gagal memproses penawaran.',
+          data['message']?.toString() ?? 'Server gagal memproses penawaran.',
         );
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
   Future<List<MarketOfferModel>> fetchMyOffers() async {
     try {
-      final response =
-          await _apiClient.dio.get(
-        '/market-offers',
-      );
+      final response = await _apiClient.dio.get('/market-offers');
 
-      final responseData =
-          response.data;
+      final responseData = response.data;
 
       if (responseData is! Map) {
         return [];
       }
 
-      final data =
-          responseData['data'];
+      final data = _extractList(responseData);
 
-      if (data is! List) {
+      if (data.isEmpty) {
         return [];
       }
 
@@ -288,160 +269,114 @@ class MarketplaceApiService {
           .whereType<Map>()
           .map(
             (item) =>
-                MarketOfferModel.fromJson(
-              Map<String, dynamic>.from(item),
-            ),
+                MarketOfferModel.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList();
     } on DioException catch (e) {
-      final data =
-          e.response?.data;
+      final data = e.response?.data;
 
       if (data is Map) {
         throw Exception(
-          data['message']?.toString() ??
-              'Gagal mengambil penawaran.',
+          data['message']?.toString() ?? 'Gagal mengambil penawaran.',
         );
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
-  Future<List<MarketOfferModel>>
-      fetchListingOffers(
-    int listingId,
-  ) async {
+  Future<List<MarketOfferModel>> fetchListingOffers(int listingId) async {
     try {
-      final response =
-          await _apiClient.dio.get(
+      final response = await _apiClient.dio.get(
         '/market-listings/$listingId/offers',
       );
 
-      final responseData =
-          response.data;
+      final responseData = response.data;
 
       if (responseData is! Map) {
-        throw Exception(
-          'Respons server tidak valid.',
-        );
+        throw Exception('Respons server tidak valid.');
       }
 
-      final data =
-          responseData['data'];
+      final data = _extractList(responseData);
 
-      if (data is! List) {
-        throw Exception(
-          responseData['message']?.toString() ??
-              'Data penawaran tidak ditemukan.',
-        );
+      if (data.isEmpty) {
+        return [];
       }
 
       return data
           .whereType<Map>()
           .map(
             (item) =>
-                MarketOfferModel.fromJson(
-              Map<String, dynamic>.from(item),
-            ),
+                MarketOfferModel.fromJson(Map<String, dynamic>.from(item)),
           )
           .toList();
     } on DioException catch (e) {
-      final data =
-          e.response?.data;
+      final data = e.response?.data;
 
       if (data is Map) {
         throw Exception(
-          data['message']?.toString() ??
-              'Gagal mengambil penawaran.',
+          data['message']?.toString() ?? 'Gagal mengambil penawaran.',
         );
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
-  Future<MarketOfferModel>
-      updateOfferStatus({
+  Future<MarketOfferModel> updateOfferStatus({
     required int offerId,
     required String status,
   }) async {
     try {
-      final response =
-          await _apiClient.dio.put(
+      final response = await _apiClient.dio.put(
         '/market-offers/$offerId',
-        data: {
-          'status': status,
-        },
+        data: {'status': status},
       );
 
-      final responseData =
-          response.data;
+      final responseData = response.data;
 
       if (responseData is! Map) {
-        throw Exception(
-          'Respons server tidak valid.',
-        );
+        throw Exception('Respons server tidak valid.');
       }
 
       if (responseData['success'] != true) {
         throw Exception(
-          responseData['message']?.toString() ??
-              'Gagal memperbarui penawaran.',
+          responseData['message']?.toString() ?? 'Gagal memperbarui penawaran.',
         );
       }
 
-      final data =
-          responseData['data'];
+      final data = responseData['data'];
 
       if (data is! Map) {
-        throw Exception(
-          'Data penawaran tidak ditemukan.',
-        );
+        throw Exception('Data penawaran tidak ditemukan.');
       }
 
-      return MarketOfferModel.fromJson(
-        Map<String, dynamic>.from(data),
-      );
+      return MarketOfferModel.fromJson(Map<String, dynamic>.from(data));
     } on DioException catch (e) {
-      final data =
-          e.response?.data;
+      final data = e.response?.data;
 
       if (data is Map) {
         throw Exception(
-          data['message']?.toString() ??
-              'Server gagal memproses penawaran.',
+          data['message']?.toString() ?? 'Server gagal memproses penawaran.',
         );
       }
 
-      throw Exception(
-        'Server error ${e.response?.statusCode ?? ''}.',
-      );
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
     }
   }
 
-  Future<List<PurchaseContractModel>>
-      fetchContracts() async {
-    final response =
-        await _apiClient.dio.get(
-      '/purchase-contracts',
-    );
+  Future<List<PurchaseContractModel>> fetchContracts() async {
+    final response = await _apiClient.dio.get('/purchase-contracts');
 
-    final responseData =
-        response.data;
+    final responseData = response.data;
 
     if (responseData is! Map) {
       return [];
     }
 
-    final data =
-        responseData['data'];
+    final data = _extractList(responseData);
 
-    if (data is! List) {
+    if (data.isEmpty) {
       return [];
     }
 
@@ -449,43 +384,30 @@ class MarketplaceApiService {
         .whereType<Map>()
         .map(
           (item) =>
-              PurchaseContractModel.fromJson(
-            Map<String, dynamic>.from(item),
-          ),
+              PurchaseContractModel.fromJson(Map<String, dynamic>.from(item)),
         )
         .toList();
   }
 
-  Future<PurchaseContractModel>
-      getContract(
-    int contractId,
-  ) async {
-    final response =
-        await _apiClient.dio.get(
+  Future<PurchaseContractModel> getContract(int contractId) async {
+    final response = await _apiClient.dio.get(
       '/purchase-contracts/$contractId',
     );
 
-    final responseData =
-        response.data;
+    final responseData = response.data;
 
     if (responseData is! Map) {
-      throw Exception(
-        'Respons server tidak valid.',
-      );
+      throw Exception('Respons server tidak valid.');
     }
 
-    final data =
-        responseData['data'];
+    final data = responseData['data'];
 
     if (data is! Map) {
       throw Exception(
-        responseData['message']?.toString() ??
-            'Kontrak tidak ditemukan.',
+        responseData['message']?.toString() ?? 'Kontrak tidak ditemukan.',
       );
     }
 
-    return PurchaseContractModel.fromJson(
-      Map<String, dynamic>.from(data),
-    );
+    return PurchaseContractModel.fromJson(Map<String, dynamic>.from(data));
   }
 }
