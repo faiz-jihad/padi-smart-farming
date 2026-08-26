@@ -167,3 +167,41 @@
     </div>
 
 </header>
+
+{{-- Inline script: wiring dropdown navbar tanpa bergantung pada Vite build --}}
+<script>
+(function () {
+    function initPopover(toggleId, panelId) {
+        var toggle = document.getElementById(toggleId);
+        var panel  = document.getElementById(panelId);
+        if (!toggle || !panel) return;
+
+        function open()  { panel.hidden = false; toggle.setAttribute('aria-expanded', 'true'); }
+        function close() { panel.hidden = true;  toggle.setAttribute('aria-expanded', 'false'); }
+
+        toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            panel.hidden ? open() : close();
+        });
+
+        panel.addEventListener('click', function (e) { e.stopPropagation(); });
+
+        document.addEventListener('click', close);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { close(); toggle.focus(); }
+        });
+    }
+
+    // Jalankan setelah elemen navbar sudah ada di DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            initPopover('adminNotificationToggle', 'adminNotificationPanel');
+            initPopover('adminAccountToggle',      'adminAccountPanel');
+        });
+    } else {
+        initPopover('adminNotificationToggle', 'adminNotificationPanel');
+        initPopover('adminAccountToggle',      'adminAccountPanel');
+    }
+}());
+</script>

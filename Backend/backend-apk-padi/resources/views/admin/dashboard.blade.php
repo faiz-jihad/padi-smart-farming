@@ -772,19 +772,6 @@
     </div>
 </div>
 
-{{-- Initial Dashboard State for Interactive Client Engine --}}
-<script>
-    window.dashboardData = @json([
-        'farmsForMap' => $farmsForMap,
-        'hourlyTelemetry' => $hourlyTelemetry,
-        'monthlyTrends' => $monthlyTrends,
-        'forecastDays' => $forecastDays,
-        'liveWeather' => $liveWeather,
-        'disasterThreats' => $disasterThreats,
-        'disasterSummary' => $disasterSummary,
-    ]);
-</script>
-
 {{-- Interactive Client Scripts --}}
 <script src="{{ asset('js/admin/dashboard-interactive.js') }}"></script>
 
