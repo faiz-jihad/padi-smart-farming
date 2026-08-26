@@ -772,23 +772,8 @@
     </div>
 </div>
 
-{{-- Initial Dashboard State for Interactive Client Engine --}}
-@php
-    $dashboardDataPayload = [
-        'farmsForMap' => $farmsForMap,
-        'hourlyTelemetry' => $hourlyTelemetry,
-        'monthlyTrends' => $monthlyTrends,
-        'forecastDays' => $forecastDays,
-        'liveWeather' => $liveWeather,
-        'disasterThreats' => $disasterThreats,
-        'disasterSummary' => $disasterSummary,
-    ];
-@endphp
-<script>
-    window.dashboardData = @js($dashboardDataPayload);
-</script>
-
 {{-- Interactive Client Scripts --}}
 <script src="{{ asset('js/admin/dashboard-interactive.js') }}"></script>
 
 @endsection
+
