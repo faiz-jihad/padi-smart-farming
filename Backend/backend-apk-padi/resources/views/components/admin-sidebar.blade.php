@@ -275,7 +275,11 @@
                 </p>
 
                 <p class="admin-sidebar__profile-role">
-                    Administrator
+                    @if($adminUser?->hasRole(\App\Enums\UserRole::ExtensionOfficer->value))
+                        Penyuluh
+                    @else
+                        Administrator
+                    @endif
                 </p>
 
             </div>

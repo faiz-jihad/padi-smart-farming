@@ -256,6 +256,7 @@
                                     Detail
                                 </a>
 
+                                @if(auth()->user()?->hasRole(\App\Enums\UserRole::Admin->value))
                                 <form action="{{ route('admin.soil.destroy', $soil) }}" method="POST" style="display:inline; margin-left:4px;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus sampel tanah {{ $soil->sample_code }}?')">
                                     @csrf
                                     @method('DELETE')
@@ -266,6 +267,7 @@
                                         Hapus
                                     </button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

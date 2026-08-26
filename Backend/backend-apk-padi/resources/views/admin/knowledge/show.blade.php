@@ -30,6 +30,7 @@
                 Edit Panduan
             </a>
 
+            @if(auth()->user()?->hasRole(\App\Enums\UserRole::Admin->value))
             <form method="POST" action="{{ route('admin.knowledge.destroy', $article) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel panduan ini?')">
                 @csrf
                 @method('DELETE')
@@ -37,6 +38,7 @@
                     Hapus
                 </button>
             </form>
+            @endif
 
             <a href="{{ route('admin.knowledge.index') }}" class="kb-cat-btn">
                 Kembali ke Daftar

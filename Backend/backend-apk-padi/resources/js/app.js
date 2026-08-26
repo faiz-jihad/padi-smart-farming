@@ -3,55 +3,48 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 Alpine.start();
 
-
-const adminMeta = document.querySelector('meta[name="admin-user-id"]');
-const notificationList = document.getElementById('adminNotificationList');
-const notificationBadge = document.getElementById('adminNotificationBadge');
-const notificationCountText = document.querySelectorAll('[data-admin-notification-count]');
-
+// ─── Helper: set visibilitas panel popover ────────────────────────────────────
 function setPanelState(toggle, panel, isOpen) {
-    if (!toggle || !panel) {
-        return;
-    }
-
+    if (!toggle || !panel) return;
     panel.hidden = !isOpen;
     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
+// ─── Setup satu pasang toggle + panel sebagai popover ────────────────────────
 function setupPopover(toggleId, panelId) {
     const toggle = document.getElementById(toggleId);
-    const panel = document.getElementById(panelId);
+    const panel  = document.getElementById(panelId);
 
-    if (!toggle || !panel) {
-        return;
-    }
+    if (!toggle || !panel) return;
 
-    toggle.addEventListener('click', (event) => {
-        event.stopPropagation();
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         setPanelState(toggle, panel, panel.hidden);
     });
 
-    panel.addEventListener('click', (event) => {
-        event.stopPropagation();
+    panel.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 
-    document.addEventListener('click', () => setPanelState(toggle, panel, false));
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
+    document.addEventListener('click', () => {
+        setPanelState(toggle, panel, false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
             setPanelState(toggle, panel, false);
             toggle.focus();
         }
     });
 }
 
+// ─── Setup sidebar mobile ─────────────────────────────────────────────────────
 function setupSidebar() {
     const sidebar = document.querySelector('.admin-sidebar');
-    const toggle = document.getElementById('sidebarToggle');
+    const toggle  = document.getElementById('sidebarToggle');
     const overlay = document.getElementById('sidebarOverlay');
 
-    if (!sidebar || !toggle || !overlay) {
-        return;
-    }
+    if (!sidebar || !toggle || !overlay) return;
 
     const closeSidebar = () => {
         sidebar.classList.remove('is-open');
@@ -69,59 +62,43 @@ function setupSidebar() {
     };
 
     toggle.addEventListener('click', () => {
-        if (sidebar.classList.contains('is-open')) {
-            closeSidebar();
-            return;
-        }
-
-        openSidebar();
+        sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
     });
 
     overlay.addEventListener('click', closeSidebar);
 
     document.querySelectorAll('.admin-sidebar__link').forEach((link) => {
         link.addEventListener('click', () => {
-            if (window.innerWidth <= 1024) {
-                closeSidebar();
-            }
+            if (window.innerWidth <= 1024) closeSidebar();
         });
     });
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeSidebar();
-        }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSidebar();
     });
 
     window.addEventListener('resize', () => {
-        if (window.innerWidth > 1024) {
-            closeSidebar();
-        }
+        if (window.innerWidth > 1024) closeSidebar();
     });
 }
 
-function updateNotificationCount() {
-    if (!notificationBadge) {
-        return;
-    }
-
-    const current = Number(notificationBadge.dataset.count ?? '0') + 1;
-    notificationBadge.dataset.count = String(current);
-    notificationBadge.textContent = current > 9 ? '9+' : String(current);
-    notificationBadge.hidden = false;
-
-    notificationCountText.forEach((node) => {
-        node.textContent = String(current);
-    });
+// ─── Update badge notifikasi ──────────────────────────────────────────────────
+function updateNotificationCount(badge, countNodes) {
+    if (!badge) return;
+    const current = Number(badge.dataset.count ?? '0') + 1;
+    badge.dataset.count = String(current);
+    badge.textContent   = current > 9 ? '9+' : String(current);
+    badge.hidden = false;
+    countNodes.forEach((node) => { node.textContent = String(current); });
 }
 
-function prependNotification(notification) {
-    if (!notificationList) {
-        return;
-    }
+// ─── Prepend item notifikasi baru ke list ────────────────────────────────────
+function prependNotification(notification, list) {
+    if (!list) return;
 
-    const emptyState = notificationList.querySelector('[data-admin-notification-empty]');
-    emptyState?.closest('.admin-navbar__notification-empty')?.remove();
+    list.querySelector('[data-admin-notification-empty]')
+        ?.closest('.admin-navbar__notification-empty')
+        ?.remove();
 
     const item = document.createElement('div');
     item.className = 'admin-navbar__notification-item is-unread';
@@ -145,18 +122,31 @@ function prependNotification(notification) {
 
     content.append(title, body, time);
     item.append(icon, content);
-    notificationList.prepend(item);
+    list.prepend(item);
 }
 
-setupSidebar();
-setupPopover('adminNotificationToggle', 'adminNotificationPanel');
-setupPopover('adminAccountToggle', 'adminAccountPanel');
+// ─── Inisialisasi setelah DOM siap ───────────────────────────────────────────
+// PENTING: app.js dimuat di <head> sehingga DOM belum tersedia saat modul
+// dievaluasi. Semua getElementById / querySelector HARUS ada di DOMContentLoaded.
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[PADI Admin] DOM ready — initialising popovers & sidebar');
 
-if (adminMeta?.content && window.Echo) {
-    window.Echo
-        .private(`admin.notifications.${adminMeta.content}`)
-        .listen('.admin.notification.created', (event) => {
-            updateNotificationCount();
-            prependNotification(event);
-        });
-}
+    const adminMeta             = document.querySelector('meta[name="admin-user-id"]');
+    const notificationList      = document.getElementById('adminNotificationList');
+    const notificationBadge     = document.getElementById('adminNotificationBadge');
+    const notificationCountText = document.querySelectorAll('[data-admin-notification-count]');
+
+    setupSidebar();
+    setupPopover('adminNotificationToggle', 'adminNotificationPanel');
+    setupPopover('adminAccountToggle',      'adminAccountPanel');
+
+    if (adminMeta?.content && window.Echo) {
+        window.Echo
+            .private(`admin.notifications.${adminMeta.content}`)
+            .listen('.admin.notification.created', (event) => {
+                updateNotificationCount(notificationBadge, notificationCountText);
+                prependNotification(event, notificationList);
+            });
+    }
+});
+

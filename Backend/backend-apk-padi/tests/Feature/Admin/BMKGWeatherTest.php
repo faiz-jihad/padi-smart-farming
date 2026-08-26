@@ -12,6 +12,13 @@ class BMKGWeatherTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+    }
+
     public function test_can_fetch_bmkg_weather_forecast_via_service(): void
     {
         $service = app(WeatherService::class);
@@ -26,7 +33,9 @@ class BMKGWeatherTest extends TestCase
     public function test_can_fetch_bmkg_forecast_via_api_endpoint(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $farmer->assignRole('farmer');
 
         $farm = Farm::create([
             'farmer_user_id' => $farmer->id,
@@ -58,6 +67,7 @@ class BMKGWeatherTest extends TestCase
     public function test_can_update_weather_provider_setting_to_bmkg(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
 
         $response = $this->actingAs($admin)->patch('/admin/weather/settings', [
             'weather_provider' => 'bmkg',

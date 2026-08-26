@@ -51,6 +51,7 @@ Route::middleware(['auth', 'admin.web'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function (): void {
+        // ─── General Internal Routes (Admin & Extension Officer / PPL) ─────
         Route::get('/', [DashboardController::class, 'index'])->middleware('throttle:admin-sync')->name('dashboard');
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');
@@ -58,7 +59,6 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
         Route::post('/agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
         Route::patch('/agriculture/{farm}', [AgricultureController::class, 'update'])->name('agriculture.update');
-        Route::delete('/agriculture/{farm}', [AgricultureController::class, 'destroy'])->name('agriculture.destroy');
 
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
@@ -74,10 +74,6 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/weather/refresh', [WeatherController::class, 'refresh'])->middleware('throttle:weather-refresh')->name('weather.refresh');
         Route::post('/weather/refresh-all', [WeatherController::class, 'refreshAll'])->middleware('throttle:weather-refresh')->name('weather.refresh-all');
         Route::post('/weather/export', [WeatherController::class, 'export'])->name('weather.export');
-        Route::get('/weather/settings', [WeatherController::class, 'settings'])->name('weather.settings');
-        Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
-        Route::post('/weather/test-connection', [WeatherController::class, 'testConnection'])->name('weather.test-connection');
-        Route::post('/weather/clear-cache', [WeatherController::class, 'clearCache'])->name('weather.clear-cache');
 
         // Admin Geo Intelligence Map Routes
         Route::prefix('/map')->name('map.')->group(function (): void {
@@ -100,7 +96,6 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/soil', [SoilController::class, 'store'])->name('soil.store');
         Route::post('/soil/export', [SoilController::class, 'export'])->name('soil.export');
         Route::get('/soil/{soil}', [SoilController::class, 'show'])->name('soil.show');
-        Route::delete('/soil/{soil}', [SoilController::class, 'destroy'])->name('soil.destroy');
 
         // Knowledge Base Routes
         Route::get('/knowledge', [\App\Http\Controllers\Admin\KnowledgeController::class, 'index'])->name('knowledge.index');
@@ -109,15 +104,27 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/knowledge/{slug}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'show'])->name('knowledge.show');
         Route::get('/knowledge/{article}/edit', [\App\Http\Controllers\Admin\KnowledgeController::class, 'edit'])->name('knowledge.edit');
         Route::patch('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'update'])->name('knowledge.update');
-        Route::delete('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'destroy'])->name('knowledge.destroy');
 
         // ─── Admin-Only Sub-Routes ──────────────────────────────────────────
         Route::middleware('role:admin')->group(function (): void {
+            // Weather Settings & Maintenance (Admin Only)
+            Route::get('/weather/settings', [WeatherController::class, 'settings'])->name('weather.settings');
+            Route::patch('/weather/settings', [WeatherController::class, 'updateSettings'])->name('weather.settings.update');
+            Route::post('/weather/test-connection', [WeatherController::class, 'testConnection'])->name('weather.test-connection');
+            Route::post('/weather/clear-cache', [WeatherController::class, 'clearCache'])->name('weather.clear-cache');
+
+            // Restricted Deletions (Admin Only)
+            Route::delete('/agriculture/{farm}', [AgricultureController::class, 'destroy'])->name('agriculture.destroy');
+            Route::delete('/soil/{soil}', [SoilController::class, 'destroy'])->name('soil.destroy');
+            Route::delete('/knowledge/{article}', [\App\Http\Controllers\Admin\KnowledgeController::class, 'destroy'])->name('knowledge.destroy');
+
+            // User Management
             Route::get('/users', [UserController::class, 'index'])->name('users.index');
             Route::post('/users', [UserController::class, 'store'])->name('users.store');
             Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
             Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
+            // Marketplace Management
             Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
             Route::get('/marketplace/create', [MarketplaceController::class, 'create'])->name('marketplace.create');
             Route::post('/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
@@ -125,6 +132,7 @@ Route::middleware(['auth', 'admin.web'])
             Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
             Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
             Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
+
 
             // Agriculture Events Management (Admin)
             Route::get('/events', [AdminEventController::class, 'index'])->name('events.index');
@@ -135,11 +143,13 @@ Route::middleware(['auth', 'admin.web'])
             Route::patch('/events/{event}', [AdminEventController::class, 'update'])->name('events.update');
             Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
 
+            // Broadcast Management
             Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
             Route::post('/broadcast', [BroadcastController::class, 'store'])->middleware('throttle:broadcast-alert')->name('broadcast.store');
             Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
             Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
 
+            // Audit Log
             Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
 
             // Farmer Public Profile Management (Admin)

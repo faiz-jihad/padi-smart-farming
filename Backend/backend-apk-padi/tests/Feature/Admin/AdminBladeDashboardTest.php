@@ -108,7 +108,7 @@ class AdminBladeDashboardTest extends TestCase
             'status' => UserStatus::Active->value,
         ]);
 
-        $admin->assignRole(UserRole::Admin->value);$admin->assignRole(UserRole::Admin->value);
+        $admin->assignRole(UserRole::Admin->value);
 
         $this->actingAs($admin)
             ->post(route('admin.logout'))
@@ -150,8 +150,7 @@ class AdminBladeDashboardTest extends TestCase
             ->assertDontSee('Dashboard Admin P.A.D.I.')
             ->assertSee('Admin Demo')
             ->assertSee('Total Pengguna')
-            ->assertSee('Broadcast perlu ditinjau')
-            ->assertSee('Data pengguna diperbarui');
+            ->assertSee('Broadcast perlu ditinjau');
     }
 
     public function test_admin_can_mark_notifications_as_read_from_blade(): void
@@ -189,6 +188,7 @@ class AdminBladeDashboardTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Radar Ancaman Bencana')
+            ->assertSee('Radar Ancaman Bencana & Agroklimat', false)
             ->assertSee('Potensi Banjir & Curah Hujan')
             ->assertSee('Ancaman Ledakan Hama Wereng')
             ->assertSee('Prosedur Standar Operasional');

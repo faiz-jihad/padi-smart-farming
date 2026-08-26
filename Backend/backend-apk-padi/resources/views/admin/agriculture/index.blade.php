@@ -304,6 +304,7 @@
                                         Edit
                                     </button>
 
+                                    @if(auth()->user()?->hasRole(\App\Enums\UserRole::Admin->value))
                                     <form method="POST" action="{{ route('admin.agriculture.destroy', $farm) }}" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
@@ -318,6 +319,7 @@
                                             Hapus
                                         </button>
                                     </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

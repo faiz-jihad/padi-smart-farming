@@ -136,7 +136,9 @@
 
                 <span class="admin-navbar__profile-info">
                     <span>{{ $adminName }}</span>
-                    <small>Administrator</small>
+                    <small>
+                        {{ \App\Enums\UserRole::tryFrom(auth()->user()->role)?->label() ?? auth()->user()->role }}
+                    </small>
                 </span>
 
                 <svg class="admin-navbar__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -147,7 +149,9 @@
             <div id="adminAccountPanel" class="admin-navbar__account-panel" hidden>
                 <div class="admin-navbar__account-summary">
                     <strong>{{ $adminName }}</strong>
-                    <span>Administrator</span>
+                    <span>
+                        {{ \App\Enums\UserRole::tryFrom(auth()->user()->role)?->label() ?? auth()->user()->role }}
+                    </span>
                 </div>
 
                 <form method="POST" action="{{ route('admin.logout') }}" class="admin-navbar__logout-form">
