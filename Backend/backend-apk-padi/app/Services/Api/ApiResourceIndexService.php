@@ -20,6 +20,7 @@ use App\Models\PartnerFavorite;
 use App\Models\PplValidation;
 use App\Models\PurchaseContract;
 use App\Models\RiceVariety;
+use App\Models\User;
 use App\Models\WeatherSnapshot;
 
 use Illuminate\Database\Eloquent\Collection;
@@ -69,9 +70,24 @@ class ApiResourceIndexService
             ->get();
     }
 
-    public function contractPayments(): Collection
+    public function contractPayments(?User $user = null): Collection
     {
-        return ContractPayment::query()->with('contract')->get();
+        $query = ContractPayment::query()->with('contract');
+
+        if (! $user) {
+            return $query->get();
+        }
+
+        $isAdmin = ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+
+        if ($isAdmin) {
+            return $query->get();
+        }
+
+        return $query->whereHas('contract', function ($q) use ($user): void {
+            $q->where('farmer_id', $user->id)
+                ->orWhere('partner_id', $user->id);
+        })->get();
     }
 
     public function deviceTokens(): Collection
