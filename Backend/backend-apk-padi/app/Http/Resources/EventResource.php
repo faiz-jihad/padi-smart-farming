@@ -32,7 +32,7 @@ class EventResource extends JsonResource
             'asset_image' => $this->asset_image ?? 'assets/images/onboarding_1.jpeg',
             'contact_person' => $this->contact_person,
             'status' => $this->status,
-            'is_registered' => $user ? $this->isRegisteredBy($user) : false,
+            'is_registered' => $user ? (isset($this->is_user_registered) ? (bool) $this->is_user_registered : $this->isRegisteredBy($user)) : false,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

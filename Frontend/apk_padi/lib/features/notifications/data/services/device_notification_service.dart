@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:padi/core/network/api_client.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/notifications/data/models/app_notification_model.dart';
@@ -13,6 +14,18 @@ class DeviceNotificationService {
   const DeviceNotificationService(this._apiClient);
 
   final ApiClient _apiClient;
+
+  /// Request system notification permission on Android (13+) / iOS
+  Future<void> requestNotificationPermission() async {
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        final status = await Permission.notification.status;
+        if (!status.isGranted) {
+          await Permission.notification.request();
+        }
+      }
+    } catch (_) {}
+  }
 
   /// Fetch all notifications for the authenticated user and platform.
   /// Fetch all notifications for the authenticated user and platform.

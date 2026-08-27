@@ -14,18 +14,20 @@ class MarketListingService
 {
     public function getListings(User $user): Collection
     {
-        return MarketListing::query()
-            ->where('status', 'published')
-            ->with([
-                'farmer',
-                'farm',
-                'cropSeason',
-                'harvest',
-                'images',
-                'offers',
-            ])
-            ->latest()
-            ->get();
+        return PadiCacheService::remember('padi:market:listings_v2', PadiCacheService::TTL_LISTINGS, function () {
+            return MarketListing::query()
+                ->where('status', 'published')
+                ->with([
+                    'farmer:id,name,phone,email',
+                    'farm:id,name,area_ha,latitude,longitude',
+                    'cropSeason:id,variety_id,status',
+                    'harvest:id,moisture_percent,quality_grade,quantity',
+                    'images:id,market_listing_id,image_url,is_primary',
+                    'offers:id,listing_id,partner_id,offered_price,quantity,status',
+                ])
+                ->latest('published_at')
+                ->get();
+        });
     }
 
     public function createListing(
@@ -65,13 +67,15 @@ class MarketListingService
             'published_at' => now(),
         ]);
 
+        PadiCacheService::invalidateMarketCache();
+
         return $listing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-            'offers',
+            'farmer:id,name,phone,email',
+            'farm:id,name,area_ha,latitude,longitude',
+            'cropSeason:id,variety_id,status',
+            'harvest:id,moisture_percent,quality_grade,quantity',
+            'images:id,market_listing_id,image_url,is_primary',
+            'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }
 
@@ -82,12 +86,12 @@ class MarketListingService
         $this->authorizeListing($user, $listing, allowPublicListing: true);
 
         return $listing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-            'offers',
+            'farmer:id,name,phone,email',
+            'farm:id,name,area_ha,latitude,longitude',
+            'cropSeason:id,variety_id,status',
+            'harvest:id,moisture_percent,quality_grade,quantity',
+            'images:id,market_listing_id,image_url,is_primary',
+            'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }
 
@@ -121,13 +125,15 @@ class MarketListingService
 
         $listing->update($this->prepareListingData($data));
 
+        PadiCacheService::invalidateMarketCache();
+
         return $listing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
-            'images',
-            'offers',
+            'farmer:id,name,phone,email',
+            'farm:id,name,area_ha,latitude,longitude',
+            'cropSeason:id,variety_id,status',
+            'harvest:id,moisture_percent,quality_grade,quantity',
+            'images:id,market_listing_id,image_url,is_primary',
+            'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }
 
@@ -146,11 +152,13 @@ class MarketListingService
             'published_at' => now(),
         ]);
 
+        PadiCacheService::invalidateMarketCache();
+
         return $listing->load([
-            'farmer',
-            'farm',
-            'cropSeason',
-            'harvest',
+            'farmer:id,name,phone,email',
+            'farm:id,name,area_ha,latitude,longitude',
+            'cropSeason:id,variety_id,status',
+            'harvest:id,moisture_percent,quality_grade,quantity',
         ]);
     }
 
@@ -168,6 +176,7 @@ class MarketListingService
         }
 
         $listing->delete();
+        PadiCacheService::invalidateMarketCache();
     }
 
     private function authorizeFarm(

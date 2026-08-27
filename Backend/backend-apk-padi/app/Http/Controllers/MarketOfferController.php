@@ -7,6 +7,7 @@ use App\Models\MarketListing;
 use App\Models\MarketOffer;
 use App\Models\PurchaseContract;
 use App\Services\Admin\AdminNotificationService;
+use App\Services\PadiCacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,8 +26,8 @@ class MarketOfferController extends Controller
 
         $query = MarketOffer::query()
             ->with([
-                'listing',
-                'partner',
+                'listing:id,farmer_id,commodity,unit,price_per_unit,image_url,status',
+                'partner:id,name,phone,email',
             ]);
 
         if ($user->role === 'farmer') {
@@ -38,7 +39,7 @@ class MarketOfferController extends Controller
         }
 
         $offers = $query
-            ->latest()
+            ->latest('created_at')
             ->get();
 
         return MarketOfferResource::collection(
@@ -163,10 +164,10 @@ class MarketOfferController extends Controller
         $offers = $marketListing
             ->offers()
             ->with([
-                'partner',
-                'listing',
+                'partner:id,name,phone,email',
+                'listing:id,farmer_id,commodity,unit,price_per_unit,image_url,status',
             ])
-            ->latest()
+            ->latest('created_at')
             ->get();
 
         return MarketOfferResource::collection(
@@ -393,6 +394,9 @@ class MarketOfferController extends Controller
         $unit = $marketOffer->listing->unit ?? 'kg';
 
         if ($validated['status'] === 'accepted') {
+            // Invalidate sales & contract caches for both farmer & partner
+            PadiCacheService::invalidateContractAndSalesCache($marketOffer->listing?->farmer_id, $marketOffer->partner_id);
+
             // Notify buyer: their offer was accepted → contract created
             $notificationService->notifyUser(
                 $marketOffer->partner_id,

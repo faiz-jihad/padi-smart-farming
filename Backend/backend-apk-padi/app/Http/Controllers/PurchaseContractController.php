@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\PurchaseContractResource;
 use App\Models\PurchaseContract;
 use App\Services\Admin\AdminNotificationService;
+use App\Services\PadiCacheService;
 use Illuminate\Http\Request;
 
 class PurchaseContractController extends Controller
@@ -15,26 +16,20 @@ class PurchaseContractController extends Controller
 
         $query = PurchaseContract::query()
             ->with([
-                'listing',
-                'farmer',
-                'partner',
-                'offer',
+                'listing:id,commodity,unit,price_per_unit,image_url,status',
+                'farmer:id,name,phone,email',
+                'partner:id,name,phone,email',
+                'offer:id,listing_id,partner_id,offered_price,quantity,status',
             ]);
 
         if ($user->role === 'farmer') {
-            $query->where(
-                'farmer_id',
-                $user->id
-            );
+            $query->where('farmer_id', $user->id);
         } else {
-            $query->where(
-                'partner_id',
-                $user->id
-            );
+            $query->where('partner_id', $user->id);
         }
 
         return PurchaseContractResource::collection(
-            $query->latest()->get()
+            $query->latest('contracted_at')->get()
         );
     }
 
@@ -55,10 +50,10 @@ class PurchaseContractController extends Controller
         }
 
         $purchaseContract->load([
-            'listing',
-            'farmer',
-            'partner',
-            'offer',
+            'listing:id,commodity,unit,price_per_unit,image_url,description,status',
+            'farmer:id,name,phone,email',
+            'partner:id,name,phone,email',
+            'offer:id,listing_id,partner_id,offered_price,quantity,status,message',
         ]);
 
         return response()->json([
@@ -195,6 +190,9 @@ class PurchaseContractController extends Controller
             \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi kontrak: ' . $e->getMessage());
         }
 
+        // Invalidate sales & contract caches for both farmer & partner
+        PadiCacheService::invalidateContractAndSalesCache($contract->farmer_id, $contract->partner_id);
+
         return response()->json([
             'success' => true,
             'message' => 'Pesanan dan kontrak pembelian berhasil dibuat.',
@@ -213,33 +211,37 @@ class PurchaseContractController extends Controller
             ], 401);
         }
 
-        $query = PurchaseContract::query()
-            ->with(['listing', 'farmer', 'partner']);
-
-        if ($user->role === 'farmer') {
-            $query->where('farmer_id', $user->id);
-        } else {
-            $query->where('partner_id', $user->id);
-        }
-
         $period = $request->query('period', 'all');
+        $cacheKey = "padi:sales:{$user->role}:{$user->id}:{$period}";
 
-        if ($period === 'month') {
-            $query->where('contracted_at', '>=', now()->startOfMonth());
-        } elseif ($period === 'season') {
-            $query->where('contracted_at', '>=', now()->subMonths(3));
-        }
+        $reportData = PadiCacheService::remember($cacheKey, PadiCacheService::TTL_SALES, function () use ($user, $period) {
+            $query = PurchaseContract::query()
+                ->with([
+                    'listing:id,commodity,unit,price_per_unit,image_url',
+                    'farmer:id,name,phone,email',
+                    'partner:id,name,phone,email'
+                ]);
 
-        $contracts = $query->latest('contracted_at')->get();
+            if ($user->role === 'farmer') {
+                $query->where('farmer_id', $user->id);
+            } else {
+                $query->where('partner_id', $user->id);
+            }
 
-        $totalRevenue = (float) $contracts->sum('total_amount');
-        $totalVolume = (float) $contracts->sum('quantity');
-        $totalTransactions = $contracts->count();
-        $averagePrice = $totalVolume > 0 ? $totalRevenue / $totalVolume : 0;
+            if ($period === 'month') {
+                $query->where('contracted_at', '>=', now()->startOfMonth());
+            } elseif ($period === 'season') {
+                $query->where('contracted_at', '>=', now()->subMonths(3));
+            }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
+            $contracts = $query->latest('contracted_at')->get();
+
+            $totalRevenue = (float) $contracts->sum('total_amount');
+            $totalVolume = (float) $contracts->sum('quantity');
+            $totalTransactions = $contracts->count();
+            $averagePrice = $totalVolume > 0 ? $totalRevenue / $totalVolume : 0;
+
+            return [
                 'summary' => [
                     'total_revenue' => $totalRevenue,
                     'total_volume' => $totalVolume,
@@ -247,8 +249,13 @@ class PurchaseContractController extends Controller
                     'average_price' => round($averagePrice, 2),
                     'period' => $period,
                 ],
-                'contracts' => PurchaseContractResource::collection($contracts),
-            ],
+                'contracts' => PurchaseContractResource::collection($contracts)->resolve(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $reportData,
         ]);
     }
 }

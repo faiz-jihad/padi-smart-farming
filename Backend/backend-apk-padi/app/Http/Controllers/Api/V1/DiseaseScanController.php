@@ -20,7 +20,7 @@ class DiseaseScanController extends Controller
 
         $scans = DiseaseScan::query()
             ->when(! $user->hasRole('admin'), fn ($query) => $query->where('farmer_id', $user->id))
-            ->with('farm')
+            ->with(['farm:id,name,area_ha', 'recommendation'])
             ->latest('scanned_at')
             ->paginate((int) $request->integer('per_page', 15));
 

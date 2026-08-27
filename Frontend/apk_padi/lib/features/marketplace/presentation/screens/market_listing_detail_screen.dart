@@ -1182,25 +1182,6 @@ class _MarketListingDetailScreenState
                               quantity: selectedQty,
                             );
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle_rounded, color: Color(0xFF6EE7B7), size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    '${selectedQty.toInt()} ${listing.unit} ${listing.commodity} ditambahkan ke keranjang.',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            action: SnackBarAction(
-                              label: 'Lihat',
-                              onPressed: () => context.push('/cart'),
-                            ),
-                          ),
-                        );
                       },
                       icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
                       label: const Text(

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CommunityAlert;
 use App\Models\CommunityReport;
 use App\Models\MarketListing;
+use App\Models\PurchaseContract;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,8 @@ class PadiCacheService
 {
     const TTL_PRICES = 300;       // 5 minutes
     const TTL_RADAR = 180;        // 3 minutes
+    const TTL_LISTINGS = 120;     // 2 minutes
+    const TTL_SALES = 300;        // 5 minutes
     const TTL_WEATHER = 900;      // 15 minutes
     const TTL_KB = 86400;         // 24 hours
 
@@ -23,12 +26,16 @@ class PadiCacheService
     public static function getMarketPriceTicker(): array
     {
         return self::remember('padi:market:price_ticker', self::TTL_PRICES, function () {
-            $latestGkp = MarketListing::where('commodity', 'like', '%GKP%')
+            $latestGkp = MarketListing::query()
+                ->select(['id', 'commodity', 'price_per_unit', 'unit', 'published_at'])
+                ->where('commodity', 'like', '%GKP%')
                 ->where('status', 'published')
                 ->latest('published_at')
                 ->first();
 
-            $latestGkg = MarketListing::where('commodity', 'like', '%GKG%')
+            $latestGkg = MarketListing::query()
+                ->select(['id', 'commodity', 'price_per_unit', 'unit', 'published_at'])
+                ->where('commodity', 'like', '%GKG%')
                 ->where('status', 'published')
                 ->latest('published_at')
                 ->first();
@@ -49,6 +56,29 @@ class PadiCacheService
     {
         self::forget('padi:market:price_ticker');
         self::forget('padi:market:published_listings');
+        self::forget('padi:market:listings_v2');
+    }
+
+    /**
+     * Invalidate sales reports & contracts cache for relevant parties.
+     */
+    public static function invalidateContractAndSalesCache(?int $farmerId = null, ?int $partnerId = null): void
+    {
+        self::invalidateMarketCache();
+
+        if ($farmerId) {
+            self::forget("padi:sales:farmer:{$farmerId}:all");
+            self::forget("padi:sales:farmer:{$farmerId}:month");
+            self::forget("padi:sales:farmer:{$farmerId}:season");
+            self::forget("padi:contracts:farmer:{$farmerId}");
+        }
+
+        if ($partnerId) {
+            self::forget("padi:sales:partner:{$partnerId}:all");
+            self::forget("padi:sales:partner:{$partnerId}:month");
+            self::forget("padi:sales:partner:{$partnerId}:season");
+            self::forget("padi:contracts:partner:{$partnerId}");
+        }
     }
 
     /**
@@ -62,7 +92,10 @@ class PadiCacheService
                 ->limit(20)
                 ->get();
 
-            $latestReports = CommunityReport::with(['farmer', 'scan'])
+            $latestReports = CommunityReport::with([
+                    'farmer:id,name,phone',
+                    'scan:id,disease_name,confidence,crop_stage'
+                ])
                 ->latest('created_at')
                 ->limit(20)
                 ->get();

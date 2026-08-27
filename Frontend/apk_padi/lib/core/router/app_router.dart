@@ -54,12 +54,35 @@ import 'package:padi/features/event/presentation/screens/event_list_screen.dart'
 
 export 'package:padi/core/providers/app_providers.dart';
 
+final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+class _ClearSnackBarRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    rootScaffoldMessengerKey.currentState?.clearSnackBars();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    rootScaffoldMessengerKey.currentState?.clearSnackBars();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    rootScaffoldMessengerKey.currentState?.clearSnackBars();
+  }
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.read(authControllerProvider);
 
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: auth,
+    observers: [_ClearSnackBarRouteObserver()],
     errorBuilder: (context, state) => Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(

@@ -17,7 +17,14 @@ class EventController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $events = AgricultureEvent::query()
+            ->when($user, function ($query) use ($user): void {
+                $query->withExists(['registrations as is_user_registered' => function ($q) use ($user): void {
+                    $q->where('user_id', $user->id);
+                }]);
+            })
             ->when($request->query('category') && $request->query('category') !== 'all', function ($query) use ($request): void {
                 $query->where('category', $request->query('category'));
             })

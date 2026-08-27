@@ -49,8 +49,11 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       _fetchNotifications(service, isBuyer);
     });
 
-    // Fetch immediately on build
-    Future.microtask(() => _fetchNotifications(service, isBuyer));
+    // Request device permission on Android/iOS & fetch immediately on build
+    Future.microtask(() async {
+      await service.requestNotificationPermission();
+      await _fetchNotifications(service, isBuyer);
+    });
 
     return const NotificationsState();
   }

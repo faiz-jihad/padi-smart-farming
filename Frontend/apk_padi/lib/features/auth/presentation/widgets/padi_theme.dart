@@ -106,7 +106,7 @@ ThemeData buildPadiTheme() {
         side: BorderSide(color: const Color(0xFF34D399).withOpacity(0.35)),
       ),
       elevation: 6,
-      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
     ),
   );
 }

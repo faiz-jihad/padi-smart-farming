@@ -21,6 +21,7 @@ class PadiApp extends ConsumerWidget {
     final systemLocale = currentLang == AppLanguage.en ? const Locale('en') : const Locale('id');
 
     return MaterialApp.router(
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'P.A.D.I.',
       debugShowCheckedModeBanner: false,
       theme: buildPadiTheme(),

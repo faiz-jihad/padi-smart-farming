@@ -765,21 +765,6 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen> {
                               item,
                               quantity: item.quantity >= 500 ? 500 : 100,
                             );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle_rounded, color: Color(0xFF6EE7B7), size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text('${item.commodity} ditambahkan ke keranjang!')),
-                              ],
-                            ),
-                            action: SnackBarAction(
-                              label: 'Lihat',
-                              onPressed: () => context.push('/cart'),
-                            ),
-                          ),
-                        );
                       },
                       icon: const Icon(Icons.add_shopping_cart_rounded, size: 12),
                       label: const Text(
