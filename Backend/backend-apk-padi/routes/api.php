@@ -140,7 +140,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
 
         Route::get('market-listings', [MarketListingController::class, 'index']);
-        Route::post('market-listings', [MarketListingController::class, 'store']);
+        Route::post('market-listings', [MarketListingController::class, 'store'])
+            ->middleware('role:farmer|admin');
         Route::get('market-listings/{marketListing}', [MarketListingController::class, 'show']);
         Route::patch('market-listings/{marketListing}', [MarketListingController::class, 'update']);
         Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy']);
