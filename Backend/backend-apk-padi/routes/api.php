@@ -85,7 +85,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('farms/{farm}', [ApiV1FarmController::class, 'show']);
         Route::put('farms/{farm}', [ApiV1FarmController::class, 'update']);
         Route::delete('farms/{farm}', [ApiV1FarmController::class, 'destroy']);
-        Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm']);
+        Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm'])
+            ->middleware('role:farmer|extension_officer|admin');
 
         Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
         Route::get('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'show']);

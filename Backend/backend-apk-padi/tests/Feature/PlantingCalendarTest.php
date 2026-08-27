@@ -12,6 +12,7 @@ use App\Models\Regency;
 use App\Models\User;
 use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\RoleSeeder;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -19,9 +20,17 @@ class PlantingCalendarTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RoleSeeder::class);
+    }
+
     public function test_can_get_planting_calendar_with_district_fallback(): void
     {
         $user = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $user->assignRole('farmer');
         Sanctum::actingAs($user);
 
         $province = Province::create(['code' => '32', 'name' => 'Jawa Barat']);
@@ -55,6 +64,7 @@ class PlantingCalendarTest extends TestCase
     public function test_can_get_planting_calendar_for_farm_with_regency_fallback(): void
     {
         $user = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $user->assignRole('farmer');
         Sanctum::actingAs($user);
 
         $province = Province::create(['code' => '32', 'name' => 'Jawa Barat']);

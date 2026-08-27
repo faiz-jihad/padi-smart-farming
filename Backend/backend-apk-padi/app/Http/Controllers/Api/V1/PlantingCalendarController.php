@@ -100,6 +100,14 @@ class PlantingCalendarController extends Controller
      */
     public function byFarm(Request $request, Farm $farm): JsonResponse
     {
+        $user = $request->user();
+        $isAdmin = $user && ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+        $isOfficer = $user && ($user->role === 'extension_officer' || (method_exists($user, 'hasRole') && $user->hasRole('extension_officer')));
+
+        if (! $isAdmin && ! $isOfficer && (! $user || $farm->farmer_user_id !== $user->id)) {
+            abort(403, 'Anda tidak memiliki akses ke data lahan ini.');
+        }
+
         $year = $request->input('year') ? (int) $request->input('year') : null;
         $season = $request->input('season');
 
