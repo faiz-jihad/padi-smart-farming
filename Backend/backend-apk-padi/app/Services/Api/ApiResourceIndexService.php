@@ -27,9 +27,22 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ApiResourceIndexService
 {
-    public function alertSubscriptions(): Collection
+    public function alertSubscriptions(?User $user = null): Collection
     {
-        return AlertSubscription::query()->latest('id')->get();
+        $query = AlertSubscription::query()->latest('id');
+
+        if (! $user) {
+            return $query->get();
+        }
+
+        $isAdmin = ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+        $isOfficer = ($user->role === 'extension_officer' || (method_exists($user, 'hasRole') && $user->hasRole('extension_officer')));
+
+        if ($isAdmin || $isOfficer) {
+            return $query->get();
+        }
+
+        return $query->where('farmer_id', $user->id)->get();
     }
 
     public function adminBroadcasts(): Collection

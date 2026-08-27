@@ -184,8 +184,16 @@ class NotificationController extends Controller
     /**
      * Mark single notification as read.
      */
-    public function markAsRead(Notification $notification): JsonResponse
+    public function markAsRead(Request $request, Notification $notification): JsonResponse
     {
+        $user = $request->user();
+
+        $isAdmin = $user && ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+
+        if (! $isAdmin && $notification->user_id !== null && (! $user || $notification->user_id !== $user->id)) {
+            abort(403, 'Anda tidak memiliki akses ke notifikasi ini.');
+        }
+
         $notification->update(['read_at' => now()]);
 
         return response()->json([

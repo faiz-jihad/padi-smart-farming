@@ -170,7 +170,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('disease-scans/{diseaseScan}', [DiseaseScanController::class, 'show']);
         Route::get('community-reports', [CommunityReportController::class, 'index']);
         Route::post('community-reports', [CommunityReportController::class, 'store']);
-        Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
+        Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index'])
+            ->middleware('role:farmer|extension_officer|admin');
         Route::get('device-tokens', [DeviceTokenController::class, 'index'])
             ->middleware('role:admin');
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
