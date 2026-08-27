@@ -157,7 +157,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
-        Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])->middleware('throttle:push-notifications');
+        Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
+            ->middleware(['role:extension_officer|admin', 'throttle:push-notifications']);
         Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream']);
