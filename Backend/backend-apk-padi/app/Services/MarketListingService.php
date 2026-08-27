@@ -62,7 +62,7 @@ class MarketListingService
 
         $listing = MarketListing::query()->create([
             ...$listingData,
-            'farmer_id' => $user->id,
+            'farmer_id' => $user->hasRole('admin') ? ($farm->farmer_user_id ?? $user->id) : $user->id,
             'status' => 'published',
             'published_at' => now(),
         ]);

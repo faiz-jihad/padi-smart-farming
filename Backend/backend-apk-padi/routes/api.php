@@ -85,7 +85,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('farms/{farm}', [ApiV1FarmController::class, 'show']);
         Route::put('farms/{farm}', [ApiV1FarmController::class, 'update']);
         Route::delete('farms/{farm}', [ApiV1FarmController::class, 'destroy']);
-        Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm']);
+        Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm'])
+            ->middleware('role:farmer|extension_officer|admin');
 
         Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
         Route::get('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'show']);
@@ -128,7 +129,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             Route::post('city', [WeatherController::class, 'byCity']);
         });
 
-        Route::prefix('soil-detections')->group(function (): void {
+        Route::prefix('soil-detections')->middleware('role:farmer|extension_officer|admin')->group(function (): void {
             Route::get('/', [SoilDetectionController::class, 'index']);
             Route::post('/', [SoilDetectionController::class, 'store']);
             Route::get('fetch-api-data', [SoilDetectionController::class, 'fetchApiData']);
@@ -140,7 +141,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
 
         Route::get('market-listings', [MarketListingController::class, 'index']);
-        Route::post('market-listings', [MarketListingController::class, 'store']);
+        Route::post('market-listings', [MarketListingController::class, 'store'])
+            ->middleware('role:farmer|admin');
         Route::get('market-listings/{marketListing}', [MarketListingController::class, 'show']);
         Route::patch('market-listings/{marketListing}', [MarketListingController::class, 'update']);
         Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy']);
@@ -159,7 +161,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
-        Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])->middleware('throttle:push-notifications');
+        Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
+            ->middleware(['role:extension_officer|admin', 'throttle:push-notifications']);
         Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream']);
@@ -169,12 +172,15 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('disease-scans/{diseaseScan}', [DiseaseScanController::class, 'show']);
         Route::get('community-reports', [CommunityReportController::class, 'index']);
         Route::post('community-reports', [CommunityReportController::class, 'store']);
-        Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
-        Route::get('device-tokens', [DeviceTokenController::class, 'index']);
+        Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index'])
+            ->middleware('role:farmer|extension_officer|admin');
+        Route::get('device-tokens', [DeviceTokenController::class, 'index'])
+            ->middleware('role:admin');
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
         Route::get('events', [EventController::class, 'index']);
-        Route::post('events', [EventController::class, 'store']);
+        Route::post('events', [EventController::class, 'store'])
+            ->middleware('role:extension_officer|admin');
         Route::get('events/{event}', [EventController::class, 'show']);
         Route::post('events/{event}/register', [EventController::class, 'register']);
 

@@ -8,7 +8,7 @@ class StoreMarketListingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasRole('farmer') ?? false;
+        return $this->user()?->hasRole('farmer') || $this->user()?->hasRole('admin');
     }
 
     public function rules(): array

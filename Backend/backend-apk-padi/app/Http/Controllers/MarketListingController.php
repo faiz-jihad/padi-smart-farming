@@ -48,6 +48,13 @@ class MarketListingController extends Controller
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
+        $user = $request->user();
+        $farm = \App\Models\Farm::findOrFail($validated['farm_id']);
+
+        if ($farm->farmer_user_id !== $user->id && ! $user->hasRole('admin')) {
+            abort(403, 'Anda tidak memiliki akses ke data lahan ini.');
+        }
+
         $cropSeason = CropSeason::where('farm_id', $validated['farm_id'])
             ->where('status', 'active')
             ->latest('id')
@@ -66,7 +73,7 @@ class MarketListingController extends Controller
         );
 
         $listing = MarketListing::create([
-            'farmer_id' => $request->user()->id,
+            'farmer_id' => $user->hasRole('admin') ? ($farm->farmer_user_id ?? $user->id) : $user->id,
             'farm_id' => $validated['farm_id'],
             'crop_season_id' => $cropSeason->id,
             'harvest_id' => null,
