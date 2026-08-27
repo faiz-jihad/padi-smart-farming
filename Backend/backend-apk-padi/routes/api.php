@@ -172,7 +172,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('community-reports', [CommunityReportController::class, 'index']);
         Route::post('community-reports', [CommunityReportController::class, 'store']);
         Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index']);
-        Route::get('device-tokens', [DeviceTokenController::class, 'index']);
+        Route::get('device-tokens', [DeviceTokenController::class, 'index'])
+            ->middleware('role:admin');
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
         Route::get('events', [EventController::class, 'index']);

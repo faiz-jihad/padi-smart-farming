@@ -10,8 +10,15 @@ use Illuminate\Http\Request;
 
 class DeviceTokenController extends Controller
 {
-    public function index(ApiResourceIndexService $resources)
+    public function index(Request $request, ApiResourceIndexService $resources)
     {
+        $user = $request->user();
+        $isAdmin = $user && ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+
+        if (! $isAdmin) {
+            abort(403, 'Akses khusus administrator.');
+        }
+
         return DeviceTokenResource::collection($resources->deviceTokens());
     }
 
