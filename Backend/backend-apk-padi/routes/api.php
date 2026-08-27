@@ -173,7 +173,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
         Route::get('events', [EventController::class, 'index']);
-        Route::post('events', [EventController::class, 'store']);
+        Route::post('events', [EventController::class, 'store'])
+            ->middleware('role:extension_officer|admin');
         Route::get('events/{event}', [EventController::class, 'show']);
         Route::post('events/{event}/register', [EventController::class, 'register']);
 
