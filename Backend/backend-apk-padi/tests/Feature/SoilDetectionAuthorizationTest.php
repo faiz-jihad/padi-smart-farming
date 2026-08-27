@@ -189,4 +189,133 @@ class SoilDetectionAuthorizationTest extends TestCase
             'created_by' => $admin->id,
         ]);
     }
+
+    public function test_unauthenticated_user_cannot_view_soil_detections(): void
+    {
+        $farmer = $this->createActor(UserRole::Farmer->value);
+        $farm = $this->createFarm($farmer);
+
+        $response = $this->getJson("/api/v1/soil-detections?farm_id={$farm->id}");
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_buyer_cannot_view_soil_detections(): void
+    {
+        $farmer = $this->createActor(UserRole::Farmer->value);
+        $farm = $this->createFarm($farmer);
+
+        $buyer = $this->createActor(UserRole::Buyer->value);
+        $token = $buyer->createToken('Buyer Token')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->getJson("/api/v1/soil-detections?farm_id={$farm->id}");
+
+        $response->assertForbidden();
+    }
+
+    public function test_farmer_cannot_view_soil_detections_for_another_farmer_farm(): void
+    {
+        $victimFarmer = $this->createActor(UserRole::Farmer->value);
+        $victimFarm = $this->createFarm($victimFarmer, 'Sawah Korban');
+
+        $attackerFarmer = $this->createActor(UserRole::Farmer->value);
+        $token = $attackerFarmer->createToken('Attacker Token')->plainTextToken;
+
+        $response = $this->withToken($token)
+            ->getJson("/api/v1/soil-detections?farm_id={$victimFarm->id}");
+
+        $response->assertForbidden();
+    }
+
+    public function test_farmer_can_view_soil_detections_for_own_farm(): void
+    {
+        $farmer = $this->createActor(UserRole::Farmer->value);
+        $farm = $this->createFarm($farmer);
+        $token = $farmer->createToken('Farmer Token')->plainTextToken;
+
+        SoilDetection::create([
+            'farm_id' => $farm->id,
+            'sample_code' => 'SOIL-MY-FARM-001',
+            'ph_level' => 6.5,
+            'nitrogen_ppm' => 120,
+            'phosphorus_ppm' => 25,
+            'potassium_ppm' => 150,
+            'moisture_percentage' => 50.0,
+            'organic_matter_percentage' => 2.5,
+            'soil_type' => 'loam',
+            'tested_at' => now(),
+            'created_by' => $farmer->id,
+        ]);
+
+        $response = $this->withToken($token)
+            ->getJson("/api/v1/soil-detections?farm_id={$farm->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.sample_code', 'SOIL-MY-FARM-001');
+    }
+
+    public function test_extension_officer_can_view_soil_detections_for_farmer_farm(): void
+    {
+        $farmer = $this->createActor(UserRole::Farmer->value);
+        $farm = $this->createFarm($farmer);
+
+        $officer = $this->createActor(UserRole::ExtensionOfficer->value);
+        $token = $officer->createToken('Officer Token')->plainTextToken;
+
+        SoilDetection::create([
+            'farm_id' => $farm->id,
+            'sample_code' => 'SOIL-PPL-VIEW-001',
+            'ph_level' => 6.5,
+            'nitrogen_ppm' => 120,
+            'phosphorus_ppm' => 25,
+            'potassium_ppm' => 150,
+            'moisture_percentage' => 50.0,
+            'organic_matter_percentage' => 2.5,
+            'soil_type' => 'loam',
+            'tested_at' => now(),
+            'created_by' => $farmer->id,
+        ]);
+
+        $response = $this->withToken($token)
+            ->getJson("/api/v1/soil-detections?farm_id={$farm->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.sample_code', 'SOIL-PPL-VIEW-001');
+    }
+
+    public function test_admin_can_view_soil_detections_for_farmer_farm(): void
+    {
+        $farmer = $this->createActor(UserRole::Farmer->value);
+        $farm = $this->createFarm($farmer);
+
+        $admin = $this->createActor(UserRole::Admin->value);
+        $token = $admin->createToken('Admin Token')->plainTextToken;
+
+        SoilDetection::create([
+            'farm_id' => $farm->id,
+            'sample_code' => 'SOIL-ADMIN-VIEW-001',
+            'ph_level' => 6.5,
+            'nitrogen_ppm' => 120,
+            'phosphorus_ppm' => 25,
+            'potassium_ppm' => 150,
+            'moisture_percentage' => 50.0,
+            'organic_matter_percentage' => 2.5,
+            'soil_type' => 'loam',
+            'tested_at' => now(),
+            'created_by' => $farmer->id,
+        ]);
+
+        $response = $this->withToken($token)
+            ->getJson("/api/v1/soil-detections?farm_id={$farm->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.sample_code', 'SOIL-ADMIN-VIEW-001');
+    }
 }

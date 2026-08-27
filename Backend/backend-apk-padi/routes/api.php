@@ -129,7 +129,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
 
         Route::prefix('soil-detections')->group(function (): void {
-            Route::get('/', [SoilDetectionController::class, 'index']);
+            Route::get('/', [SoilDetectionController::class, 'index'])
+                ->middleware('role:farmer|extension_officer|admin');
             Route::post('/', [SoilDetectionController::class, 'store'])
                 ->middleware('role:farmer|extension_officer|admin');
             Route::get('fetch-api-data', [SoilDetectionController::class, 'fetchApiData']);
