@@ -153,6 +153,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::put('market-offers/{marketOffer}', [MarketOfferController::class, 'update']);
 
         Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
+        Route::post('purchase-contracts', [PurchaseContractController::class, 'store']);
+        Route::get('sales-report', [PurchaseContractController::class, 'salesReport']);
         Route::get('contract-payments', [ContractPaymentController::class, 'index']);
 
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);

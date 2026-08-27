@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/core/utils/debouncer.dart';
+import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/marketplace/data/models/market_listing_model.dart';
 import 'package:padi/features/marketplace/data/services/marketplace_api_service.dart';
@@ -37,11 +39,13 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final Debouncer _searchDebouncer = Debouncer(milliseconds: 300);
   String _selectedCategory = 'all';
   String _selectedSort = 'newest';
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -111,7 +115,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cartState = ref.watch(cartProvider);
     final listingsAsync = ref.watch(marketplaceListingsProvider);
+    final isBuyer = ref.watch(isBuyerRoleProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F4), // Clean Agro Canvas
@@ -144,7 +150,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           ),
           child: TextField(
             controller: _searchController,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _searchDebouncer.run(() => setState(() {})),
             style: const TextStyle(
               color: Color(0xFF17251E),
               fontSize: 13,
@@ -188,11 +194,48 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           ),
         ),
         actions: [
+          // Keranjang Belanja dengan Badge Counter
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                tooltip: 'Keranjang Belanja',
+                icon: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                onPressed: () => context.push('/cart'),
+              ),
+              if (cartState.totalCount > 0)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '${cartState.totalCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
-            tooltip: 'Penawaran Saya',
-            onPressed: () => context.push('/marketplace/offers'),
-            icon: const Icon(
-              Icons.receipt_long_rounded,
+            tooltip: isBuyer ? 'Pesanan & Kontrak Saya' : 'Penawaran Saya',
+            onPressed: () => context.push(isBuyer ? '/buyer/orders' : '/marketplace/offers'),
+            icon: Icon(
+              isBuyer ? Icons.receipt_long_rounded : Icons.gavel_rounded,
               color: Colors.white,
               size: 22,
             ),
@@ -209,20 +252,37 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateListing,
-        backgroundColor: HomeColors.primaryGreen,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-        label: const Text(
-          'Mulai Jual Panen',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13.5,
-          ),
-        ),
-      ),
+      floatingActionButton: isBuyer
+          ? (cartState.hasItems
+              ? FloatingActionButton.extended(
+                  onPressed: () => context.push('/cart'),
+                  backgroundColor: HomeColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  icon: const Icon(Icons.shopping_cart_rounded, size: 20),
+                  label: Text(
+                    'Keranjang (${cartState.totalCount})',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                )
+              : null)
+          : FloatingActionButton.extended(
+              onPressed: _openCreateListing,
+              backgroundColor: HomeColors.primaryGreen,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+              label: const Text(
+                'Mulai Jual Panen',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
       body: RefreshIndicator(
         color: HomeColors.primaryGreen,
         backgroundColor: Colors.white,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:padi/features/auth/presentation/widgets/auth_fields.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
@@ -154,7 +155,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             const SizedBox(height: 4),
                             const Text(
-                              'Kelola lahan & pantau tanaman padi Anda',
+                              'Silakan masuk untuk mengakses akun Anda',
                               style: TextStyle(
                                 fontSize: 12.5,
                                 color: HomeColors.textSecondary,
@@ -228,15 +229,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: const Text(
                                   'Lupa password?',
                                   style: TextStyle(
-                                    color: HomeColors.primaryGreen,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
+                                    color: HomeColors.textSecondary,
                                   ),
                                 ),
                               ),
                             ),
 
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
 
                             // Submit Button
                             SizedBox(
@@ -269,24 +270,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 12),
+
+                            // Dedicated Register Button
+                            SizedBox(
+                              height: 48,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const RoleSelectionScreen(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.person_add_rounded, size: 18),
+                                label: const Text(
+                                  'Daftar Akun Baru',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: HomeColors.primaryGreen,
+                                  side: const BorderSide(color: HomeColors.primaryGreen, width: 1.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(HomeRadius.md),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
 
                             // Register link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 const Text(
                                   'Belum punya akun? ',
                                   style: TextStyle(color: HomeColors.textSecondary, fontSize: 13),
                                 ),
-                                GestureDetector(
-                                  onTap: state.isSubmitting ? null : () => context.go('/register'),
-                                  child: const Text(
-                                    'Daftar di sini',
-                                    style: TextStyle(
-                                      color: HomeColors.primaryGreen,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 13,
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const RoleSelectionScreen(),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                    child: Text(
+                                      'Daftar di sini',
+                                      style: TextStyle(
+                                        color: HomeColors.primaryGreen,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 13,
+                                        decoration: TextDecoration.underline,
+                                      ),
                                     ),
                                   ),
                                 ),

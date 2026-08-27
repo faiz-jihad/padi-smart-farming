@@ -92,5 +92,21 @@ ThemeData buildPadiTheme() {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: padiGreen),
     ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF0F5132),
+      contentTextStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+        fontSize: 13,
+      ),
+      actionTextColor: const Color(0xFF6EE7B7),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: const Color(0xFF34D399).withOpacity(0.35)),
+      ),
+      elevation: 6,
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+    ),
   );
 }

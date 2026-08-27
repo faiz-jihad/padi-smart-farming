@@ -326,11 +326,21 @@ class MarketplaceApiService {
   Future<MarketOfferModel> updateOfferStatus({
     required int offerId,
     required String status,
+    double? counterPrice,
+    double? counterQuantity,
+    String? counterNotes,
   }) async {
     try {
+      final payload = <String, dynamic>{'status': status};
+      if (counterPrice != null) payload['counter_price'] = counterPrice;
+      if (counterQuantity != null) payload['counter_quantity'] = counterQuantity;
+      if (counterNotes != null && counterNotes.trim().isNotEmpty) {
+        payload['counter_notes'] = counterNotes.trim();
+      }
+
       final response = await _apiClient.dio.put(
         '/market-offers/$offerId',
-        data: {'status': status},
+        data: payload,
       );
 
       final responseData = response.data;
@@ -409,5 +419,85 @@ class MarketplaceApiService {
     }
 
     return PurchaseContractModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<PurchaseContractModel> createPurchaseContract({
+    required int listingId,
+    required double quantity,
+    required double agreedPrice,
+    String? notes,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/purchase-contracts',
+        data: {
+          'listing_id': listingId,
+          'quantity': quantity,
+          'agreed_price': agreedPrice,
+          'notes': notes,
+        },
+      );
+
+      final responseData = response.data;
+
+      if (responseData is! Map) {
+        throw Exception('Respons server tidak valid.');
+      }
+
+      if (responseData['success'] != true) {
+        throw Exception(
+          responseData['message']?.toString() ?? 'Gagal membuat pesanan/kontrak.',
+        );
+      }
+
+      final data = responseData['data'];
+
+      if (data is! Map) {
+        throw Exception('Data kontrak tidak ditemukan dalam respon.');
+      }
+
+      return PurchaseContractModel.fromJson(Map<String, dynamic>.from(data));
+    } on DioException catch (e) {
+      final data = e.response?.data;
+
+      if (data is Map) {
+        if (data['errors'] is Map && (data['errors'] as Map).isNotEmpty) {
+          final errMap = data['errors'] as Map;
+          final firstError = errMap.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            throw Exception(firstError.first.toString());
+          }
+        }
+
+        throw Exception(
+          data['message']?.toString() ?? 'Server gagal memproses pembelian.',
+        );
+      }
+
+      throw Exception('Server error ${e.response?.statusCode ?? ''}.');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchSalesReport({String period = 'all'}) async {
+    try {
+      final response = await _apiClient.dio.get(
+        '/sales-report',
+        queryParameters: {'period': period},
+      );
+
+      final responseData = response.data;
+      if (responseData is! Map || responseData['success'] != true) {
+        throw Exception(
+          responseData['message']?.toString() ?? 'Gagal memuat laporan penjualan.',
+        );
+      }
+
+      final data = responseData['data'];
+      if (data is! Map) return {};
+
+      return Map<String, dynamic>.from(data);
+    } catch (_) {
+      return {};
+    }
   }
 }

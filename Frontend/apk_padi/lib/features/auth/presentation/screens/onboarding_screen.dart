@@ -47,7 +47,7 @@ class OnboardingScreen extends StatelessWidget {
                       const SizedBox(height: 28),
                       _WelcomeActions(
                         onLogin: () => context.go('/login'),
-                        onRegister: () => context.go('/register'),
+                        onRegister: () => context.go('/select-role'),
                       ),
                     ],
                   ),

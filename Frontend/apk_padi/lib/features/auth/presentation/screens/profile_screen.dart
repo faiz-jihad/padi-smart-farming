@@ -671,6 +671,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentLang = ref.watch(languageProvider);
     final s = AppStrings(currentLang);
     final user = auth.state.user;
+    final isBuyer = ref.watch(isBuyerRoleProvider);
 
     if (user != null && user.id != _loadedUserId) {
       _loadedUserId = user.id;
@@ -721,12 +722,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 // 1. User Header Profile Card
-                _buildUserHeaderCard(user),
+                _buildUserHeaderCard(user, isBuyer),
 
                 const SizedBox(height: 18),
 
                 // 2. Section: Data Pengguna
-                _buildSectionHeader(s.userSectionTitle),
+                _buildSectionHeader(isBuyer ? 'AKUN PEMBELI / MITRA' : s.userSectionTitle),
                 Container(
                   decoration: BoxDecoration(
                     color: HomeColors.surface,
@@ -752,6 +753,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                   ),
                 ),
+
+                if (isBuyer) ...[
+                  const SizedBox(height: 18),
+                  _buildSectionHeader('Aktivitas Pembelian Panen'),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: HomeColors.surface,
+                      borderRadius: BorderRadius.circular(HomeRadius.xl),
+                      border: Border.all(color: HomeColors.border),
+                      boxShadow: HomeShadows.subtle,
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.receipt_long_rounded,
+                          title: 'Pesanan & Kontrak Saya',
+                          subtitle: 'Pantau kontrak panen aktif dan status pengiriman',
+                          onTap: () => context.push('/buyer/orders'),
+                        ),
+                        const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
+                        _buildSettingsTile(
+                          icon: Icons.shopping_cart_outlined,
+                          title: 'Keranjang Belanja',
+                          subtitle: 'Lihat daftar komoditas yang siap dicheckout',
+                          onTap: () => context.push('/cart'),
+                        ),
+                        const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
+                        _buildSettingsTile(
+                          icon: Icons.gavel_rounded,
+                          title: 'Penawaran Harga Saya',
+                          subtitle: 'Status penawaran lelang hasil panen',
+                          onTap: () => context.push('/marketplace/offers'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 18),
 
@@ -882,11 +920,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildUserHeaderCard(dynamic user) {
-    final name = user?.name ?? 'Faiz';
-    final email = user?.email ?? 'petani@padi.id';
+  Widget _buildUserHeaderCard(dynamic user, bool isBuyer) {
+    final name = user?.name ?? 'Pengguna';
+    final email = user?.email ?? '';
     final phone = user?.phone ?? '';
-    final role = user?.roleLabel ?? user?.role ?? 'Petani';
+    final rawRole = (user?.roleLabel ?? user?.role ?? '').toString().trim();
+    String role;
+    if (rawRole == 'true' || rawRole == 'false' || rawRole.isEmpty) {
+      role = isBuyer ? 'Pembeli' : 'Petani';
+    } else if (rawRole.toLowerCase() == 'buyer' || rawRole.toLowerCase() == 'partner') {
+      role = 'Pembeli';
+    } else if (rawRole.toLowerCase() == 'farmer') {
+      role = 'Petani';
+    } else {
+      role = rawRole;
+    }
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'P';
 
     return Container(

@@ -13,6 +13,7 @@ import 'package:padi/features/auth/presentation/screens/login_screen.dart';
 import 'package:padi/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:padi/features/auth/presentation/screens/profile_screen.dart';
 import 'package:padi/features/auth/presentation/screens/register_screen.dart';
+import 'package:padi/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:padi/features/auth/presentation/screens/splash_screen.dart';
 
 import 'package:padi/features/home/presentation/screens/home_screen.dart';
@@ -35,9 +36,16 @@ import 'package:padi/features/marketplace/presentation/screens/marketplace_scree
 import 'package:padi/features/marketplace/presentation/screens/market_listing_detail_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/create_market_listing_screen.dart';
 import 'package:padi/features/plant_check/presentation/screens/plant_check_screen.dart';
+import 'package:padi/features/cart/data/models/cart_item_model.dart';
+import 'package:padi/features/cart/presentation/screens/cart_screen.dart';
+import 'package:padi/features/cart/presentation/screens/checkout_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/buyer_orders_screen.dart';
 import 'package:padi/features/planting_calendar/presentation/screens/planting_calendar_screen.dart';
+import 'package:padi/features/marketplace/data/models/purchase_contract_model.dart';
 import 'package:padi/features/marketplace/presentation/screens/create_market_offer_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/market_offers_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/purchase_invoice_screen.dart';
+import 'package:padi/features/marketplace/presentation/screens/farmer_sales_report_screen.dart';
 import 'package:padi/features/event/data/models/event_model.dart';
 import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/event/presentation/screens/create_event_screen.dart';
@@ -119,8 +127,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
+        path: '/select-role',
+        builder: (context, state) => const RoleSelectionScreen(),
+      ),
+      GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        builder: (context, state) {
+          final role = state.uri.queryParameters['role'];
+          if (role == null || role.isEmpty) {
+            return const RoleSelectionScreen();
+          }
+          return RegisterScreen(initialRole: role);
+        },
       ),
       GoRoute(
         path: '/forgot-password',
@@ -299,10 +317,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/marketplace',
         builder: (context, state) {
-          return const _MainTabScaffold(
-            currentIndex: 3,
-            child: MarketplaceScreen(),
+          final isBuyer = ref.watch(isBuyerRoleProvider);
+          return _MainTabScaffold(
+            currentIndex: isBuyer ? 1 : 3,
+            child: const MarketplaceScreen(),
           );
+        },
+      ),
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) {
+          final isBuyer = ref.watch(isBuyerRoleProvider);
+          if (isBuyer) {
+            return const _MainTabScaffold(
+              currentIndex: 2,
+              child: CartScreen(),
+            );
+          }
+          return const CartScreen();
+        },
+      ),
+      GoRoute(
+        path: '/checkout',
+        builder: (context, state) {
+          final directItem = state.extra as CartItemModel?;
+          return CheckoutScreen(directItem: directItem);
+        },
+      ),
+      GoRoute(
+        path: '/buyer/orders',
+        builder: (context, state) {
+          final isBuyer = ref.watch(isBuyerRoleProvider);
+          if (isBuyer) {
+            return const _MainTabScaffold(
+              currentIndex: 3,
+              child: BuyerOrdersScreen(),
+            );
+          }
+          return const BuyerOrdersScreen();
         },
       ),
 
@@ -318,6 +370,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           return const MarketOffersScreen();
         },
+      ),
+      GoRoute(
+        path: '/sales-report',
+        builder: (context, state) {
+          return const FarmerSalesReportScreen();
+        },
+      ),
+      GoRoute(
+        path: '/faktur/:id',
+        builder: (context, state) {
+          final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+          final extra = state.extra is PurchaseContractModel ? state.extra as PurchaseContractModel : null;
+          return PurchaseInvoiceScreen(contractId: id, initialContract: extra);
+        },
+      ),
+      GoRoute(
+        path: '/invoice/:id',
+        redirect: (context, state) => '/faktur/${state.pathParameters['id']}',
       ),
 
       GoRoute(
@@ -454,6 +524,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           location == '/login' ||
           location == '/register' ||
+          location == '/select-role' ||
           location == '/forgot-password';
 
       if (auth.isChecking) {
@@ -470,6 +541,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (location == '/splash' ||
             location == '/onboarding' ||
             location == '/login' ||
+            location == '/select-role' ||
             location == '/forgot-password') {
           return '/home';
         }
@@ -498,7 +570,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _MainTabScaffold extends StatelessWidget {
+class _MainTabScaffold extends ConsumerWidget {
   const _MainTabScaffold({required this.currentIndex, required this.child});
 
   static const double _navReservedHeight = 106;
@@ -506,15 +578,26 @@ class _MainTabScaffold extends StatelessWidget {
   final int currentIndex;
   final Widget child;
 
-  void _onTabSelected(BuildContext context, int index) {
-    final route = switch (index) {
-      0 => '/home',
-      1 => '/farms',
-      2 => '/plant-check',
-      3 => '/marketplace',
-      4 => '/profile',
-      _ => '/home',
-    };
+  void _onTabSelected(BuildContext context, WidgetRef ref, int index) {
+    final isBuyer = ref.read(isBuyerRoleProvider);
+
+    final route = isBuyer
+        ? switch (index) {
+            0 => '/home',
+            1 => '/marketplace',
+            2 => '/cart',
+            3 => '/buyer/orders',
+            4 => '/profile',
+            _ => '/home',
+          }
+        : switch (index) {
+            0 => '/home',
+            1 => '/farms',
+            2 => '/plant-check',
+            3 => '/marketplace',
+            4 => '/profile',
+            _ => '/home',
+          };
 
     if (index == currentIndex) return;
 
@@ -522,7 +605,7 @@ class _MainTabScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -534,7 +617,7 @@ class _MainTabScaffold extends StatelessWidget {
             bottom: 0,
             child: HomeBottomNavigation(
               currentIndex: currentIndex,
-              onTap: (index) => _onTabSelected(context, index),
+              onTap: (index) => _onTabSelected(context, ref, index),
             ),
           ),
         ],

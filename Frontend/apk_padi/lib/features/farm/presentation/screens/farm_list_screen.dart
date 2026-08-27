@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
 import 'package:padi/features/farm/presentation/widgets/farm_card.dart';
@@ -33,11 +34,13 @@ class FarmListScreen extends ConsumerStatefulWidget {
 
 class _FarmListScreenState extends ConsumerState<FarmListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final Debouncer _searchDebouncer = Debouncer(milliseconds: 300);
   bool _isMapMode = false;
   FarmModel? _focusedFarm;
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -305,7 +308,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                         ),
                         child: TextField(
                           controller: _searchController,
-                          onChanged: (_) => setState(() {}),
+                          onChanged: (_) => _searchDebouncer.run(() => setState(() {})),
                           style: const TextStyle(
                             color: HomeColors.textPrimary,
                             fontSize: 14,

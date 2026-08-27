@@ -13,14 +13,22 @@ class AppUserModel extends AppUser {
   });
 
   factory AppUserModel.fromJson(Map<String, dynamic> json) {
+    var rawRole = json['role']?.toString() ?? '';
+    var rawRoleLabel = json['role_label']?.toString();
+
+    if (rawRole == 'true' || rawRoleLabel == 'true') {
+      rawRole = 'buyer';
+      rawRoleLabel = 'Pembeli';
+    }
+
     return AppUserModel(
       id: _toInt(json['id']),
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString(),
-      role: json['role']?.toString() ?? '',
+      role: rawRole,
       status: json['status']?.toString() ?? '',
-      roleLabel: json['role_label']?.toString(),
+      roleLabel: rawRoleLabel,
       statusLabel: json['status_label']?.toString(),
     );
   }

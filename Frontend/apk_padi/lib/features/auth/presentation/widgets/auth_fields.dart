@@ -33,6 +33,7 @@ class PadiTextField extends StatelessWidget {
     );
 
     final effectiveDecoration = (decoration ?? defaultDecoration).copyWith(
+      labelText: decoration?.labelText ?? label,
       errorText: errorText,
       prefixIcon: decoration?.prefixIcon ??
           (decoration == null && prefixIcon != null ? Icon(prefixIcon) : null),

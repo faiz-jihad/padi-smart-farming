@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/features/cart/data/models/cart_item_model.dart';
+import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/marketplace/data/models/market_listing_model.dart';
 import 'package:padi/features/marketplace/data/services/marketplace_api_service.dart';
@@ -221,14 +224,15 @@ class _MarketListingDetailScreenState
                     const SizedBox(width: 12),
                     Expanded(
                       child: FilledButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Membuka WhatsApp Petani...'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          var cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (cleanPhone.startsWith('0')) {
+                            cleanPhone = '62${cleanPhone.substring(1)}';
+                          }
+                          final text = 'Halo Bapak/Ibu $farmerName, saya melihat hasil panen ${listing.commodity} di aplikasi P.A.D.I. dan berminat untuk informasi lebih lanjut.';
+                          final uri = Uri.parse('https://wa.me/$cleanPhone?text=${Uri.encodeComponent(text)}');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
                         },
                         icon: const Icon(Icons.chat_bubble_rounded, size: 18),
                         label: const Text('Kirim Pesan'),
@@ -327,6 +331,58 @@ class _MarketListingDetailScreenState
               ),
             ),
             actions: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final cartState = ref.watch(cartProvider);
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.black.withOpacity(0.45),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.shopping_cart_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            onPressed: () => context.push('/cart'),
+                          ),
+                        ),
+                        if (cartState.totalCount > 0)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFEF4444),
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                '${cartState.totalCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: CircleAvatar(
@@ -799,7 +855,7 @@ class _MarketListingDetailScreenState
     MarketListingModel listing,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -830,22 +886,29 @@ class _MarketListingDetailScreenState
               )
             : Row(
                 children: [
-                  OutlinedButton(
-                    onPressed: () => _showContactModal(context, listing),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: HomeColors.primaryGreen,
-                      side: const BorderSide(color: HomeColors.primaryGreen),
-                      minimumSize: const Size(48, 48),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  // 1. WhatsApp Button
+                  Tooltip(
+                    message: 'Chat WhatsApp Petani',
+                    child: OutlinedButton(
+                      onPressed: () => _showContactModal(context, listing),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF16A34A),
+                        side: const BorderSide(color: Color(0xFF16A34A)),
+                        minimumSize: const Size(44, 46),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
+                      child: const Icon(Icons.chat_bubble_rounded, size: 18),
                     ),
-                    child: const Icon(Icons.chat_rounded, size: 20),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
+                  const SizedBox(width: 8),
+
+                  // 2. Tawar Harga Button
+                  Tooltip(
+                    message: 'Ajukan Tawar Harga',
+                    child: OutlinedButton(
                       onPressed: () {
                         context.push(
                           '/marketplace/${listing.id}/offer',
@@ -857,27 +920,309 @@ class _MarketListingDetailScreenState
                           },
                         );
                       },
-                      icon: const Icon(Icons.gavel_rounded, size: 18),
-                      label: const Text(
-                        'Kirim Penawaran Harga',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: HomeColors.primaryGreen,
+                        side: const BorderSide(color: HomeColors.primaryGreen),
+                        minimumSize: const Size(44, 46),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: HomeColors.primaryGreen,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 48),
+                      child: const Icon(Icons.gavel_rounded, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // 3. + Keranjang Button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showAddToCartBottomSheet(context, listing),
+                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 15),
+                      label: const Text(
+                        '+ Keranjang',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: HomeColors.primaryGreen,
+                        side: const BorderSide(color: HomeColors.primaryGreen, width: 1.5),
+                        minimumSize: const Size(0, 46),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+
+                  // 4. Beli Sekarang Button
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        final directItem = CartItemModel(
+                          listingId: listing.id,
+                          farmerId: listing.farmerId,
+                          commodity: listing.commodity,
+                          unit: listing.unit,
+                          pricePerUnit: listing.pricePerUnit,
+                          quantity: listing.quantity >= 500
+                              ? 500
+                              : (listing.quantity >= 100
+                                  ? 100
+                                  : (listing.quantity > 0 ? listing.quantity : 1)),
+                          maxQuantity: listing.quantity > 0 ? listing.quantity : 999999,
+                          farmerName: listing.farmerName ?? 'Petani Mitra P.A.D.I.',
+                          farmerPhone: listing.farmerPhone ?? '+6281234567890',
+                          farmName: listing.farmName ?? 'Lahan Pertanian',
+                          imageUrl: listing.imageUrl,
+                          varietyName: listing.varietyName,
+                          qualityGrade: listing.qualityGrade,
+                        );
+                        context.push('/checkout', extra: directItem);
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: HomeColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 46),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Beli Sekarang',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
                 ],
               ),
       ),
+    );
+  }
+
+  void _showAddToCartBottomSheet(
+    BuildContext context,
+    MarketListingModel listing,
+  ) {
+    double selectedQty = listing.quantity >= 500
+        ? 500
+        : (listing.quantity >= 100 ? 100 : (listing.quantity > 0 ? listing.quantity : 1));
+    final maxQty = listing.quantity > 0 ? listing.quantity : 999999.0;
+    final pricePerUnit = listing.pricePerUnit;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            final subtotal = selectedQty * pricePerUnit;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5ECE3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: SizedBox(
+                            width: 68,
+                            height: 68,
+                            child: _buildHeaderImage(listing.imageUrl),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                listing.commodity,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF17251E),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_formatPrice(pricePerUnit)} / ${listing.unit}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: HomeColors.primaryGreen,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Stok Tersedia: ${listing.quantity.toInt()} ${listing.unit}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(color: Color(0xFFF1F5F0), height: 24),
+                    const Text(
+                      'Tentukan Jumlah Pembelian:',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF17251E),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_rounded, size: 18),
+                                onPressed: selectedQty > 50
+                                    ? () {
+                                        setModalState(() {
+                                          selectedQty = (selectedQty - 50).clamp(1.0, maxQty);
+                                        });
+                                      }
+                                    : null,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Text(
+                                  '${selectedQty.toInt()} ${listing.unit}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                onPressed: selectedQty < maxQty
+                                    ? () {
+                                        setModalState(() {
+                                          selectedQty = (selectedQty + 50).clamp(1.0, maxQty);
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'Subtotal:',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            ),
+                            Text(
+                              _formatPrice(subtotal),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: HomeColors.primaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).addItem(
+                              listing,
+                              quantity: selectedQty,
+                            );
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: Color(0xFF6EE7B7), size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${selectedQty.toInt()} ${listing.unit} ${listing.commodity} ditambahkan ke keranjang.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            action: SnackBarAction(
+                              label: 'Lihat',
+                              onPressed: () => context.push('/cart'),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                      label: const Text(
+                        'Tambahkan ke Keranjang Belanja',
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: HomeColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:padi/core/errors/api_exception.dart';
 import 'package:padi/features/auth/data/models/auth_result.dart';
 import 'package:padi/features/auth/domain/entities/app_user.dart';
 import 'package:padi/features/auth/domain/repositories/auth_repository.dart';
@@ -41,7 +42,7 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<AppUser> me() async {
     if (failMe) {
-      throw Exception('Token tidak valid');
+      throw const ApiException('Token tidak valid', statusCode: 401);
     }
     return testUser;
   }

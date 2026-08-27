@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/notifications/data/models/app_notification_model.dart';
-import 'package:padi/features/notifications/data/services/device_notification_service.dart';
+import 'package:padi/features/notifications/presentation/providers/notifications_provider.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -13,58 +13,29 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
-  late final DeviceNotificationService _notificationService;
-
-  List<AppNotificationModel> _notifications = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-  String _selectedCategory = 'all'; // 'all', 'unread', 'crop', 'radar', 'market', 'ppl'
+  String _selectedCategory = 'all';
 
   @override
   void initState() {
     super.initState();
-    final apiClient = ref.read(apiClientProvider);
-    _notificationService = DeviceNotificationService(apiClient);
-    _loadNotifications();
-  }
-
-  Future<void> _loadNotifications() async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-    }
-
-    try {
-      final list = await _notificationService.fetchNotifications();
-      if (!mounted) return;
-
-      setState(() {
-        _notifications = list;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Gagal memuat notifikasi.';
-      });
-    }
+    // Trigger a fresh fetch when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsProvider.notifier).refresh();
+    });
   }
 
   Future<void> _markAllAsRead() async {
-    final success = await _notificationService.markAllAsRead();
-    if (success && mounted) {
-      setState(() {
-        _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
-      });
+    await ref.read(notificationsProvider.notifier).markAllAsRead();
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Semua notifikasi ditandai telah dibaca'),
-          backgroundColor: const Color(0xFF059669),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Color(0xFF6EE7B7), size: 18),
+              SizedBox(width: 8),
+              Text('Semua notifikasi ditandai telah dibaca'),
+            ],
+          ),
         ),
       );
     }
@@ -72,17 +43,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
   Future<void> _onNotificationTap(AppNotificationModel item) async {
     if (!item.isRead) {
-      await _notificationService.markAsRead(item.id);
-      if (mounted) {
-        setState(() {
-          _notifications = _notifications.map((n) {
-            if (n.id == item.id) return n.copyWith(isRead: true);
-            return n;
-          }).toList();
-        });
-      }
+      await ref.read(notificationsProvider.notifier).markAsRead(item.id);
     }
-
     _showNotificationDetail(item);
   }
 
@@ -237,31 +199,47 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   List<AppNotificationModel> get _filteredNotifications {
-    if (_selectedCategory == 'all') return _notifications;
+    final state = ref.watch(notificationsProvider);
+    final notifications = state.notifications;
+    final isBuyer = ref.watch(isBuyerRoleProvider);
+    if (_selectedCategory == 'all') return notifications;
     if (_selectedCategory == 'unread') {
-      return _notifications.where((n) => !n.isRead).toList();
+      return notifications.where((n) => !n.isRead).toList();
+    }
+    if (_selectedCategory == 'rights') {
+      return notifications.where((n) => n.type == 'role_rights').toList();
     }
 
-    return _notifications.where((n) {
+    if (isBuyer) {
+      switch (_selectedCategory) {
+        case 'order':
+          return notifications.where((n) => n.type == 'order_status').toList();
+        case 'logistics':
+          return notifications.where((n) => n.type == 'logistics').toList();
+        case 'market':
+          return notifications.where((n) => n.type == 'marketplace_deal' || n.type == 'marketplace' || n.type == 'market_offer').toList();
+        default:
+          return notifications;
+      }
+    } else {
       switch (_selectedCategory) {
         case 'crop':
-          return n.type == 'crop_alert' || n.type == 'planting_reminder' || n.type == 'cultivation';
+          return notifications.where((n) => n.type == 'crop_alert' || n.type == 'planting_reminder' || n.type == 'cultivation').toList();
         case 'radar':
-          return n.type == 'warning' || n.type == 'early_warning' || n.type == 'disease_outbreak';
+          return notifications.where((n) => n.type == 'warning' || n.type == 'early_warning' || n.type == 'disease_outbreak').toList();
         case 'market':
-          return n.type == 'marketplace_deal' || n.type == 'market_offer' || n.type == 'marketplace';
-        case 'ppl':
-          return n.type == 'ppl_validation' || n.type == 'field_verification';
+          return notifications.where((n) => n.type == 'marketplace_deal' || n.type == 'market_offer' || n.type == 'marketplace').toList();
         default:
-          return true;
+          return notifications;
       }
-    }).toList();
+    }
   }
-
-  int get _unreadCount => _notifications.where((n) => !n.isRead).length;
 
   @override
   Widget build(BuildContext context) {
+    final notifState = ref.watch(notificationsProvider);
+    final unreadCount = notifState.unreadCount;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -281,7 +259,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           ),
         ),
         actions: [
-          if (_unreadCount > 0)
+          if (unreadCount > 0)
             TextButton(
               onPressed: _markAllAsRead,
               child: const Text(
@@ -296,55 +274,160 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF64748B), size: 22),
             tooltip: 'Segarkan',
-            onPressed: _loadNotifications,
+            onPressed: () => ref.read(notificationsProvider.notifier).refresh(),
           ),
         ],
       ),
-      body: _isLoading
+      body: notifState.isLoading && notifState.notifications.isEmpty
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF059669)),
             )
-          : _errorMessage != null && _notifications.isEmpty
+          : notifState.error != null && notifState.notifications.isEmpty
               ? _buildErrorState()
               : _buildBody(),
     );
   }
 
   Widget _buildBody() {
+    final isBuyer = ref.watch(isBuyerRoleProvider);
     final filtered = _filteredNotifications;
 
     return RefreshIndicator(
-      onRefresh: _loadNotifications,
-      color: const Color(0xFF059669),
+      onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
+      color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669),
       child: Column(
         children: [
-          // Filter tabs
+          // 1. Role Rights & Facilities Notice Banner (Pure Green and White)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isBuyer ? const Color(0xFF6EE7B7) : const Color(0xFFA7F3D0),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669)).withOpacity(0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isBuyer ? const Color(0xFFD1FAE5) : const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.verified_user_rounded,
+                    size: 20,
+                    color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              isBuyer
+                                  ? 'Hak & Legalitas Pembeli B2B'
+                                  : 'Hak & Fasilitas Resmi Petani',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: isBuyer ? const Color(0xFFD1FAE5) : const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'HAK AKTIF',
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF047857),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isBuyer
+                            ? 'Dilindungi jaminan timbangan tera resmi, armada logistik truk, & kontrak sah.'
+                            : 'Bebas diagnosa AI agronomi gratis, kalender pupuk, & jual gabah tanpa calo.',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 2. Filter tabs
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip('all', 'Semua (${_notifications.length})'),
-                  if (_unreadCount > 0)
-                    _buildFilterChip('unread', 'Belum Dibaca ($_unreadCount)'),
-                  _buildFilterChip('crop', 'Budidaya'),
-                  _buildFilterChip('radar', 'Peringatan Hama'),
-                  _buildFilterChip('market', 'Pasar'),
-                  _buildFilterChip('ppl', 'PPL'),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final notifState = ref.watch(notificationsProvider);
+                  final totalCount = notifState.notifications.length;
+                  final unread = notifState.unreadCount;
+                  final isBuyerRole = ref.watch(isBuyerRoleProvider);
+                  return Row(
+                    children: [
+                      _buildFilterChip('all', 'Semua ($totalCount)'),
+                      if (unread > 0)
+                        _buildFilterChip('unread', 'Belum Dibaca ($unread)'),
+                      _buildFilterChip('rights', 'Hak Akun'),
+                      if (isBuyerRole) ...[
+                        _buildFilterChip('order', 'Pesanan & Timbang'),
+                        _buildFilterChip('logistics', 'Logistik Truk'),
+                        _buildFilterChip('market', 'Bursa & Stok'),
+                      ] else ...[
+                        _buildFilterChip('crop', 'Lahan & Pupuk'),
+                        _buildFilterChip('radar', 'Hama & Cuaca'),
+                        _buildFilterChip('market', 'Bursa Gabah'),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
-          // List
+          // 3. List
           Expanded(
             child: filtered.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) => const Divider(
                       height: 1,
@@ -396,6 +479,21 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     final Color iconBg;
 
     switch (item.type) {
+      case 'role_rights':
+        iconData = Icons.shield_outlined;
+        iconColor = const Color(0xFF059669);
+        iconBg = const Color(0xFFECFDF5);
+        break;
+      case 'order_status':
+        iconData = Icons.scale_rounded;
+        iconColor = const Color(0xFF0F5132);
+        iconBg = const Color(0xFFD1FAE5);
+        break;
+      case 'logistics':
+        iconData = Icons.local_shipping_outlined;
+        iconColor = const Color(0xFF059669);
+        iconBg = const Color(0xFFECFDF5);
+        break;
       case 'crop_alert':
       case 'planting_reminder':
       case 'cultivation':
@@ -406,27 +504,22 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       case 'warning':
       case 'early_warning':
       case 'disease_outbreak':
-        iconData = Icons.warning_amber_rounded;
-        iconColor = const Color(0xFFDC2626);
-        iconBg = const Color(0xFFFEF2F2);
+        iconData = Icons.shield_outlined;
+        iconColor = const Color(0xFF047857);
+        iconBg = const Color(0xFFEAF5EF);
         break;
       case 'marketplace_deal':
       case 'market_offer':
       case 'marketplace':
         iconData = Icons.storefront_outlined;
-        iconColor = const Color(0xFFD97706);
-        iconBg = const Color(0xFFFFFBEB);
+        iconColor = const Color(0xFF0F5132);
+        iconBg = const Color(0xFFECFDF5);
         break;
-      case 'ppl_validation':
-      case 'field_verification':
-        iconData = Icons.verified_user_outlined;
-        iconColor = const Color(0xFF2563EB);
-        iconBg = const Color(0xFFEFF6FF);
-        break;
+      case 'system':
       default:
         iconData = Icons.notifications_none_rounded;
-        iconColor = const Color(0xFF64748B);
-        iconBg = const Color(0xFFF8FAFC);
+        iconColor = const Color(0xFF059669);
+        iconBg = const Color(0xFFF1F5F9);
         break;
     }
 
@@ -545,6 +638,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   Widget _buildErrorState() {
+    final error = ref.read(notificationsProvider).error;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -556,13 +650,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             const Text('Gagal Memuat Notifikasi', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
             Text(
-              _errorMessage ?? 'Periksa koneksi internet Anda.',
+              error ?? 'Periksa koneksi internet Anda.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _loadNotifications,
+              onPressed: () => ref.read(notificationsProvider.notifier).refresh(),
               icon: const Icon(Icons.refresh_rounded, size: 16),
               label: const Text('Coba Lagi'),
               style: FilledButton.styleFrom(

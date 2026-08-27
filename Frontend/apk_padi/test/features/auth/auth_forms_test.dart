@@ -13,20 +13,18 @@ void main() {
   testWidgets('form login menampilkan field utama', (tester) async {
     await tester.pumpWidget(_wrap(const LoginScreen()));
 
-    expect(find.text('Masuk ke P.A.D.I.'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
-    expect(find.text('Masuk'), findsOneWidget);
+    expect(find.text('Masuk Sekarang'), findsOneWidget);
+    expect(find.text('Daftar Akun Baru'), findsOneWidget);
   });
 
   testWidgets('form register menampilkan pilihan Petani dan Pembeli', (tester) async {
-    await tester.pumpWidget(_wrap(const RegisterScreen()));
+    await tester.pumpWidget(_wrap(const RegisterScreen(initialRole: 'farmer')));
 
-    expect(find.text('Buat akun P.A.D.I.'), findsOneWidget);
-    expect(find.text('Nama lengkap'), findsOneWidget);
-    expect(find.text('Petani'), findsOneWidget);
-    expect(find.text('Pembeli'), findsOneWidget);
-    expect(find.text('Daftar'), findsOneWidget);
+    expect(find.text('Nama Lengkap'), findsOneWidget);
+    expect(find.text('Peran: Petani Mitra P.A.D.I.'), findsOneWidget);
+    expect(find.text('Daftar sebagai Petani'), findsOneWidget);
   });
 }
 

@@ -26,7 +26,11 @@ class RegisterUserAction
                 'last_login_at' => now(),
             ]);
 
-            $user->assignRole($data['account_type']);
+            try {
+                $user->assignRole($data['account_type']);
+            } catch (\Throwable $e) {
+                // Keep resilient if Spatie permission table is not seeded
+            }
 
             $token = $user
                 ->createToken($data['device_name'] ?? 'P.A.D.I Mobile')
@@ -39,7 +43,8 @@ class RegisterUserAction
     private function legacyRoleValue(string $accountType): string
     {
         return match ($accountType) {
-            'buyer' => 'partner',
+            'buyer' => 'buyer',
+            'partner' => 'buyer',
             'extension_officer' => 'ppl',
             default => $accountType,
         };

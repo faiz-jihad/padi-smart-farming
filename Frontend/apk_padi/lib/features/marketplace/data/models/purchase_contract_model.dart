@@ -14,8 +14,10 @@ class PurchaseContractModel {
     this.unit,
     this.farmerName,
     this.farmerEmail,
+    this.farmerPhone,
     this.partnerName,
     this.partnerEmail,
+    this.imageUrl,
   });
 
   factory PurchaseContractModel.fromJson(
@@ -50,12 +52,14 @@ class PurchaseContractModel {
       totalAmount: _toDouble(json['total_amount']),
       status: json['status']?.toString() ?? '',
       contractedAt: json['contracted_at']?.toString(),
-      commodity: listing?['commodity']?.toString(),
-      unit: listing?['unit']?.toString(),
-      farmerName: farmer?['name']?.toString(),
+      commodity: json['commodity']?.toString() ?? listing?['commodity']?.toString(),
+      unit: json['unit']?.toString() ?? listing?['unit']?.toString(),
+      farmerName: json['farmer_name']?.toString() ?? farmer?['name']?.toString(),
       farmerEmail: farmer?['email']?.toString(),
-      partnerName: partner?['name']?.toString(),
+      farmerPhone: json['farmer_phone']?.toString() ?? farmer?['phone']?.toString(),
+      partnerName: json['partner_name']?.toString() ?? partner?['name']?.toString(),
       partnerEmail: partner?['email']?.toString(),
+      imageUrl: listing?['image_url']?.toString(),
     );
   }
 
@@ -109,6 +113,8 @@ class PurchaseContractModel {
   final String? unit;
   final String? farmerName;
   final String? farmerEmail;
+  final String? farmerPhone;
   final String? partnerName;
   final String? partnerEmail;
+  final String? imageUrl;
 }

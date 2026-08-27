@@ -9,7 +9,7 @@ class ApiClient {
           Dio(
             BaseOptions(
               baseUrl: AppConfig.apiBaseUrl,
-              connectTimeout: const Duration(seconds: 4),
+              connectTimeout: const Duration(seconds: 15),
               receiveTimeout: const Duration(seconds: 30),
               sendTimeout: const Duration(seconds: 30),
             ),
@@ -36,7 +36,7 @@ class ApiClient {
         },
         onError: (error, handler) async {
           if (kDebugMode) {
-            debugPrint('❌ [API ERR] ${error.type} ${error.message} on ${error.requestOptions.uri}');
+            debugPrint('❌ [API ERR] ${error.type} ${error.message} on ${error.requestOptions.uri}\nResponse: ${error.response?.data}');
           }
 
           // Auto-fallback to next candidate host on connection failure / lookup failed

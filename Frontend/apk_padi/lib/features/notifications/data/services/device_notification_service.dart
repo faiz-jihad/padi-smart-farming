@@ -15,7 +15,8 @@ class DeviceNotificationService {
   final ApiClient _apiClient;
 
   /// Fetch all notifications for the authenticated user and platform.
-  Future<List<AppNotificationModel>> fetchNotifications() async {
+  /// Fetch all notifications for the authenticated user and platform.
+  Future<List<AppNotificationModel>> fetchNotifications({String? role}) async {
     try {
       final response = await _apiClient.dio.get('/notifications');
       final responseData = response.data;
@@ -39,46 +40,108 @@ class DeviceNotificationService {
       }
 
       // Return default initial notifications if empty
-      return _getDefaultNotifications();
+      return _getDefaultNotifications(role);
     } catch (_) {
-      return _getDefaultNotifications();
+      return _getDefaultNotifications(role);
     }
   }
 
-  List<AppNotificationModel> _getDefaultNotifications() {
+  List<AppNotificationModel> _getDefaultNotifications(String? role) {
+    final isBuyer = role == 'buyer' || role == 'partner';
+
+    if (isBuyer) {
+      return [
+        const AppNotificationModel(
+          id: 201,
+          type: 'role_rights',
+          title: 'Pemberitahuan Hak & Legalitas Akun Pembeli B2B',
+          body: 'Akun Anda memiliki hak perlindungan hukum atas jaminan timbangan sawah berkalibrasi tera resmi, armada logistik truk, dan penerbitan faktur B2B sah.',
+          data: {'url': '/buyer/orders'},
+          isRead: false,
+          createdAt: '2026-08-27T08:00:00Z',
+        ),
+        const AppNotificationModel(
+          id: 202,
+          type: 'order_status',
+          title: 'Pesanan Gabah GKP Siap Ditimbang di Lahan',
+          body: 'Pesanan GKP Ciherang #ORD-9218 di Gapoktan Subang siap ditimbang dengan timbangan tera sah bersertifikat.',
+          data: {'url': '/buyer/orders'},
+          isRead: false,
+          createdAt: '2026-08-27T07:30:00Z',
+        ),
+        const AppNotificationModel(
+          id: 203,
+          type: 'logistics',
+          title: 'Armada Truk Logistik Menuju Titik Penjemputan',
+          body: 'Surat jalan penjemputan gabah telah terbit. Truk Fuso armada logistik sedang bergerak ke lokasi sawah.',
+          data: {'url': '/buyer/orders'},
+          isRead: false,
+          createdAt: '2026-08-26T15:20:00Z',
+        ),
+        const AppNotificationModel(
+          id: 204,
+          type: 'marketplace_deal',
+          title: 'Panen Raya Baru: 40 Ton Beras Super Pandan Wangi',
+          body: 'Kelompok Tani Cianjur baru saja mendaftarkan stok beras super grade A. Buka bursa untuk verifikasi penawaran.',
+          data: {'url': '/marketplace'},
+          isRead: true,
+          createdAt: '2026-08-25T11:00:00Z',
+        ),
+        const AppNotificationModel(
+          id: 205,
+          type: 'system',
+          title: 'Sertifikasi Tera Metrologi Legal Selesai',
+          body: 'Seluruh timbangan lapangan kelompok tani mitra P.A.D.I. telah diperbarui kalibrasinya.',
+          data: {'url': '/marketplace'},
+          isRead: true,
+          createdAt: '2026-08-24T09:00:00Z',
+        ),
+      ];
+    }
+
+    // Default for Farmer (Petani)
     return [
       const AppNotificationModel(
         id: 101,
+        type: 'role_rights',
+        title: 'Pemberitahuan Hak & Fasilitas Resmi Petani P.A.D.I.',
+        body: 'Akun Anda berhak atas fasilitas penuh diagnosa penyakit tanaman AI, rekomendasi pupuk, dan penjualan langsung ke bursa tanpa potongan calo.',
+        data: {'url': '/farms'},
+        isRead: false,
+        createdAt: '2026-08-27T08:00:00Z',
+      ),
+      const AppNotificationModel(
+        id: 102,
         type: 'crop_alert',
-        title: 'Pengingat Pemupukan Susulan (HST 14-21)',
-        body: 'Waktunya pemupukan NPK Phonska dan Urea untuk merangsang anakan produktif padi.',
+        title: 'Pengingat Pemupukan Susulan (Fase Vegetatif HST 14-21)',
+        body: 'Waktunya pemupukan NPK Phonska dan Urea untuk merangsang anakan produktif tanaman padi Anda.',
         data: {'url': '/farms'},
         isRead: false,
         createdAt: '2026-08-26T07:30:00Z',
       ),
       const AppNotificationModel(
-        id: 102,
+        id: 103,
         type: 'warning',
-        title: 'Peringatan Hama: Waspada Blas Daun',
-        body: 'Peningkatan kelembaban terdeteksi di sekitar hamparan. Pantau bercak belah ketupat pada helai daun.',
+        title: 'Peringatan Hama Lokal: Waspada Wereng & Blas',
+        body: 'Peningkatan kelembaban terdeteksi di sekitar hamparan sawah. Periksa helai daun dan pangkal rumpun padi.',
         data: {'url': '/community-alert'},
         isRead: false,
         createdAt: '2026-08-26T06:15:00Z',
       ),
       const AppNotificationModel(
-        id: 103,
+        id: 104,
         type: 'marketplace_deal',
-        title: 'Tren Harga Gabah Hari Ini',
-        body: 'Harga GKP rata-rata Rp 6.800/kg dan GKG Rp 7.900/kg. Cek penawaran pembeli di Toko PADI.',
+        title: 'Tawaran Pembeli Baru untuk Gabah Anda',
+        body: 'Mitra Industri Penggilingan Beras mengajukan penawaran harga Rp 6.900/kg untuk gabah GKP Anda.',
         data: {'url': '/marketplace'},
         isRead: true,
         createdAt: '2026-08-25T14:00:00Z',
       ),
       const AppNotificationModel(
-        id: 104,
+        id: 105,
         type: 'system',
-        title: 'Diagnosa Gemini AI Siap Digunakan',
-        body: 'Gunakan kamera untuk memindai daun padi Anda dan peroleh resep obat serta racikan nabati otomatis.',
+        title: 'Diagnosa Kamera AI Gemini Siap Digunakan',
+        body: 'Gunakan kamera HP Anda untuk memindai daun padi dan peroleh resep obat serta dosis pemupukan akurat.',
         data: {'url': '/plant-check'},
         isRead: true,
         createdAt: '2026-08-24T09:00:00Z',

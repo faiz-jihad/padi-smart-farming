@@ -59,3 +59,20 @@ final authControllerProvider = ChangeNotifierProvider<AuthController>((ref) {
 
   return controller;
 });
+
+final isBuyerRoleProvider = Provider<bool>((ref) {
+  final user = ref.watch(authControllerProvider).state.user;
+  if (user == null) return false;
+  final role = user.role.toLowerCase().trim();
+  final roleLabel = (user.roleLabel ?? '').toLowerCase().trim();
+  return role == 'buyer' ||
+      role == 'partner' ||
+      role == 'pembeli' ||
+      role == 'true' ||
+      roleLabel == 'true' ||
+      role.contains('buyer') ||
+      role.contains('partner') ||
+      roleLabel.contains('beli') ||
+      roleLabel.contains('mitra') ||
+      roleLabel.contains('buyer');
+});

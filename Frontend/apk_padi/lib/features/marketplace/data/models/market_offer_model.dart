@@ -81,4 +81,6 @@ class MarketOfferModel {
   bool get isAccepted => status == 'accepted';
 
   bool get isRejected => status == 'rejected';
+
+  bool get isCountered => status == 'countered';
 }

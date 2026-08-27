@@ -6,7 +6,9 @@ import 'package:padi/features/auth/presentation/widgets/auth_fields.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.initialRole});
+
+  final String? initialRole;
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -18,8 +20,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmationController = TextEditingController();
-  String _accountType = 'farmer';
+  late String _accountType;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _accountType = widget.initialRole == 'buyer' ? 'buyer' : 'farmer';
+  }
 
   @override
   void dispose() {
@@ -73,69 +81,110 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: SingleChildScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 12),
-
-                      // Logo & Branding Header
-                      Center(
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/images/padi-logo.png',
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.eco_rounded,
-                              color: HomeColors.primaryGreen,
-                              size: 30,
+                      // Back Button to Role Selection
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: InkWell(
+                          onTap: () {
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop();
+                            } else {
+                              context.go('/select-role');
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.2)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.arrow_back_rounded, size: 16, color: Colors.white),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Pilih Ulang Peran',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
 
-                      const Center(
-                        child: Text(
-                          'P.A.D.I.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.0,
-                          ),
-                        ),
-                      ),
-                      const Center(
-                        child: Text(
-                          'Daftar Akun Baru & Kelola Lahan Pertanian',
-                          style: TextStyle(
-                            color: Color(0xFFFDE68A),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      const SizedBox(height: 12),
+
+                      // Logo and Brand Header
+                      Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.30),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Image.asset(
+                                'assets/images/padi-logo.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.eco_rounded,
+                                  color: HomeColors.primaryGreen,
+                                  size: 32,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'P.A.D.I.',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _accountType == 'buyer'
+                                  ? 'Registrasi Portal Pembeli & Industri'
+                                  : 'Daftar Akun Baru & Kelola Lahan Pertanian',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: const Color(0xFFFDE68A).withOpacity(0.92),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
                       const SizedBox(height: 18),
 
-                      // Form Container Card
+                      // White Form Card
                       Container(
-                        padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(24),
@@ -150,9 +199,109 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text(
-                              'Pendaftaran Akun',
-                              style: TextStyle(
+                            // Role Indicator Header with "Ganti Peran"
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _accountType == 'buyer'
+                                    ? const Color(0xFFECFDF5)
+                                    : const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _accountType == 'buyer'
+                                      ? const Color(0xFF34D399)
+                                      : const Color(0xFF86EFAC),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _accountType == 'buyer'
+                                              ? Icons.storefront_rounded
+                                              : Icons.grass_rounded,
+                                          size: 16,
+                                          color: _accountType == 'buyer'
+                                              ? const Color(0xFF0F5132)
+                                              : HomeColors.primaryGreen,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _accountType == 'buyer'
+                                                ? 'Peran: Pembeli / Mitra B2B'
+                                                : 'Peran: Petani Mitra P.A.D.I.',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w900,
+                                              color: _accountType == 'buyer'
+                                                  ? const Color(0xFF0F5132)
+                                                  : HomeColors.primaryGreen,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: state.isSubmitting
+                                        ? null
+                                        : () {
+                                            if (Navigator.of(context).canPop()) {
+                                              Navigator.of(context).pop();
+                                            } else {
+                                              context.go('/select-role');
+                                            }
+                                          },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: (_accountType == 'buyer'
+                                                ? const Color(0xFF0F5132)
+                                                : HomeColors.primaryGreen)
+                                            .withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            'Ganti',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: _accountType == 'buyer'
+                                                  ? const Color(0xFF0F5132)
+                                                  : HomeColors.primaryGreen,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Icon(
+                                            Icons.edit_rounded,
+                                            size: 11,
+                                            color: _accountType == 'buyer'
+                                                ? const Color(0xFF0F5132)
+                                                : HomeColors.primaryGreen,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            Text(
+                              _accountType == 'buyer'
+                                  ? 'Pendaftaran Akun Pembeli'
+                                  : 'Pendaftaran Akun Petani',
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w900,
                                 color: HomeColors.textPrimary,
@@ -160,9 +309,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Lengkapi data untuk memulai monitoring tanaman',
-                              style: TextStyle(
+                            Text(
+                              _accountType == 'buyer'
+                                  ? 'Lengkapi data untuk mulai berbelanja hasil panen raya'
+                                  : 'Lengkapi data untuk memulai monitoring tanaman padi Anda',
+                              style: const TextStyle(
                                 fontSize: 12.5,
                                 color: HomeColors.textSecondary,
                               ),
@@ -230,52 +381,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               decoration: _inputDecoration('081234567890', Icons.phone_android_rounded),
                             ),
 
-                            const SizedBox(height: 14),
-
-                            // Role Selector SegmentedButton
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 6, left: 2),
-                              child: Text(
-                                'Peran Akun',
-                                style: TextStyle(
-                                  color: HomeColors.textPrimary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 48,
-                              child: SegmentedButton<String>(
-                                segments: const [
-                                  ButtonSegment(
-                                    value: 'farmer',
-                                    label: Text('Petani', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                                    icon: Icon(Icons.grass_rounded, size: 18),
-                                  ),
-                                  ButtonSegment(
-                                    value: 'buyer',
-                                    label: Text('Pembeli / Mitra', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                                    icon: Icon(Icons.shopping_bag_outlined, size: 18),
-                                  ),
-                                ],
-                                selected: {_accountType},
-                                style: SegmentedButton.styleFrom(
-                                  selectedBackgroundColor: HomeColors.primaryGreen,
-                                  selectedForegroundColor: Colors.white,
-                                  backgroundColor: HomeColors.surfaceMuted,
-                                  side: const BorderSide(color: HomeColors.borderSubtle),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(HomeRadius.md),
-                                  ),
-                                ),
-                                onSelectionChanged: state.isSubmitting
-                                    ? null
-                                    : (values) => setState(() => _accountType = values.first),
-                              ),
-                            ),
-
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 12),
 
                             // Password Field
                             PadiTextField(
@@ -314,7 +420,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               child: FilledButton(
                                 onPressed: state.isSubmitting ? null : _submit,
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: HomeColors.primaryGreen,
+                                  backgroundColor: _accountType == 'buyer'
+                                      ? const Color(0xFF0F5132)
+                                      : HomeColors.primaryGreen,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -329,9 +437,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Daftar Sekarang',
-                                        style: TextStyle(
+                                    : Text(
+                                        _accountType == 'buyer'
+                                            ? 'Daftar sebagai Pembeli B2B'
+                                            : 'Daftar sebagai Petani',
+                                        style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w900,
                                         ),
@@ -342,21 +452,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             const SizedBox(height: 16),
 
                             // Login Link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 const Text(
                                   'Sudah punya akun? ',
                                   style: TextStyle(color: HomeColors.textSecondary, fontSize: 13),
                                 ),
-                                GestureDetector(
+                                InkWell(
                                   onTap: state.isSubmitting ? null : () => context.go('/login'),
-                                  child: const Text(
-                                    'Masuk di sini',
-                                    style: TextStyle(
-                                      color: HomeColors.primaryGreen,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 13,
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    child: Text(
+                                      'Masuk di sini',
+                                      style: TextStyle(
+                                        color: _accountType == 'buyer'
+                                            ? const Color(0xFF0F5132)
+                                            : HomeColors.primaryGreen,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -381,7 +498,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(icon, color: HomeColors.primaryGreen, size: 20),
+      prefixIcon: Icon(icon, color: _accountType == 'buyer' ? const Color(0xFF0F5132) : HomeColors.primaryGreen, size: 20),
       filled: true,
       fillColor: HomeColors.surfaceMuted,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -391,7 +508,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(color: HomeColors.primaryGreen, width: 1.5),
+        borderSide: BorderSide(
+          color: _accountType == 'buyer' ? const Color(0xFF0F5132) : HomeColors.primaryGreen,
+          width: 1.5,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(HomeRadius.md),

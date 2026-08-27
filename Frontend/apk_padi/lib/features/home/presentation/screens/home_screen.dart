@@ -6,6 +6,7 @@ import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/cultivation/data/models/crop_season_model.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
+import 'package:padi/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/home/presentation/widgets/community_alert_card.dart';
 import 'package:padi/features/home/presentation/widgets/crop_journey_card.dart';
@@ -15,6 +16,7 @@ import 'package:padi/features/home/presentation/widgets/home_header.dart';
 import 'package:padi/features/home/presentation/widgets/home_skeleton.dart';
 import 'package:padi/features/home/presentation/widgets/market_price_card.dart';
 import 'package:padi/features/home/presentation/widgets/quick_action_grid.dart';
+import 'package:padi/features/home/presentation/widgets/role_rights_card.dart';
 import 'package:padi/features/home/presentation/widgets/smart_insight_card.dart';
 import 'package:padi/features/home/presentation/widgets/today_activity_section.dart';
 import 'package:padi/features/home/presentation/widgets/upcoming_events_banner.dart';
@@ -294,6 +296,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final s = AppStrings(lang);
     final dashboardAsync = ref.watch(_homeDashboardProvider);
     final user = auth.state.user;
+    final isBuyer = ref.watch(isBuyerRoleProvider);
+    if (isBuyer) {
+      return const BuyerHomeScreen();
+    }
     final rawName = user?.name.trim();
     final userName = rawName != null && rawName.isNotEmpty ? rawName : s.defaultUserName;
 
@@ -445,6 +451,99 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onCalendarTap: () => context.push('/planting-calendar'),
           onAlertTap: () => context.push('/community-alert'),
           onTimelineTap: () => context.push('/land/timeline'),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Quick Access Bar: Negosiasi Bursa & Laporan Penjualan Panen
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFA7F3D0)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF059669).withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => context.push('/marketplace/offers'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.handshake_outlined, color: Color(0xFF059669), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nego Penawaran',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            Text(
+                              'Kelola tawar balik',
+                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(height: 28, width: 1, color: const Color(0xFFE2E8F0)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () => context.push('/sales-report'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.assessment_outlined, color: Color(0xFF047857), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Laporan Penjualan',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            Text(
+                              'Omzet & faktur sah',
+                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: HomeSpacing.lg),

@@ -46,6 +46,12 @@ class AppNotificationModel {
 
   String get categoryLabel {
     switch (type) {
+      case 'role_rights':
+        return 'Hak & Kewenangan';
+      case 'order_status':
+        return 'Pesanan & Kontrak';
+      case 'logistics':
+        return 'Logistik Truk';
       case 'crop_alert':
       case 'planting_reminder':
       case 'cultivation':
