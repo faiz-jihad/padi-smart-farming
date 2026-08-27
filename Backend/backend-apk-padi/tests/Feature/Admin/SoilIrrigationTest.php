@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\Farm;
 use App\Models\SoilDetection;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,10 +13,19 @@ class SoilIrrigationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RoleSeeder::class);
+    }
+
     public function test_can_calculate_irrigation_schedule_and_exact_time(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $admin->assignRole('admin');
         $farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
+        $farmer->assignRole('farmer');
 
         $farm = Farm::create([
             'farmer_user_id' => $farmer->id,

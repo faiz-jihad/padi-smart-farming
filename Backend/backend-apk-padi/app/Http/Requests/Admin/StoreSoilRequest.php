@@ -8,7 +8,31 @@ class StoreSoilRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        if (! $user) {
+            return false;
+        }
+
+        $isAdmin = ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+        $isOfficer = ($user->role === 'extension_officer' || (method_exists($user, 'hasRole') && $user->hasRole('extension_officer')));
+
+        if ($isAdmin || $isOfficer) {
+            return true;
+        }
+
+        $isFarmer = ($user->role === 'farmer' || (method_exists($user, 'hasRole') && $user->hasRole('farmer')));
+        if ($isFarmer) {
+            $farmId = $this->input('farm_id');
+            if (! $farmId) {
+                return true;
+            }
+
+            $farm = \App\Models\Farm::find($farmId);
+
+            return $farm && $farm->farmer_user_id === $user->id;
+        }
+
+        return false;
     }
 
     public function rules(): array

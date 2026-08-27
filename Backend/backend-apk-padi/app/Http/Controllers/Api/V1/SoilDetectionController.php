@@ -25,6 +25,9 @@ class SoilDetectionController extends Controller
             'limit' => 'nullable|integer|min:1|max:100',
         ]);
 
+        $farm = \App\Models\Farm::findOrFail($validated['farm_id']);
+        $this->authorizeFarm($request->user(), $farm);
+
         $detections = SoilDetection::where('farm_id', $validated['farm_id'])
             ->latest('tested_at')
             ->limit($validated['limit'] ?? 20)
@@ -42,9 +45,12 @@ class SoilDetectionController extends Controller
      */
     public function store(StoreSoilRequest $request): JsonResponse
     {
+        $farm = \App\Models\Farm::findOrFail($request->validated('farm_id'));
+        $this->authorizeFarm($request->user(), $farm);
+
         $soil = $this->soilDetectionService->analyzeAndCreate(
             $request->validated(),
-            auth()->id()
+            $request->user()->id
         );
 
         return response()->json([
@@ -57,13 +63,14 @@ class SoilDetectionController extends Controller
     /**
      * Get detail of a specific soil detection (by sample_code or id)
      */
-    public function show(string $soilDetection): JsonResponse
+    public function show(Request $request, string $soilDetection): JsonResponse
     {
         $model = SoilDetection::where('sample_code', $soilDetection)
             ->orWhere('id', $soilDetection)
             ->firstOrFail();
 
         $model->load('farm.farmer');
+        $this->authorizeFarm($request->user(), $model->farm);
 
         $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule(
             (float) $model->moisture_percentage,
@@ -87,6 +94,8 @@ class SoilDetectionController extends Controller
         ]);
 
         $farm = \App\Models\Farm::findOrFail($validated['farm_id']);
+        $this->authorizeFarm($request->user(), $farm);
+
         $weatherService = app(\App\Services\Weather\WeatherService::class);
 
         $agroSoil = $weatherService->getSoilData($farm->latitude ?? -7.25, $farm->longitude ?? 112.75);
@@ -118,11 +127,14 @@ class SoilDetectionController extends Controller
     /**
      * Get Indonesian PADI Irrigation Schedule for a soil detection
      */
-    public function irrigationSchedule(string $soilDetection): JsonResponse
+    public function irrigationSchedule(Request $request, string $soilDetection): JsonResponse
     {
         $model = SoilDetection::where('sample_code', $soilDetection)
             ->orWhere('id', $soilDetection)
             ->firstOrFail();
+
+        $model->loadMissing('farm');
+        $this->authorizeFarm($request->user(), $model->farm);
 
         $schedule = $this->soilDetectionService->calculateIrrigationSchedule(
             (float) $model->moisture_percentage,
@@ -136,5 +148,15 @@ class SoilDetectionController extends Controller
             'farm' => $model->farm?->name,
             'irrigation_schedule' => $schedule,
         ]);
+    }
+
+    private function authorizeFarm($user, \App\Models\Farm $farm): void
+    {
+        $isAdmin = $user && ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+        $isOfficer = $user && ($user->role === 'extension_officer' || (method_exists($user, 'hasRole') && $user->hasRole('extension_officer')));
+
+        if (! $isAdmin && ! $isOfficer && (! $user || $farm->farmer_user_id !== $user->id)) {
+            abort(403, 'Anda tidak memiliki akses ke data lahan ini.');
+        }
     }
 }
