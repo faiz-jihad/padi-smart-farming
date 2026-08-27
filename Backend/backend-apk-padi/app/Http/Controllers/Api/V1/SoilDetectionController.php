@@ -42,9 +42,19 @@ class SoilDetectionController extends Controller
      */
     public function store(StoreSoilRequest $request): JsonResponse
     {
+        $user = $request->user();
+        $farm = \App\Models\Farm::findOrFail($request->validated('farm_id'));
+
+        $isAdmin = ($user->role === 'admin' || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+        $isOfficer = ($user->role === 'extension_officer' || (method_exists($user, 'hasRole') && $user->hasRole('extension_officer')));
+
+        if (! $isAdmin && ! $isOfficer && $farm->farmer_user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke data lahan ini.');
+        }
+
         $soil = $this->soilDetectionService->analyzeAndCreate(
             $request->validated(),
-            auth()->id()
+            $user->id
         );
 
         return response()->json([
