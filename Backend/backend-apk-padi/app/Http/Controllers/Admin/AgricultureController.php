@@ -9,7 +9,9 @@ use App\Services\Admin\AdminAuditLogger;
 use App\Services\Admin\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+
 
 class AgricultureController extends Controller
 {
@@ -25,7 +27,10 @@ class AgricultureController extends Controller
         AdminNotificationService $notifications,
     ): RedirectResponse {
         $validated = $request->validate([
-            'farmer_user_id' => ['required', 'exists:users,id'],
+            'farmer_user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', 'farmer')),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'area_ha' => ['required', 'numeric', 'min:0.01'],
             'latitude' => ['nullable', 'numeric'],
@@ -48,7 +53,10 @@ class AgricultureController extends Controller
         AdminNotificationService $notifications,
     ): RedirectResponse {
         $validated = $request->validate([
-            'farmer_user_id' => ['required', 'exists:users,id'],
+            'farmer_user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', 'farmer')),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'area_ha' => ['required', 'numeric', 'min:0.01'],
             'latitude' => ['nullable', 'numeric'],

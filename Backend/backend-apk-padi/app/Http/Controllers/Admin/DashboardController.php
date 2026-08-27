@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
@@ -41,6 +42,29 @@ class DashboardController extends Controller
         }
 
         return view('admin.dashboard', $data);
+    }
+
+    public function report(
+        Request $request,
+        AdminDashboardService $dashboard
+    )
+    {
+        $farmId = $request->filled('farm_id')
+            ? (int) $request->input('farm_id')
+            : null;
+
+        $data = $dashboard->viewData(Auth::id(), $farmId);
+
+        $pdf = Pdf::loadView(
+            'admin.report.dashboard-report',
+            $data
+        );
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream(
+            'Laporan_Monitoring_Agroklimat_' . now()->format('d-m-Y') . '.pdf'
+        );
     }
 
     public function markNotificationsRead(Request $request, AdminDashboardService $dashboard): RedirectResponse|JsonResponse

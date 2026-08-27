@@ -1469,4 +1469,108 @@
     }
 }
 
+@media print {
+    /* Hilangkan layout dashboard saat proses print */
+    html,
+    body {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* Semua isi dashboard tidak ikut dicetak */
+    body > * {
+        display: none !important;
+    }
+
+    /* Container utama dashboard tetap dibutuhkan
+       karena report berada di dalamnya */
+    body > .admin-main {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .admin-main > * {
+        display: none !important;
+    }
+
+    /* MAIN tempat modal berada */
+    .admin-content {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .admin-content > * {
+        display: none !important;
+    }
+
+    /* Tampilkan hanya modal Quick Report */
+    #modalQuickReport {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        overflow: visible !important;
+    }
+
+    #modalQuickReport .dashboard-modal-dialog {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+
+    /* Jangan ikut print header/footer modal */
+    #modalQuickReport .modal-header,
+    #modalQuickReport .modal-footer {
+        display: none !important;
+    }
+
+    /* Hanya report */
+    #printableReportSection {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        overflow: visible !important;
+        background: white !important;
+        color: black !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+}
 

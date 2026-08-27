@@ -55,7 +55,10 @@ class AdminAgricultureService
             'cropSeasons' => $allCropSeasons->take(10),
             'concreteSchedules' => $concreteSchedules,
             'irrigationAlerts' => $irrigationAlerts,
-            'farmers' => User::query()->orderBy('name')->get(['id', 'name', 'email', 'role']),
+            'farmers' => User::query()
+                ->where('role', 'farmer')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'role']),
             'filters' => [
                 'search' => $search,
                 'irrigation' => $irrigation,

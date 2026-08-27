@@ -293,9 +293,6 @@
                                 <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
                                     Jadwal pelatihan atau musyawarah yang dibuat akan otomatis muncul di aplikasi petani.
                                 </p>
-                                <a href="{{ route('admin.events.create') }}" class="btn-event btn-event-primary" style="display: inline-flex;">
-                                    + Buat Acara Pertanian Baru
-                                </a>
                             </td>
                         </tr>
                     @endforelse
