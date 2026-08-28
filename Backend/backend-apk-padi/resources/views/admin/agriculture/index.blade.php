@@ -196,6 +196,7 @@
                         <tr>
                             <th>Nama Lahan &amp; Catatan</th>
                             <th>Pemilik (Petani)</th>
+                            <th>Wilayah</th>
                             <th>Luas Wilayah</th>
                             <th>Sistem Pengairan</th>
                             <th>Koordinat GPS</th>
@@ -238,6 +239,22 @@
                                         <div>
                                             <p class="farmer-name">{{ $farm->farmer?->name ?? 'Petani Terdaftar' }}</p>
                                             <p class="farmer-phone">{{ $farm->farmer?->phone ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 13px; line-height: 1.5;">
+                                        <div style="font-weight: 600; color: #0f172a;">
+                                            {{ $farm->province?->name ?? '-' }}
+                                        </div>
+                                        <div style="color: #475569;">
+                                            {{ $farm->regency?->name ?? '-' }}
+                                        </div>
+                                        <div style="color: #64748b;">
+                                            Kec. {{ $farm->district?->name ?? '-' }}
+                                        </div>
+                                        <div style="color: #64748b;">
+                                            Kel. {{ $farm->village?->name ?? '-' }}
                                         </div>
                                     </div>
                                 </td>

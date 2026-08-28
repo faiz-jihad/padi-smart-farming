@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Services\Geography\LocationService;
 
 
 class AgricultureController extends Controller
@@ -25,6 +26,7 @@ class AgricultureController extends Controller
         AdminAgricultureService $agriculture,
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
+        LocationService $locationService,
     ): RedirectResponse {
         $validated = $request->validate([
             'farmer_user_id' => [
@@ -40,7 +42,13 @@ class AgricultureController extends Controller
             'irrigation_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $agriculture->store($validated, $request, $audit, $notifications);
+        $agriculture->store(
+            $validated,
+            $request,
+            $audit,
+            $notifications,
+            $locationService
+        );
 
         return back()->with('status', 'Data lahan pertanian baru berhasil ditambahkan.');
     }

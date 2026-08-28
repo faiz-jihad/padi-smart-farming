@@ -57,8 +57,24 @@ class LocationService
 
         // 3. Fallback: Nearest district by centroid distance
         $nearestDistrict = $this->findNearestDistrict($latitude, $longitude);
+
         if ($nearestDistrict) {
-            $nearestVillage = $this->findNearestVillageInDistrict($nearestDistrict->id, $latitude, $longitude);
+            $distance = $this->haversineDistance(
+                $latitude,
+                $longitude,
+                (float) $nearestDistrict->latitude,
+                (float) $nearestDistrict->longitude
+            );
+
+            if ($distance > 30) {
+                return null;
+            }
+
+            $nearestVillage = $this->findNearestVillageInDistrict(
+                $nearestDistrict->id,
+                $latitude,
+                $longitude
+            );
 
             return $this->formatResult(
                 province: $nearestDistrict->regency?->province,

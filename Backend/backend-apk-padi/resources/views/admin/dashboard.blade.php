@@ -507,6 +507,12 @@
                 @endforelse
             </div>
 
+            <div class="dashboard-panel__footer-action">
+                <a href="{{ route('admin.notifications.index') }}" class="dashboard-view-all">
+                    Lihat semua notifikasi →
+                </a>
+            </div>
+
             @if(($adminUnreadNotifications ?? 0) > 0)
                 <form method="POST" action="{{ route('admin.notifications.read') }}" class="dashboard-panel__footer-action">
                     @csrf

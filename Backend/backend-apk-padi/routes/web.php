@@ -53,8 +53,16 @@ Route::middleware(['auth', 'admin.web'])
     ->group(function (): void {
         // ─── General Internal Routes (Admin & Extension Officer / PPL) ─────
         Route::get('/', [DashboardController::class, 'index'])->middleware('throttle:admin-sync')->name('dashboard');
+        Route::get('/', [DashboardController::class, 'index'])
+            ->middleware('throttle:admin-sync')
+            ->name('dashboard');
+
+        Route::get('/notifications', [DashboardController::class, 'notifications'])
+            ->name('notifications.index');
+
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');
+
         Route::get('/report/download', [DashboardController::class, 'report'])
             ->name('report.download');
 

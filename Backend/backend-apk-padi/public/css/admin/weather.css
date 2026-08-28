@@ -313,6 +313,31 @@
     margin: 3px 0 0 0;
 }
 
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid #1f7a45;
+    border-radius: 8px;
+    background: #1b5e20;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-export:hover {
+    background: #2e7d32;
+    border-color: #176238;
+}
+
+.btn-export:active {
+    transform: translateY(1px);
+}
+
 /* Search Bar */
 .filter-wrapper {
     padding: 16px 28px;

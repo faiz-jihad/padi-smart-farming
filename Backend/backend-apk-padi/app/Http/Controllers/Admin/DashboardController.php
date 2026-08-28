@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -83,6 +85,31 @@ class DashboardController extends Controller
         }
 
         return back()->with('status', 'Notifikasi sudah ditandai dibaca.');
+    }
+
+    public function notifications(): View
+    {
+        $adminId = Auth::id();
+
+        $notifications = collect();
+        $unreadCount = 0;
+
+        if ($adminId && Schema::hasTable('notifications')) {
+            $notifications = Notification::query()
+                ->where('user_id', $adminId)
+                ->latest('id')
+                ->paginate(15);
+
+            $unreadCount = Notification::query()
+                ->where('user_id', $adminId)
+                ->whereNull('read_at')
+                ->count();
+        }
+
+        return view('admin.notifications.index', [
+            'notifications' => $notifications,
+            'unreadCount' => $unreadCount,
+        ]);
     }
 }
 
