@@ -50,6 +50,7 @@ class AdminDashboardService
             'metrics' => $this->metrics(),
             'recentActivities' => $this->recentActivities(),
             'systemNotifications' => $this->systemNotifications($adminId),
+            'adminUnreadNotifications' => $this->unreadNotificationCount($adminId),
             'farms' => $farms,
             'selectedFarmId' => $selectedFarm?->id ?? $farmId,
             'selectedFarm' => $selectedFarm,
@@ -64,6 +65,7 @@ class AdminDashboardService
             'marketplaceStats' => $this->marketplaceStats(),
             'userStats' => $this->userStats(),
         ];
+        
     }
 
     public function markNotificationsRead(?int $adminId): bool
@@ -167,6 +169,17 @@ class AdminDashboardService
             ->all();
     }
 
+    private function unreadNotificationCount(?int $adminId): int
+    {
+        if (! $adminId || ! Schema::hasTable('notifications')) {
+            return 0;
+        }
+
+        return Notification::query()
+            ->where('user_id', $adminId)
+            ->whereNull('read_at')
+            ->count();
+    }
     /**
      * @return array<string, int>
      */

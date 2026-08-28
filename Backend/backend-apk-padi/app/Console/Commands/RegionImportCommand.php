@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\File;
 
 class RegionImportCommand extends Command
 {
-    protected $signature = 'region:import 
+    protected $signature = 'region:import
                             {--file= : Path ke file CSV wilayah Kemendagri/BPS}
                             {--province= : Kode provinsi tertentu (misal: 32)}';
 
-    protected $description = 'Import data wilayah administratif Indonesia dari file CSV';
+    protected $description = 'Import data wilayah administratif Indonesia dari file CSV Kemendagri/BPS';
 
     public function handle(): int
     {
@@ -26,126 +26,192 @@ class RegionImportCommand extends Command
         $provinceFilter = $this->option('province');
 
         if (!File::exists($filePath)) {
-            $this->warn("File tidak ditemukan di: {$filePath}");
-            $this->line("Silakan letakkan file data CSV wilayah di 'storage/app/data/regions.csv'");
-            $this->line("Format CSV yang diharapkan (tanpa header / header: code,name,type,lat,lng):");
-            $this->line("Contoh format kode:");
-            $this->line("- Provinsi (2 digit) : 32,JAWA BARAT");
-            $this->line("- Kab/Kota (4 digit)  : 3212,KABUPATEN INDRAMAYU");
-            $this->line("- Kecamatan (6 digit) : 321206,KANDANGHAUR");
-            $this->line("- Desa/Kel (10 digit) : 3212062001,KANDANGHAUR");
-            $this->info("Untuk seeding data dev Jawa Barat + Indramayu, jalankan: php artisan db:seed --class=RegionSeeder");
+            $this->error("File tidak ditemukan: {$filePath}");
+            $this->line("Letakkan file CSV di storage/app/data/regions.csv");
             return self::FAILURE;
         }
 
-        $this->info("Memulai import data wilayah dari {$filePath}...");
+        $this->info("Membaca file: {$filePath}");
 
         $handle = fopen($filePath, 'r');
+
         if (!$handle) {
-            $this->error("Gagal membuka file CSV.");
+            $this->error('Gagal membuka file CSV.');
             return self::FAILURE;
         }
 
-        $count = 0;
+        $header = fgetcsv($handle, 0, ',');
+
+        if (!$header || count($header) < 9) {
+            fclose($handle);
+            $this->error('Format CSV tidak sesuai. File harus memiliki 9 kolom data Kemendagri.');
+            return self::FAILURE;
+        }
+
+        $provinceFilter = $provinceFilter
+            ? str_replace('.', '', trim($provinceFilter))
+            : null;
+
+        $provinceCache = [];
+        $regencyCache = [];
+        $districtCache = [];
+
+        $countProvince = 0;
+        $countRegency = 0;
+        $countDistrict = 0;
+        $countVillage = 0;
+
         DB::beginTransaction();
 
         try {
-            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-                if (empty($row[0]) || empty($row[1])) {
+            while (($row = fgetcsv($handle, 0, ',')) !== false) {
+                if (count($row) < 9) {
                     continue;
                 }
 
-                $code = trim($row[0]);
-                $name = trim($row[1]);
-                $lat = isset($row[3]) && is_numeric($row[3]) ? (float) $row[3] : null;
-                $lng = isset($row[4]) && is_numeric($row[4]) ? (float) $row[4] : null;
+                $villageCode  = $this->cleanCode($row[0]);
+                $villageName  = trim($row[1]);
+                $districtCode = $this->cleanCode($row[2]);
+                $districtName = trim($row[3]);
+                $regencyCode  = $this->cleanCode($row[4]);
+                $regencyName  = trim($row[5]);
+                $provinceCode = $this->cleanCode($row[6]);
+                $provinceName = trim($row[7]);
+                $villageType  = strtoupper(trim($row[8]));
 
-                if ($provinceFilter && !str_starts_with($code, $provinceFilter)) {
+                if (!$provinceCode || !$regencyCode || !$districtCode || !$villageCode) {
                     continue;
                 }
 
-                $codeLength = strlen($code);
+                if ($provinceFilter && $provinceCode !== $provinceFilter) {
+                    continue;
+                }
 
-                // Province: 2 digits
-                if ($codeLength === 2) {
-                    Province::updateOrCreate(
-                        ['code' => $code],
-                        ['name' => $name, 'latitude' => $lat, 'longitude' => $lng]
+                /*
+                 * 1. Province
+                 */
+                if (!isset($provinceCache[$provinceCode])) {
+                    $province = Province::updateOrCreate(
+                        ['code' => $provinceCode],
+                        [
+                            'name' => $provinceName,
+                            'latitude' => null,
+                            'longitude' => null,
+                        ]
                     );
-                    $count++;
+
+                    $provinceCache[$provinceCode] = $province;
+                    $countProvince++;
+                } else {
+                    $province = $provinceCache[$provinceCode];
                 }
-                // Regency: 4-5 digits (e.g. 32.12 or 3212)
-                elseif ($codeLength === 4 || ($codeLength === 5 && str_contains($code, '.'))) {
-                    $cleanCode = str_replace('.', '', $code);
-                    $provCode = substr($cleanCode, 0, 2);
-                    $province = Province::where('code', $provCode)->first();
-                    if ($province) {
-                        $type = str_contains(strtoupper($name), 'KOTA') ? RegencyType::City : RegencyType::Regency;
-                        $cleanName = preg_replace('/^(KABUPATEN|KAB\.|KOTA)\s+/i', '', $name);
-                        Regency::updateOrCreate(
-                            ['code' => $cleanCode],
-                            [
-                                'province_id' => $province->id,
-                                'name'        => $cleanName,
-                                'type'        => $type,
-                                'latitude'    => $lat,
-                                'longitude'   => $lng,
-                            ]
-                        );
-                        $count++;
-                    }
+
+                /*
+                 * 2. Regency
+                 */
+                if (!isset($regencyCache[$regencyCode])) {
+                    $cleanRegencyName = preg_replace(
+                        '/^(KABUPATEN|KAB\.|KOTA)\s+/i',
+                        '',
+                        $regencyName
+                    );
+
+                    $type = str_contains($regencyName, 'KOTA')
+                        ? RegencyType::City
+                        : RegencyType::Regency;
+
+                    $regency = Regency::updateOrCreate(
+                        ['code' => $regencyCode],
+                        [
+                            'province_id' => $province->id,
+                            'name' => $cleanRegencyName,
+                            'type' => $type,
+                        ]
+                    );
+
+                    $regencyCache[$regencyCode] = $regency;
+                    $countRegency++;
+                } else {
+                    $regency = $regencyCache[$regencyCode];
                 }
-                // District: 6-8 digits
-                elseif ($codeLength === 6 || ($codeLength === 8 && str_contains($code, '.'))) {
-                    $cleanCode = str_replace('.', '', $code);
-                    $regCode = substr($cleanCode, 0, 4);
-                    $regency = Regency::where('code', $regCode)->first();
-                    if ($regency) {
-                        $cleanName = preg_replace('/^(KECAMATAN|KEC\.)\s+/i', '', $name);
-                        District::updateOrCreate(
-                            ['code' => $cleanCode],
-                            [
-                                'regency_id' => $regency->id,
-                                'name'       => $cleanName,
-                                'latitude'   => $lat,
-                                'longitude'  => $lng,
-                            ]
-                        );
-                        $count++;
-                    }
+
+                /*
+                 * 3. District
+                 */
+                if (!isset($districtCache[$districtCode])) {
+                    $cleanDistrictName = preg_replace(
+                        '/^(KECAMATAN|KEC\.)\s+/i',
+                        '',
+                        $districtName
+                    );
+
+                    $district = District::updateOrCreate(
+                        ['code' => $districtCode],
+                        [
+                            'regency_id' => $regency->id,
+                            'name' => $cleanDistrictName,
+                        ]
+                    );
+
+                    $districtCache[$districtCode] = $district;
+                    $countDistrict++;
+                } else {
+                    $district = $districtCache[$districtCode];
                 }
-                // Village: 10-13 digits
-                elseif ($codeLength >= 10) {
-                    $cleanCode = str_replace('.', '', $code);
-                    $distCode = substr($cleanCode, 0, 6);
-                    $district = District::where('code', $distCode)->first();
-                    if ($district) {
-                        $type = str_contains(strtoupper($name), 'KELURAHAN') ? VillageType::UrbanVillage : VillageType::Village;
-                        $cleanName = preg_replace('/^(DESA|KELURAHAN|KEL\.)\s+/i', '', $name);
-                        Village::updateOrCreate(
-                            ['code' => $cleanCode],
-                            [
-                                'district_id' => $district->id,
-                                'name'        => $cleanName,
-                                'type'        => $type,
-                                'latitude'    => $lat,
-                                'longitude'   => $lng,
-                            ]
-                        );
-                        $count++;
-                    }
-                }
+
+                /*
+                 * 4. Village
+                 */
+                $cleanVillageName = preg_replace(
+                    '/^(DESA|KELURAHAN|KEL\.|DESA ADAT)\s+/i',
+                    '',
+                    $villageName
+                );
+
+                $type = match (true) {
+                    str_contains($villageType, 'KELURAHAN') => VillageType::UrbanVillage,
+                    str_contains($villageType, 'DESA ADAT') => VillageType::Village,
+                    default => VillageType::Village,
+                };
+
+                Village::updateOrCreate(
+                    ['code' => $villageCode],
+                    [
+                        'district_id' => $district->id,
+                        'name' => $cleanVillageName,
+                        'type' => $type,
+                        'latitude' => null,
+                        'longitude' => null,
+                    ]
+                );
+
+                $countVillage++;
             }
 
             fclose($handle);
             DB::commit();
-            $this->info("Import berhasil! Total {$count} data wilayah diproses.");
+
+            $this->newLine();
+            $this->info('Import berhasil!');
+            $this->line("Province : {$countProvince}");
+            $this->line("Regency  : {$countRegency}");
+            $this->line("District : {$countDistrict}");
+            $this->line("Village  : {$countVillage}");
+
             return self::SUCCESS;
+
         } catch (\Throwable $e) {
             DB::rollBack();
             fclose($handle);
-            $this->error("Error saat import: " . $e->getMessage());
+
+            $this->error('Error saat import: ' . $e->getMessage());
+
             return self::FAILURE;
         }
+    }
+
+    private function cleanCode(?string $code): string
+    {
+        return str_replace('.', '', trim((string) $code));
     }
 }

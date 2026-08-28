@@ -41,7 +41,7 @@
             <button
                 type="button"
                 id="adminNotificationToggle"
-                class="admin-navbar__notification"
+                class="admin-navbar__notification {{ request()->routeIs('admin.notifications.*') ? 'is-active' : '' }}"
                 aria-label="Buka notifikasi"
                 aria-expanded="false"
                 aria-controls="adminNotificationPanel"
@@ -113,6 +113,12 @@
                             </span>
                         </div>
                     @endforelse
+                </div>
+
+                <div class="dashboard-panel__footer-action">
+                    <a href="{{ route('admin.notifications.index') }}" class="dashboard-view-all">
+                        Lihat semua notifikasi →
+                    </a>
                 </div>
 
             </div>

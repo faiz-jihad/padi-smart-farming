@@ -83,13 +83,23 @@ function setupSidebar() {
 }
 
 // ─── Update badge notifikasi ──────────────────────────────────────────────────
-function updateNotificationCount(badge, countNodes) {
-    if (!badge) return;
-    const current = Number(badge.dataset.count ?? '0') + 1;
-    badge.dataset.count = String(current);
-    badge.textContent   = current > 9 ? '9+' : String(current);
-    badge.hidden = false;
-    countNodes.forEach((node) => { node.textContent = String(current); });
+function updateNotificationCount(badge, countNodes, dashboardBadge) {
+    const current = Number(badge?.dataset.count ?? '0') + 1;
+
+    if (badge) {
+        badge.dataset.count = String(current);
+        badge.textContent = current > 9 ? '9+' : String(current);
+        badge.hidden = false;
+    }
+
+    countNodes.forEach((node) => {
+        node.textContent = String(current);
+    });
+
+    if (dashboardBadge) {
+        dashboardBadge.textContent =
+            `${current.toLocaleString('id-ID')} belum dibaca`;
+    }
 }
 
 // ─── Prepend item notifikasi baru ke list ────────────────────────────────────
@@ -134,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminMeta             = document.querySelector('meta[name="admin-user-id"]');
     const notificationList      = document.getElementById('adminNotificationList');
     const notificationBadge     = document.getElementById('adminNotificationBadge');
-    const notificationCountText = document.querySelectorAll('[data-admin-notification-count]');
+    const dashboardNotificationBadge = document.getElementById('adminNotifBadge');
+    const notificationCountText  = document.querySelectorAll('[data-admin-notification-count]');
 
     setupSidebar();
     setupPopover('adminNotificationToggle', 'adminNotificationPanel');
@@ -144,7 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.Echo
             .private(`admin.notifications.${adminMeta.content}`)
             .listen('.admin.notification.created', (event) => {
-                updateNotificationCount(notificationBadge, notificationCountText);
+                updateNotificationCount(
+                    notificationBadge,
+                    notificationCountText,
+                    dashboardNotificationBadge
+                );
                 prependNotification(event, notificationList);
             });
     }

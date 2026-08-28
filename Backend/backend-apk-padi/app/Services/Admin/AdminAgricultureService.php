@@ -8,6 +8,7 @@ use App\Models\Harvest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use App\Services\Geography\LocationService;
 
 class AdminAgricultureService
 {
@@ -20,7 +21,14 @@ class AdminAgricultureService
         $irrigation = trim((string) $request->query('irrigation', ''));
 
         $farmsQuery = Farm::query()
-            ->with(['farmer', 'cropSeasons.variety'])
+            ->with([
+                'farmer',
+                'province',
+                'regency',
+                'district',
+                'village',
+                'cropSeasons.variety',
+            ])
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $sub) use ($search): void {
                     $sub->where('name', 'like', "%{$search}%")
@@ -228,16 +236,43 @@ class AdminAgricultureService
         Request $request,
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
+        LocationService $locationService,
     ): Farm {
         if (isset($data['boundary_coordinates']) && is_string($data['boundary_coordinates'])) {
             $data['boundary_coordinates'] = json_decode($data['boundary_coordinates'], true);
         }
 
-        $farm = Farm::query()->create($data);
-        app(\App\Services\Agriculture\CropSeasonService::class)->autoGenerateCropSeasonsForFarm($farm);
+        if (!empty($data['latitude']) && !empty($data['longitude'])) {
+            $location = $locationService->resolveCoordinates(
+                (float) $data['latitude'],
+                (float) $data['longitude']
+            );
 
-        $audit->write('admin_farm_created', $farm, null, $farm->toArray(), $request);
-        $notifications->notifyAdmins('Lahan dibuat', "Lahan {$farm->name} ditambahkan ke sistem.");
+            if ($location) {
+                $data['province_id'] = $location['province']['id'] ?? null;
+                $data['regency_id'] = $location['regency']['id'] ?? null;
+                $data['district_id'] = $location['district']['id'] ?? null;
+                $data['village_id'] = $location['village']['id'] ?? null;
+            }
+        }
+
+        $farm = Farm::query()->create($data);
+
+        app(\App\Services\Agriculture\CropSeasonService::class)
+            ->autoGenerateCropSeasonsForFarm($farm);
+
+        $audit->write(
+            'admin_farm_created',
+            $farm,
+            null,
+            $farm->toArray(),
+            $request
+        );
+
+        $notifications->notifyAdmins(
+            'Lahan dibuat',
+            "Lahan {$farm->name} ditambahkan ke sistem."
+        );
 
         return $farm;
     }
