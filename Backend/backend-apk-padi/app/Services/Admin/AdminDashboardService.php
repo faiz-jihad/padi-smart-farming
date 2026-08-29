@@ -669,7 +669,7 @@ class AdminDashboardService
                 'Tinggi Muka Air' => '+25 cm (Naik)',
             ],
             'recommendation' => 'Buka pintu pembuangan sekunder dan tunda pemupukan cair.',
-            'action_route' => route('admin.early-warning.index'),
+            'action_route' => route('admin.broadcast.index'),
             'action_label' => 'Kirim Peringatan Petani',
         ];
 

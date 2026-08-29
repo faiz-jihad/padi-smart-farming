@@ -356,7 +356,7 @@
                 <span id="disasterSystemBadge" class="dashboard-threat-summary-badge dashboard-threat-summary-badge--{{ $disasterSummary['system_status'] }}">
                     {{ $disasterSummary['system_status'] === 'danger' ? 'Status Bahaya' : ($disasterSummary['system_status'] === 'warning' ? 'Status Siaga' : 'Status Aman') }}
                 </span>
-                <a href="{{ route('admin.early-warning.index') }}" class="dashboard-panel__link">
+                <a href="{{ route('admin.broadcast.index') }}" class="dashboard-panel__link">
                     Kelola Peringatan Dini →
                 </a>
             </div>

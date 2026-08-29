@@ -333,6 +333,7 @@
                         <select id="create-role" name="role" class="users-select" required>
                             <option value="farmer" @selected(old('role') === 'farmer')>Petani</option>
                             <option value="ppl" @selected(old('role') === 'ppl')>PPL (Penyuluh)</option>
+                            <option value="extension_officer" @selected(old('role') === 'extension_officer')>Extension Officer</option>
                             <option value="partner" @selected(old('role') === 'partner')>Partner / Pembeli</option>
                             <option value="admin" @selected(old('role') === 'admin')>Administrator</option>
                         </select>
