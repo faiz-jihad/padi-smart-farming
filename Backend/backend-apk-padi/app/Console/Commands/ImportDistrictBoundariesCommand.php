@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ImportDistrictBoundariesCommand extends Command
 {
-    protected $signature = 'geo:import-district-boundaries
+    protected $signature = 'geo:import-district-boundaries-sql
                             {--file= : Path spesifik ke file SQL}
                             {--province= : Kode provinsi (contoh: 32 untuk Jawa Barat)}
                             {--regency= : Filter kode kabupaten (contoh: 3212)}

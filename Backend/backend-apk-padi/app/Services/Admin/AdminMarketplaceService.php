@@ -52,9 +52,19 @@ class AdminMarketplaceService
 
     public function createData(): array
     {
+        $farmers = User::where('role', 'farmer')
+            ->orderBy('name')
+            ->get();
+
+        $farms = Farm::with('farmer')
+            ->whereIn('farmer_user_id', $farmers->pluck('id'))
+            ->orderBy('name')
+            ->get()
+            ->groupBy('farmer_user_id');
+
         return [
-            'farmers' => User::where('role', 'farmer')->orderBy('name')->get(),
-            'farms' => Farm::with('farmer')->orderBy('name')->get(),
+            'farmers' => $farmers,
+            'farms' => $farms,
         ];
     }
 

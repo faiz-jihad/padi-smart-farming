@@ -148,23 +148,6 @@
                 </a>
             @endcan
 
-            @can('view_early_warning')
-                <a href="{{ route('admin.early-warning.index') }}"
-                    class="admin-sidebar__link {{ request()->routeIs('admin.early-warning.*') ? 'is-active' : '' }}">
-
-                    <svg class="admin-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M12 3v18" />
-                        <path d="M3 12h18" />
-                        <path d="m5 5 14 14" />
-                        <path d="m19 5-14 14" />
-                    </svg>
-
-                    <span>Early Warning</span>
-
-                </a>
-            @endcan
-
             @can('view_marketplace')
                 <a href="{{ route('admin.marketplace.index') }}"
                     class="admin-sidebar__link {{ request()->routeIs('admin.marketplace.*') ? 'is-active' : '' }}">

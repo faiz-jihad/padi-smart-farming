@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CropSeason;
+use App\Rules\FarmBelongsToFarmer;
 use App\Models\MarketListing;
 use App\Models\MarketOffer;
 use App\Services\Admin\AdminAuditLogger;
@@ -11,6 +12,7 @@ use App\Services\Admin\AdminMarketplaceService;
 use App\Services\Admin\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MarketplaceController extends Controller
@@ -29,7 +31,12 @@ class MarketplaceController extends Controller
     {
         $validated = $request->validate([
             'farmer_id' => 'required|integer|exists:users,id',
-            'farm_id' => 'required|integer|exists:farms,id',
+            'farm_id' => [
+                'required',
+                'integer',
+                'exists:farms,id',
+                new FarmBelongsToFarmer((int) $request->farmer_id),
+            ],
             'commodity' => 'required|string|max:100',
             'quantity' => 'required|numeric|min:0.1',
             'unit' => 'required|string|max:20',
@@ -41,7 +48,10 @@ class MarketplaceController extends Controller
         ]);
 
         // Auto assign crop season
-        $cropSeason = CropSeason::where('farm_id', $validated['farm_id'])->latest('id')->first();
+        $cropSeason = CropSeason::where('farm_id', $validated['farm_id'])
+            ->latest('id')
+            ->first();
+
         $validated['crop_season_id'] = $cropSeason?->id ?? CropSeason::firstOrCreate([
             'farm_id' => $validated['farm_id'],
             'season_name' => 'MT2 2026',

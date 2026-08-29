@@ -32,22 +32,34 @@
         <form method="POST" action="{{ route('admin.marketplace.store') }}">
             @csrf
 
+            <div
+                id="marketplace-form-data"
+                data-farms='@json($farms)'
+                hidden
+            ></div>
+
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
                 <div>
                     <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:6px;" for="farmer_id">Pilih Petani <span style="color:#dc2626;">*</span></label>
                     <select name="farmer_id" id="farmer_id" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;" required>
+                        <option value="">-- Pilih Petani --</option>
+
                         @foreach($farmers as $farmer)
-                            <option value="{{ $farmer->id }}">{{ $farmer->name }} ({{ $farmer->email }})</option>
+                            <option value="{{ $farmer->id }}">
+                                {{ $farmer->name }} ({{ $farmer->email }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
                 <div>
                     <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:6px;" for="farm_id">Pilih Lahan Pertanian <span style="color:#dc2626;">*</span></label>
-                    <select name="farm_id" id="farm_id" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;" required>
-                        @foreach($farms as $farm)
-                            <option value="{{ $farm->id }}">{{ $farm->name }} ({{ $farm->farmer?->name ?? 'Admin' }})</option>
-                        @endforeach
+                    <select name="farm_id" id="farm_id"
+                        style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff;"
+                        required
+                        disabled>
+
+                        <option value="">-- Pilih Petani Terlebih Dahulu --</option>
                     </select>
                 </div>
             </div>
@@ -119,3 +131,6 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+    <script src="{{ asset('js/admin/marketplace-create.js') }}"></script>
+@endpush

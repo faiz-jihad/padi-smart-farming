@@ -30,7 +30,6 @@ class RoleSeeder extends Seeder
             'view_soil',
             'view_knowledge',
             'view_disease',
-            'view_early_warning',
 
             // Admin only
             'view_users',
@@ -67,7 +66,6 @@ class RoleSeeder extends Seeder
             'view_soil',
             'view_knowledge',
             'view_disease',
-            'view_early_warning',
         ]);
 
         // =========================

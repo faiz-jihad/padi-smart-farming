@@ -22,7 +22,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(['farmer', 'ppl', 'partner', 'admin'])],
+            'role' => ['required', Rule::in(['farmer', 'ppl', 'extension_officer', 'partner', 'admin'])],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'verification_status' => ['required', Rule::in(['pending', 'verified', 'rejected'])],
         ];

@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
-use App\Http\Controllers\Admin\EarlyWarningController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
 use App\Http\Controllers\Admin\MarketplaceController;
@@ -72,9 +71,6 @@ Route::middleware(['auth', 'admin.web'])
 
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
-
-        Route::get('/early-warning', [EarlyWarningController::class, 'index'])->name('early-warning.index');
-        Route::post('/early-warning', [EarlyWarningController::class, 'store'])->name('early-warning.store');
 
         // Weather Management Routes
         Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');
@@ -154,10 +150,11 @@ Route::middleware(['auth', 'admin.web'])
             Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
 
             // Broadcast Management
-            Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast.index');
-            Route::post('/broadcast', [BroadcastController::class, 'store'])->middleware('throttle:broadcast-alert')->name('broadcast.store');
-            Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])->name('broadcast.update');
-            Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])->name('broadcast.destroy');
+            Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])
+                ->name('broadcast.update');
+
+            Route::delete('/broadcast/{broadcast}', [BroadcastController::class, 'destroy'])
+                ->name('broadcast.destroy');
 
             // Audit Log
             Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
@@ -178,6 +175,16 @@ Route::middleware(['auth', 'admin.web'])
             Route::delete('/farmer-profiles/{farmerProfile:subdomain}/listings/{listing}', [FarmerPublicProfileAdminController::class, 'destroyListing'])->name('farmer-profiles.listings.destroy');
             Route::post('/farmer-profiles/{farmerProfile:subdomain}/gallery', [FarmerPublicProfileAdminController::class, 'storeGallery'])->name('farmer-profiles.gallery.store');
             Route::delete('/farmer-profiles/{farmerProfile:subdomain}/gallery/{gallery}', [FarmerPublicProfileAdminController::class, 'destroyGallery'])->name('farmer-profiles.gallery.destroy');
+        });
+
+        Route::middleware('role:admin|extension_officer')->group(function (): void {
+            // Broadcast Management
+            Route::get('/broadcast', [BroadcastController::class, 'index'])
+                ->name('broadcast.index');
+
+            Route::post('/broadcast', [BroadcastController::class, 'store'])
+                ->middleware('throttle:broadcast-alert')
+                ->name('broadcast.store');
         });
     });
 
