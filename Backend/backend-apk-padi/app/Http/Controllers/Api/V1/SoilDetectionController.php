@@ -74,13 +74,23 @@ class SoilDetectionController extends Controller
 
         $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule(
             (float) $model->moisture_percentage,
-            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null
+            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null,
+            $model->farm_id
         );
+
+        $comparisonResult = null;
+        if ($model->farm) {
+            $comparisonService = app(\App\Services\Irrigation\IrrigationComparisonService::class);
+            $comparisonResult = $comparisonService->compareForFarm($model->farm, $model);
+        }
 
         return response()->json([
             'success' => true,
             'data' => $model,
             'irrigation_schedule' => $irrigationSchedule,
+            'field_schedule' => $comparisonResult['field_schedule'] ?? null,
+            'official_context' => $comparisonResult['official_context'] ?? null,
+            'comparison' => $comparisonResult['comparison'] ?? null,
         ]);
     }
 
@@ -138,8 +148,15 @@ class SoilDetectionController extends Controller
 
         $schedule = $this->soilDetectionService->calculateIrrigationSchedule(
             (float) $model->moisture_percentage,
-            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null
+            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null,
+            $model->farm_id
         );
+
+        $comparisonResult = null;
+        if ($model->farm) {
+            $comparisonService = app(\App\Services\Irrigation\IrrigationComparisonService::class);
+            $comparisonResult = $comparisonService->compareForFarm($model->farm, $model);
+        }
 
         return response()->json([
             'success' => true,
@@ -147,6 +164,9 @@ class SoilDetectionController extends Controller
             'sample_code' => $model->sample_code,
             'farm' => $model->farm?->name,
             'irrigation_schedule' => $schedule,
+            'field_schedule' => $comparisonResult['field_schedule'] ?? null,
+            'official_context' => $comparisonResult['official_context'] ?? null,
+            'comparison' => $comparisonResult['comparison'] ?? null,
         ]);
     }
 

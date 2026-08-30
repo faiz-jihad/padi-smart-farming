@@ -22,6 +22,7 @@ use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\FarmerProfileController;
 use App\Http\Controllers\FertilizerRuleController;
 use App\Http\Controllers\Api\V1\HarvestController;
+use App\Http\Controllers\Api\V1\IrrigationScheduleController;
 use App\Http\Controllers\ListingImageController;
 use App\Http\Controllers\Api\V1\MarketListingController;
 use App\Http\Controllers\MarketOfferController;
@@ -136,6 +137,31 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             Route::get('/{soilDetection}', [SoilDetectionController::class, 'show']);
             Route::get('/{soilDetection}/irrigation-schedule', [SoilDetectionController::class, 'irrigationSchedule']);
         });
+
+        Route::get('/farms/{farm}/irrigation-schedules', [
+            IrrigationScheduleController::class,
+            'index'
+        ]);
+
+        Route::get('/farms/{farm}/irrigation-comparison', [
+            IrrigationScheduleController::class,
+            'comparison'
+        ]);
+
+        Route::post('/farms/{farm}/irrigation-schedules', [
+            IrrigationScheduleController::class,
+            'store'
+        ]);
+
+        Route::put('/irrigation-schedules/{id}', [
+            IrrigationScheduleController::class,
+            'update'
+        ]);
+
+        Route::delete('/irrigation-schedules/{id}', [
+            IrrigationScheduleController::class,
+            'destroy'
+        ]);
 
         Route::get('crop-seasons', [CropSeasonController::class, 'index']);
         Route::post('crop-seasons', [CropSeasonController::class, 'store']);
