@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Enums\UserRole;
 
 class User extends Authenticatable
 {
@@ -69,4 +70,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            if ($user->role) {
+                $spatieRole = match ($user->role) {
+                    'ppl' => UserRole::ExtensionOfficer->value,
+                    'partner' => UserRole::Buyer->value,
+                    default => $user->role,
+                };
+
+                $user->assignRole($spatieRole);
+            }
+        });
+    }
+
 }
+
