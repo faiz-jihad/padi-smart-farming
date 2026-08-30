@@ -66,7 +66,11 @@ return new class extends Migration
 
         // 4. Index optimization for farms table
         if (Schema::hasTable('farms')) {
-            $this->safeAddIndex('farms', 'user_id', 'idx_farms_user_id');
+            $this->safeAddIndex(
+                'farms',
+                'farmer_user_id',
+                'idx_farms_farmer_user_id'
+            );
         }
     }
 
@@ -94,7 +98,7 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('farms')) {
-            $this->safeDropIndex('farms', 'idx_farms_user_id');
+            $this->safeDropIndex('farms', 'idx_farms_farmer_user_id');
         }
     }
 };
