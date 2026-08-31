@@ -21,7 +21,7 @@ Dependency mengarah ke dalam: API memanggil application, application memakai dom
 
 Model yang ditemukan:
 
-`../AI/model_penyakit_padi_v2_finetuned.h5`
+`models/model_penyakit_padi_v2_finetuned.h5`
 
 Hasil inspeksi:
 
@@ -36,14 +36,17 @@ Urutan class asli, label training, dan preprocessing training tidak ditemukan di
 
 ```powershell
 cd ai-service
-python -m venv .venv
+py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 Copy-Item .env.example .env
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-OpenAPI tersedia di `http://127.0.0.1:8000/docs`.
+Gunakan Python 3.11 untuk environment lokal. Runtime Docker juga memakai Python 3.11, dan dependency native TensorFlow perlu versi Python yang sama agar model bisa dimuat.
+Laravel API memakai port `8000`, jadi jalankan AI service lokal di port `8001` agar aplikasi Flutter tetap terhubung ke backend Laravel.
+
+OpenAPI tersedia di `http://127.0.0.1:8001/docs`.
 
 ## Docker
 
@@ -53,7 +56,7 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Compose me-mount model dari `../AI/model_penyakit_padi_v2_finetuned.h5` ke container sebagai read-only.
+Compose me-mount model dari `./models/model_penyakit_padi_v2_finetuned.h5` ke container sebagai read-only.
 
 ## Test dan Quality
 
@@ -70,13 +73,13 @@ Test otomatis mem-mock model, LLM, dan Weather API. Tidak ada panggilan API ekst
 Health:
 
 ```bash
-curl http://127.0.0.1:8000/api/v1/health
+curl http://127.0.0.1:8001/api/v1/health
 ```
 
 Deteksi penyakit:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/diseases/detect \
+curl -X POST http://127.0.0.1:8001/api/v1/diseases/detect \
   -F "image=@sample.jpg" \
   -F "plant_age_days=45"
 ```
@@ -84,7 +87,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/diseases/detect \
 Rekomendasi penanganan:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/treatments/recommend \
+curl -X POST http://127.0.0.1:8001/api/v1/treatments/recommend \
   -H "Content-Type: application/json" \
   -d '{"disease_code":"blast","confidence":0.91,"plant_age_days":45,"severity":"medium","affected_area_percentage":12,"weather_condition":"humid","actions_already_taken":[]}'
 ```
@@ -92,7 +95,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/treatments/recommend \
 Rekomendasi tanam:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/planting/recommend \
+curl -X POST http://127.0.0.1:8001/api/v1/planting/recommend \
   -H "Content-Type: application/json" \
   -d '{"latitude":-6.3266,"longitude":108.32,"rice_variety":"Ciherang","irrigation_type":"technical","land_area_hectares":1,"preferred_start_date":"2026-08-13"}'
 ```

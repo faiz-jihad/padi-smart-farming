@@ -117,6 +117,399 @@ class AppStrings {
         AppLanguage.en => 'Profile',
       };
 
+  String get navCart => switch (lang) {
+        AppLanguage.id => 'Keranjang',
+        AppLanguage.jv => 'Kranjang',
+        AppLanguage.en => 'Cart',
+      };
+
+  String get navOrders => switch (lang) {
+        AppLanguage.id => 'Pesanan',
+        AppLanguage.jv => 'Pesenan',
+        AppLanguage.en => 'Orders',
+      };
+
+  String get back => switch (lang) {
+        AppLanguage.id => 'Kembali',
+        AppLanguage.jv => 'Mbalik',
+        AppLanguage.en => 'Back',
+      };
+
+  String get roleFarmer => switch (lang) {
+        AppLanguage.id => 'Petani',
+        AppLanguage.jv => 'Wong Tani',
+        AppLanguage.en => 'Farmer',
+      };
+
+  String get roleBuyer => switch (lang) {
+        AppLanguage.id => 'Pembeli',
+        AppLanguage.jv => 'Bakul',
+        AppLanguage.en => 'Buyer',
+      };
+
+  String get buyerAccountTitle => switch (lang) {
+        AppLanguage.id => 'Akun Pembeli / Mitra',
+        AppLanguage.jv => 'Akun Bakul / Mitra',
+        AppLanguage.en => 'Buyer / Partner Account',
+      };
+
+  String get buyerPurchasesTitle => switch (lang) {
+        AppLanguage.id => 'Aktivitas Pembelian Panen',
+        AppLanguage.jv => 'Aktivitas Tuku Panen',
+        AppLanguage.en => 'Harvest Purchase Activity',
+      };
+
+  String get buyerOrders => switch (lang) {
+        AppLanguage.id => 'Pesanan & Kontrak Saya',
+        AppLanguage.jv => 'Pesenan & Kontrak Kula',
+        AppLanguage.en => 'My Orders & Contracts',
+      };
+
+  String get buyerOrdersSubtitle => switch (lang) {
+        AppLanguage.id => 'Pantau kontrak panen aktif dan status pengiriman',
+        AppLanguage.jv => 'Pantau kontrak panen aktif lan status kiriman',
+        AppLanguage.en => 'Track active crop contracts and shipping status',
+      };
+
+  String get buyerCart => switch (lang) {
+        AppLanguage.id => 'Keranjang Belanja',
+        AppLanguage.jv => 'Kranjang Blanja',
+        AppLanguage.en => 'Shopping Cart',
+      };
+
+  String get buyerCartSubtitle => switch (lang) {
+        AppLanguage.id => 'Lihat daftar komoditas yang siap dicheckout',
+        AppLanguage.jv => 'Delok komoditas sing wis siyap dicheckout',
+        AppLanguage.en => 'View commodities ready for checkout',
+      };
+
+  String get buyerOffers => switch (lang) {
+        AppLanguage.id => 'Penawaran Harga Saya',
+        AppLanguage.jv => 'Tawaran Rega Kula',
+        AppLanguage.en => 'My Price Offers',
+      };
+
+  String get buyerOffersSubtitle => switch (lang) {
+        AppLanguage.id => 'Status penawaran lelang hasil panen',
+        AppLanguage.jv => 'Status tawaran lelang asil panen',
+        AppLanguage.en => 'Status of auction crop bids',
+      };
+
+  String get statusActive => switch (lang) {
+        AppLanguage.id => 'Aktif',
+        AppLanguage.jv => 'Aktif',
+        AppLanguage.en => 'Active',
+      };
+
+  String get themeSystemToast => switch (lang) {
+        AppLanguage.id => 'Tema otomatis mengikuti pengaturan sistem HP',
+        AppLanguage.jv => 'Tema otomatis manut setelan sistem HP',
+        AppLanguage.en => 'Theme automatically follows system settings',
+      };
+
+  String get emailCopiedToast => switch (lang) {
+        AppLanguage.id => 'Alamat email tersalin ke clipboard',
+        AppLanguage.jv => 'Alamat email wis kasalin',
+        AppLanguage.en => 'Email address copied to clipboard',
+      };
+
+  String get negoOffers => switch (lang) {
+        AppLanguage.id => 'Nego Penawaran',
+        AppLanguage.jv => 'Nego Tawaran',
+        AppLanguage.en => 'Negotiate Offers',
+      };
+
+  String get manageCounterOffers => switch (lang) {
+        AppLanguage.id => 'Kelola tawar balik',
+        AppLanguage.jv => 'Atur tawar balik',
+        AppLanguage.en => 'Manage counter offers',
+      };
+
+  String get salesReport => switch (lang) {
+        AppLanguage.id => 'Laporan Penjualan',
+        AppLanguage.jv => 'Laporan Penjualan',
+        AppLanguage.en => 'Sales Report',
+      };
+
+  String get verifiedRevenue => switch (lang) {
+        AppLanguage.id => 'Omzet & faktur sah',
+        AppLanguage.jv => 'Omzet & faktur sah',
+        AppLanguage.en => 'Revenue & verified invoices',
+      };
+
+  String get searchPaddyPlaceholder => switch (lang) {
+        AppLanguage.id => 'Cari gabah panen, beras, varietas...',
+        AppLanguage.jv => 'Golek gabah, beras, jinis pari...',
+        AppLanguage.en => 'Search harvested paddy, rice, varieties...',
+      };
+
+  String get flashSaleTitle => switch (lang) {
+        AppLanguage.id => 'Panen Kilat Hari Ini',
+        AppLanguage.jv => 'Panen Kilat Dina Iki',
+        AppLanguage.en => "Today's Flash Harvest",
+      };
+
+  String get endsIn => switch (lang) {
+        AppLanguage.id => 'Berakhir dalam',
+        AppLanguage.jv => 'Pungkasan sajrone',
+        AppLanguage.en => 'Ends in',
+      };
+
+  String get tabRecommended => switch (lang) {
+        AppLanguage.id => 'Rekomendasi',
+        AppLanguage.jv => 'Rekomendasi',
+        AppLanguage.en => 'Recommended',
+      };
+
+  String get tabBestSelling => switch (lang) {
+        AppLanguage.id => 'Paling Laris',
+        AppLanguage.jv => 'Paling Payu',
+        AppLanguage.en => 'Best Selling',
+      };
+
+  String get tabNearYou => switch (lang) {
+        AppLanguage.id => 'Dekat Anda',
+        AppLanguage.jv => 'Cedhak Panjenengan',
+        AppLanguage.en => 'Near You',
+      };
+
+  String get tabWholesale => switch (lang) {
+        AppLanguage.id => 'Partai Besar',
+        AppLanguage.jv => 'Partai Gedhe',
+        AppLanguage.en => 'Wholesale',
+      };
+
+  String get officialPartner => switch (lang) {
+        AppLanguage.id => 'MITRA RESMI',
+        AppLanguage.jv => 'MITRA RESMI',
+        AppLanguage.en => 'OFFICIAL PARTNER',
+      };
+
+  String get wholesaleBadge => switch (lang) {
+        AppLanguage.id => 'PARTAI BESAR',
+        AppLanguage.jv => 'PARTAI GEDHE',
+        AppLanguage.en => 'WHOLESALE',
+      };
+
+  String get weatherNow => switch (lang) {
+        AppLanguage.id => 'Sekarang',
+        AppLanguage.jv => 'Saiki',
+        AppLanguage.en => 'Now',
+      };
+
+  String get humidity => switch (lang) {
+        AppLanguage.id => 'Kelembapan',
+        AppLanguage.jv => 'Kelembapan',
+        AppLanguage.en => 'Humidity',
+      };
+
+  String get windSpeed => switch (lang) {
+        AppLanguage.id => 'Kecepatan Angin',
+        AppLanguage.jv => 'Kacepetan Angin',
+        AppLanguage.en => 'Wind Speed',
+      };
+
+  String get agroEventsTitle => switch (lang) {
+        AppLanguage.id => 'Agenda & Acara Tani',
+        AppLanguage.jv => 'Agenda & Acara Tani',
+        AppLanguage.en => 'Agro Events & Agenda',
+      };
+
+  String get radarNearby => switch (lang) {
+        AppLanguage.id => 'RADAR SEKITAR',
+        AppLanguage.jv => 'RADAR SEKITAR',
+        AppLanguage.en => 'NEARBY RADAR',
+      };
+
+  String get harvestMarketTitle => switch (lang) {
+        AppLanguage.id => 'PASAR GABAH & BERAS',
+        AppLanguage.jv => 'PASAR GABAH & BERAS',
+        AppLanguage.en => 'PADDY & RICE MARKET',
+      };
+
+  String get harvestSeasonArrived => switch (lang) {
+        AppLanguage.id => 'Musim Panen Tiba?',
+        AppLanguage.jv => 'Mangsa Panen Rawuh?',
+        AppLanguage.en => 'Harvest Season Arrived?',
+      };
+
+  String get sellHarvestDirectly => switch (lang) {
+        AppLanguage.id => 'Jual gabah langsung ke pembeli terverifikasi tanpa tengkulak.',
+        AppLanguage.jv => 'Adol gabah langsung marang bakul resmi tanpa tengkulak.',
+        AppLanguage.en => 'Sell grain directly to verified buyers without middlemen.',
+      };
+
+  String get marketPaddyNow => switch (lang) {
+        AppLanguage.id => 'Pasarkan Hasil Panen',
+        AppLanguage.jv => 'Pasarake Asil Panen',
+        AppLanguage.en => 'List Harvest Now',
+      };
+
+  String get cropJourneyTitle => switch (lang) {
+        AppLanguage.id => 'Perjalanan Musim Tanam',
+        AppLanguage.jv => 'Lampahan Mangsa Tanam',
+        AppLanguage.en => 'Crop Season Journey',
+      };
+
+  String get noActiveSeasonDesc => switch (lang) {
+        AppLanguage.id => 'Belum ada musim aktif pada lahan ini. Mulai musim tanam agar progres dihitung otomatis.',
+        AppLanguage.jv => 'Durung ana mangsa aktif ing sawah iki. Mulai mangsa tanam supaya lampahan diitung otomatis.',
+        AppLanguage.en => 'No active season for this farm. Start a season so progress is calculated automatically.',
+      };
+
+  // --- Farm / Lahan ---
+  String get farmPlotsGis => switch (lang) {
+        AppLanguage.id => 'Kelola petak sawah & GIS',
+        AppLanguage.jv => 'Atur petak sawah & GIS',
+        AppLanguage.en => 'Manage farm plots & GIS',
+      };
+
+  String get searchFarmsHint => switch (lang) {
+        AppLanguage.id => 'Cari nama sawah atau desa...',
+        AppLanguage.jv => 'Golek jeneng sawah utawa desa...',
+        AppLanguage.en => 'Search farm name or village...',
+      };
+
+  String get noMatchingFarms => switch (lang) {
+        AppLanguage.id => 'Tidak ada lahan yang cocok',
+        AppLanguage.jv => 'Ora ana sawah sing cocog',
+        AppLanguage.en => 'No matching farms found',
+      };
+
+  String get checkSearchKeyword => switch (lang) {
+        AppLanguage.id => 'Coba periksa kata kunci pencarian Anda.',
+        AppLanguage.jv => 'Coba delok maneh tembung panggolekan sampeyan.',
+        AppLanguage.en => 'Please check your search keywords.',
+      };
+
+  String get noFarmsYet => switch (lang) {
+        AppLanguage.id => 'Belum Ada Lahan Terdaftar',
+        AppLanguage.jv => 'Durung Ana Sawah Kadhaptar',
+        AppLanguage.en => 'No Farms Registered Yet',
+      };
+
+  String get noFarmsDesc => switch (lang) {
+        AppLanguage.id => 'Daftarkan petak sawah Anda untuk mendapatkan rekomendasi kalender tanam, takaran pupuk, dan pemantauan satelit.',
+        AppLanguage.jv => 'Daftarake sawah sampeyan kanggo nampa saran tanggalan tandur, takeran pupuk, lan pantauan satelit.',
+        AppLanguage.en => 'Register your farm plot for planting calendar advice, fertilizer dosage, and satellite monitoring.',
+      };
+
+  String get addFirstFarm => switch (lang) {
+        AppLanguage.id => 'Tambah Lahan Pertama',
+        AppLanguage.jv => 'Tambah Sawah Sepisanan',
+        AppLanguage.en => 'Add First Farm',
+      };
+
+  // --- Plant Check / Deteksi ---
+  String get aiCameraPreparing => switch (lang) {
+        AppLanguage.id => 'Menyiapkan kamera AI...',
+        AppLanguage.jv => 'Nyiapake kamera AI...',
+        AppLanguage.en => 'Preparing AI camera...',
+      };
+
+  String get positionLeafInFrame => switch (lang) {
+        AppLanguage.id => 'Posisikan bercak daun di dalam kotak hijau',
+        AppLanguage.jv => 'Pasno bercak godhong ing njero kothak ijo',
+        AppLanguage.en => 'Position leaf symptoms inside the green frame',
+      };
+
+  String get photoGuideTitle => switch (lang) {
+        AppLanguage.id => 'Panduan Foto Daun Padi',
+        AppLanguage.jv => 'Pandhuan Foto Godhong Pari',
+        AppLanguage.en => 'Paddy Leaf Photo Guide',
+      };
+
+  String get photoGuideGotIt => switch (lang) {
+        AppLanguage.id => 'Mengerti',
+        AppLanguage.jv => 'Ngerti',
+        AppLanguage.en => 'Got It',
+      };
+
+  String get galleryLabel => switch (lang) {
+        AppLanguage.id => 'Galeri',
+        AppLanguage.jv => 'Galeri',
+        AppLanguage.en => 'Gallery',
+      };
+
+  String get cameraNotReady => switch (lang) {
+        AppLanguage.id => 'Kamera belum siap.',
+        AppLanguage.jv => 'Kamera durung siyap.',
+        AppLanguage.en => 'Camera not ready.',
+      };
+
+  String get registerFarmFirst => switch (lang) {
+        AppLanguage.id => 'Daftarkan Lahan',
+        AppLanguage.jv => 'Daftarake Sawah',
+        AppLanguage.en => 'Register Farm',
+      };
+
+  // --- Marketplace ---
+  String get searchMarketplaceHint => switch (lang) {
+        AppLanguage.id => 'Cari gabah panen, beras pandan wangi, benih...',
+        AppLanguage.jv => 'Golek gabah panen, beras pandan wangi, winih...',
+        AppLanguage.en => 'Search harvested grain, rice, seeds...',
+      };
+
+  String get startSelling => switch (lang) {
+        AppLanguage.id => 'Mulai Jual Panen',
+        AppLanguage.jv => 'Mulai Adol Panen',
+        AppLanguage.en => 'Start Selling Harvest',
+      };
+
+  String get categoryAll => switch (lang) {
+        AppLanguage.id => 'Semua',
+        AppLanguage.jv => 'Kabeh',
+        AppLanguage.en => 'All',
+      };
+
+  String get categoryGkp => switch (lang) {
+        AppLanguage.id => 'GKP Panen',
+        AppLanguage.jv => 'GKP Panen',
+        AppLanguage.en => 'Harvest Grain (GKP)',
+      };
+
+  String get categoryGkg => switch (lang) {
+        AppLanguage.id => 'GKG Giling',
+        AppLanguage.jv => 'GKG Giling',
+        AppLanguage.en => 'Milled Grain (GKG)',
+      };
+
+  String get categoryRice => switch (lang) {
+        AppLanguage.id => 'Beras Premium',
+        AppLanguage.jv => 'Beras Apik',
+        AppLanguage.en => 'Premium Rice',
+      };
+
+  String get categorySeed => switch (lang) {
+        AppLanguage.id => 'Benih Bersertifikat',
+        AppLanguage.jv => 'Winih Resmi',
+        AppLanguage.en => 'Certified Seeds',
+      };
+
+  String get sortRelevance => switch (lang) {
+        AppLanguage.id => 'Terkait',
+        AppLanguage.jv => 'Cocog',
+        AppLanguage.en => 'Relevant',
+      };
+
+  String get sortNewest => switch (lang) {
+        AppLanguage.id => 'Terbaru',
+        AppLanguage.jv => 'Paling Anyar',
+        AppLanguage.en => 'Newest',
+      };
+
+  String get sortHighestStock => switch (lang) {
+        AppLanguage.id => 'Stok Terbanyak',
+        AppLanguage.jv => 'Stok Paling Akeh',
+        AppLanguage.en => 'Highest Stock',
+      };
+
+  String get sortPrice => switch (lang) {
+        AppLanguage.id => 'Harga',
+        AppLanguage.jv => 'Rega',
+        AppLanguage.en => 'Price',
+      };
+
   // --- Home Screen Headers & Greet ---
   String helloUser(String name) => switch (lang) {
         AppLanguage.id => 'Halo, $name 👋',

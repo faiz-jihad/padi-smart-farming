@@ -12,13 +12,12 @@ class GeminiRecommendationService
     /**
      * Generate structured agricultural recommendation via Gemini API with deep knowledge base fallback.
      *
-     * @param DiseaseScan $scan
-     * @param array<string, mixed> $weatherContext
+     * @param  array<string, mixed>  $weatherContext
      * @return array<string, mixed>
      */
     public function generateForScan(DiseaseScan $scan, array $weatherContext = []): array
     {
-        $diseaseName = $scan->predicted_class ?? 'Blast (Penyakit Blas)';
+        $diseaseName = $scan->predicted_class ?? 'Tidak Dapat Dipastikan';
         $temperature = $weatherContext['temperature'] ?? 28.0;
         $humidity = $weatherContext['humidity'] ?? 80.0;
         $weatherCondition = $weatherContext['condition'] ?? 'Normal / Cerah Berawan';
@@ -28,15 +27,15 @@ class GeminiRecommendationService
 
         $result = null;
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             try {
                 $result = $this->callGeminiApi($apiKey, $model, $diseaseName, $temperature, $humidity, $weatherCondition);
             } catch (\Throwable $e) {
-                Log::warning('[Gemini API Error] ' . $e->getMessage() . '. Falling back to knowledge base.');
+                Log::warning('[Gemini API Error] '.$e->getMessage().'. Falling back to knowledge base.');
             }
         }
 
-        if (!$result) {
+        if (! $result) {
             $result = $this->generateFromKnowledgeBase($diseaseName, $temperature, $humidity, $weatherCondition);
         }
 
@@ -45,15 +44,15 @@ class GeminiRecommendationService
             DiseaseRecommendation::query()->updateOrCreate(
                 ['scan_id' => $scan->id],
                 [
-                    'source' => !empty($apiKey) ? 'gemini_ai' : 'knowledge_base',
-                    'llm_model' => !empty($apiKey) ? $model : 'padi-rag-v2',
+                    'source' => ! empty($apiKey) ? 'gemini_ai' : 'knowledge_base',
+                    'llm_model' => ! empty($apiKey) ? $model : 'padi-rag-v2',
                     'explanation' => $result['analisis'] ?? '',
                     'action' => $result['langkah_preventif'] ?? '',
                     'safety_note' => $result['rekomendasi_obat'] ?? '',
                 ]
             );
         } catch (\Throwable $e) {
-            Log::warning('[DiseaseRecommendation Save Error] ' . $e->getMessage());
+            Log::warning('[DiseaseRecommendation Save Error] '.$e->getMessage());
         }
 
         return $result;
@@ -71,16 +70,22 @@ class GeminiRecommendationService
         string $weatherCondition
     ): ?array {
         $kbInfo = $this->getKnowledgeBaseEntry($diseaseName);
-        $kbContext = "";
+        $kbContext = '';
         if ($kbInfo) {
-            $pencegahan = implode(", ", $kbInfo['agronomi_modern']['pencegahan'] ?? []);
-            $pengendalian = implode(", ", $kbInfo['agronomi_modern']['pengendalian'] ?? []);
-            $kbContext = "Referensi Agronomi: Penyebab: " . ($kbInfo['scientific_name'] ?? '-') . "\nPencegahan: $pencegahan\nPengendalian: $pengendalian";
+            $pencegahan = implode(', ', $kbInfo['agronomi_modern']['pencegahan'] ?? []);
+            $pengendalian = implode(', ', $kbInfo['agronomi_modern']['pengendalian'] ?? []);
+            $kbContext = 'Referensi Agronomi: Penyebab: '.($kbInfo['scientific_name'] ?? '-')."\nPencegahan: $pencegahan\nPengendalian: $pengendalian";
         }
 
         $prompt = <<<PROMPT
-Anda adalah pakar agronomi senior tanaman padi di Indonesia.
-Analisis penyakit padi berikut berdasarkan kondisi lingkungan dan berikan rekomendasi teknis terbaik untuk petani.
+Anda adalah pakar agronomi senior tanaman padi (Oryza sativa) bersertifikasi di Indonesia.
+Analisis penyakit padi berikut berdasarkan kondisi lingkungan dan berikan rekomendasi teknis faktual untuk petani.
+
+PRINSIP ANTI-HALUSINASI AGRO-KIMIA:
+- HANYA rekomendasikan bahan aktif dan pestisida yang terdaftar resmi di Kementerian Pertanian RI.
+- JANGAN PERNAH mengarang dosis atau mencampurkan bahan kimia yang tidak kompatibel.
+- Pastikan produk komersial adalah produk asli yang lazim digunakan petani Indonesia (misal: Nordox 56 WP, Agrept 20 WP, Bactocyn 150 AL, Amistartop 325 SC, Fujiwan 400 EC, Score 250 EC, Prevathon 50 SC, Virtako 300 SC).
+- Dosis harus rasional dan aman sesuai label rekomendasi penyuluhan pertanian.
 
 Data Input:
 - Nama Penyakit: {$diseaseName}
@@ -97,21 +102,21 @@ Jelaskan 1-2 paragraf analisis kondisi tanaman, tingkat keparahan potensial, dan
 </analisis>
 
 <langkah>
-1. **Langkah 1** — penjelasan tindakan praktis
-2. **Langkah 2** — penjelasan tindakan praktis
-3. **Langkah 3** — penjelasan tindakan praktis
-4. **Langkah 4** — penjelasan tindakan praktis
+1. **Langkah 1** — penjelasan tindakan praktis sanitasi atau pemeliharaan
+2. **Langkah 2** — penjelasan tindakan praktis pemupukan/pengairan
+3. **Langkah 3** — penjelasan tindakan praktis pengendalian
+4. **Langkah 4** — penjelasan tindakan praktis pencegahan
 </langkah>
 
 <obat>
-1. **Nama Bahan Aktif/Teknik** — Dosis, cara semprot, dan waktu aplikasi (pagi/sore).
-2. **Nama Bahan Aktif/Teknik** — Dosis, cara semprot, dan waktu aplikasi.
-3. **Nama Bahan Aktif/Teknik** — Dosis, cara semprot, dan waktu aplikasi.
+1. **Nama Bahan Aktif/Teknik** — Dosis resmi, cara semprot, dan waktu aplikasi (pagi/sore).
+2. **Nama Bahan Aktif/Teknik** — Dosis resmi, cara semprot, dan waktu aplikasi.
+3. **Nama Bahan Aktif/Teknik** — Dosis resmi, cara semprot, dan waktu aplikasi.
 </obat>
 
 <produk>
 NamaProduk|BahanAktif|KisaranHarga|KataKunciCari
-(Sertakan 3-4 produk asli berizin di Indonesia per baris, contoh: Nordox 56 WP|Tembaga Oksida 56%|Rp 45.000 - 65.000/250g|fungisida nordox)
+(Sertakan 3-4 produk asli terdaftar di Indonesia per baris, contoh: Nordox 56 WP|Tembaga Oksida 56%|Rp 45.000 - 65.000 / 250g|fungisida nordox)
 </produk>
 
 <diy>
@@ -126,17 +131,17 @@ PROMPT;
             'contents' => [
                 [
                     'parts' => [
-                        ['text' => $prompt]
-                    ]
-                ]
+                        ['text' => $prompt],
+                    ],
+                ],
             ],
             'generationConfig' => [
-                'temperature' => 0.2,
+                'temperature' => 0.0, // Zero temperature to strictly prevent hallucinations
                 'maxOutputTokens' => 2048,
-            ]
+            ],
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -162,7 +167,7 @@ PROMPT;
         preg_match('/<diy>(.*?)<\/diy>/s', $text, $diyMatch);
 
         $produkList = [];
-        if (!empty($produkMatch[1])) {
+        if (! empty($produkMatch[1])) {
             $lines = explode("\n", trim($produkMatch[1]));
             foreach ($lines as $line) {
                 $line = trim($line);
@@ -189,7 +194,7 @@ PROMPT;
             'analisis' => trim($analisisMatch[1] ?? 'Analisis tanaman berdasarkan gejala daun padi.'),
             'langkah_preventif' => trim($langkahMatch[1] ?? "- Jaga sanitasi dan kebersihan pematang sawah.\n- Atur pengairan secara berselang (intermittent)."),
             'rekomendasi_obat' => trim($obatMatch[1] ?? 'Konsultasikan dengan PPL setempat untuk dosis bahan aktif terbaik.'),
-            'produk' => !empty($produkList) ? $produkList : $this->getDefaultProducts($diseaseName),
+            'produk' => ! empty($produkList) ? $produkList : $this->getDefaultProducts($diseaseName),
             'diy' => trim($diyMatch[1] ?? $this->getDefaultDiy($diseaseName)),
             'source' => 'Gemini AI Pro',
         ];
@@ -208,30 +213,30 @@ PROMPT;
 
         $analisis = "Terdeteksi gejala **{$diseaseName}**. Kondisi suhu sekitar {$temperature}°C dan kelembaban {$humidity}% dengan cuaca {$weatherCondition} berpotensi mempengaruhi laju penyebaran patogen pada tanaman padi Anda.";
 
-        if (!empty($kb['deskripsi'])) {
-            $analisis .= " " . $kb['deskripsi'];
+        if (! empty($kb['deskripsi'])) {
+            $analisis .= ' '.$kb['deskripsi'];
         }
 
         $pencegahanArr = $kb['agronomi_modern']['pencegahan'] ?? [
-            "Lakukan pergiliran varietas padi tahan penyakit.",
-            "Atur jarak tanam menggunakan sistem jajar legowo (2:1 atau 4:1) untuk sirkulasi udara optimal.",
-            "Hindari pemberian pupuk Nitrogen (Urea) berlebihan saat cuaca lembab.",
-            "Bersihkan gulma dan rumput liar di pematang sawah yang menjadi inang patogen.",
+            'Lakukan pergiliran varietas padi tahan penyakit.',
+            'Atur jarak tanam menggunakan sistem jajar legowo (2:1 atau 4:1) untuk sirkulasi udara optimal.',
+            'Hindari pemberian pupuk Nitrogen (Urea) berlebihan saat cuaca lembab.',
+            'Bersihkan gulma dan rumput liar di pematang sawah yang menjadi inang patogen.',
         ];
 
-        $langkahPreventif = "";
+        $langkahPreventif = '';
         foreach ($pencegahanArr as $i => $item) {
             $num = $i + 1;
             $langkahPreventif .= "{$num}. {$item}\n";
         }
 
         $pengendalianArr = $kb['agronomi_modern']['pengendalian'] ?? [
-            "Aplikasikan bakterisida / fungisida protektif pada pagi hari sebelum pukul 09.00.",
-            "Gunakan dosis anjuran 1.5 - 2 gram/liter air dengan sprayer bertekanan merata.",
-            "Lakukan pengeringan sawah secara berkala (intermittent irrigation) selama 3-5 hari.",
+            'Aplikasikan bakterisida / fungisida protektif pada pagi hari sebelum pukul 09.00.',
+            'Gunakan dosis anjuran 1.5 - 2 gram/liter air dengan sprayer bertekanan merata.',
+            'Lakukan pengeringan sawah secara berkala (intermittent irrigation) selama 3-5 hari.',
         ];
 
-        $rekomendasiObat = "";
+        $rekomendasiObat = '';
         foreach ($pengendalianArr as $i => $item) {
             $num = $i + 1;
             $rekomendasiObat .= "{$num}. {$item}\n";
@@ -254,7 +259,7 @@ PROMPT;
     private function getKnowledgeBaseEntry(string $diseaseName): ?array
     {
         $filePath = storage_path('app/knowledge_base.json');
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             $filePath = base_path('../ai-service/knowledge_base/knowledge_base.json');
         }
 
@@ -272,7 +277,8 @@ PROMPT;
                         return $data[$diseaseName];
                     }
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         }
 
         return null;

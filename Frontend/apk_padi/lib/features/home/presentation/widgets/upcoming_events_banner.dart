@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/event/data/models/event_model.dart';
 import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
@@ -34,6 +35,8 @@ class _UpcomingEventsBannerState extends ConsumerState<UpcomingEventsBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
     final events = ref.watch(eventsProvider);
     final upcomingEvents = events.where((e) => e.isUpcoming).toList();
 
@@ -65,8 +68,8 @@ class _UpcomingEventsBannerState extends ConsumerState<UpcomingEventsBanner> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Agenda & Acara Tani',
+                  Text(
+                    s.agroEventsTitle,
                     style: HomeTypography.sectionTitle,
                   ),
                 ],
@@ -92,11 +95,11 @@ class _UpcomingEventsBannerState extends ConsumerState<UpcomingEventsBanner> {
                   InkWell(
                     onTap: widget.onViewAllTap,
                     borderRadius: BorderRadius.circular(HomeRadius.pill),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       child: Text(
-                        'Lihat Semua',
-                        style: TextStyle(
+                        s.viewAll,
+                        style: const TextStyle(
                           color: HomeColors.primaryGreen,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w800,

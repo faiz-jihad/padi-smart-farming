@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
@@ -44,11 +45,13 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
     final auth = ref.watch(authControllerProvider);
     final user = auth.state.user;
     final userName = user?.name.trim().isNotEmpty == true
         ? user!.name.trim()
-        : 'Mitra Pembeli';
+        : s.roleBuyer;
 
     final cartState = ref.watch(cartProvider);
     final listingsAsync = ref.watch(marketplaceListingsProvider);
@@ -77,6 +80,7 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen> {
                   onSearchSubmitted: (q) => context.go('/marketplace'),
                   onCartTap: () => context.push('/cart'),
                   onNotificationTap: () => context.push('/notifications'),
+                  s: s,
                 ),
               ),
 
@@ -129,7 +133,7 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen> {
                       ),
 
                       // Feed Filter Tabs (Rekomendasi, Paling Laris, Dekat Anda)
-                      _buildMarketplaceFeedTabs(),
+                      _buildMarketplaceFeedTabs(s),
 
                       const SizedBox(height: 12),
 
@@ -572,8 +576,8 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen> {
   }
 
   // --- Feed Filter Tabs ---
-  Widget _buildMarketplaceFeedTabs() {
-    final tabs = ['Rekomendasi', 'Paling Laris', 'Dekat Anda', 'Tonase Besar'];
+  Widget _buildMarketplaceFeedTabs(AppStrings s) {
+    final tabs = [s.tabRecommended, s.tabBestSelling, s.tabNearYou, s.tabWholesale];
 
     return SizedBox(
       height: 34,
@@ -914,12 +918,14 @@ class _MarketplaceHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.onSearchSubmitted,
     required this.onCartTap,
     required this.onNotificationTap,
+    required this.s,
   });
 
   final int cartCount;
   final ValueChanged<String> onSearchSubmitted;
   final VoidCallback onCartTap;
   final VoidCallback onNotificationTap;
+  final AppStrings s;
   final Debouncer _debouncer = Debouncer(milliseconds: 400);
 
   @override
@@ -965,12 +971,12 @@ class _MarketplaceHeaderDelegate extends SliverPersistentHeaderDelegate {
                   onSearchSubmitted(val);
                 },
                 style: const TextStyle(fontSize: 12.5),
-                decoration: const InputDecoration(
-                  hintText: 'Cari gabah panen, beras, varietas...',
-                  hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                  prefixIcon: Icon(Icons.search_rounded, size: 20, color: Color(0xFF0F5132)),
+                decoration: InputDecoration(
+                  hintText: s.searchPaddyPlaceholder,
+                  hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF0F5132)),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 11),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
               ),
             ),

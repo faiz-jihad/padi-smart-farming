@@ -19,6 +19,10 @@ class DiseaseScanResource extends JsonResource
             'predicted_class' => $this->predicted_class,
             'confidence' => $this->confidence !== null ? (float) $this->confidence : null,
             'model_version' => $this->model_version,
+            'user_feedback' => $this->user_feedback,
+            'verified_class' => $this->verified_class,
+            'is_learned' => (bool) $this->is_learned,
+            'feedback_notes' => $this->feedback_notes,
             'scanned_at' => optional($this->scanned_at)->toIso8601String(),
             'created_at' => optional($this->created_at)->toIso8601String(),
             'recommendation' => $this->gemini_recommendations ?? (

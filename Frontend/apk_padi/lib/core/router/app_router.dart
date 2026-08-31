@@ -53,6 +53,7 @@ import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/event/presentation/screens/create_event_screen.dart';
 import 'package:padi/features/event/presentation/screens/event_detail_screen.dart';
 import 'package:padi/features/event/presentation/screens/event_list_screen.dart';
+import 'package:padi/core/widgets/app_error_screen.dart';
 
 export 'package:padi/core/providers/app_providers.dart';
 
@@ -208,6 +209,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/error/offline',
+        builder: (context, state) => AppErrorScreen.offline(
+          onRetry: () async {
+            final returnTo = state.uri.queryParameters['returnTo'] ?? '/home';
+            context.go(returnTo);
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/error/technical',
+        builder: (context, state) {
+          final message = state.uri.queryParameters['message'];
+          return AppErrorScreen.technical(
+            details: message,
+            onRetry: () async {
+              final returnTo = state.uri.queryParameters['returnTo'] ?? '/home';
+              context.go(returnTo);
+            },
+          );
+        },
+      ),
+      GoRoute(
         path: '/reset-password/new',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
@@ -227,6 +250,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             code: code,
           );
         },
+      ),
+      GoRoute(
+        path: '/error/maintenance',
+        builder: (context, state) => AppErrorScreen.maintenance(
+          onBack: () => context.go('/home'),
+        ),
       ),
       GoRoute(
         path: '/home',

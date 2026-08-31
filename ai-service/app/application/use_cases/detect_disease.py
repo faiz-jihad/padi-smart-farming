@@ -9,6 +9,8 @@ from app.domain.entities.disease_prediction import DiseasePrediction, ImageQuali
 from app.domain.repositories.disease_model_repository import DiseaseModelRepository
 from app.domain.services.confidence_policy import ConfidencePolicy
 from app.domain.services.image_quality_policy import ImageQualityPolicy
+from app.domain.services.leaf_memory_bank import LeafMemoryBank
+from app.domain.services.leaf_validation_policy import LeafValidationPolicy
 from app.infrastructure.machine_learning.image_preprocessor import ImagePreprocessor
 
 
@@ -20,34 +22,86 @@ class DetectDiseaseUseCase:
         confidence_policy: ConfidencePolicy,
         image_quality_policy: ImageQualityPolicy,
         max_image_size_bytes: int,
+        leaf_validation_policy: LeafValidationPolicy | None = None,
+        leaf_memory_bank: LeafMemoryBank | None = None,
     ) -> None:
         self.model_repository = model_repository
         self.image_preprocessor = image_preprocessor
         self.confidence_policy = confidence_policy
         self.image_quality_policy = image_quality_policy
         self.max_image_size_bytes = max_image_size_bytes
+        self.leaf_validation_policy = leaf_validation_policy or LeafValidationPolicy()
+        self.leaf_memory_bank = leaf_memory_bank
 
     def execute(self, detection_input: DiseaseDetectionInput) -> DiseasePrediction:
-        """Menjalankan alur validasi gambar sampai inferensi penyakit."""
+        """Menjalankan alur validasi gambar sampai inferensi penyakit dengan pembelajaran adaptif."""
         started_at = time.perf_counter()
         self._validate_upload(detection_input)
 
         image_rgb = self.image_preprocessor.decode(detection_input.content)
         blur_score, brightness_score = self.image_preprocessor.measure_quality(image_rgb)
         quality_decision = self.image_quality_policy.evaluate(blur_score, brightness_score)
-        image_quality = ImageQuality(
-            is_acceptable=quality_decision.is_acceptable,
-            blur_score=round(blur_score, 2),
-            brightness_score=round(brightness_score, 2),
-            warnings=quality_decision.warnings,
-        )
         if not quality_decision.is_acceptable:
             raise ImageValidationError(
                 quality_decision.error_message or "Kualitas gambar tidak memenuhi syarat.",
                 code=quality_decision.error_code or "IMAGE_QUALITY_REJECTED",
             )
 
-        disease_code, disease_name, confidence = self.model_repository.predict(image_rgb)
+        # Validasi apakah objek pada gambar adalah daun padi yang valid
+        leaf_features = self.image_preprocessor.analyze_leaf_features(image_rgb)
+        leaf_decision = self.leaf_validation_policy.evaluate_visual_features(
+            leaf_ratio=leaf_features["leaf_ratio"],
+            skin_ratio=leaf_features["skin_ratio"],
+            mean_saturation=leaf_features["mean_saturation"],
+            unnatural_ratio=leaf_features["unnatural_ratio"],
+        )
+        if not leaf_decision.is_acceptable:
+            raise ImageValidationError(
+                leaf_decision.error_message or "Objek pada gambar bukan daun padi.",
+                code=leaf_decision.error_code or "IMAGE_NOT_LEAF",
+            )
+
+        combined_warnings = list(quality_decision.warnings) + list(leaf_decision.warnings)
+        image_quality = ImageQuality(
+            is_acceptable=True,
+            blur_score=round(blur_score, 2),
+            brightness_score=round(brightness_score, 2),
+            warnings=combined_warnings,
+        )
+
+        # Prediksi model dasar + ekstraksi fitur visual daun
+        if hasattr(self.model_repository, "predict_with_embedding"):
+            disease_code, disease_name, confidence, feature_vector = self.model_repository.predict_with_embedding(
+                image_rgb
+            )
+        else:
+            disease_code, disease_name, confidence = self.model_repository.predict(image_rgb)
+            feature_vector = None
+
+        # Pembelajaran Berkelanjutan: Sempurnakan hasil diagnosa berdasarkan memori daun masa lalu
+        if self.leaf_memory_bank is not None and feature_vector is not None:
+            refined_code, refined_name, refined_conf, is_boosted = self.leaf_memory_bank.compute_memory_refinement(
+                query_vector=feature_vector,
+                base_disease_code=disease_code,
+                base_confidence=confidence,
+            )
+            if is_boosted:
+                disease_code = refined_code
+                if refined_name:
+                    disease_name = refined_name
+                confidence = refined_conf
+
+        # Validasi kecocokan keyakinan model terhadap pola daun padi
+        model_leaf_decision = self.leaf_validation_policy.evaluate_model_confidence(
+            confidence=confidence,
+            leaf_ratio=leaf_features["leaf_ratio"],
+        )
+        if not model_leaf_decision.is_acceptable:
+            raise ImageValidationError(
+                model_leaf_decision.error_message or "Pola daun padi tidak teridentifikasi.",
+                code=model_leaf_decision.error_code or "IMAGE_NOT_LEAF",
+            )
+
         confidence_decision = self.confidence_policy.evaluate(confidence)
         processing_time_ms = int((time.perf_counter() - started_at) * 1000)
 

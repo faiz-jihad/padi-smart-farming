@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class MarketplaceHeader extends StatelessWidget {
@@ -58,99 +60,139 @@ class MarketplaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 1. Grid Kategori Ikon P.A.D.I.
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: categories.map((cat) {
-              final key = cat['key'] as String;
-              final label = cat['label'] as String;
-              final icon = cat['icon'] as IconData;
-              final color = cat['color'] as Color;
-              final isSelected = selectedCategory == key;
+    return Consumer(
+      builder: (context, ref, _) {
+        final lang = ref.watch(languageProvider);
+        final s = AppStrings(lang);
 
-              return InkWell(
-                onTap: () => onCategorySelected(key),
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? color.withOpacity(0.15)
-                              : const Color(0xFFF6F8F5),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isSelected
-                                ? color
-                                : const Color(0xFFE5ECE3),
-                            width: isSelected ? 1.5 : 0.8,
+        final categories = [
+          {
+            'key': 'all',
+            'label': s.categoryAll,
+            'icon': Icons.apps_rounded,
+            'color': const Color(0xFF146B45),
+          },
+          {
+            'key': 'gkp',
+            'label': s.categoryGkp,
+            'icon': Icons.grass_rounded,
+            'color': const Color(0xFF075E3B),
+          },
+          {
+            'key': 'gkg',
+            'label': s.categoryGkg,
+            'icon': Icons.grain_rounded,
+            'color': const Color(0xFF0E7C53),
+          },
+          {
+            'key': 'beras',
+            'label': s.categoryRice,
+            'icon': Icons.rice_bowl_rounded,
+            'color': const Color(0xFF0284C7),
+          },
+          {
+            'key': 'benih',
+            'label': s.categorySeed,
+            'icon': Icons.spa_rounded,
+            'color': const Color(0xFF059669),
+          },
+        ];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Grid Kategori Ikon P.A.D.I.
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: categories.map((cat) {
+                  final key = cat['key'] as String;
+                  final label = cat['label'] as String;
+                  final icon = cat['icon'] as IconData;
+                  final color = cat['color'] as Color;
+                  final isSelected = selectedCategory == key;
+
+                  return InkWell(
+                    onTap: () => onCategorySelected(key),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? color.withOpacity(0.15)
+                                  : const Color(0xFFF6F8F5),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? color
+                                    : const Color(0xFFE5ECE3),
+                                width: isSelected ? 1.5 : 0.8,
+                              ),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: isSelected ? color : const Color(0xFF555555),
+                              size: 22,
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          icon,
-                          color: isSelected ? color : const Color(0xFF555555),
-                          size: 22,
-                        ),
+                          const SizedBox(height: 5),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: isSelected ? color : const Color(0xFF333333),
+                              fontSize: 10.5,
+                              fontWeight:
+                                  isSelected ? FontWeight.w800 : FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected ? color : const Color(0xFF333333),
-                          fontSize: 10.5,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // 2. Tab Sorting Bar (Hijau Zamrud Aktif)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  _buildSortTab(
+                    label: s.sortRelevance,
+                    sortKey: 'relevance',
+                    isSelected:
+                        selectedSort == 'newest' || selectedSort == 'relevance',
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        const SizedBox(height: 6),
-
-        // 2. Tab Sorting Bar (Hijau Zamrud Aktif)
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            children: [
-              _buildSortTab(
-                label: 'Terkait',
-                sortKey: 'relevance',
-                isSelected:
-                    selectedSort == 'newest' || selectedSort == 'relevance',
+                  _buildSortTab(
+                    label: s.sortNewest,
+                    sortKey: 'newest',
+                    isSelected: selectedSort == 'newest',
+                  ),
+                  _buildSortTab(
+                    label: s.sortHighestStock,
+                    sortKey: 'qty_desc',
+                    isSelected: selectedSort == 'qty_desc',
+                  ),
+                  _buildPriceSortTab(s.sortPrice),
+                ],
               ),
-              _buildSortTab(
-                label: 'Terbaru',
-                sortKey: 'newest',
-                isSelected: selectedSort == 'newest',
-              ),
-              _buildSortTab(
-                label: 'Stok Terbanyak',
-                sortKey: 'qty_desc',
-                isSelected: selectedSort == 'qty_desc',
-              ),
-              _buildPriceSortTab(),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -191,7 +233,7 @@ class MarketplaceHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceSortTab() {
+  Widget _buildPriceSortTab(String label) {
     final isPriceAsc = selectedSort == 'price_asc';
     final isPriceDesc = selectedSort == 'price_desc';
     final isPriceActive = isPriceAsc || isPriceDesc;
@@ -221,7 +263,7 @@ class MarketplaceHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Harga',
+                label,
                 style: TextStyle(
                   color: isPriceActive
                       ? HomeColors.primaryGreen

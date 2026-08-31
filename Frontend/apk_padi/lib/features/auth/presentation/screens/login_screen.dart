@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/auth/presentation/screens/role_selection_screen.dart';
-import 'package:padi/features/auth/presentation/widgets/auth_fields.dart';
-import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -16,13 +14,38 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan masukkan email dan kata sandi Anda.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    await ref.read(authControllerProvider).login(
+          email: email,
+          password: password,
+        );
   }
 
   @override
@@ -32,435 +55,375 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final resetSuccess =
         GoRouterState.of(context).uri.queryParameters['reset'] == 'success';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF042F1E),
-      body: Stack(
-        children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/splash_background.jpeg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: HomeColors.deepGreen),
-            ),
-          ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: const Color(0xFFF9FAFB),
+        body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
 
-          // Deep Agricultural Gradient Scrim
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.35),
-                    const Color(0xFF042F1E).withOpacity(0.82),
-                    const Color(0xFF021B11).withOpacity(0.96),
-                  ],
-                  stops: const [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Main Scrollable Content
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  // Brand Header
+                  Row(
                     children: [
-                      const SizedBox(height: 16),
-
-                      // Logo & Branding Header
-                      Center(
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/images/padi-logo.png',
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                                  Icons.eco_rounded,
-                                  color: HomeColors.primaryGreen,
-                                  size: 32,
-                                ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      const Center(
-                        child: Text(
-                          'P.A.D.I.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.0,
-                          ),
-                        ),
-                      ),
-                      const Center(
-                        child: Text(
-                          'Predictive Agriculture & Disease Intelligence',
-                          style: TextStyle(
-                            color: Color(0xFFFDE68A),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Form Container Card
                       Container(
-                        padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+                        width: 46,
+                        height: 46,
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.20),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              color: Color(0x06000000),
+                              blurRadius: 10,
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const Text(
-                              'Masuk ke Akun',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: HomeColors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Silakan masuk untuk mengakses akun Anda',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: HomeColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            if (resetSuccess ||
-                                (state.message != null &&
-                                    state.message!.isNotEmpty)) ...[
-                              Builder(
-                                builder: (context) {
-                                  final isSuccess =
-                                      resetSuccess || !state.isError;
-
-                                  final message = resetSuccess
-                                      ? 'Password berhasil direset. Silakan masuk kembali.'
-                                      : state.message!;
-
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: isSuccess
-                                          ? const Color(0xFFE8F8F0)
-                                          : HomeColors.dangerBg,
-                                      borderRadius: BorderRadius.circular(
-                                        HomeRadius.md,
-                                      ),
-                                      border: Border.all(
-                                        color: isSuccess
-                                            ? const Color(0xFFB7E7D0)
-                                            : const Color(0xFFFECDD3),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          isSuccess
-                                              ? Icons
-                                                    .check_circle_outline_rounded
-                                              : Icons.error_outline_rounded,
-                                          color: isSuccess
-                                              ? const Color(0xFF087443)
-                                              : HomeColors.danger,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            message,
-                                            style: TextStyle(
-                                              color: isSuccess
-                                                  ? const Color(0xFF087443)
-                                                  : HomeColors.danger,
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // Email Field
-                            PadiTextField(
-                              controller: _emailController,
-                              label: 'Email',
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              errorText: state.fieldErrors['email']?.first,
-                              decoration: _inputDecoration(
-                                'Email Anda',
-                                Icons.mail_outline_rounded,
-                              ),
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            // Password Field
-                            PadiTextField(
-                              controller: _passwordController,
-                              label: 'Password',
-                              obscureText: _obscurePassword,
-                              errorText: state.fieldErrors['password']?.first,
-                              decoration:
-                                  _inputDecoration(
-                                    'Kata sandi',
-                                    Icons.lock_outline_rounded,
-                                  ).copyWith(
-                                    suffixIcon: IconButton(
-                                      tooltip: _obscurePassword
-                                          ? 'Tampilkan'
-                                          : 'Sembunyikan',
-                                      onPressed: () => setState(
-                                        () => _obscurePassword =
-                                            !_obscurePassword,
-                                      ),
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                        color: HomeColors.textSecondary,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
-                            ),
-
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: state.isSubmitting
-                                    ? null
-                                    : () => context.go('/forgot-password'),
-                                child: const Text(
-                                  'Lupa password?',
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: HomeColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Submit Button
-                            SizedBox(
-                              height: 50,
-                              child: FilledButton(
-                                onPressed: state.isSubmitting ? null : _submit,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: HomeColors.primaryGreen,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      HomeRadius.md,
-                                    ),
-                                  ),
-                                ),
-                                child: state.isSubmitting
-                                    ? const SizedBox.square(
-                                        dimension: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Masuk Sekarang',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Dedicated Register Button
-                            SizedBox(
-                              height: 48,
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const RoleSelectionScreen(),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.person_add_rounded,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'Daftar Akun Baru',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: HomeColors.primaryGreen,
-                                  side: const BorderSide(
-                                    color: HomeColors.primaryGreen,
-                                    width: 1.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      HomeRadius.md,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Register link
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                const Text(
-                                  'Belum punya akun? ',
-                                  style: TextStyle(
-                                    color: HomeColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const RoleSelectionScreen(),
-                                      ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 4,
-                                    ),
-                                    child: Text(
-                                      'Daftar di sini',
-                                      style: TextStyle(
-                                        color: HomeColors.primaryGreen,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        child: Image.asset(
+                          'assets/images/padi-logo.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.eco_rounded,
+                            color: Color(0xFF059669),
+                            size: 24,
+                          ),
                         ),
                       ),
-
-                      const SizedBox(height: 20),
+                      const SizedBox(width: 12),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'P.A.D.I.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          Text(
+                            'Smart Farming Ecosystem',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF059669),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 28),
+
+                  // Welcome Title
+                  const Text(
+                    'Selamat Datang',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Masuk untuk mengakses monitoring lahan dan layanan pertanian cerdas Anda.',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF64748B),
+                      height: 1.45,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Status Banner
+                  if (resetSuccess ||
+                      (state.message != null &&
+                          state.message!.isNotEmpty)) ...[
+                    Builder(
+                      builder: (context) {
+                        final isSuccess = resetSuccess || !state.isError;
+                        final message = resetSuccess
+                            ? 'Password berhasil direset. Silakan masuk kembali.'
+                            : state.message!;
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: isSuccess
+                                ? const Color(0xFFE8F8F0)
+                                : const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSuccess
+                                  ? const Color(0xFFB7E7D0)
+                                  : const Color(0xFFFECACA),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                isSuccess
+                                    ? Icons.check_circle_outline_rounded
+                                    : Icons.error_outline_rounded,
+                                color: isSuccess
+                                    ? const Color(0xFF087443)
+                                    : const Color(0xFFDC2626),
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  message,
+                                  style: TextStyle(
+                                    color: isSuccess
+                                        ? const Color(0xFF087443)
+                                        : const Color(0xFFDC2626),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+
+                  // Form Container Card
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x04000000),
+                          blurRadius: 16,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Email Field
+                        _buildFieldLabel('Alamat Email'),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _emailController,
+                          focusNode: _emailFocus,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocus),
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A), fontWeight: FontWeight.w500),
+                          decoration: _inputDecoration(
+                            hintText: 'nama@email.com',
+                            prefixIcon: Icons.mail_outline_rounded,
+                            errorText: state.fieldErrors['email']?.first,
+                          ),
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // Password Field
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildFieldLabel('Kata Sandi'),
+                            GestureDetector(
+                              onTap: state.isSubmitting ? null : () => context.go('/forgot-password'),
+                              child: const Text(
+                                'Lupa sandi?',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF059669),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocus,
+                          scrollPadding: const EdgeInsets.only(bottom: 120),
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _submit(),
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A), fontWeight: FontWeight.w500),
+                          decoration: _inputDecoration(
+                            hintText: 'Masukkan kata sandi',
+                            prefixIcon: Icons.lock_outline_rounded,
+                            errorText: state.fieldErrors['password']?.first,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              tooltip: _obscurePassword ? 'Tampilkan sandi' : 'Sembunyikan sandi',
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                color: const Color(0xFF94A3B8),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Submit Button
+                        SizedBox(
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: state.isSubmitting ? null : _submit,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF059669),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: state.isSubmitting
+                                ? const SizedBox.square(
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Masuk',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: -0.2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(Icons.arrow_forward_rounded, size: 18),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // Register Route Prompt
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Belum memiliki akun? ',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RoleSelectionScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Daftar sekarang',
+                          style: TextStyle(
+                            color: Color(0xFF059669),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, color: HomeColors.primaryGreen, size: 20),
-      filled: true,
-      fillColor: HomeColors.surfaceMuted,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(color: HomeColors.borderSubtle),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(
-          color: HomeColors.primaryGreen,
-          width: 1.5,
         ),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(color: HomeColors.danger),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(color: HomeColors.danger, width: 1.5),
+    ),
+  );
+}
+
+  Widget _buildFieldLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFF334155),
       ),
     );
   }
 
-  Future<void> _submit() async {
-    await ref
-        .read(authControllerProvider)
-        .login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required IconData prefixIcon,
+    String? errorText,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
+      prefixIcon: Icon(prefixIcon, color: const Color(0xFF64748B), size: 20),
+      suffixIcon: suffixIcon,
+      errorText: errorText,
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF059669), width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFDC2626)),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.6),
+      ),
+    );
   }
 }

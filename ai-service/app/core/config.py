@@ -62,7 +62,7 @@ class Settings:
     allowed_origins: list[str] = field(default_factory=lambda: _env_list("ALLOWED_ORIGINS", "http://localhost:3000"))
 
     model_path: Path = field(
-        default_factory=lambda: Path(_env("MODEL_PATH", "../AI/model_penyakit_padi_v2_finetuned.h5"))
+        default_factory=lambda: Path(_env("MODEL_PATH", "models/model_penyakit_padi_v2_finetuned.h5"))
     )
     model_version: str = field(default_factory=lambda: _env("MODEL_VERSION", "1.0.0"))
     model_confidence_high: float = field(default_factory=lambda: _env_float("MODEL_CONFIDENCE_HIGH", 0.85))
@@ -71,16 +71,16 @@ class Settings:
         default_factory=lambda: _env_json_mapping(
             "MODEL_CLASS_MAPPING",
             {
-                "0": "healthy",
-                "1": "blast",
-                "2": "tungro",
-                "3": "bacterial_leaf_blight",
-                "4": "unknown",
-                "5": "unknown",
-                "6": "unknown",
-                "7": "unknown",
-                "8": "unknown",
-                "9": "unknown",
+                "0": "bacterial_leaf_blight",
+                "1": "bacterial_leaf_streak",
+                "2": "bacterial_panicle_blight",
+                "3": "blast",
+                "4": "brown_spot",
+                "5": "dead_heart",
+                "6": "downy_mildew",
+                "7": "hispa",
+                "8": "healthy",
+                "9": "tungro",
             },
         )
     )
@@ -89,6 +89,8 @@ class Settings:
     min_blur_score: float = field(default_factory=lambda: _env_float("MIN_BLUR_SCORE", 100.0))
     min_brightness: float = field(default_factory=lambda: _env_float("MIN_BRIGHTNESS", 40.0))
     max_brightness: float = field(default_factory=lambda: _env_float("MAX_BRIGHTNESS", 220.0))
+    min_leaf_ratio: float = field(default_factory=lambda: _env_float("MIN_LEAF_RATIO", 0.12))
+    min_disease_confidence: float = field(default_factory=lambda: _env_float("MIN_DISEASE_CONFIDENCE", 0.35))
 
     llm_api_key: str = field(default_factory=lambda: _env("LLM_API_KEY", ""))
     llm_model: str = field(default_factory=lambda: _env("LLM_MODEL", ""))

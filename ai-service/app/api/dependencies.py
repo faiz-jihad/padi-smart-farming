@@ -10,7 +10,10 @@ from app.application.use_cases.recommend_planting_time import RecommendPlantingT
 from app.core.config import Settings
 from app.domain.services.confidence_policy import ConfidencePolicy
 from app.domain.services.image_quality_policy import ImageQualityPolicy
+from app.domain.services.leaf_memory_bank import LeafMemoryBank
+from app.domain.services.leaf_validation_policy import LeafValidationPolicy
 from app.domain.services.planting_scoring_policy import PlantingScoringPolicy
+from app.application.use_cases.learn_disease_scan import LearnDiseaseScanUseCase
 from app.infrastructure.llm.llm_client import LlmClient
 from app.infrastructure.llm.treatment_generator import TreatmentGenerator
 from app.infrastructure.machine_learning.disease_classifier import DiseaseClassifier
@@ -40,9 +43,16 @@ class ServiceContainer:
             min_brightness=settings.min_brightness,
             max_brightness=settings.max_brightness,
         )
+        self.leaf_validation_policy = LeafValidationPolicy(
+            min_leaf_ratio=settings.min_leaf_ratio,
+            min_disease_confidence=settings.min_disease_confidence,
+        )
         base_dir = Path(__file__).resolve().parents[2]
+        self.leaf_memory_bank = LeafMemoryBank(
+            storage_path=base_dir / "models" / "leaf_memory_bank.json"
+        )
         self.knowledge_base_repository = KnowledgeBaseRepository(
-            guidelines_path=base_dir.parent / "knowledge_base" / "treatment_guidelines.json"
+            guidelines_path=base_dir / "knowledge_base" / "treatment_guidelines.json"
         )
         self.llm_client = LlmClient(
             api_key=settings.llm_api_key,
@@ -74,7 +84,21 @@ def get_detect_disease_use_case(request: Request) -> DetectDiseaseUseCase:
         confidence_policy=container.confidence_policy,
         image_quality_policy=container.image_quality_policy,
         max_image_size_bytes=container.settings.max_image_size_bytes,
+        leaf_validation_policy=container.leaf_validation_policy,
+        leaf_memory_bank=container.leaf_memory_bank,
     )
+
+
+def get_learn_disease_scan_use_case(request: Request) -> LearnDiseaseScanUseCase:
+    container = get_container(request)
+    return LearnDiseaseScanUseCase(
+        image_preprocessor=container.image_preprocessor,
+        disease_classifier=container.disease_classifier,
+        leaf_memory_bank=container.leaf_memory_bank,
+        leaf_validation_policy=container.leaf_validation_policy,
+    )
+
+
 
 
 def get_generate_treatment_use_case(request: Request) -> GenerateTreatmentUseCase:

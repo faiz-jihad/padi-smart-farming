@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
@@ -115,6 +116,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
     final cartState = ref.watch(cartProvider);
     final listingsAsync = ref.watch(marketplaceListingsProvider);
     final isBuyer = ref.watch(isBuyerRoleProvider);
@@ -126,7 +129,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          tooltip: 'Kembali',
+          tooltip: s.back,
           icon: const Icon(
             Icons.arrow_back_rounded,
             color: Colors.white,
@@ -160,7 +163,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               isDense: true,
               filled: true,
               fillColor: Colors.white,
-              hintText: 'Cari gabah panen, beras pandan wangi, benih...',
+              hintText: s.searchMarketplaceHint,
               hintStyle: const TextStyle(
                 color: Color(0xFF999999),
                 fontSize: 12,
@@ -199,7 +202,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             clipBehavior: Clip.none,
             children: [
               IconButton(
-                tooltip: 'Keranjang Belanja',
+                tooltip: s.buyerCart,
                 icon: const Icon(
                   Icons.shopping_cart_outlined,
                   color: Colors.white,
@@ -232,7 +235,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             ],
           ),
           IconButton(
-            tooltip: isBuyer ? 'Pesanan & Kontrak Saya' : 'Penawaran Saya',
+            tooltip: isBuyer ? s.buyerOrders : s.buyerOffers,
             onPressed: () => context.push(isBuyer ? '/buyer/orders' : '/marketplace/offers'),
             icon: Icon(
               isBuyer ? Icons.receipt_long_rounded : Icons.gavel_rounded,
@@ -241,7 +244,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Segarkan',
+            tooltip: switch (lang) {
+              AppLanguage.id => 'Segarkan',
+              AppLanguage.jv => 'Anyari',
+              AppLanguage.en => 'Refresh',
+            },
             onPressed: () => ref.invalidate(marketplaceListingsProvider),
             icon: const Icon(
               Icons.refresh_rounded,
@@ -261,7 +268,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   elevation: 4,
                   icon: const Icon(Icons.shopping_cart_rounded, size: 20),
                   label: Text(
-                    'Keranjang (${cartState.totalCount})',
+                    '${s.buyerCart} (${cartState.totalCount})',
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 13.5,
@@ -275,9 +282,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               foregroundColor: Colors.white,
               elevation: 4,
               icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-              label: const Text(
-                'Mulai Jual Panen',
-                style: TextStyle(
+              label: Text(
+                s.startSelling,
+                style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 13.5,
                 ),

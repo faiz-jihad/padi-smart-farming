@@ -87,6 +87,135 @@
       "Panduan umum pengendalian hawar daun bakteri padi"
     ]
   },
+  "bacterial_leaf_streak": {
+    "name": "Bacterial Leaf Streak",
+    "immediate_actions": [
+      "Periksa garis-garis kecokelatan basah pada helai daun.",
+      "Keringkan sawah secara berkala (intermittent irrigation) untuk menekan kelembaban mikro.",
+      "Hindari pemupukan urea/nitrogen berlebih saat gejala aktif."
+    ],
+    "prevention_steps": [
+      "Gunakan varietas tahan dan benih bersertifikat.",
+      "Lakukan pergiliran varietas tanaman antar musim.",
+      "Bersihkan gulma di pematang sawah."
+    ],
+    "danger_signs": [
+      "Garis-garis meluas dan daun mengering cokelat kemerahan sebelum fase bunting.",
+      "Tanaman tampak terbakar di sebagian besar petakan."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh jika serangan meluas di fase anakan aktif.",
+    "sources": [
+      "Balai Besar Penelitian Tanaman Padi (BBPadi)",
+      "Pedoman Pengendalian Penyakit Padi Kementan"
+    ]
+  },
+  "bacterial_panicle_blight": {
+    "name": "Bacterial Panicle Blight",
+    "immediate_actions": [
+      "Amati bulir malai yang hampa atau berubah warna kecokelatan/kehitaman.",
+      "Tandai petakan yang terkena dan hindari penggunaan air limpasan ke petakan lain.",
+      "Jangan menyemprot pestisida tanpa anjuran tepat saat malai mekar."
+    ],
+    "prevention_steps": [
+      "Gunakan benih bebas patogen dan lakukan seed treatment.",
+      "Atur waktu tanam agar fase pembungaan tidak bertepatan dengan suhu malam yang sangat panas.",
+      "Seimbangkan unsur hara N, P, dan K."
+    ],
+    "danger_signs": [
+      "Sebagian besar malai tegak karena bulir hampa.",
+      "Pangkal bulir membusuk hitam merata."
+    ],
+    "extension_officer_advice": "Segera laporkan ke PPL setempat karena penyakit ini dapat menurunkan rendemen gabah secara drastis.",
+    "sources": [
+      "IRRI Rice Knowledge Bank",
+      "Kementerian Pertanian RI"
+    ]
+  },
+  "brown_spot": {
+    "name": "Brown Spot",
+    "immediate_actions": [
+      "Periksa apakah tanah kekurangan hara (terutama kalium, silika, atau unsur mikro).",
+      "Berikan pupuk berimbang terutama pupuk K (Kalium) untuk memperkuat dinding sel daun.",
+      "Jaga ketersediaan air dan hindari kekeringan ekstrem pada lahan."
+    ],
+    "prevention_steps": [
+      "Perbaiki kesuburan tanah dengan pupuk organik/kompos matang.",
+      "Lakukan perlakuan benih (seed treatment) sebelum semai.",
+      "Gunakan varietas adaptif lahan masam/marjinal jika tanah kurang subur."
+    ],
+    "danger_signs": [
+      "Bercak cokelat oval meluas ke seluruh helai daun dan pelepah.",
+      "Daun mengering premature dan bulir padi berbintik cokelat kusam."
+    ],
+    "extension_officer_advice": "Konsultasikan uji tanah dengan penyuluh untuk memastikan kebutuhan pemupukan makro/mikro.",
+    "sources": [
+      "Pedoman Pengendalian Hama & Penyakit Padi Balitbangtan",
+      "Pedoman Teknis Budidaya Padi Sawah Kementan"
+    ]
+  },
+  "dead_heart": {
+    "name": "Dead Heart",
+    "immediate_actions": [
+      "Periksa pangkal batang rumpun padi muda yang mengering (sundep).",
+      "Cabut dan musnahkan larva/kelompok telur penggerek batang yang terlihat.",
+      "Kumpulkan kelompok telur di pesemaian atau pertanaman awal."
+    ],
+    "prevention_steps": [
+      "Tanam serempak dalam satu hamparan.",
+      "Potong pucuk bibit saat pindah tanam untuk membuang telur.",
+      "Gunakan perangkap lampu (light trap) untuk memantau populasi ngengat."
+    ],
+    "danger_signs": [
+      "Anakan muda mengering lebih dari 10% dari total rumpun.",
+      "Batang padi berlubang dan mengeluarkan serbuk gerek."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh jika tangkapan ngengat di light trap meningkat tajam.",
+    "sources": [
+      "Direktorat Perlindungan Tanaman Pangan Kementan RI"
+    ]
+  },
+  "downy_mildew": {
+    "name": "Downy Mildew",
+    "immediate_actions": [
+      "Periksa lapisan jamur tipis di permukaan bawah daun.",
+      "Kurangi genangan air yang terlalu dalam di petakan.",
+      "Perbaiki sirkulasi udara dengan menjaga kerapatan kanopi."
+    ],
+    "prevention_steps": [
+      "Gunakan varietas tahan bulu embun.",
+      "Drainase lahan yang baik setelah curah hujan tinggi.",
+      "Sanitasi sisa-sisa jerami yang terinfeksi."
+    ],
+    "danger_signs": [
+      "Tanaman kerdil parah dengan daun memilin dan rapuh.",
+      "Malai tidak keluar sempurna atau abnormal."
+    ],
+    "extension_officer_advice": "Konsultasikan dengan penyuluh jika tanaman di persemaian mulai menunjukkan daun memilin.",
+    "sources": [
+      "Buku Saku Penyakit Tanaman Pangan BBPadi"
+    ]
+  },
+  "hispa": {
+    "name": "Hispa",
+    "immediate_actions": [
+      "Amati keberadaan kumbang hitam berduri kecil pada daun.",
+      "Pangkas pucuk daun yang terdapat telur/larva jika masih di fase persemaian.",
+      "Hindari pemupukan N yang berlebihan yang membuat daun terlalu sukulen/lembek."
+    ],
+    "prevention_steps": [
+      "Lakukan pengolahan tanah sempurna untuk mematikan sisa pupa.",
+      "Gunakan jaring ayun (sweep net) untuk menangkap kumbang dewasa.",
+      "Lestarikan musuh alami seperti kumbang kubah dan parasitoid."
+    ],
+    "danger_signs": [
+      "Daun mengering putih melepuh seperti terbakar di lebih dari 20% kanopi.",
+      "Aktivitas kumbang hispa tampak aktif di siang hari dalam jumlah banyak."
+    ],
+    "extension_officer_advice": "Hubungi penyuluh untuk pemantauan ambang batas ekonomi pengendalian hispa.",
+    "sources": [
+      "Pedoman Pengendalian Hama Utama Tanaman Padi Ditjen Tanaman Pangan"
+    ]
+  },
   "unknown": {
     "name": "Tidak Dapat Dipastikan",
     "immediate_actions": [

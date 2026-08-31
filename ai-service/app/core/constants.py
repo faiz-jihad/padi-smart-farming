@@ -4,10 +4,16 @@ SUPPORTED_IMAGE_SIGNATURES = {
 }
 
 SUPPORTED_DISEASE_CODES = {
-    "healthy": "Healthy",
-    "blast": "Blast",
-    "tungro": "Tungro",
-    "bacterial_leaf_blight": "Bacterial Leaf Blight",
+    "bacterial_leaf_blight": "Bacterial Leaf Blight (Hawar Daun Bakteri)",
+    "bacterial_leaf_streak": "Bacterial Leaf Streak (Bercak Daun Bakteri)",
+    "bacterial_panicle_blight": "Bacterial Panicle Blight (Hawar Malai Bakteri)",
+    "blast": "Blast (Penyakit Blas)",
+    "brown_spot": "Brown Spot (Bercak Cokelat)",
+    "dead_heart": "Dead Heart (Penggerek Batang)",
+    "downy_mildew": "Downy Mildew (Bulu Embun)",
+    "hispa": "Hispa (Hama Hispa)",
+    "healthy": "Normal (Padi Sehat)",
+    "tungro": "Tungro (Penyakit Tungro)",
     "unknown": "Tidak Dapat Dipastikan",
 }
 

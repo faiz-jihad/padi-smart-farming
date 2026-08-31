@@ -35,6 +35,11 @@ void main() {
       expect(s.helloUser('Faiz'), 'Halo, Faiz 👋');
       expect(s.activeFarmsCount(3), '3 lahan aktif');
       expect(s.cropAgeDays(45), 'Hari ke-45');
+      expect(s.navCart, 'Keranjang');
+      expect(s.navOrders, 'Pesanan');
+      expect(s.roleFarmer, 'Petani');
+      expect(s.roleBuyer, 'Pembeli');
+      expect(s.statusActive, 'Aktif');
     });
 
     test('Javanese strings use natural daily farmer terms', () {
@@ -51,6 +56,10 @@ void main() {
       expect(s.signOut, 'Metu');
       expect(s.activeFarmsCount(2), '2 sawah aktif');
       expect(s.cropAgeDays(30), 'Dina ke-30');
+      expect(s.navCart, 'Kranjang');
+      expect(s.navOrders, 'Pesenan');
+      expect(s.roleFarmer, 'Wong Tani');
+      expect(s.roleBuyer, 'Bakul');
     });
 
     test('English strings are concise and professional', () {
@@ -66,6 +75,10 @@ void main() {
       expect(s.activeFarmsCount(1), '1 active farm');
       expect(s.activeFarmsCount(5), '5 active farms');
       expect(s.cropAgeDays(12), 'Day 12');
+      expect(s.navCart, 'Cart');
+      expect(s.navOrders, 'Orders');
+      expect(s.roleFarmer, 'Farmer');
+      expect(s.roleBuyer, 'Buyer');
     });
 
     test('Backend Enum & Growth Phase Mapping works for all locales', () {

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class DiseaseModelRepository(Protocol):
@@ -14,3 +14,7 @@ class DiseaseModelRepository(Protocol):
 
     def predict(self, image_rgb) -> tuple[str, str, float]:
         """Menghasilkan disease_code, disease_name, dan confidence dari citra RGB."""
+
+    def predict_with_embedding(self, image_rgb) -> tuple[str, str, float, Any]:
+        """Menghasilkan prediksi sekaligus vektor representasi visual (embedding) daun."""
+

@@ -174,10 +174,10 @@ List<dynamic> _parseActivities(dynamic response) {
 
       final severity =
           severityStr.contains('high') || severityStr.contains('critical')
-          ? AlertSeverity.high
-          : severityStr.contains('low')
-              ? AlertSeverity.low
-              : AlertSeverity.medium;
+              ? AlertSeverity.high
+              : severityStr.contains('low')
+                  ? AlertSeverity.low
+                  : AlertSeverity.medium;
 
       return (
         '$pestName Terdeteksi',
@@ -464,7 +464,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             border: Border.all(color: const Color(0xFFA7F3D0)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF059669).withOpacity(0.04),
+                color: const Color(0xFF059669).withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -487,17 +487,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Icon(Icons.handshake_outlined, color: Color(0xFF059669), size: 18),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Nego Penawaran',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              s.negoOffers,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                             ),
                             Text(
-                              'Kelola tawar balik',
-                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                              s.manageCounterOffers,
+                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                             ),
                           ],
                         ),
@@ -523,17 +523,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Icon(Icons.assessment_outlined, color: Color(0xFF047857), size: 18),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Laporan Penjualan',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              s.salesReport,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                             ),
                             Text(
-                              'Omzet & faktur sah',
-                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                              s.verifiedRevenue,
+                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                             ),
                           ],
                         ),

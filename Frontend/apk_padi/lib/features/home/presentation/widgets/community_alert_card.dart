@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 enum AlertSeverity { low, medium, high }
@@ -21,7 +23,22 @@ class CommunityAlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _getSeverityColors();
+    return Consumer(
+      builder: (context, ref, _) {
+        final lang = ref.watch(languageProvider);
+        final colors = _getSeverityColors();
+
+    final radarBadge = switch (lang) {
+      AppLanguage.id => 'RADAR SEKITAR • ${distanceKm.toStringAsFixed(1)} KM',
+      AppLanguage.jv => 'RADAR SEKITAR • ${distanceKm.toStringAsFixed(1)} KM',
+      AppLanguage.en => 'NEARBY RADAR • ${distanceKm.toStringAsFixed(1)} KM',
+    };
+
+    final viewReportLabel = switch (lang) {
+      AppLanguage.id => 'Lihat laporan sekitar',
+      AppLanguage.jv => 'Delok lapuran sekitar',
+      AppLanguage.en => 'View nearby reports',
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -72,7 +89,7 @@ class CommunityAlertCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(HomeRadius.pill),
                             ),
                             child: Text(
-                              'RADAR SEKITAR • ${distanceKm.toStringAsFixed(1)} KM',
+                              radarBadge,
                               style: TextStyle(
                                 color: colors.icon,
                                 fontSize: 9.5,
@@ -106,18 +123,18 @@ class CommunityAlertCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Lihat laporan sekitar',
+                            viewReportLabel,
                             style: TextStyle(
                               color: colors.icon,
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                           Icon(
-                            Icons.arrow_forward_rounded,
+                            Icons.chevron_right_rounded,
+                            size: 16,
                             color: colors.icon,
-                            size: 14,
                           ),
                         ],
                       ),
@@ -130,40 +147,30 @@ class CommunityAlertCard extends StatelessWidget {
         ),
       ),
     );
+      },
+    );
   }
 
-  _SeverityColorInfo _getSeverityColors() {
+  ({Color bg, Color border, Color icon}) _getSeverityColors() {
     switch (severity) {
       case AlertSeverity.high:
-        return const _SeverityColorInfo(
-          icon: HomeColors.danger,
-          bg: HomeColors.dangerBg,
-          border: Color(0xFFFECACA),
+        return (
+          bg: HomeColors.warningBg,
+          border: const Color(0xFFFED7AA),
+          icon: HomeColors.warning,
         );
       case AlertSeverity.medium:
-        return const _SeverityColorInfo(
-          icon: HomeColors.warning,
-          bg: HomeColors.warningBg,
-          border: Color(0xFFFDE68A),
+        return (
+          bg: HomeColors.skyBlueBg,
+          border: const Color(0xFFBAE6FD),
+          icon: HomeColors.skyBlue,
         );
       case AlertSeverity.low:
-        return const _SeverityColorInfo(
-          icon: HomeColors.primaryGreen,
+        return (
           bg: HomeColors.lightGreen,
-          border: HomeColors.border,
+          border: const Color(0xFFBBF7D0),
+          icon: HomeColors.primaryGreen,
         );
     }
   }
-}
-
-class _SeverityColorInfo {
-  const _SeverityColorInfo({
-    required this.icon,
-    required this.bg,
-    required this.border,
-  });
-
-  final Color icon;
-  final Color bg;
-  final Color border;
 }

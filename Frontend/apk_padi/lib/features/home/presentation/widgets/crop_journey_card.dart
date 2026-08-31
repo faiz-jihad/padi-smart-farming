@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/cultivation/data/models/crop_season_model.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
@@ -21,7 +23,11 @@ class CropJourneyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = _SeasonJourneyMetrics.fromSeason(season);
+    return Consumer(
+      builder: (context, ref, _) {
+        final lang = ref.watch(languageProvider);
+        final s = AppStrings(lang);
+        final metrics = _SeasonJourneyMetrics.fromSeason(season);
 
     return Container(
       decoration: BoxDecoration(
@@ -39,15 +45,17 @@ class CropJourneyCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(HomeSpacing.cardPadding),
             child: metrics == null
-                ? _buildNoSeasonState(context)
-                : _buildMeasuredJourney(context, metrics),
+                ? _buildNoSeasonState(context, s)
+                : _buildMeasuredJourney(context, metrics, s, lang),
           ),
         ),
       ),
     );
+      },
+    );
   }
 
-  Widget _buildNoSeasonState(BuildContext context) {
+  Widget _buildNoSeasonState(BuildContext context, AppStrings s) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -66,8 +74,8 @@ class CropJourneyCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: HomeSpacing.sm),
-            const Expanded(
-              child: Text('Perjalanan Musim Tanam', style: HomeTypography.cardTitle),
+            Expanded(
+              child: Text(s.cropJourneyTitle, style: HomeTypography.cardTitle),
             ),
             if (farms != null && farms!.length > 1 && selectedFarm != null) ...[
               InkWell(
@@ -83,7 +91,7 @@ class CropJourneyCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        selectedFarm?.name ?? 'Lahan',
+                        selectedFarm?.name ?? s.navFarms,
                         style: const TextStyle(
                           color: HomeColors.primaryGreen,
                           fontSize: 11,
@@ -99,8 +107,8 @@ class CropJourneyCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: HomeSpacing.xs),
-        const Text(
-          'Belum ada musim aktif pada lahan ini. Mulai musim tanam agar progres dihitung otomatis dari tanggal tanam.',
+        Text(
+          s.noActiveSeasonDesc,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: HomeTypography.supporting,
@@ -109,7 +117,18 @@ class CropJourneyCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMeasuredJourney(BuildContext context, _SeasonJourneyMetrics metrics) {
+  Widget _buildMeasuredJourney(BuildContext context, _SeasonJourneyMetrics metrics, AppStrings s, AppLanguage lang) {
+    final startLabel = switch (lang) {
+      AppLanguage.id => 'Mulai',
+      AppLanguage.jv => 'Wiwit',
+      AppLanguage.en => 'Start',
+    };
+    final harvestLabel = switch (lang) {
+      AppLanguage.id => 'Estimasi panen',
+      AppLanguage.jv => 'Prakiraan panen',
+      AppLanguage.en => 'Est. harvest',
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -128,9 +147,9 @@ class CropJourneyCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: HomeSpacing.xs),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Perjalanan Musim Tanam',
+                s.cropJourneyTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: HomeTypography.cardTitle,
@@ -266,14 +285,14 @@ class CropJourneyCard extends StatelessWidget {
           children: [
             Expanded(
               child: _buildMeasuredValue(
-                label: 'Mulai',
+                label: startLabel,
                 value: metrics.startLabel,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _buildMeasuredValue(
-                label: 'Estimasi panen',
+                label: harvestLabel,
                 value: metrics.harvestLabel,
               ),
             ),

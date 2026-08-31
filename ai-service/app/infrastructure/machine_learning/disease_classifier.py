@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 from app.core.exceptions import ModelUnavailableError
@@ -52,6 +53,47 @@ class DiseaseClassifier:
             self._load_error = exc.code
             logger.error("event=model_unavailable code=%s", exc.code)
 
+    def extract_feature_vector(self, image_rgb: np.ndarray) -> np.ndarray:
+        """Mengekstraksi vektor representasi visual (embedding) dari daun."""
+        model_input = self._image_preprocessor.preprocess_for_model(image_rgb)
+        if self._model is not None:
+            try:
+                # Coba ambil output layer sebelum softmax (penultimate layer)
+                if not hasattr(self, "_feature_extractor") or self._feature_extractor is None:
+                    import tensorflow as tf
+
+                    if len(self._model.layers) > 1:
+                        self._feature_extractor = tf.keras.Model(
+                            inputs=self._model.inputs,
+                            outputs=self._model.layers[-2].output,
+                        )
+                    else:
+                        self._feature_extractor = None
+
+                if self._feature_extractor is not None:
+                    features = self._feature_extractor.predict(model_input, verbose=0)
+                    flat = np.asarray(features).flatten()
+                    norm = np.linalg.norm(flat)
+                    return flat / norm if norm > 0 else flat
+            except Exception as exc:
+                logger.debug("event=penultimate_layer_fallback error=%s", exc)
+
+        # Fallback representasi visual berbasis statistik spasial & histogram warna terstandarisasi
+        resized = cv2.resize(image_rgb, (32, 32)).astype(np.float32) / 255.0
+        hsv = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2HSV).astype(np.float32)
+        h_hist = np.histogram(hsv[:, :, 0], bins=16, range=(0, 180))[0].astype(np.float32)
+        s_hist = np.histogram(hsv[:, :, 1], bins=8, range=(0, 256))[0].astype(np.float32)
+        spatial_means = resized.reshape(-1)
+        combined = np.concatenate([spatial_means, h_hist, s_hist])
+        norm = np.linalg.norm(combined)
+        return combined / norm if norm > 0 else combined
+
+    def predict_with_embedding(self, image_rgb: np.ndarray) -> tuple[str, str, float, np.ndarray]:
+        """Melakukan inferensi dan sekaligus menghasilkan vektor embedding daun."""
+        disease_code, disease_name, confidence = self.predict(image_rgb)
+        feature_vector = self.extract_feature_vector(image_rgb)
+        return disease_code, disease_name, confidence, feature_vector
+
     def predict(self, image_rgb) -> tuple[str, str, float]:
         if self._model is None:
             raise ModelUnavailableError("Model belum tersedia.", code=self._load_error or "MODEL_NOT_LOADED")
@@ -63,3 +105,4 @@ class DiseaseClassifier:
         confidence = float(flattened_probabilities[class_index])
         disease_code, disease_name = self._label_mapper.map_index(class_index)
         return disease_code, disease_name, confidence
+

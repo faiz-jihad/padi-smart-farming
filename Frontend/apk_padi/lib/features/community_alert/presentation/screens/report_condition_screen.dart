@@ -99,17 +99,20 @@ class _ReportConditionScreenState extends ConsumerState<ReportConditionScreen> {
         setState(() {
           _recentScans = scans;
           if (_activeScanId != null) {
-            _selectedScan = scans.firstWhere(
-              (s) => s.id == _activeScanId,
-              orElse: () => scans.isNotEmpty
-                  ? scans.first
-                  : PlantCheckResult(
-                      id: _activeScanId!,
-                      farmId: 0,
-                      predictedClass: 'Gejala Penyakit Padi',
-                      qualityStatus: 'valid',
-                    ),
-            );
+            final found = scans.where((s) => s.id == _activeScanId).toList();
+            if (found.isNotEmpty) {
+              _selectedScan = found.first;
+            } else if (scans.isNotEmpty) {
+              _selectedScan = scans.first;
+              _activeScanId = scans.first.id;
+            } else {
+              _selectedScan = PlantCheckResult(
+                id: _activeScanId!,
+                farmId: 0,
+                predictedClass: 'Gejala Penyakit Padi',
+                qualityStatus: 'valid',
+              );
+            }
           } else if (scans.isNotEmpty) {
             _selectedScan = scans.first;
             _activeScanId = scans.first.id;
@@ -120,6 +123,7 @@ class _ReportConditionScreenState extends ConsumerState<ReportConditionScreen> {
     } catch (_) {
       if (mounted) setState(() => _isLoadingScans = false);
     }
+
 
     // 3. Try to get GPS current position
     _fetchGpsLocation(silently: true);
@@ -369,7 +373,7 @@ class _ReportConditionScreenState extends ConsumerState<ReportConditionScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF047857).withOpacity(0.2),
+            color: const Color(0xFF047857).withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -381,9 +385,10 @@ class _ReportConditionScreenState extends ConsumerState<ReportConditionScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(14),
             ),
+
             child: const Icon(Icons.radar_rounded, color: Color(0xFFFDE68A), size: 28),
           ),
           const SizedBox(width: 14),
@@ -692,8 +697,9 @@ class _ReportConditionScreenState extends ConsumerState<ReportConditionScreen> {
                         point: _currentPoint,
                         radius: _radiusKm * 1000, // convert km to meters
                         useRadiusInMeter: true,
-                        color: const Color(0xFFEF4444).withOpacity(0.20),
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.20),
                         borderColor: const Color(0xFFEF4444),
+
                         borderStrokeWidth: 2.0,
                       ),
                     ],

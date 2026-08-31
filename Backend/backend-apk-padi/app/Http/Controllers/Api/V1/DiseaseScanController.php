@@ -43,9 +43,12 @@ class DiseaseScanController extends Controller
                 $request->file('image'),
                 $request->validated()
             );
+        } catch (\InvalidArgumentException $error) {
+            return ApiResponse::error($error->getMessage(), 422);
         } catch (RuntimeException $error) {
             return ApiResponse::error($error->getMessage(), 503);
         }
+
 
         return ApiResponse::success('Foto tanaman berhasil diperiksa.', [
             'scan' => DiseaseScanResource::make($scan),
@@ -64,4 +67,32 @@ class DiseaseScanController extends Controller
             'scan' => DiseaseScanResource::make($diseaseScan->load('farm')),
         ]);
     }
+
+    public function feedback(Request $request, DiseaseScan $diseaseScan, DiseaseDetectionService $service): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($diseaseScan->farmer_id !== $user->id && ! $user->hasRole('admin')) {
+            abort(403, 'Anda tidak memiliki akses ke data scan ini.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:confirmed,corrected',
+            'corrected_class' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updatedScan = $service->submitFeedback(
+            $diseaseScan,
+            $validated['status'],
+            $validated['corrected_class'] ?? null,
+            $validated['notes'] ?? null
+        );
+
+        return ApiResponse::success('Terima kasih! Umpan balik Anda telah dipelajari oleh sistem untuk meningkatkan akurasi diagnosa berikutnya.', [
+            'scan' => DiseaseScanResource::make($updatedScan->load('farm')),
+            'is_learned' => true,
+        ]);
+    }
 }
+

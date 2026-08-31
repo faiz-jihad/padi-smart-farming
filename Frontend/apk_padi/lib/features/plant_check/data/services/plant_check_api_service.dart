@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:padi/core/helpers/api_error_helper.dart';
 import 'package:padi/core/network/api_client.dart';
@@ -10,11 +12,28 @@ class PlantCheckApiService {
   Future<PlantCheckResult> scanDisease({
     required int farmId,
     required String imagePath,
+    Uint8List? imageBytes,
+    String? fileName,
     int? plantAgeDays,
     double? latitude,
     double? longitude,
   }) async {
     try {
+      final uploadFileName = _uploadFileName(fileName, imagePath);
+      final MultipartFile uploadFile;
+
+      if (imageBytes != null) {
+        uploadFile = MultipartFile.fromBytes(
+          imageBytes,
+          filename: uploadFileName,
+        );
+      } else {
+        uploadFile = await MultipartFile.fromFile(
+          imagePath,
+          filename: uploadFileName,
+        );
+      }
+
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/disease-scans',
         data: FormData.fromMap({
@@ -22,7 +41,7 @@ class PlantCheckApiService {
           if (plantAgeDays != null) 'plant_age_days': plantAgeDays,
           if (latitude != null) 'latitude': latitude,
           if (longitude != null) 'longitude': longitude,
-          'image': await MultipartFile.fromFile(imagePath),
+          'image': uploadFile,
         }),
       );
 
@@ -48,7 +67,29 @@ class PlantCheckApiService {
       return [];
     }
   }
+
+  Future<bool> submitFeedback({
+    required int scanId,
+    required String status,
+    String? correctedClass,
+    String? notes,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/disease-scans/$scanId/feedback',
+        data: {
+          'status': status,
+          if (correctedClass != null) 'corrected_class': correctedClass,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data?['success'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 }
+
 
 class GeminiProduct {
   const GeminiProduct({
@@ -125,6 +166,9 @@ class PlantCheckResult {
     this.modelVersion,
     this.imageUrl,
     this.recommendation,
+    this.userFeedback,
+    this.verifiedClass,
+    this.isLearned = false,
   });
 
   factory PlantCheckResult.fromJson(Map<String, dynamic> json) {
@@ -144,6 +188,9 @@ class PlantCheckResult {
       modelVersion: json['model_version']?.toString(),
       imageUrl: json['image_url']?.toString(),
       recommendation: rec,
+      userFeedback: json['user_feedback']?.toString(),
+      verifiedClass: json['verified_class']?.toString(),
+      isLearned: json['is_learned'] == true,
     );
   }
 
@@ -156,6 +203,26 @@ class PlantCheckResult {
   final String? modelVersion;
   final String? imageUrl;
   final GeminiRecommendationData? recommendation;
+  final String? userFeedback;
+  final String? verifiedClass;
+  final bool isLearned;
+}
+
+
+String _uploadFileName(String? fileName, String imagePath) {
+  final name = (fileName?.trim().isNotEmpty ?? false)
+      ? fileName!.trim()
+      : _fileNameFromPath(imagePath);
+
+  return RegExp(r'\.(jpe?g|png|webp)$', caseSensitive: false).hasMatch(name)
+      ? name
+      : '$name.jpg';
+}
+
+String _fileNameFromPath(String path) {
+  final parts = path.split(RegExp(r'[\\/]'));
+  final name = parts.isNotEmpty ? parts.last.trim() : '';
+  return name.isNotEmpty ? name : 'daun-padi.jpg';
 }
 
 int _toInt(dynamic value) {

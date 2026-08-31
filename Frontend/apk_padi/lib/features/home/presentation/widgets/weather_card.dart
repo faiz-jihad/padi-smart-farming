@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/home/presentation/widgets/weather_forecast_item.dart';
 
@@ -8,19 +10,19 @@ class WeatherCard extends StatefulWidget {
     required this.locationName,
     required this.onTapCalendar,
     this.currentTemp = '28°C',
-    this.currentCondition = 'Cerah Berawan',
+    this.currentCondition,
     this.humidity = '78%',
     this.windSpeed = '12 km/j',
-    this.rainNotice = 'Peluang hujan 40% sore ini. Aman untuk pemupukan pagi.',
+    this.rainNotice,
   });
 
   final String locationName;
   final VoidCallback onTapCalendar;
   final String currentTemp;
-  final String currentCondition;
+  final String? currentCondition;
   final String humidity;
   final String windSpeed;
-  final String rainNotice;
+  final String? rainNotice;
 
   @override
   State<WeatherCard> createState() => _WeatherCardState();
@@ -29,53 +31,102 @@ class WeatherCard extends StatefulWidget {
 class _WeatherCardState extends State<WeatherCard> {
   int _selectedForecastIndex = 0;
 
-  final List<Map<String, dynamic>> _forecastList = const [
-    {
-      'time': 'Sekarang',
-      'temp': '28°C',
-      'icon': Icons.wb_cloudy_rounded,
-      'rain': '20%',
-    },
-    {
-      'time': '10:00',
-      'temp': '29°C',
-      'icon': Icons.wb_sunny_rounded,
-      'rain': '15%',
-    },
-    {
-      'time': '12:00',
-      'temp': '31°C',
-      'icon': Icons.wb_sunny_outlined,
-      'rain': '10%',
-    },
-    {
-      'time': '14:00',
-      'temp': '30°C',
-      'icon': Icons.grain_rounded,
-      'rain': '40%',
-    },
-    {
-      'time': '16:00',
-      'temp': '28°C',
-      'icon': Icons.thunderstorm_rounded,
-      'rain': '65%',
-    },
-    {
-      'time': 'Besok',
-      'temp': '27°C',
-      'icon': Icons.water_drop_rounded,
-      'rain': '70%',
-    },
-    {
-      'time': 'Lusa',
-      'temp': '30°C',
-      'icon': Icons.wb_sunny_rounded,
-      'rain': '20%',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final lang = ref.watch(languageProvider);
+        final s = AppStrings(lang);
+
+    final title = switch (lang) {
+      AppLanguage.id => 'Cuaca & Agroklimat',
+      AppLanguage.jv => 'Hawa & Agroklimat',
+      AppLanguage.en => 'Weather & Agroclimate',
+    };
+
+    final defaultLocation = switch (lang) {
+      AppLanguage.id => 'Wilayah Sawah Anda',
+      AppLanguage.jv => 'Wewengkon Sawah Panjenengan',
+      AppLanguage.en => 'Your Farm Area',
+    };
+
+    final calendarLabel = switch (lang) {
+      AppLanguage.id => 'Kalender',
+      AppLanguage.jv => 'Tanggalan',
+      AppLanguage.en => 'Calendar',
+    };
+
+    final condition = widget.currentCondition ??
+        switch (lang) {
+          AppLanguage.id => 'Cerah Berawan',
+          AppLanguage.jv => 'Padhang Mendhung',
+          AppLanguage.en => 'Partly Cloudy',
+        };
+
+    final notice = widget.rainNotice ??
+        switch (lang) {
+          AppLanguage.id => 'Peluang hujan 40% sore ini. Aman untuk pemupukan pagi.',
+          AppLanguage.jv => 'Peluang udan 40% sore iki. Aman kanggo mupuk esuk.',
+          AppLanguage.en => '40% chance of rain this afternoon. Safe for morning fertilizing.',
+        };
+
+    final nowLabel = s.weatherNow;
+    final tomorrowLabel = switch (lang) {
+      AppLanguage.id => 'Besok',
+      AppLanguage.jv => 'Sesuk',
+      AppLanguage.en => 'Tomorrow',
+    };
+    final dayAfterTomorrowLabel = switch (lang) {
+      AppLanguage.id => 'Lusa',
+      AppLanguage.jv => 'Emben',
+      AppLanguage.en => 'In 2 Days',
+    };
+
+    final forecastList = [
+      {
+        'time': nowLabel,
+        'temp': '28°C',
+        'icon': Icons.wb_cloudy_rounded,
+        'rain': '20%',
+      },
+      {
+        'time': '10:00',
+        'temp': '29°C',
+        'icon': Icons.wb_sunny_rounded,
+        'rain': '15%',
+      },
+      {
+        'time': '12:00',
+        'temp': '31°C',
+        'icon': Icons.wb_sunny_outlined,
+        'rain': '10%',
+      },
+      {
+        'time': '14:00',
+        'temp': '30°C',
+        'icon': Icons.grain_rounded,
+        'rain': '40%',
+      },
+      {
+        'time': '16:00',
+        'temp': '28°C',
+        'icon': Icons.thunderstorm_rounded,
+        'rain': '65%',
+      },
+      {
+        'time': tomorrowLabel,
+        'temp': '27°C',
+        'icon': Icons.water_drop_rounded,
+        'rain': '70%',
+      },
+      {
+        'time': dayAfterTomorrowLabel,
+        'temp': '30°C',
+        'icon': Icons.wb_sunny_rounded,
+        'rain': '20%',
+      },
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: HomeColors.surface,
@@ -111,14 +162,14 @@ class _WeatherCardState extends State<WeatherCard> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Cuaca & Agroklimat',
+                        Text(
+                          title,
                           style: HomeTypography.cardTitle,
                         ),
                         Text(
                           widget.locationName.isNotEmpty
                               ? widget.locationName
-                              : 'Wilayah Sawah Anda',
+                              : defaultLocation,
                           style: HomeTypography.caption,
                         ),
                       ],
@@ -132,18 +183,18 @@ class _WeatherCardState extends State<WeatherCard> {
                     foregroundColor: HomeColors.primaryGreen,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Kalender',
-                        style: TextStyle(
+                        calendarLabel,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(width: 2),
-                      Icon(Icons.chevron_right_rounded, size: 16),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.chevron_right_rounded, size: 16),
                     ],
                   ),
                 ),
@@ -159,14 +210,14 @@ class _WeatherCardState extends State<WeatherCard> {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFF0FDF4),
-                    HomeColors.skyBlueBg.withOpacity(0.5),
+                    HomeColors.skyBlueBg.withValues(alpha: 0.5),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(HomeRadius.md),
                 border: Border.all(
-                  color: const Color(0xFFBAE6FD).withOpacity(0.6),
+                  color: const Color(0xFFBAE6FD).withValues(alpha: 0.6),
                 ),
               ),
               child: Row(
@@ -191,7 +242,7 @@ class _WeatherCardState extends State<WeatherCard> {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                widget.currentCondition,
+                                condition,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -205,7 +256,7 @@ class _WeatherCardState extends State<WeatherCard> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          widget.rainNotice,
+                          notice,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -244,18 +295,18 @@ class _WeatherCardState extends State<WeatherCard> {
 
             const SizedBox(height: HomeSpacing.sm),
 
-            // Horizontal Scrollable Forecast (Guaranteed NO RenderFlex overflow)
+            // Horizontal Scrollable Forecast
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: Row(
                 children: List.generate(
-                  _forecastList.length,
+                  forecastList.length,
                   (index) {
-                    final item = _forecastList[index];
+                    final item = forecastList[index];
                     return Padding(
                       padding: EdgeInsets.only(
-                        right: index == _forecastList.length - 1 ? 0 : 8,
+                        right: index == forecastList.length - 1 ? 0 : 8,
                       ),
                       child: WeatherForecastItem(
                         time: item['time']?.toString() ?? '',
@@ -273,6 +324,8 @@ class _WeatherCardState extends State<WeatherCard> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

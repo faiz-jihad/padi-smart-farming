@@ -201,6 +201,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('disease-scans', [DiseaseScanController::class, 'index']);
         Route::post('disease-scans', [DiseaseScanController::class, 'store'])->middleware('throttle:ai-scans');
         Route::get('disease-scans/{diseaseScan}', [DiseaseScanController::class, 'show']);
+        Route::post('disease-scans/{diseaseScan}/feedback', [DiseaseScanController::class, 'feedback']);
+
         Route::get('community-reports', [CommunityReportController::class, 'index']);
         Route::post('community-reports', [CommunityReportController::class, 'store']);
         Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index'])
