@@ -20,6 +20,13 @@ class ApiClient {
           options.baseUrl = AppConfig.apiBaseUrl;
           options.headers['Accept'] = 'application/json';
           final token = await _tokenStorage.readToken();
+          if (kDebugMode) {
+  debugPrint('🔑 TOKEN: ${token == null ? 'NULL' : '${token.substring(0, token.length > 15 ? 15 : token.length)}...'}');
+}
+
+if (token != null && token.isNotEmpty) {
+  options.headers['Authorization'] = 'Bearer $token';
+}
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }

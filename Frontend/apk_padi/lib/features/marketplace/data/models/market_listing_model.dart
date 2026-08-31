@@ -13,6 +13,7 @@ class MarketListingModel {
     this.description,
     this.salesLink,
     this.imageUrl,
+    this.images = const [],
     this.publishedAt,
     this.expiresAt,
     this.isOwner = false,
@@ -32,6 +33,26 @@ class MarketListingModel {
     final farmerMap = json['farmer'] is Map ? json['farmer'] as Map : null;
     final farmMap = json['farm'] is Map ? json['farm'] as Map : null;
 
+    final imagesData = json['images'];
+
+    final parsedImages = imagesData is List
+        ? imagesData
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList()
+        : <Map<String, dynamic>>[];
+
+    String? resolvedImageUrl = json['image_url']?.toString();
+
+    if ((resolvedImageUrl == null || resolvedImageUrl.isEmpty) &&
+        parsedImages.isNotEmpty) {
+      final firstImage = parsedImages.first['image_url'];
+
+      if (firstImage != null && firstImage.toString().isNotEmpty) {
+        resolvedImageUrl = firstImage.toString();
+      }
+    }
+
     return MarketListingModel(
       id: _toInt(json['id']),
       farmerId: _toInt(json['farmer_id']),
@@ -44,7 +65,8 @@ class MarketListingModel {
       pricePerUnit: _toDouble(json['price_per_unit']),
       description: json['description']?.toString(),
       salesLink: json['sales_link']?.toString(),
-      imageUrl: json['image_url']?.toString(),
+      imageUrl: resolvedImageUrl,
+      images: parsedImages,
       status: json['status']?.toString() ?? 'published',
       publishedAt: json['published_at']?.toString(),
       expiresAt: json['expires_at']?.toString(),
@@ -58,7 +80,9 @@ class MarketListingModel {
       farmName: json['farm_name']?.toString() ??
           farmMap?['name']?.toString() ??
           'Lahan Pertanian',
-      farmAreaHa: _toDouble(json['farm_area_ha'] ?? farmMap?['area_ha']),
+      farmAreaHa: _toDouble(
+        json['farm_area_ha'] ?? farmMap?['area_ha'],
+      ),
       varietyName: json['variety_name']?.toString(),
       plantingDate: json['planting_date']?.toString(),
       moisturePercent: _toDouble(json['moisture_percent']),
@@ -70,6 +94,7 @@ class MarketListingModel {
     if (value is num) {
       return value.toInt();
     }
+
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
@@ -77,6 +102,7 @@ class MarketListingModel {
     if (value is num) {
       return value.toDouble();
     }
+
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
@@ -93,11 +119,10 @@ class MarketListingModel {
   final String? description;
   final String? salesLink;
   final String? imageUrl;
+  final List<Map<String, dynamic>> images;
   final String? publishedAt;
   final String? expiresAt;
   final bool isOwner;
-
-  // Real Database Relation Fields
   final String? farmerName;
   final String? farmerPhone;
   final String? farmName;

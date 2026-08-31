@@ -13,22 +13,20 @@ use Illuminate\Http\UploadedFile;
 class MarketListingService
 {
     public function getListings(User $user): Collection
-    {
-        return PadiCacheService::remember('padi:market:listings_v2', PadiCacheService::TTL_LISTINGS, function () {
-            return MarketListing::query()
-                ->where('status', 'published')
-                ->with([
-                    'farmer:id,name,phone,email',
-                    'farm:id,name,area_ha,latitude,longitude',
-                    'cropSeason:id,variety_id,status',
-                    'harvest:id,moisture_percent,quality_grade,quantity',
-                    'images:id,market_listing_id,image_url,is_primary',
-                    'offers:id,listing_id,partner_id,offered_price,quantity,status',
-                ])
-                ->latest('published_at')
-                ->get();
-        });
-    }
+{
+    return MarketListing::query()
+        ->where('status', 'published')
+        ->with([
+            'farmer:id,name,phone,email',
+            'farm:id,name,area_ha,latitude,longitude',
+            'cropSeason:id,variety_id,status',
+            'harvest:id,moisture_percent,quality_grade,quantity',
+            'images:id,listing_id,image_url,sort_order',
+            'offers:id,listing_id,partner_id,offered_price,quantity,status',
+        ])
+        ->latest('published_at')
+        ->get();
+}
 
     public function createListing(
         User $user,
@@ -74,7 +72,7 @@ class MarketListingService
             'farm:id,name,area_ha,latitude,longitude',
             'cropSeason:id,variety_id,status',
             'harvest:id,moisture_percent,quality_grade,quantity',
-            'images:id,market_listing_id,image_url,is_primary',
+            'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }
@@ -90,7 +88,7 @@ class MarketListingService
             'farm:id,name,area_ha,latitude,longitude',
             'cropSeason:id,variety_id,status',
             'harvest:id,moisture_percent,quality_grade,quantity',
-            'images:id,market_listing_id,image_url,is_primary',
+            'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }
@@ -132,7 +130,7 @@ class MarketListingService
             'farm:id,name,area_ha,latitude,longitude',
             'cropSeason:id,variety_id,status',
             'harvest:id,moisture_percent,quality_grade,quantity',
-            'images:id,market_listing_id,image_url,is_primary',
+            'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
     }

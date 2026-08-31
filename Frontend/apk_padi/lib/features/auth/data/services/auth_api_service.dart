@@ -37,7 +37,10 @@ class AuthApiService {
     }
   }
 
-  Future<AuthResult> login({required String email, required String password}) async {
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/auth/login',
@@ -56,14 +59,20 @@ class AuthApiService {
 
   Future<AppUserModel> me() async {
     try {
-      final response = await _apiClient.dio.get<Map<String, dynamic>>('/auth/me');
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/auth/me',
+      );
+
       return _userFromResponse(response.data);
     } catch (error) {
       throw mapDioException(error);
     }
   }
 
-  Future<AppUserModel> updateProfile({required String name, required String phone}) async {
+  Future<AppUserModel> updateProfile({
+    required String name,
+    required String phone,
+  }) async {
     try {
       final response = await _apiClient.dio.patch<Map<String, dynamic>>(
         '/profile',
@@ -72,6 +81,7 @@ class AuthApiService {
           'phone': phone,
         },
       );
+
       return _userFromResponse(response.data);
     } catch (error) {
       throw mapDioException(error);
@@ -101,7 +111,49 @@ class AuthApiService {
     try {
       await _apiClient.dio.post<Map<String, dynamic>>(
         '/auth/forgot-password',
-        data: {'email': email},
+        data: {
+          'email': email,
+        },
+      );
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+
+  Future<bool> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/forgot-password/verify',
+        data: {
+          'email': email,
+          'code': code,
+        },
+      );
+
+      return response.data?['success'] == true;
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/reset-password',
+        data: {
+          'email': email,
+          'code': code,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
       );
     } catch (error) {
       throw mapDioException(error);
@@ -110,7 +162,9 @@ class AuthApiService {
 
   Future<void> logout() async {
     try {
-      await _apiClient.dio.post<Map<String, dynamic>>('/auth/logout');
+      await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/logout',
+      );
     } catch (error) {
       throw mapDioException(error);
     }
@@ -118,7 +172,9 @@ class AuthApiService {
 
   Future<void> logoutAll() async {
     try {
-      await _apiClient.dio.post<Map<String, dynamic>>('/auth/logout-all');
+      await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/logout-all',
+      );
     } catch (error) {
       throw mapDioException(error);
     }
@@ -127,13 +183,19 @@ class AuthApiService {
 
 AuthResult _authResultFromResponse(Map<String, dynamic>? json) {
   final data = json?['data'] as Map<String, dynamic>? ?? {};
+
   return AuthResult(
-    user: AppUserModel.fromJson(data['user'] as Map<String, dynamic>),
+    user: AppUserModel.fromJson(
+      data['user'] as Map<String, dynamic>,
+    ),
     token: data['token']?.toString(),
   );
 }
 
 AppUserModel _userFromResponse(Map<String, dynamic>? json) {
   final data = json?['data'] as Map<String, dynamic>? ?? {};
-  return AppUserModel.fromJson(data['user'] as Map<String, dynamic>);
+
+  return AppUserModel.fromJson(
+    data['user'] as Map<String, dynamic>,
+  );
 }

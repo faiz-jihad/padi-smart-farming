@@ -16,12 +16,17 @@ class AuthState {
     this.isSubmitting = false,
     this.message,
     this.fieldErrors = const {},
+    this.isError = false,
   });
 
   const AuthState.checking() : this(status: AuthStatus.checking);
 
-  const AuthState.unauthenticated({String? message})
-    : this(status: AuthStatus.unauthenticated, message: message);
+  const AuthState.unauthenticated({String? message, bool isError = false})
+    : this(
+        status: AuthStatus.unauthenticated,
+        message: message,
+        isError: isError,
+      );
 
   const AuthState.authenticated(AppUser user)
     : this(status: AuthStatus.authenticated, user: user);
@@ -31,6 +36,7 @@ class AuthState {
   final bool isSubmitting;
   final String? message;
   final Map<String, List<String>> fieldErrors;
+  final bool isError;
 
   AuthState copyWith({
     AuthStatus? status,
@@ -38,6 +44,7 @@ class AuthState {
     bool? isSubmitting,
     String? message,
     Map<String, List<String>>? fieldErrors,
+    bool? isError,
     bool clearMessage = false,
   }) {
     return AuthState(
@@ -46,6 +53,7 @@ class AuthState {
       isSubmitting: isSubmitting ?? this.isSubmitting,
       message: clearMessage ? null : message ?? this.message,
       fieldErrors: fieldErrors ?? this.fieldErrors,
+      isError: clearMessage ? false : isError ?? this.isError,
     );
   }
 }
@@ -57,15 +65,18 @@ class AuthController extends ChangeNotifier {
   final TokenStorage _tokenStorage;
 
   AuthState _state = const AuthState.checking();
+
   AuthState get state => _state;
 
   bool get isAuthenticated => _state.status == AuthStatus.authenticated;
+
   bool get isChecking => _state.status == AuthStatus.checking;
 
   Future<void> restoreSession() async {
     _setState(const AuthState.checking());
 
     final token = await _tokenStorage.readToken();
+
     if (token == null || token.isEmpty) {
       _setState(const AuthState.unauthenticated());
       return;
@@ -73,17 +84,26 @@ class AuthController extends ChangeNotifier {
 
     try {
       final user = await _repository.me();
+
       _setState(AuthState.authenticated(user));
     } catch (error) {
       if (_isInvalidSessionError(error)) {
         await _tokenStorage.clearToken();
       }
-      _setState(AuthState.unauthenticated(message: _messageFromError(error)));
+
+      _setState(
+        AuthState.unauthenticated(
+          message: _messageFromError(error),
+          isError: true,
+        ),
+      );
     }
   }
 
   Future<bool> login({required String email, required String password}) async {
-    return _submitAuth(() => _repository.login(email: email, password: password));
+    return _submitAuth(
+      () => _repository.login(email: email, password: password),
+    );
   }
 
   Future<bool> register({
@@ -106,16 +126,26 @@ class AuthController extends ChangeNotifier {
     );
   }
 
-  Future<void> updateProfile({required String name, required String phone}) async {
+  Future<void> updateProfile({
+    required String name,
+    required String phone,
+  }) async {
     if (_state.isSubmitting) {
       return;
     }
 
-    _setState(_state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}));
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
 
     try {
       final user = await _repository.updateProfile(name: name, phone: phone);
-      _setState(AuthState.authenticated(user).copyWith(message: 'Profil berhasil diperbarui.'));
+
+      _setState(
+        AuthState.authenticated(
+          user,
+        ).copyWith(message: 'Profil berhasil diperbarui.', isError: false),
+      );
     } catch (error) {
       _applyError(error);
     }
@@ -130,7 +160,9 @@ class AuthController extends ChangeNotifier {
       return;
     }
 
-    _setState(_state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}));
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
 
     try {
       await _repository.changePassword(
@@ -138,24 +170,112 @@ class AuthController extends ChangeNotifier {
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
-      _setState(_state.copyWith(isSubmitting: false, message: 'Password berhasil diubah.'));
+
+      _setState(
+        _state.copyWith(
+          isSubmitting: false,
+          message: 'Password berhasil diubah.',
+          isError: false,
+        ),
+      );
     } catch (error) {
       _applyError(error);
     }
   }
 
-  Future<void> forgotPassword(String email) async {
+  Future<bool> forgotPassword(String email) async {
     if (_state.isSubmitting) {
-      return;
+      return false;
     }
 
-    _setState(_state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}));
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
 
     try {
       await _repository.forgotPassword(email);
-      _setState(_state.copyWith(isSubmitting: false, message: 'Instruksi reset password telah dikirim.'));
+
+      _setState(
+        _state.copyWith(
+          isSubmitting: false,
+          message: 'Kode reset password telah dikirim ke email.',
+          isError: false,
+        ),
+      );
+
+      return true;
     } catch (error) {
       _applyError(error);
+      return false;
+    }
+  }
+
+  Future<bool> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    if (_state.isSubmitting) {
+      return false;
+    }
+
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
+
+    try {
+      final success = await _repository.verifyResetCode(
+        email: email,
+        code: code,
+      );
+
+      _setState(
+        _state.copyWith(
+          isSubmitting: false,
+          message: success ? 'Kode verifikasi valid.' : null,
+        ),
+      );
+
+      return success;
+    } catch (error) {
+      _applyError(error);
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    if (_state.isSubmitting) {
+      return false;
+    }
+
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
+
+    try {
+      await _repository.resetPassword(
+        email: email,
+        code: code,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
+
+      _setState(
+        _state.copyWith(
+          isSubmitting: false,
+          message: 'Password berhasil direset. Silakan masuk kembali.',
+          isError: false,
+        ),
+      );
+
+      return true;
+    } catch (error) {
+      _applyError(error);
+      return false;
     }
   }
 
@@ -166,15 +286,14 @@ class AuthController extends ChangeNotifier {
       } else {
         await _repository.logout();
       }
-    } catch (_) {
-      // Token tetap dibersihkan agar pengguna tidak terjebak pada sesi rusak.
-    }
+    } catch (_) {}
 
     await clearSession();
   }
 
   Future<void> clearSession() async {
     await _tokenStorage.clearToken();
+
     _setState(const AuthState.unauthenticated());
   }
 
@@ -183,14 +302,19 @@ class AuthController extends ChangeNotifier {
       return false;
     }
 
-    _setState(_state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}));
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
 
     try {
       final result = await submit();
+
       if (result.token != null) {
         await _tokenStorage.saveToken(result.token!);
       }
+
       _setState(AuthState.authenticated(result.user));
+
       return true;
     } catch (error) {
       _applyError(error);
@@ -202,7 +326,11 @@ class AuthController extends ChangeNotifier {
     if (error is ApiException) {
       if (error.statusCode == 401) {
         unawaited(_tokenStorage.clearToken());
-        _setState(AuthState.unauthenticated(message: error.message));
+
+        _setState(
+          AuthState.unauthenticated(message: error.message, isError: true),
+        );
+
         return;
       }
 
@@ -211,16 +339,26 @@ class AuthController extends ChangeNotifier {
           isSubmitting: false,
           message: error.message,
           fieldErrors: error.errors,
+          isError: true,
         ),
       );
+
       return;
     }
 
-    _setState(_state.copyWith(isSubmitting: false, message: _messageFromError(error)));
+    _setState(
+      _state.copyWith(
+        isSubmitting: false,
+        message: _messageFromError(error),
+        isError: true,
+      ),
+    );
   }
 
   String _messageFromError(Object error) {
-    return error is ApiException ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
+    return error is ApiException
+        ? error.message
+        : 'Terjadi kesalahan. Silakan coba lagi.';
   }
 
   bool _isInvalidSessionError(Object error) {

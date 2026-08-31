@@ -10,7 +10,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -33,10 +34,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         children: [
           const AuthHeader(
             title: 'Pulihkan password',
-            subtitle: 'Masukkan email akun. Fitur aktif setelah mailer backend dikonfigurasi.',
+            subtitle: 'Masukkan email akun untuk menerima kode reset password.',
           ),
           const SizedBox(height: 24),
-          ErrorBanner(message: state.message ?? ''),
+          ErrorBanner(
+            message: state.message ?? '',
+            isSuccess:
+                state.message != null &&
+                state.message!.toLowerCase().contains('dikirim'),
+          ),
           if (state.message != null) const SizedBox(height: 12),
           PadiTextField(
             controller: _emailController,
@@ -47,15 +53,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 22),
           FilledButton(
-            onPressed: state.isSubmitting
-                ? null
-                : () => ref.read(authControllerProvider).forgotPassword(_emailController.text.trim()),
+            onPressed: state.isSubmitting ? null : _submit,
             child: state.isSubmitting
                 ? const SizedBox.square(
                     dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : const Text('Kirim instruksi'),
+                : const Text('Kirim kode'),
           ),
           const SizedBox(height: 14),
           TextButton(
@@ -65,5 +72,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      return;
+    }
+
+    final success = await ref
+        .read(authControllerProvider)
+        .forgotPassword(email);
+
+    if (!mounted || !success) {
+      return;
+    }
+
+    context.go('/reset-password', extra: email);
   }
 }

@@ -29,6 +29,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final state = auth.state;
+    final resetSuccess =
+        GoRouterState.of(context).uri.queryParameters['reset'] == 'success';
 
     return Scaffold(
       backgroundColor: const Color(0xFF042F1E),
@@ -39,7 +41,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Image.asset(
               'assets/images/splash_background.jpeg',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(color: HomeColors.deepGreen),
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: HomeColors.deepGreen),
             ),
           ),
 
@@ -67,8 +70,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: SingleChildScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -93,11 +100,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           child: Image.asset(
                             'assets/images/padi-logo.png',
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.eco_rounded,
-                              color: HomeColors.primaryGreen,
-                              size: 32,
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.eco_rounded,
+                                  color: HomeColors.primaryGreen,
+                                  size: 32,
+                                ),
                           ),
                         ),
                       ),
@@ -163,30 +171,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             const SizedBox(height: 20),
 
-                            if (state.message != null && state.message!.isNotEmpty) ...[
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: HomeColors.dangerBg,
-                                  borderRadius: BorderRadius.circular(HomeRadius.md),
-                                  border: Border.all(color: const Color(0xFFFECDD3)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.error_outline_rounded, color: HomeColors.danger, size: 18),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        state.message!,
-                                        style: const TextStyle(
-                                          color: HomeColors.danger,
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                            if (resetSuccess ||
+                                (state.message != null &&
+                                    state.message!.isNotEmpty)) ...[
+                              Builder(
+                                builder: (context) {
+                                  final isSuccess =
+                                      resetSuccess || !state.isError;
+
+                                  final message = resetSuccess
+                                      ? 'Password berhasil direset. Silakan masuk kembali.'
+                                      : state.message!;
+
+                                  return Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isSuccess
+                                          ? const Color(0xFFE8F8F0)
+                                          : HomeColors.dangerBg,
+                                      borderRadius: BorderRadius.circular(
+                                        HomeRadius.md,
+                                      ),
+                                      border: Border.all(
+                                        color: isSuccess
+                                            ? const Color(0xFFB7E7D0)
+                                            : const Color(0xFFFECDD3),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isSuccess
+                                              ? Icons
+                                                    .check_circle_outline_rounded
+                                              : Icons.error_outline_rounded,
+                                          color: isSuccess
+                                              ? const Color(0xFF087443)
+                                              : HomeColors.danger,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            message,
+                                            style: TextStyle(
+                                              color: isSuccess
+                                                  ? const Color(0xFF087443)
+                                                  : HomeColors.danger,
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 16),
                             ],
@@ -198,7 +238,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               errorText: state.fieldErrors['email']?.first,
-                              decoration: _inputDecoration('Email Anda', Icons.mail_outline_rounded),
+                              decoration: _inputDecoration(
+                                'Email Anda',
+                                Icons.mail_outline_rounded,
+                              ),
                             ),
 
                             const SizedBox(height: 14),
@@ -209,23 +252,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               label: 'Password',
                               obscureText: _obscurePassword,
                               errorText: state.fieldErrors['password']?.first,
-                              decoration: _inputDecoration('Kata sandi', Icons.lock_outline_rounded).copyWith(
-                                suffixIcon: IconButton(
-                                  tooltip: _obscurePassword ? 'Tampilkan' : 'Sembunyikan',
-                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: HomeColors.textSecondary,
-                                    size: 20,
+                              decoration:
+                                  _inputDecoration(
+                                    'Kata sandi',
+                                    Icons.lock_outline_rounded,
+                                  ).copyWith(
+                                    suffixIcon: IconButton(
+                                      tooltip: _obscurePassword
+                                          ? 'Tampilkan'
+                                          : 'Sembunyikan',
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        color: HomeColors.textSecondary,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
                             ),
 
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: state.isSubmitting ? null : () => context.go('/forgot-password'),
+                                onPressed: state.isSubmitting
+                                    ? null
+                                    : () => context.go('/forgot-password'),
                                 child: const Text(
                                   'Lupa password?',
                                   style: TextStyle(
@@ -249,7 +305,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(HomeRadius.md),
+                                    borderRadius: BorderRadius.circular(
+                                      HomeRadius.md,
+                                    ),
                                   ),
                                 ),
                                 child: state.isSubmitting
@@ -279,11 +337,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (context) => const RoleSelectionScreen(),
+                                      builder: (context) =>
+                                          const RoleSelectionScreen(),
                                     ),
                                   );
                                 },
-                                icon: const Icon(Icons.person_add_rounded, size: 18),
+                                icon: const Icon(
+                                  Icons.person_add_rounded,
+                                  size: 18,
+                                ),
                                 label: const Text(
                                   'Daftar Akun Baru',
                                   style: TextStyle(
@@ -293,9 +355,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: HomeColors.primaryGreen,
-                                  side: const BorderSide(color: HomeColors.primaryGreen, width: 1.5),
+                                  side: const BorderSide(
+                                    color: HomeColors.primaryGreen,
+                                    width: 1.5,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(HomeRadius.md),
+                                    borderRadius: BorderRadius.circular(
+                                      HomeRadius.md,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -310,19 +377,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               children: [
                                 const Text(
                                   'Belum punya akun? ',
-                                  style: TextStyle(color: HomeColors.textSecondary, fontSize: 13),
+                                  style: TextStyle(
+                                    color: HomeColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
                                 ),
                                 InkWell(
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) => const RoleSelectionScreen(),
+                                        builder: (context) =>
+                                            const RoleSelectionScreen(),
                                       ),
                                     );
                                   },
                                   borderRadius: BorderRadius.circular(4),
                                   child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 4,
+                                    ),
                                     child: Text(
                                       'Daftar di sini',
                                       style: TextStyle(
@@ -365,7 +439,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(HomeRadius.md),
-        borderSide: const BorderSide(color: HomeColors.primaryGreen, width: 1.5),
+        borderSide: const BorderSide(
+          color: HomeColors.primaryGreen,
+          width: 1.5,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(HomeRadius.md),
@@ -379,7 +456,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    await ref.read(authControllerProvider).login(
+    await ref
+        .read(authControllerProvider)
+        .login(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );

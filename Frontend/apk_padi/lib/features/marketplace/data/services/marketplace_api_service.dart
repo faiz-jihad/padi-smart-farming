@@ -401,7 +401,7 @@ class MarketplaceApiService {
 
   Future<PurchaseContractModel> getContract(int contractId) async {
     final response = await _apiClient.dio.get(
-      '/purchase-contracts/$contractId',
+      '/purchase-contracts/$contractId/invoice',
     );
 
     final responseData = response.data;
@@ -500,4 +500,39 @@ class MarketplaceApiService {
       return {};
     }
   }
+  Future<List<Map<String, dynamic>>> fetchContractPayments() async {
+  try {
+    final response = await _apiClient.dio.get('/contract-payments');
+
+    final responseData = response.data;
+
+    if (responseData is! Map) {
+      return [];
+    }
+
+    final data = responseData['data'];
+
+    if (data is! List) {
+      return [];
+    }
+
+    return data
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  } on DioException catch (e) {
+    final data = e.response?.data;
+
+    if (data is Map) {
+      throw Exception(
+        data['message']?.toString() ??
+            'Gagal mengambil data pembayaran kontrak.',
+      );
+    }
+
+    throw Exception(
+      'Server error ${e.response?.statusCode ?? ''}.',
+    );
+  }
+}
 }

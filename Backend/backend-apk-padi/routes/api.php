@@ -66,8 +66,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::prefix('auth')->middleware('throttle:auth-strict')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
-        Route::post('forgot-password', [PasswordResetController::class, 'forgot']);
-        Route::post('reset-password', [PasswordResetController::class, 'reset']);
+        Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
+        Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify']);
+        Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
         Route::middleware(['auth:sanctum', 'account.active'])->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
@@ -182,9 +183,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
         Route::post('purchase-contracts', [PurchaseContractController::class, 'store']);
+        Route::get(
+            'purchase-contracts/{purchaseContract}',
+            [PurchaseContractController::class, 'show']
+        );
         Route::get('sales-report', [PurchaseContractController::class, 'salesReport']);
         Route::get('contract-payments', [ContractPaymentController::class, 'index']);
-
+        Route::get('purchase-contracts/{purchaseContract}/invoice', [PurchaseContractController::class, 'invoice']);
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
