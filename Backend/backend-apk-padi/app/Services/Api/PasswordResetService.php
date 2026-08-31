@@ -2,15 +2,20 @@
 
 namespace App\Services\Api;
 
+use App\Mail\PasswordResetCodeMail;
 use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class PasswordResetService
 {
+    private const CODE_TTL = 10;
+
+    private const CACHE_PREFIX = 'password_reset_code:';
+
     public function mailerIsConfigured(): bool
     {
         $mailer = (string) Config::get('mail.default');
@@ -18,31 +23,107 @@ class PasswordResetService
         return ! in_array($mailer, ['array', 'log'], true);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function sendResetLink(array $data): string
+    public function sendResetCode(array $data): bool
     {
-        return Password::sendResetLink($data);
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return true;
+        }
+
+        $code = (string) random_int(100000, 999999);
+
+        $cacheKey = $this->cacheKey($email);
+
+        Cache::put(
+            $cacheKey,
+            [
+                'code' => Hash::make($code),
+                'expires_at' => now()->addMinutes(self::CODE_TTL)->timestamp,
+            ],
+            now()->addMinutes(self::CODE_TTL)
+        );
+
+        try {
+            Mail::to($user->email)->send(
+                new PasswordResetCodeMail(
+                    name: $user->name,
+                    code: $code,
+                )
+            );
+
+            return true;
+        } catch (\Throwable $exception) {
+            Cache::forget($cacheKey);
+
+            report($exception);
+
+            return false;
+        }
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function reset(array $data): string
+    public function verifyCode(string $email, string $code): bool
     {
-        return Password::reset(
-            $data,
-            function (User $user, string $password): void {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+        $email = strtolower(trim($email));
+        $code = trim($code);
 
-                $user->tokens()->delete();
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return false;
+        }
 
-                event(new PasswordReset($user));
-            }
-        );
+        $reset = Cache::get($this->cacheKey($email));
+
+        if (! is_array($reset)) {
+            return false;
+        }
+
+        if (
+            ! isset($reset['code']) ||
+            ! isset($reset['expires_at'])
+        ) {
+            return false;
+        }
+
+        if ((int) $reset['expires_at'] < now()->timestamp) {
+            Cache::forget($this->cacheKey($email));
+
+            return false;
+        }
+
+        return Hash::check($code, $reset['code']);
+    }
+
+    public function reset(array $data): bool
+    {
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        $code = trim((string) ($data['code'] ?? ''));
+
+        if (! $this->verifyCode($email, $code)) {
+            return false;
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return false;
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $user->tokens()->delete();
+
+        Cache::forget($this->cacheKey($email));
+
+        return true;
+    }
+
+    private function cacheKey(string $email): string
+    {
+        return self::CACHE_PREFIX . sha1(strtolower(trim($email)));
     }
 }

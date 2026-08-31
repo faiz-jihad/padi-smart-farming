@@ -258,5 +258,34 @@ class PurchaseContractController extends Controller
             'data' => $reportData,
         ]);
     }
+    public function invoice(
+    Request $request,
+    PurchaseContract $purchaseContract
+) {
+    $user = $request->user();
+
+    if (
+        $purchaseContract->farmer_id !== $user->id &&
+        $purchaseContract->partner_id !== $user->id
+    ) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda tidak memiliki akses ke faktur ini.',
+        ], 403);
+    }
+
+    $purchaseContract->load([
+        'listing:id,commodity,unit,price_per_unit,image_url,description,status',
+        'farmer:id,name,phone,email',
+        'partner:id,name,phone,email',
+        'offer:id,listing_id,partner_id,offered_price,quantity,status,message',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Faktur pembelian berhasil diambil.',
+        'data' => new PurchaseContractResource($purchaseContract),
+    ]);
+}
 }
 

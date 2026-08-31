@@ -28,16 +28,30 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthResult> login({required String email, required String password}) {
-    return _authApiService.login(email: email, password: password);
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+  }) {
+    return _authApiService.login(
+      email: email,
+      password: password,
+    );
   }
 
   @override
-  Future<AppUser> me() => _authApiService.me();
+  Future<AppUser> me() {
+    return _authApiService.me();
+  }
 
   @override
-  Future<AppUser> updateProfile({required String name, required String phone}) {
-    return _authApiService.updateProfile(name: name, phone: phone);
+  Future<AppUser> updateProfile({
+    required String name,
+    required String phone,
+  }) {
+    return _authApiService.updateProfile(
+      name: name,
+      phone: phone,
+    );
   }
 
   @override
@@ -54,11 +68,43 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> forgotPassword(String email) => _authApiService.forgotPassword(email);
+  Future<void> forgotPassword(String email) {
+    return _authApiService.forgotPassword(email);
+  }
 
   @override
-  Future<void> logout() => _authApiService.logout();
+  Future<bool> verifyResetCode({
+    required String email,
+    required String code,
+  }) {
+    return _authApiService.verifyResetCode(
+      email: email,
+      code: code,
+    );
+  }
 
   @override
-  Future<void> logoutAll() => _authApiService.logoutAll();
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) {
+    return _authApiService.resetPassword(
+      email: email,
+      code: code,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+  }
+
+  @override
+  Future<void> logout() {
+    return _authApiService.logout();
+  }
+
+  @override
+  Future<void> logoutAll() {
+    return _authApiService.logoutAll();
+  }
 }

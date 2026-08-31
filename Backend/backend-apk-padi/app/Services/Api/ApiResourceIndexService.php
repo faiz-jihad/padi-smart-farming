@@ -112,7 +112,7 @@ class ApiResourceIndexService
                 'farm:id,name,area_ha,latitude,longitude',
                 'cropSeason:id,variety_id,status',
                 'harvest:id,moisture_percent,quality_grade,quantity',
-                'images:id,market_listing_id,image_url,is_primary',
+                'images:id,listing_id,image_url,is_primary',
                 'offers:id,listing_id,partner_id,offered_price,quantity,status',
             ])
             ->latest('published_at')

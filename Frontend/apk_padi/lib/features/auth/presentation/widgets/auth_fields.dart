@@ -51,29 +51,71 @@ class PadiTextField extends StatelessWidget {
 }
 
 class ErrorBanner extends StatelessWidget {
-  const ErrorBanner({super.key, required this.message});
+  const ErrorBanner({
+    super.key,
+    required this.message,
+    this.isSuccess = false,
+  });
 
   final String message;
+  final bool isSuccess;
 
   @override
   Widget build(BuildContext context) {
-    if (message.isEmpty) {
+    if (message.trim().isEmpty) {
       return const SizedBox.shrink();
     }
 
+    final backgroundColor = isSuccess
+        ? const Color(0xFFE8F8F1)
+        : const Color(0xFFFFEEE8);
+
+    final borderColor = isSuccess
+        ? const Color(0xFF8ED9B8)
+        : const Color(0xFFFFC9B8);
+
+    final textColor = isSuccess
+        ? const Color(0xFF087443)
+        : const Color(0xFF9E3B1F);
+
+    final icon = isSuccess
+        ? Icons.check_circle_outline_rounded
+        : Icons.error_outline_rounded;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF1E8),
-        borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
       ),
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: Color(0xFF9A3412),
-          fontWeight: FontWeight.w600,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: borderColor,
         ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: textColor,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

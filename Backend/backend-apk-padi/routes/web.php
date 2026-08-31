@@ -34,6 +34,13 @@ Route::get('/profile/{subdomain}', [FarmerPublicProfileController::class, 'show'
 // ─── Default Redirects (Apex domain only) ───────────────────────────────────
 Route::redirect('/', '/admin');
 Route::redirect('/login', '/admin/login')->name('login');
+Route::get('/reset-password/{token}', function (string $token) {
+    $email = request()->query('email');
+
+    return redirect()->away(
+        'padi://reset-password?token=' . urlencode($token) . '&email=' . urlencode((string) $email)
+    );
+})->name('password.reset');
 
 // ─── Admin Auth ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
