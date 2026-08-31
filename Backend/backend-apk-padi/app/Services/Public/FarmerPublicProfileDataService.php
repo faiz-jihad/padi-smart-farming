@@ -102,6 +102,12 @@ class FarmerPublicProfileDataService
     {
         $sections = $profile->resolvedSectionSettings();
 
+        if (! $profile->isVerified()) {
+            $sections['show_products'] = false;
+            $sections['show_gallery'] = false;
+            $sections['show_contact'] = false;
+        }
+
         return [
             'profile'    => $this->buildProfileData($profile),
             'statistics' => $sections['show_productivity'] ? $this->buildStatistics($profile) : null,
