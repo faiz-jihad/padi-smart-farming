@@ -23,6 +23,14 @@ class AppConfig {
     'API_HOSTS',
     defaultValue: '',
   );
+  static const _apiLanHost = String.fromEnvironment(
+    'API_LAN_HOST',
+    defaultValue: '192.168.100.10',
+  );
+  static const _connectTimeoutSeconds = int.fromEnvironment(
+    'API_CONNECT_TIMEOUT_SECONDS',
+    defaultValue: 30,
+  );
 
   static final List<String> candidateHosts = _resolveCandidateHosts();
 
@@ -81,6 +89,16 @@ class AppConfig {
     };
   }
 
+  static String get apiHealthUrl {
+    return '${apiBaseUrl.replaceFirst('/api/v1', '')}/api/v1/health';
+  }
+
+  static Duration get apiConnectTimeout {
+    return Duration(
+      seconds: _connectTimeoutSeconds < 5 ? 5 : _connectTimeoutSeconds,
+    );
+  }
+
   static const deviceName = String.fromEnvironment(
     'DEVICE_NAME',
     defaultValue: 'P.A.D.I Mobile',
@@ -98,8 +116,8 @@ class AppConfig {
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return _dedupe([
+        if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
         '10.0.2.2',
-        '127.0.0.1',
       ]);
     }
 

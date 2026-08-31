@@ -15,6 +15,7 @@ class DiseaseScan extends Model
         'quality_status',
         'predicted_class',
         'confidence',
+        'detection_metadata',
         'model_version',
         'user_feedback',
         'verified_class',
@@ -25,6 +26,7 @@ class DiseaseScan extends Model
 
     protected $casts = [
         'confidence' => 'decimal:4',
+        'detection_metadata' => 'array',
         'is_learned' => 'boolean',
         'scanned_at' => 'datetime',
     ];

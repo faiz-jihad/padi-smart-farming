@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +66,7 @@ class LeafMemoryBank:
             feature_vector=normalized_vector,
             confidence=round(float(confidence), 4),
             source=source,
-            learned_at=datetime.now(timezone.utc).isoformat(),
+            learned_at=datetime.now(UTC).isoformat(),
         )
 
         self._samples[sample_id] = sample

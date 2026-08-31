@@ -77,6 +77,15 @@ class EventController extends Controller
      */
     public function show(Request $request, AgricultureEvent $event): JsonResponse
     {
+        $user = $request->user();
+
+        // Load the registration status for the authenticated user
+        if ($user) {
+            $event->is_user_registered = $event->registrations()
+                ->where('user_id', $user->id)
+                ->exists();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Detail acara berhasil diambil.',

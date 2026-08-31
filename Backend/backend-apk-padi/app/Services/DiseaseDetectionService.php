@@ -16,7 +16,8 @@ class DiseaseDetectionService
     public function __construct(
         private readonly GeminiRecommendationService $geminiService,
         private readonly WeatherService $weatherService
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array{farm_id: int, plant_age_days?: int|null, latitude?: float|null, longitude?: float|null}  $data
@@ -30,16 +31,17 @@ class DiseaseDetectionService
 
         $lat = (float) ($data['latitude'] ?? $farm->latitude ?? -6.3266);
         $lng = (float) ($data['longitude'] ?? $farm->longitude ?? 108.3200);
+        $plantAgeDays = isset($data['plant_age_days']) ? (int) $data['plant_age_days'] : null;
 
         $aiResult = $this->detectWithAi($image, [
-            'plant_age_days' => $data['plant_age_days'] ?? null,
+            'plant_age_days' => $plantAgeDays,
             'latitude' => $lat,
             'longitude' => $lng,
         ]);
 
         $path = $image->store('disease-scans', 'public');
 
-        if (! $path) {
+        if (!$path) {
             throw new RuntimeException('Foto gagal disimpan.');
         }
 
@@ -49,9 +51,10 @@ class DiseaseDetectionService
             'farm_id' => $farm->id,
             'image_url' => Storage::disk('public')->url($path),
             'image_hash' => hash_file('sha256', $image->getRealPath()),
-            'quality_status' => (string) ($aiResult['image_quality']['status'] ?? $aiResult['confidence_level'] ?? 'model_checked'),
+            'quality_status' => $this->qualityStatusFromAiResult($aiResult),
             'predicted_class' => (string) $aiResult['disease_name'],
             'confidence' => (float) $aiResult['confidence'],
+            'detection_metadata' => $this->buildDetectionMetadata($aiResult),
             'model_version' => (string) $aiResult['model_version'],
             'scanned_at' => now(),
         ])->load('farm');
@@ -65,7 +68,7 @@ class DiseaseDetectionService
 
         try {
             $weatherResponse = $this->weatherService->getCurrentWeather($lat, $lng);
-            if (! empty($weatherResponse['data'])) {
+            if (!empty($weatherResponse['data'])) {
                 $parsed = $this->weatherService->parseWeatherData($weatherResponse['data']);
                 $weatherContext = [
                     'temperature' => (float) ($parsed['temperature'] ?? 29.0),
@@ -74,12 +77,17 @@ class DiseaseDetectionService
                 ];
             }
         } catch (\Throwable $e) {
-            Log::warning('[Weather Realtime Failed] '.$e->getMessage());
+            Log::warning('[Weather Realtime Failed] ' . $e->getMessage());
         }
 
         // 2. Libatkan AI Microservice Python (/treatments/recommend) untuk rekomendasi agronomi terstruktur
         $diseaseCode = (string) $aiResult['disease_code'];
-        $aiTreatments = $this->getAiServiceTreatments($diseaseCode, (float) ($scan->confidence ?? 0.90), $weatherContext);
+        $aiTreatments = $this->getAiServiceTreatments(
+            $diseaseCode,
+            (float) ($scan->confidence ?? 0.90),
+            $weatherContext,
+            $plantAgeDays
+        );
         if ($aiTreatments) {
             $scan->setAttribute('ai_service_treatments', $aiTreatments);
         }
@@ -89,7 +97,7 @@ class DiseaseDetectionService
             $recommendations = $this->geminiService->generateForScan($scan, $weatherContext);
             $scan->setAttribute('gemini_recommendations', $recommendations);
         } catch (\Throwable $e) {
-            Log::warning('[Gemini Rec Service] '.$e->getMessage());
+            Log::warning('[Gemini Rec Service] ' . $e->getMessage());
         }
 
         return $scan;
@@ -101,7 +109,7 @@ class DiseaseDetectionService
      * @param  array{temperature: float, humidity: float, condition: string}  $weatherContext
      * @return array<string, mixed>|null
      */
-    private function getAiServiceTreatments(string $diseaseCode, float $confidence, array $weatherContext): ?array
+    private function getAiServiceTreatments(string $diseaseCode, float $confidence, array $weatherContext, ?int $plantAgeDays): ?array
     {
         $baseUrl = rtrim((string) config('services.ai.base_url'), '/');
         if (empty($baseUrl)) {
@@ -112,8 +120,8 @@ class DiseaseDetectionService
             $response = Http::timeout((int) config('services.ai.timeout', 15))->post("{$baseUrl}/treatments/recommend", [
                 'disease_code' => $diseaseCode,
                 'confidence' => min(max($confidence, 0.0), 1.0),
-                'plant_age_days' => 45,
-                'severity' => $confidence >= 0.85 ? 'tinggi' : 'sedang',
+                'plant_age_days' => $plantAgeDays,
+                'severity' => $confidence >= 0.85 ? 'high' : 'medium',
                 'affected_area_percentage' => $confidence >= 0.85 ? 30.0 : 15.0,
                 'weather_condition' => $weatherContext['condition'] ?? 'Cerah Berawan',
                 'actions_already_taken' => [],
@@ -125,10 +133,48 @@ class DiseaseDetectionService
                 return is_array($payload) ? ($payload['data'] ?? null) : null;
             }
         } catch (\Throwable $e) {
-            Log::info('[AI Service Treatment Recommendation Skip] '.$e->getMessage());
+            Log::info('[AI Service Treatment Recommendation Skip] ' . $e->getMessage());
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $aiResult
+     */
+    private function qualityStatusFromAiResult(array $aiResult): string
+    {
+        $imageQuality = is_array($aiResult['image_quality'] ?? null) ? $aiResult['image_quality'] : [];
+        $status = trim((string) ($imageQuality['status'] ?? ''));
+
+        if ($status !== '') {
+            return $status;
+        }
+
+        if (($imageQuality['is_acceptable'] ?? false) === true) {
+            return 'passed';
+        }
+
+        return (string) ($aiResult['confidence_level'] ?? 'model_checked');
+    }
+
+    /**
+     * @param  array<string, mixed>  $aiResult
+     * @return array<string, mixed>
+     */
+    private function buildDetectionMetadata(array $aiResult): array
+    {
+        return [
+            'disease_code' => $aiResult['disease_code'] ?? null,
+            'confidence_level' => $aiResult['confidence_level'] ?? null,
+            'needs_expert_review' => (bool) ($aiResult['needs_expert_review'] ?? false),
+            'image_quality' => $aiResult['image_quality'] ?? null,
+            'top_predictions' => $aiResult['top_predictions'] ?? [],
+            'prediction_margin' => $aiResult['prediction_margin'] ?? null,
+            'model_accuracy' => $aiResult['model_accuracy'] ?? null,
+            'processing_time_ms' => $aiResult['processing_time_ms'] ?? null,
+            'ai_request_id' => $aiResult['ai_request_id'] ?? null,
+        ];
     }
 
     /**
@@ -136,7 +182,7 @@ class DiseaseDetectionService
      */
     public function submitFeedback(DiseaseScan $scan, string $status, ?string $correctedClass = null, ?string $notes = null): DiseaseScan
     {
-        $finalClass = ($status === 'corrected' && ! empty($correctedClass))
+        $finalClass = ($status === 'corrected' && !empty($correctedClass))
             ? $correctedClass
             : ($scan->predicted_class ?? 'Tidak Dapat Dipastikan');
 
@@ -157,7 +203,7 @@ class DiseaseDetectionService
             ]);
             $scan->setAttribute('gemini_recommendations', $newRecs);
         } catch (\Throwable $e) {
-            Log::warning('[Regenerate Rec on Feedback Failed] '.$e->getMessage());
+            Log::warning('[Regenerate Rec on Feedback Failed] ' . $e->getMessage());
         }
 
         // Kirimkan ke AI microservice agar memori daun diperbarui secara real-time
@@ -179,19 +225,19 @@ class DiseaseDetectionService
         try {
             $parsedPath = parse_url($scan->image_url, PHP_URL_PATH);
             $cleanPath = ltrim(str_replace(['/storage/', 'storage/'], '', (string) $parsedPath), '/');
-            $imagePath = storage_path('app/public/'.$cleanPath);
+            $imagePath = storage_path('app/public/' . $cleanPath);
 
-            if (! file_exists($imagePath)) {
-                $imagePath = public_path('storage/'.$cleanPath);
+            if (!file_exists($imagePath)) {
+                $imagePath = public_path('storage/' . $cleanPath);
             }
 
-            if (! file_exists($imagePath)) {
+            if (!file_exists($imagePath)) {
                 return;
             }
 
             $diseaseCode = $this->normalizeDiseaseCode($diseaseName);
             if ($diseaseCode === null) {
-                Log::warning('[AI Learning Sync Skipped] Unsupported disease class: '.$diseaseName);
+                Log::warning('[AI Learning Sync Skipped] Unsupported disease class: ' . $diseaseName);
 
                 return;
             }
@@ -203,10 +249,10 @@ class DiseaseDetectionService
                     'disease_name' => $diseaseName,
                     'confidence' => (float) ($scan->confidence ?? 1.0),
                     'source' => $source,
-                    'sample_id' => 'scan_'.$scan->id,
+                    'sample_id' => 'scan_' . $scan->id,
                 ]);
         } catch (\Throwable $e) {
-            Log::warning('[AI Learning Sync Failed] '.$e->getMessage());
+            Log::warning('[AI Learning Sync Failed] ' . $e->getMessage());
         }
     }
 
@@ -239,7 +285,7 @@ class DiseaseDetectionService
         $baseUrl = rtrim((string) config('services.ai.base_url'), '/');
 
         $imagePath = $image->getRealPath();
-        if (! $imagePath || ! file_exists($imagePath)) {
+        if (!$imagePath || !file_exists($imagePath)) {
             throw new RuntimeException('File foto tidak dapat dibaca untuk inferensi AI.');
         }
 
@@ -260,9 +306,9 @@ class DiseaseDetectionService
                     'plant_age_days' => $context['plant_age_days'] ?? null,
                     'latitude' => $context['latitude'] ?? null,
                     'longitude' => $context['longitude'] ?? null,
-                ], fn ($value) => $value !== null));
+                ], fn($value) => $value !== null));
         } catch (\Throwable $e) {
-            Log::warning('[AI Microservice Detection Failed] '.$e->getMessage());
+            Log::warning('[AI Microservice Detection Failed] ' . $e->getMessage());
 
             return $this->fallbackDetectionResult($image, 'AI service deteksi penyakit belum tersedia.');
         }
@@ -273,24 +319,28 @@ class DiseaseDetectionService
             throw new \InvalidArgumentException($errorMessage);
         }
 
-        if (! $response->successful()) {
-            Log::warning('[AI Microservice Detection Error] HTTP '.$response->status().' : '.$response->body());
+        if (!$response->successful()) {
+            Log::warning('[AI Microservice Detection Error] HTTP ' . $response->status() . ' : ' . $response->body());
 
             return $this->fallbackDetectionResult($image, 'AI service deteksi penyakit gagal memproses gambar.');
         }
 
         $payload = $response->json();
         $data = is_array($payload) ? ($payload['data'] ?? null) : null;
-        if (! is_array($data)) {
+        if (!is_array($data)) {
             Log::warning('[AI Microservice Detection Error] Invalid response payload.');
 
             return $this->fallbackDetectionResult($image, 'AI service tidak mengembalikan data deteksi yang valid.');
         }
 
+        if (isset($payload['meta']['request_id'])) {
+            $data['ai_request_id'] = $payload['meta']['request_id'];
+        }
+
         try {
             return $this->normalizeAiDetectionResult($data);
         } catch (RuntimeException $e) {
-            Log::warning('[AI Microservice Detection Normalization Failed] '.$e->getMessage());
+            Log::warning('[AI Microservice Detection Normalization Failed] ' . $e->getMessage());
 
             return $this->fallbackDetectionResult($image, $e->getMessage());
         }
@@ -336,6 +386,15 @@ class DiseaseDetectionService
                     'reason' => $reason,
                 ],
                 'needs_expert_review' => true,
+                'top_predictions' => [
+                    [
+                        'disease_code' => $selected[0],
+                        'disease_name' => $selected[1],
+                        'confidence' => min($confidence, 0.80),
+                    ],
+                ],
+                'prediction_margin' => 0.0,
+                'model_accuracy' => null,
             ];
         }
 
@@ -350,6 +409,9 @@ class DiseaseDetectionService
                 'reason' => $reason,
             ],
             'needs_expert_review' => true,
+            'top_predictions' => [],
+            'prediction_margin' => null,
+            'model_accuracy' => null,
         ];
     }
 
@@ -367,11 +429,11 @@ class DiseaseDetectionService
             throw new RuntimeException('AI service belum yakin dengan hasil deteksi. Silakan ambil foto ulang dengan daun lebih jelas.');
         }
 
-        if (! isset($data['confidence']) || ! is_numeric($data['confidence'])) {
+        if (!isset($data['confidence']) || !is_numeric($data['confidence'])) {
             throw new RuntimeException('AI service tidak mengembalikan confidence model yang valid.');
         }
 
-        $confidence = min(max((float) $data['confidence'], 0.0), 1.0);
+        $confidence = $this->clampProbability((float) $data['confidence']);
         if ($confidence <= 0.0) {
             throw new RuntimeException('AI service mengembalikan confidence model terlalu rendah.');
         }
@@ -386,7 +448,79 @@ class DiseaseDetectionService
         $data['model_version'] = $modelVersion;
         $data['confidence_level'] = $data['confidence_level'] ?? ($confidence >= 0.85 ? 'high' : ($confidence >= 0.70 ? 'medium' : 'low'));
         $data['image_quality'] = is_array($data['image_quality'] ?? null) ? $data['image_quality'] : [];
+        $data['needs_expert_review'] = (bool) ($data['needs_expert_review'] ?? $data['confidence_level'] === 'low');
+        $data['top_predictions'] = $this->normalizeTopPredictions(
+            is_array($data['top_predictions'] ?? null) ? $data['top_predictions'] : [],
+            $diseaseCode,
+            $diseaseName,
+            $confidence
+        );
+        $data['prediction_margin'] = isset($data['prediction_margin']) && is_numeric($data['prediction_margin'])
+            ? $this->clampProbability((float) $data['prediction_margin'])
+            : $this->calculatePredictionMargin($data['top_predictions']);
+        $data['model_accuracy'] = isset($data['model_accuracy']) && is_numeric($data['model_accuracy'])
+            ? $this->clampProbability((float) $data['model_accuracy'])
+            : null;
+        $data['processing_time_ms'] = isset($data['processing_time_ms']) && is_numeric($data['processing_time_ms'])
+            ? max(0, (int) $data['processing_time_ms'])
+            : null;
 
         return $data;
+    }
+
+    private function clampProbability(float $value): float
+    {
+        return min(max($value, 0.0), 1.0);
+    }
+
+    /**
+     * @param  array<int, mixed>  $predictions
+     * @return array<int, array{disease_code: string, disease_name: string, confidence: float}>
+     */
+    private function normalizeTopPredictions(array $predictions, string $diseaseCode, string $diseaseName, float $confidence): array
+    {
+        $normalized = [];
+
+        foreach ($predictions as $prediction) {
+            if (!is_array($prediction)) {
+                continue;
+            }
+
+            $candidateCode = trim((string) ($prediction['disease_code'] ?? ''));
+            $candidateName = trim((string) ($prediction['disease_name'] ?? ''));
+            $candidateConfidence = $prediction['confidence'] ?? null;
+
+            if ($candidateCode === '' || $candidateName === '' || !is_numeric($candidateConfidence)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'disease_code' => $candidateCode,
+                'disease_name' => $candidateName,
+                'confidence' => $this->clampProbability((float) $candidateConfidence),
+            ];
+        }
+
+        if ($normalized === [] || $normalized[0]['disease_code'] !== $diseaseCode) {
+            array_unshift($normalized, [
+                'disease_code' => $diseaseCode,
+                'disease_name' => $diseaseName,
+                'confidence' => $confidence,
+            ]);
+        }
+
+        return array_slice($normalized, 0, 3);
+    }
+
+    /**
+     * @param  array<int, array{disease_code: string, disease_name: string, confidence: float}>  $predictions
+     */
+    private function calculatePredictionMargin(array $predictions): float
+    {
+        if (count($predictions) < 2) {
+            return 0.0;
+        }
+
+        return $this->clampProbability((float) $predictions[0]['confidence'] - (float) $predictions[1]['confidence']);
     }
 }

@@ -163,6 +163,11 @@ class PlantCheckResult {
     required this.qualityStatus,
     this.farmName,
     this.confidence,
+    this.confidenceLevel,
+    this.needsExpertReview = false,
+    this.topPredictions = const [],
+    this.predictionMargin,
+    this.modelAccuracy,
     this.modelVersion,
     this.imageUrl,
     this.recommendation,
@@ -185,6 +190,11 @@ class PlantCheckResult {
       predictedClass: json['predicted_class']?.toString() ?? 'Tidak diketahui',
       qualityStatus: json['quality_status']?.toString() ?? 'unknown',
       confidence: _toNullableDouble(json['confidence']),
+      confidenceLevel: json['confidence_level']?.toString(),
+      needsExpertReview: json['needs_expert_review'] == true,
+      topPredictions: _parsePredictionCandidates(json['top_predictions']),
+      predictionMargin: _toNullableDouble(json['prediction_margin']),
+      modelAccuracy: _toNullableDouble(json['model_accuracy']),
       modelVersion: json['model_version']?.toString(),
       imageUrl: json['image_url']?.toString(),
       recommendation: rec,
@@ -200,12 +210,37 @@ class PlantCheckResult {
   final String predictedClass;
   final String qualityStatus;
   final double? confidence;
+  final String? confidenceLevel;
+  final bool needsExpertReview;
+  final List<PredictionCandidate> topPredictions;
+  final double? predictionMargin;
+  final double? modelAccuracy;
   final String? modelVersion;
   final String? imageUrl;
   final GeminiRecommendationData? recommendation;
   final String? userFeedback;
   final String? verifiedClass;
   final bool isLearned;
+}
+
+class PredictionCandidate {
+  const PredictionCandidate({
+    required this.diseaseCode,
+    required this.diseaseName,
+    required this.confidence,
+  });
+
+  factory PredictionCandidate.fromJson(Map<String, dynamic> json) {
+    return PredictionCandidate(
+      diseaseCode: json['disease_code']?.toString() ?? '',
+      diseaseName: json['disease_name']?.toString() ?? '',
+      confidence: _toNullableDouble(json['confidence']) ?? 0,
+    );
+  }
+
+  final String diseaseCode;
+  final String diseaseName;
+  final double confidence;
 }
 
 
@@ -236,4 +271,13 @@ double? _toNullableDouble(dynamic value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value.trim().replaceAll(',', '.'));
   return null;
+}
+
+List<PredictionCandidate> _parsePredictionCandidates(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map((item) => PredictionCandidate.fromJson(Map<String, dynamic>.from(item)))
+      .where((item) => item.diseaseName.isNotEmpty)
+      .toList(growable: false);
 }

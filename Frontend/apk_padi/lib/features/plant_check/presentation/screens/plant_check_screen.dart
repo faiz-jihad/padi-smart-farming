@@ -1718,7 +1718,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     final confidence = result.confidence;
     final confidencePercent = confidence != null
         ? (confidence * 100).toStringAsFixed(1)
-        : '94.2';
+        : null;
+    final modelAccuracyPercent = result.modelAccuracy != null
+        ? (result.modelAccuracy! * 100).toStringAsFixed(1)
+        : null;
 
     return Container(
       constraints: BoxConstraints(
@@ -1805,7 +1808,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                         Icon(Icons.auto_awesome_rounded, color: Color(0xFFFDE68A), size: 14),
                                         SizedBox(width: 5),
                                         Text(
-                                          'Gemini 1.5 Pro AI',
+                                          'P.A.D.I. Vision AI',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11.5,
@@ -1817,7 +1820,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                     ),
                                   ),
 
-                                  // Accuracy Pill
+                                  // Confidence Pill
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
@@ -1837,7 +1840,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                         const Icon(Icons.verified_rounded, color: Colors.white, size: 13),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '$confidencePercent% Akurat',
+                                          confidencePercent != null
+                                              ? '$confidencePercent% yakin'
+                                              : 'Perlu review',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 11.5,
@@ -1902,7 +1907,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                           ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'}',
+                                          modelAccuracyPercent != null
+                                              ? 'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'} | Validasi: $modelAccuracyPercent%'
+                                              : 'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'}',
                                           style: TextStyle(
                                             color: Colors.white.withOpacity(0.65),
                                             fontSize: 11,

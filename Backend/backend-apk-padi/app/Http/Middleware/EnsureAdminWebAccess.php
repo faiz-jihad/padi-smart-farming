@@ -41,6 +41,8 @@ class EnsureAdminWebAccess
             abort(403);
         }
 
+        $user->syncPermissionRoleFromColumn();
+
         return $next($request);
     }
 }

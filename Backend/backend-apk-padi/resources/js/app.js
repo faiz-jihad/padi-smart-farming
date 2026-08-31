@@ -16,6 +16,9 @@ function setupPopover(toggleId, panelId) {
     const panel  = document.getElementById(panelId);
 
     if (!toggle || !panel) return;
+    if (toggle.dataset.popoverBound === 'true') return;
+
+    toggle.dataset.popoverBound = 'true';
 
     toggle.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -164,4 +167,3 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 });
-

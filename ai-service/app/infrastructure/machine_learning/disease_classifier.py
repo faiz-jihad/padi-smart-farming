@@ -30,6 +30,7 @@ class DiseaseClassifier:
         self._model_loader = model_loader or KerasModelLoader()
         self._model = None
         self._load_error: str | None = None
+        self._feature_extractor = None
 
     @property
     def is_loaded(self) -> bool:
@@ -94,15 +95,54 @@ class DiseaseClassifier:
         feature_vector = self.extract_feature_vector(image_rgb)
         return disease_code, disease_name, confidence, feature_vector
 
-    def predict(self, image_rgb) -> tuple[str, str, float]:
+    def predict_top(self, image_rgb, top_k: int = 3) -> tuple[str, str, float, list[dict[str, float | str]], float]:
+        """Melakukan inferensi dan mengembalikan kandidat penyakit teratas."""
         if self._model is None:
             raise ModelUnavailableError("Model belum tersedia.", code=self._load_error or "MODEL_NOT_LOADED")
 
-        model_input = self._image_preprocessor.preprocess_for_model(image_rgb)
-        probabilities = self._model.predict(model_input, verbose=0)
-        flattened_probabilities = np.asarray(probabilities).reshape(-1)
+        flattened_probabilities = self._predict_probabilities(image_rgb)
         class_index = int(flattened_probabilities.argmax())
         confidence = float(flattened_probabilities[class_index])
         disease_code, disease_name = self._label_mapper.map_index(class_index)
+
+        sorted_indices = np.argsort(flattened_probabilities)[::-1][: max(1, top_k)]
+        top_predictions: list[dict[str, float | str]] = []
+        for index in sorted_indices:
+            candidate_code, candidate_name = self._label_mapper.map_index(int(index))
+            top_predictions.append(
+                {
+                    "disease_code": candidate_code,
+                    "disease_name": candidate_name,
+                    "confidence": round(float(flattened_probabilities[int(index)]), 4),
+                }
+            )
+
+        second_confidence = float(flattened_probabilities[int(sorted_indices[1])]) if len(sorted_indices) > 1 else 0.0
+        prediction_margin = max(0.0, confidence - second_confidence)
+
+        return disease_code, disease_name, confidence, top_predictions, prediction_margin
+
+    def predict(self, image_rgb) -> tuple[str, str, float]:
+        disease_code, disease_name, confidence, _, _ = self.predict_top(image_rgb, top_k=1)
         return disease_code, disease_name, confidence
+
+    def _predict_probabilities(self, image_rgb) -> np.ndarray:
+        model_input = self._image_preprocessor.preprocess_for_model(image_rgb)
+        raw_output = np.asarray(self._model.predict(model_input, verbose=0), dtype=np.float32).reshape(-1)
+        if raw_output.size == 0 or not np.all(np.isfinite(raw_output)):
+            raise ModelUnavailableError("Output model tidak valid.", code="MODEL_INVALID_OUTPUT")
+
+        total = float(raw_output.sum())
+        looks_like_probability = bool(np.all(raw_output >= 0.0) and np.all(raw_output <= 1.0) and 0.98 <= total <= 1.02)
+        if looks_like_probability:
+            probabilities = raw_output / total if total > 0 else raw_output
+        else:
+            shifted = raw_output - np.max(raw_output)
+            exp_values = np.exp(shifted)
+            probabilities = exp_values / np.sum(exp_values)
+
+        if not np.all(np.isfinite(probabilities)):
+            raise ModelUnavailableError("Probabilitas model tidak valid.", code="MODEL_INVALID_PROBABILITIES")
+
+        return probabilities.astype(np.float32)
 

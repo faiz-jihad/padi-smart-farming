@@ -40,6 +40,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::get('health', function (): JsonResponse {
         return response()->json([
             'status' => 'ok',
+            'service' => 'laravel-backend',
+            'gateway' => 'frontend-laravel-ai-service',
             'system' => 'P.A.D.I. Smart Farming API',
             'version' => '1.0.0',
             'timestamp' => now()->toIso8601String(),

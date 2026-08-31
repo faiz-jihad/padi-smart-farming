@@ -47,6 +47,20 @@ class DiseaseScanApiTest extends TestCase
                     'needs_expert_review' => false,
                     'model_version' => 'padi-disease-v2',
                     'processing_time_ms' => 214,
+                    'top_predictions' => [
+                        [
+                            'disease_code' => 'blast',
+                            'disease_name' => 'Blast',
+                            'confidence' => 0.8732,
+                        ],
+                        [
+                            'disease_code' => 'brown_spot',
+                            'disease_name' => 'Brown Spot',
+                            'confidence' => 0.0811,
+                        ],
+                    ],
+                    'prediction_margin' => 0.7921,
+                    'model_accuracy' => 0.95,
                 ],
             ], 200),
             'http://ai.test/api/v1/treatments/recommend' => Http::response([
@@ -75,13 +89,17 @@ class DiseaseScanApiTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.scan.predicted_class', 'Blast')
-            ->assertJsonPath('data.scan.confidence', 0.8732);
+            ->assertJsonPath('data.scan.confidence', 0.8732)
+            ->assertJsonPath('data.scan.confidence_level', 'high')
+            ->assertJsonPath('data.scan.top_predictions.0.disease_code', 'blast')
+            ->assertJsonPath('data.scan.prediction_margin', 0.7921)
+            ->assertJsonPath('data.scan.model_accuracy', 0.95);
 
         $this->assertDatabaseHas('disease_scans', [
             'farmer_id' => $farmer->id,
             'farm_id' => $farm->id,
             'predicted_class' => 'Blast',
-            'quality_status' => 'high',
+            'quality_status' => 'passed',
             'model_version' => 'padi-disease-v2',
         ]);
 

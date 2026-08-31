@@ -10,7 +10,7 @@ class ApiClient {
           Dio(
             BaseOptions(
               baseUrl: AppConfig.apiBaseUrl,
-              connectTimeout: const Duration(seconds: 15),
+              connectTimeout: AppConfig.apiConnectTimeout,
               receiveTimeout: const Duration(seconds: 30),
               sendTimeout: const Duration(seconds: 30),
             ),
@@ -86,7 +86,8 @@ class ApiClient {
     }
 
     final errStr = '${error.type} ${error.message} ${error.error}'.toLowerCase();
-    return error.type == DioExceptionType.connectionTimeout ||
+    return _isLikelyWrongBackend(error) ||
+        error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
@@ -96,6 +97,21 @@ class ApiClient {
         errStr.contains('refused') ||
         errStr.contains('network') ||
         errStr.contains('failed host lookup');
+  }
+
+  bool _isLikelyWrongBackend(DioException error) {
+    final response = error.response;
+    final data = response?.data;
+
+    if (response?.statusCode != 404 || data is! Map) {
+      return false;
+    }
+
+    final detail = data['detail']?.toString().toLowerCase();
+    final hasLaravelErrorShape =
+        data.containsKey('message') || data.containsKey('errors');
+
+    return detail == 'not found' && !hasLaravelErrorShape;
   }
 
   Future<Response<dynamic>?> _retryWithAvailableHosts(DioException error) async {

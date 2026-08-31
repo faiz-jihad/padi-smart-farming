@@ -6,10 +6,7 @@ import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
-  const EventDetailScreen({
-    super.key,
-    required this.event,
-  });
+  const EventDetailScreen({super.key, required this.event});
 
   final EventModel event;
 
@@ -18,7 +15,14 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
-  bool _isRegistered = false;
+  late bool _isRegistered;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize from the event's actual registration status
+    _isRegistered = widget.event.isRegistered;
+  }
 
   void _handleRegistration() {
     if (_isRegistered) return;
@@ -84,12 +88,14 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final event = widget.event;
-    final registeredCount =
-        _isRegistered ? event.registeredCount + 1 : event.registeredCount;
+    final registeredCount = _isRegistered
+        ? event.registeredCount + 1
+        : event.registeredCount;
     final safeQuota = event.quota > 0 ? event.quota : 50;
     final progress = (registeredCount / safeQuota).clamp(0.0, 1.0).toDouble();
-    final remainingQuota =
-        (safeQuota - registeredCount).clamp(0, safeQuota).toInt();
+    final remainingQuota = (safeQuota - registeredCount)
+        .clamp(0, safeQuota)
+        .toInt();
 
     return Scaffold(
       backgroundColor: HomeColors.background,
@@ -113,10 +119,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           event.categoryLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
         ),
       ),
       body: SafeArea(
@@ -199,10 +202,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       ),
       child: Stack(
         children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: _buildHeroImage(event),
-          ),
+          AspectRatio(aspectRatio: 16 / 9, child: _buildHeroImage(event)),
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -471,10 +471,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     );
   }
 
-  Widget _buildHeroBadge(
-    String label, {
-    required Color backgroundColor,
-  }) {
+  Widget _buildHeroBadge(String label, {required Color backgroundColor}) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 260),
       child: Container(

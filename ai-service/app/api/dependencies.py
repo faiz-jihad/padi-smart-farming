@@ -6,6 +6,7 @@ from fastapi import Request
 
 from app.application.use_cases.detect_disease import DetectDiseaseUseCase
 from app.application.use_cases.generate_treatment import GenerateTreatmentUseCase
+from app.application.use_cases.learn_disease_scan import LearnDiseaseScanUseCase
 from app.application.use_cases.recommend_planting_time import RecommendPlantingTimeUseCase
 from app.core.config import Settings
 from app.domain.services.confidence_policy import ConfidencePolicy
@@ -13,7 +14,6 @@ from app.domain.services.image_quality_policy import ImageQualityPolicy
 from app.domain.services.leaf_memory_bank import LeafMemoryBank
 from app.domain.services.leaf_validation_policy import LeafValidationPolicy
 from app.domain.services.planting_scoring_policy import PlantingScoringPolicy
-from app.application.use_cases.learn_disease_scan import LearnDiseaseScanUseCase
 from app.infrastructure.llm.llm_client import LlmClient
 from app.infrastructure.llm.treatment_generator import TreatmentGenerator
 from app.infrastructure.machine_learning.disease_classifier import DiseaseClassifier
@@ -86,6 +86,7 @@ def get_detect_disease_use_case(request: Request) -> DetectDiseaseUseCase:
         max_image_size_bytes=container.settings.max_image_size_bytes,
         leaf_validation_policy=container.leaf_validation_policy,
         leaf_memory_bank=container.leaf_memory_bank,
+        model_accuracy=container.settings.model_reported_accuracy,
     )
 
 

@@ -7,7 +7,7 @@ from app.application.dto.disease_detection_dto import DiseaseDetectionInput
 from app.application.use_cases.detect_disease import DetectDiseaseUseCase
 from app.core.logging import request_id_context
 from app.schemas.common import MetaResponse, SuccessResponse
-from app.schemas.disease import DiseaseDetectionResponse, ImageQualityResponse
+from app.schemas.disease import DiseaseDetectionResponse, ImageQualityResponse, PredictionCandidateResponse
 
 router = APIRouter(prefix="/diseases", tags=["disease-detection"])
 
@@ -41,6 +41,12 @@ async def detect_disease(
             needs_expert_review=prediction.needs_expert_review,
             model_version=prediction.model_version,
             processing_time_ms=prediction.processing_time_ms,
+            top_predictions=[
+                PredictionCandidateResponse(**candidate.__dict__)
+                for candidate in prediction.top_predictions
+            ],
+            prediction_margin=prediction.prediction_margin,
+            model_accuracy=prediction.model_accuracy,
         ),
         meta=MetaResponse(request_id=request_id_context.get()),
     )

@@ -9,6 +9,8 @@ class DiseaseScanResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $metadata = is_array($this->detection_metadata ?? null) ? $this->detection_metadata : [];
+
         return [
             'id' => $this->id,
             'farmer_id' => $this->farmer_id,
@@ -18,6 +20,12 @@ class DiseaseScanResource extends JsonResource
             'quality_status' => $this->quality_status,
             'predicted_class' => $this->predicted_class,
             'confidence' => $this->confidence !== null ? (float) $this->confidence : null,
+            'confidence_level' => $metadata['confidence_level'] ?? null,
+            'needs_expert_review' => (bool) ($metadata['needs_expert_review'] ?? false),
+            'image_quality' => $metadata['image_quality'] ?? null,
+            'top_predictions' => $metadata['top_predictions'] ?? [],
+            'prediction_margin' => isset($metadata['prediction_margin']) ? (float) $metadata['prediction_margin'] : null,
+            'model_accuracy' => isset($metadata['model_accuracy']) ? (float) $metadata['model_accuracy'] : null,
             'model_version' => $this->model_version,
             'user_feedback' => $this->user_feedback,
             'verified_class' => $this->verified_class,

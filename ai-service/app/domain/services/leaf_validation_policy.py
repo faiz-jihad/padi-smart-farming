@@ -29,17 +29,22 @@ class LeafValidationPolicy:
         skin_ratio: float,
         mean_saturation: float,
         unnatural_ratio: float,
+        green_ratio: float | None = None,
     ) -> LeafValidationDecision:
         """Mengevaluasi karakteristik warna dan tekstur citra untuk mendeteksi daun."""
         warnings: list[str] = []
+        green_ratio = leaf_ratio if green_ratio is None else green_ratio
 
         # 1. Deteksi objek manusia / kulit (wajah, selfie, tangan dominan)
-        if skin_ratio > 0.25 and leaf_ratio < 0.20:
+        if (skin_ratio > 0.25 and leaf_ratio < 0.20) or (skin_ratio > 0.45 and green_ratio < 0.12):
             return LeafValidationDecision(
                 is_acceptable=False,
                 leaf_ratio=leaf_ratio,
                 error_code="IMAGE_NOT_LEAF_HUMAN",
-                error_message="Foto terdeteksi memuat wajah atau tubuh manusia, bukan daun padi. Harap foto daun tanaman padi.",
+                error_message=(
+                    "Foto terdeteksi memuat wajah atau tubuh manusia, bukan daun padi. "
+                    "Harap foto daun tanaman padi."
+                ),
             )
 
         # 2. Deteksi citra monokrom, kertas dokumen, atau permukaan abu-abu
@@ -66,7 +71,10 @@ class LeafValidationPolicy:
                 is_acceptable=False,
                 leaf_ratio=leaf_ratio,
                 error_code="IMAGE_NOT_LEAF",
-                error_message="Objek pada gambar bukan daun padi. Harap pastikan kamera berfokus pada daun tanaman padi.",
+                error_message=(
+                    "Objek pada gambar bukan daun padi. "
+                    "Harap pastikan kamera berfokus pada daun tanaman padi."
+                ),
             )
 
         if leaf_ratio < 0.25:
@@ -86,7 +94,10 @@ class LeafValidationPolicy:
                 is_acceptable=False,
                 leaf_ratio=leaf_ratio,
                 error_code="IMAGE_NOT_LEAF_UNRECOGNIZED",
-                error_message="Pola daun padi tidak teridentifikasi dengan jelas. Pastikan foto memperlihatkan daun padi yang jelas dan fokus.",
+                error_message=(
+                    "Pola daun padi tidak teridentifikasi dengan jelas. "
+                    "Pastikan foto memperlihatkan daun padi yang jelas dan fokus."
+                ),
             )
 
         return LeafValidationDecision(

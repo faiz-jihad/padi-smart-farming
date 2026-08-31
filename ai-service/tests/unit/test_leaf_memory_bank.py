@@ -1,9 +1,13 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from app.application.use_cases.learn_disease_scan import LearnDiseaseScanUseCase
 from app.core.exceptions import ImageValidationError
 from app.domain.services.leaf_memory_bank import LeafMemoryBank
+
+MEMORY_FIXTURE_PATH = Path("tests/fixtures/tmp_leaf_memory_bank.json")
 
 
 def test_leaf_memory_bank_add_and_retrieve():
@@ -79,10 +83,12 @@ def test_leaf_memory_refinement_uses_farmer_corrections():
     assert disease_name == "Tungro"
 
 
-def test_leaf_memory_load_ignores_untrusted_auto_scan_samples(tmp_path):
-    memory_path = tmp_path / "leaf_memory_bank.json"
-    memory_path.write_text(
-        """
+def test_leaf_memory_load_ignores_untrusted_auto_scan_samples():
+    memory_path = MEMORY_FIXTURE_PATH
+    memory_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        memory_path.write_text(
+            """
 {
   "auto-blast": {
     "sample_id": "auto-blast",
@@ -104,13 +110,15 @@ def test_leaf_memory_load_ignores_untrusted_auto_scan_samples(tmp_path):
   }
 }
 """,
-        encoding="utf-8",
-    )
+            encoding="utf-8",
+        )
 
-    bank = LeafMemoryBank(storage_path=memory_path)
+        bank = LeafMemoryBank(storage_path=memory_path)
 
-    assert bank.total_samples == 1
-    assert bank.get_stats()["disease_distribution"] == {"tungro": 1}
+        assert bank.total_samples == 1
+        assert bank.get_stats()["disease_distribution"] == {"tungro": 1}
+    finally:
+        memory_path.unlink(missing_ok=True)
 
 
 class FakePreprocessor:

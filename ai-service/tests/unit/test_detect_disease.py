@@ -38,6 +38,23 @@ class LowConfidenceModel:
         return "blast", "Blast", self.confidence
 
 
+class RankedModel:
+    model_version = "test"
+    is_loaded = True
+
+    def predict_top(self, image_rgb, top_k=3):
+        return (
+            "blast",
+            "Blast",
+            0.91,
+            [
+                {"disease_code": "blast", "disease_name": "Blast", "confidence": 0.91},
+                {"disease_code": "brown_spot", "disease_name": "Brown Spot", "confidence": 0.06},
+            ],
+            0.85,
+        )
+
+
 def _use_case(max_size=1024, preprocessor=None, model=None, min_confidence=0.35):
     return DetectDiseaseUseCase(
         model_repository=model or LowConfidenceModel(),
@@ -56,6 +73,15 @@ def test_detect_disease_marks_low_confidence_for_expert_review():
 
     assert prediction.confidence_level == "low"
     assert prediction.needs_expert_review is True
+
+
+def test_detect_disease_returns_ranked_candidates():
+    prediction = _use_case(model=RankedModel()).execute(
+        DiseaseDetectionInput(content=b"\xff\xd8\xfffake", content_type="image/jpeg", filename="leaf.jpg")
+    )
+
+    assert prediction.top_predictions[0].disease_code == "blast"
+    assert prediction.prediction_margin == 0.85
 
 
 def test_detect_disease_rejects_empty_file():

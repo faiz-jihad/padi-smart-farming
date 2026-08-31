@@ -4,8 +4,8 @@ import time
 
 from app.application.dto.disease_detection_dto import DiseaseDetectionInput
 from app.core.constants import SUPPORTED_IMAGE_SIGNATURES
-from app.core.exceptions import ImageValidationError
-from app.domain.entities.disease_prediction import DiseasePrediction, ImageQuality
+from app.core.exceptions import ImageValidationError, ModelUnavailableError
+from app.domain.entities.disease_prediction import DiseasePrediction, ImageQuality, PredictionCandidate
 from app.domain.repositories.disease_model_repository import DiseaseModelRepository
 from app.domain.services.confidence_policy import ConfidencePolicy
 from app.domain.services.image_quality_policy import ImageQualityPolicy
@@ -24,6 +24,7 @@ class DetectDiseaseUseCase:
         max_image_size_bytes: int,
         leaf_validation_policy: LeafValidationPolicy | None = None,
         leaf_memory_bank: LeafMemoryBank | None = None,
+        model_accuracy: float | None = None,
     ) -> None:
         self.model_repository = model_repository
         self.image_preprocessor = image_preprocessor
@@ -32,6 +33,7 @@ class DetectDiseaseUseCase:
         self.max_image_size_bytes = max_image_size_bytes
         self.leaf_validation_policy = leaf_validation_policy or LeafValidationPolicy()
         self.leaf_memory_bank = leaf_memory_bank
+        self.model_accuracy = model_accuracy
 
     def execute(self, detection_input: DiseaseDetectionInput) -> DiseasePrediction:
         """Menjalankan alur validasi gambar sampai inferensi penyakit dengan pembelajaran adaptif."""
@@ -54,6 +56,7 @@ class DetectDiseaseUseCase:
             skin_ratio=leaf_features["skin_ratio"],
             mean_saturation=leaf_features["mean_saturation"],
             unnatural_ratio=leaf_features["unnatural_ratio"],
+            green_ratio=leaf_features.get("green_ratio", leaf_features["leaf_ratio"]),
         )
         if not leaf_decision.is_acceptable:
             raise ImageValidationError(
@@ -70,13 +73,37 @@ class DetectDiseaseUseCase:
         )
 
         # Prediksi model dasar + ekstraksi fitur visual daun
-        if hasattr(self.model_repository, "predict_with_embedding"):
+        top_predictions: list[PredictionCandidate] = []
+        prediction_margin = 0.0
+        feature_vector = None
+        if hasattr(self.model_repository, "predict_top"):
+            disease_code, disease_name, confidence, candidates, prediction_margin = self.model_repository.predict_top(
+                image_rgb,
+                top_k=3,
+            )
+            top_predictions = [
+                PredictionCandidate(
+                    disease_code=str(candidate["disease_code"]),
+                    disease_name=str(candidate["disease_name"]),
+                    confidence=round(float(candidate["confidence"]), 4),
+                )
+                for candidate in candidates
+            ]
+            if hasattr(self.model_repository, "extract_feature_vector"):
+                feature_vector = self.model_repository.extract_feature_vector(image_rgb)
+        elif hasattr(self.model_repository, "predict_with_embedding"):
             disease_code, disease_name, confidence, feature_vector = self.model_repository.predict_with_embedding(
                 image_rgb
             )
         else:
             disease_code, disease_name, confidence = self.model_repository.predict(image_rgb)
             feature_vector = None
+
+        if disease_code == "unknown" or disease_name == "Tidak Dapat Dipastikan":
+            raise ModelUnavailableError(
+                "Mapping label model belum valid untuk hasil deteksi.",
+                code="MODEL_LABEL_MAPPING_INVALID",
+            )
 
         # Pembelajaran Berkelanjutan: Sempurnakan hasil diagnosa berdasarkan memori daun masa lalu
         if self.leaf_memory_bank is not None and feature_vector is not None:
@@ -90,6 +117,36 @@ class DetectDiseaseUseCase:
                 if refined_name:
                     disease_name = refined_name
                 confidence = refined_conf
+
+        if not top_predictions:
+            top_predictions = [
+                PredictionCandidate(
+                    disease_code=disease_code,
+                    disease_name=disease_name,
+                    confidence=round(confidence, 4),
+                )
+            ]
+        elif top_predictions[0].disease_code == disease_code:
+            top_predictions[0] = PredictionCandidate(
+                disease_code=disease_code,
+                disease_name=disease_name,
+                confidence=round(confidence, 4),
+            )
+        else:
+            top_predictions.insert(
+                0,
+                PredictionCandidate(
+                    disease_code=disease_code,
+                    disease_name=disease_name,
+                    confidence=round(confidence, 4),
+                ),
+            )
+
+        prediction_margin = (
+            max(0.0, top_predictions[0].confidence - top_predictions[1].confidence)
+            if len(top_predictions) > 1
+            else 0.0
+        )
 
         # Validasi kecocokan keyakinan model terhadap pola daun padi
         model_leaf_decision = self.leaf_validation_policy.evaluate_model_confidence(
@@ -114,6 +171,9 @@ class DetectDiseaseUseCase:
             needs_expert_review=confidence_decision.needs_expert_review,
             model_version=self.model_repository.model_version,
             processing_time_ms=processing_time_ms,
+            top_predictions=top_predictions,
+            prediction_margin=round(prediction_margin, 4),
+            model_accuracy=self.model_accuracy,
         )
 
     def _validate_upload(self, detection_input: DiseaseDetectionInput) -> None:
