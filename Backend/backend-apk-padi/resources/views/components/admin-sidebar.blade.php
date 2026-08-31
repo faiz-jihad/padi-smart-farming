@@ -177,7 +177,7 @@
                         <path d="m16.5 7.5 5-5"/>
                     </svg>
 
-                    <span>Profil Petani</span>
+                    <span>Website Usaha Tani</span>
 
                 </a>
             @endcan

@@ -205,12 +205,18 @@ class FarmerPublicProfileAdminController extends Controller
         $data['subdomain'] = $subdomain;
 
         // Section settings
-        $keys = array_keys(FarmerPublicProfile::DEFAULT_SECTION_SETTINGS);
-        $sectionSettings = [];
-        foreach ($keys as $key) {
-            $sectionSettings[$key] = $request->boolean("section_settings.{$key}", false);
+        if ($request->has('section_settings')) {
+            $keys = array_keys(FarmerPublicProfile::DEFAULT_SECTION_SETTINGS);
+            $sectionSettings = [];
+
+            foreach ($keys as $key) {
+                $sectionSettings[$key] = $request->boolean("section_settings.{$key}", false);
+            }
+
+            $data['section_settings'] = $sectionSettings;
+        } else {
+            unset($data['section_settings']);
         }
-        $data['section_settings'] = $sectionSettings;
 
         // Normalize WhatsApp
         if (! empty($data['whatsapp'])) {
@@ -478,7 +484,7 @@ class FarmerPublicProfileAdminController extends Controller
             'image_path' => $path,
             'caption'    => $request->input('caption'),
             'sort_order' => ($farmerProfile->gallery()->max('sort_order') ?? 0) + 1,
-            'status'     => 'published',
+            'status'     => 'active',
         ]);
 
         if ($farmerProfile->farmer_id) {
