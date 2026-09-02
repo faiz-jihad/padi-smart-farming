@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 import os
-from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
@@ -45,114 +43,102 @@ def _env_list(name: str, default: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def _env_json_mapping(name: str, default: dict[str, str]) -> dict[str, str]:
-    raw_value = os.getenv(name)
-    if not raw_value:
-        return default
-    parsed_value = json.loads(raw_value)
-    return {str(key): str(value) for key, value in parsed_value.items()}
-
-
-def _find_local_file(path_value: str) -> Path | None:
-    path = Path(path_value)
-    candidates = [
-        path,
-        Path.cwd() / path,
-        Path.cwd() / "ai-service" / path,
-        Path(__file__).resolve().parents[2] / path,
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return None
-
-
-def _load_json_file(path_value: str) -> dict:
-    path = _find_local_file(path_value)
-    if path is None:
-        return {}
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-
-def _default_model_class_mapping() -> dict[str, str]:
-    file_mapping = _load_json_file(_env("MODEL_CLASS_LABELS_PATH", "models/class_labels.json"))
-    if file_mapping:
-        return {str(key): str(value) for key, value in file_mapping.items()}
-
-    return {
-        "0": "bacterial_leaf_blight",
-        "1": "bacterial_leaf_streak",
-        "2": "bacterial_panicle_blight",
-        "3": "blast",
-        "4": "brown_spot",
-        "5": "dead_heart",
-        "6": "downy_mildew",
-        "7": "hispa",
-        "8": "healthy",
-        "9": "tungro",
-    }
-
-
-def _model_metadata() -> dict:
-    return _load_json_file(_env("MODEL_METADATA_PATH", "models/model_metadata.json"))
-
-
-@dataclass(frozen=True)
 class Settings:
-    app_name: str = field(default_factory=lambda: _env("APP_NAME", "padi-ai-service"))
-    app_env: str = field(default_factory=lambda: _env("APP_ENV", "development"))
-    app_debug: bool = field(default_factory=lambda: _env_bool("APP_DEBUG", False))
-    api_v1_prefix: str = field(default_factory=lambda: _env("API_V1_PREFIX", "/api/v1"))
-    allowed_origins: list[str] = field(default_factory=lambda: _env_list("ALLOWED_ORIGINS", "http://localhost:3000"))
-
-    model_path: Path = field(
-        default_factory=lambda: Path(_env("MODEL_PATH", "models/YOLO11L-Rice-Disease-Detection.pt"))
-    )
-    model_version: str = field(
-        default_factory=lambda: _env("MODEL_VERSION", str(_model_metadata().get("version", "1.0.0")))
-    )
-    model_reported_accuracy: float | None = field(
-        default_factory=lambda: (
-            float(_env("MODEL_REPORTED_ACCURACY", str(_model_metadata().get("accuracy"))))
-            if _env("MODEL_REPORTED_ACCURACY", str(_model_metadata().get("accuracy"))) not in {"", "None"}
-            else None
+    def __init__(self) -> None:
+        # App
+        self.app_name: str = _env("APP_NAME", "padi-ai-service")
+        self.app_env: str = _env("APP_ENV", "development")
+        self.app_debug: bool = _env_bool("APP_DEBUG", False)
+        self.api_v1_prefix: str = _env("API_V1_PREFIX", "/api/v1")
+        self.allowed_origins: list[str] = _env_list(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:8000,http://localhost:8000",
         )
-    )
-    model_confidence_high: float = field(default_factory=lambda: _env_float("MODEL_CONFIDENCE_HIGH", 0.85))
-    model_confidence_medium: float = field(default_factory=lambda: _env_float("MODEL_CONFIDENCE_MEDIUM", 0.70))
-    model_class_mapping: dict[str, str] = field(
-        default_factory=lambda: _env_json_mapping(
-            "MODEL_CLASS_MAPPING",
-            _default_model_class_mapping(),
+
+        # Model
+        self.model_name: str = _env("PADI_MODEL_NAME", "paddy_doctor")
+        self.model_version: str = _env("PADI_MODEL_VERSION", "v3")
+        self.model_path: Path = self._resolve_model_path(
+            _env("MODEL_PATH", f"models/padi.pt")
         )
-    )
+        self.model_imgsz: int = _env_int("MODEL_IMGSZ", 384)
+        self.model_full_name: str = f"{self.model_name}_{self.model_version}"
 
-    max_image_size_mb: int = field(default_factory=lambda: _env_int("MAX_IMAGE_SIZE_MB", 5))
-    min_blur_score: float = field(default_factory=lambda: _env_float("MIN_BLUR_SCORE", 100.0))
-    min_brightness: float = field(default_factory=lambda: _env_float("MIN_BRIGHTNESS", 40.0))
-    max_brightness: float = field(default_factory=lambda: _env_float("MAX_BRIGHTNESS", 220.0))
-    min_leaf_ratio: float = field(default_factory=lambda: _env_float("MIN_LEAF_RATIO", 0.12))
-    min_disease_confidence: float = field(default_factory=lambda: _env_float("MIN_DISEASE_CONFIDENCE", 0.35))
+        # Expected model properties
+        self.expected_task: str = "classify"
+        self.expected_num_classes: int = 10
+        self.expected_classes: list[str] = [
+            "bacterial_leaf_blight",
+            "bacterial_leaf_streak",
+            "bacterial_panicle_blight",
+            "blast",
+            "brown_spot",
+            "dead_heart",
+            "downy_mildew",
+            "hispa",
+            "normal",
+            "tungro",
+        ]
 
-    llm_api_key: str = field(default_factory=lambda: _env("LLM_API_KEY", ""))
-    llm_model: str = field(default_factory=lambda: _env("LLM_MODEL", ""))
-    llm_base_url: str = field(default_factory=lambda: _env("LLM_BASE_URL", ""))
-    llm_timeout_seconds: float = field(default_factory=lambda: _env_float("LLM_TIMEOUT_SECONDS", 15.0))
+        # GPU/CPU concurrency
+        self.max_gpu_concurrency: int = _env_int("PADI_MAX_GPU_CONCURRENCY", 1)
 
-    weather_api_key: str = field(default_factory=lambda: _env("WEATHER_API_KEY", ""))
-    weather_base_url: str = field(default_factory=lambda: _env("WEATHER_BASE_URL", ""))
-    weather_timeout_seconds: float = field(default_factory=lambda: _env_float("WEATHER_TIMEOUT_SECONDS", 10.0))
+        # Image upload
+        self.max_image_size_mb: int = _env_int("MAX_IMAGE_SIZE_MB", 10)
+        self.min_image_width: int = _env_int("QUALITY_MIN_WIDTH", 200)
+        self.min_image_height: int = _env_int("QUALITY_MIN_HEIGHT", 200)
+
+        # Image quality thresholds
+        self.quality_blur_threshold: float = _env_float("QUALITY_BLUR_THRESHOLD", 50.0)
+        self.quality_brightness_min: float = _env_float("QUALITY_BRIGHTNESS_MIN", 45.0)
+        self.quality_brightness_max: float = _env_float("QUALITY_BRIGHTNESS_MAX", 225.0)
+
+        # Decision thresholds
+        self.high_confidence_threshold: float = _env_float("HIGH_CONFIDENCE_THRESHOLD", 0.85)
+        self.review_confidence_threshold: float = _env_float("REVIEW_CONFIDENCE_THRESHOLD", 0.60)
+        self.min_margin_threshold: float = _env_float("MIN_MARGIN_THRESHOLD", 0.20)
+
+        # Multi-view (disabled by default)
+        self.enable_multiview: bool = _env_bool("PADI_ENABLE_MULTIVIEW", False)
+
+        # Catalog
+        self.disease_catalog_path: Path = self._resolve_data_path(
+            _env("DISEASE_CATALOG_PATH", "data/disease_catalog.json")
+        )
 
     @property
     def max_image_size_bytes(self) -> int:
         return self.max_image_size_mb * 1024 * 1024
 
+    def _resolve_model_path(self, path_str: str) -> Path:
+        path = Path(path_str)
+        candidates = [
+            path,
+            Path.cwd() / path,
+            Path.cwd() / "ai-service" / path,
+            Path(__file__).resolve().parents[2] / path,
+        ]
+        for c in candidates:
+            if c.exists():
+                return c
+        # Return best-guess even if not found yet (validated at startup)
+        return Path.cwd() / path
+
+    def _resolve_data_path(self, path_str: str) -> Path:
+        path = Path(path_str)
+        candidates = [
+            path,
+            Path.cwd() / path,
+            Path.cwd() / "ai-service" / path,
+            Path(__file__).resolve().parents[2] / path,
+        ]
+        for c in candidates:
+            if c.exists():
+                return c
+        return Path.cwd() / path
+
 
 @lru_cache
 def get_settings() -> Settings:
-    """Mengambil konfigurasi aplikasi dari environment variable."""
     _load_local_env()
     return Settings()

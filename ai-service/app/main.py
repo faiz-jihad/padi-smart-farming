@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,12 +11,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api.dependencies import ServiceContainer
-from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import AppError
 from app.core.logging import configure_logging, request_id_context
-from app.schemas.common import ErrorDetail, ErrorResponse, MetaResponse
+from app.schemas.common import ErrorDetail, ErrorResponse
+from app.services.decision_engine import DecisionEngine
+from app.services.disease_catalog import DiseaseCatalog
+from app.services.image_quality import ImageQualityService
+from app.services.padi_classifier import PADIClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +27,68 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging(settings.app_debug)
-    container = ServiceContainer(settings)
-    container.load_startup_resources()
-    app.state.container = container
+
+    logger.info(
+        "event=startup model=%s version=%s",
+        settings.model_name,
+        settings.model_version,
+    )
+
+    # 1. PADIClassifier — load, validate, warmup
+    classifier = PADIClassifier(
+        model_path=settings.model_path,
+        model_name=settings.model_name,
+        model_version=settings.model_version,
+        model_imgsz=settings.model_imgsz,
+        max_concurrency=settings.max_gpu_concurrency,
+    )
+    classifier.load_and_validate()  # Gagal keras jika model tidak valid
+    app.state.classifier = classifier
+
+    # 2. Image Quality Service
+    app.state.quality_service = ImageQualityService(
+        max_size_bytes=settings.max_image_size_bytes,
+        blur_threshold=settings.quality_blur_threshold,
+        brightness_min=settings.quality_brightness_min,
+        brightness_max=settings.quality_brightness_max,
+        min_width=settings.min_image_width,
+        min_height=settings.min_image_height,
+    )
+
+    # 3. Decision Engine
+    app.state.decision_engine = DecisionEngine(
+        high_confidence_threshold=settings.high_confidence_threshold,
+        review_confidence_threshold=settings.review_confidence_threshold,
+        min_margin_threshold=settings.min_margin_threshold,
+    )
+
+    # 4. Disease Catalog
+    app.state.disease_catalog = DiseaseCatalog(catalog_path=settings.disease_catalog_path)
+
+    logger.info("event=startup_complete model_loaded=%s", classifier.is_loaded)
+
     yield
+
+    logger.info("event=shutdown")
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+
     app = FastAPI(
         title="P.A.D.I. AI Service",
-        description="AI service untuk deteksi penyakit padi dan rekomendasi pendukung keputusan.",
-        version=settings.model_version,
+        description=(
+            "Production AI service untuk diagnosa penyakit padi berbasis YOLO classify. "
+            "Confidence tinggi tidak menjamin diagnosis pasti — selalu libatkan PPL untuk verifikasi lapangan."
+        ),
+        version=f"{settings.model_name}_{settings.model_version}",
         debug=settings.app_debug,
         lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
+
+    # CORS — tidak allow * di production
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
@@ -46,12 +96,20 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Request ID middleware
     app.middleware("http")(request_id_middleware)
-    app.add_exception_handler(AppError, app_error_handler)
-    app.add_exception_handler(RequestValidationError, validation_error_handler)
-    app.add_exception_handler(StarletteHTTPException, http_error_handler)
-    app.add_exception_handler(Exception, unhandled_error_handler)
-    app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+    # Error handlers
+    app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, validation_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, http_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, unhandled_error_handler)  # type: ignore[arg-type]
+
+    # Routers — semua endpoint didaftarkan di sini (bukan di api_v1_prefix terpisah)
+    from app.api.v1.endpoints.diagnosis import router as diagnosis_router
+    app.include_router(diagnosis_router)
+
     return app
 
 
@@ -67,6 +125,12 @@ async def request_id_middleware(request: Request, call_next):
 
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    logger.warning(
+        "event=app_error code=%s message=%s request_id=%s",
+        exc.code,
+        exc.message,
+        request_id_context.get(),
+    )
     return _error_response(exc.status_code, exc.code, exc.message)
 
 
@@ -84,10 +148,7 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> JSONRespo
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
-    payload = ErrorResponse(
-        error=ErrorDetail(code=code, message=message),
-        meta=MetaResponse(request_id=request_id_context.get()),
-    )
+    payload = ErrorResponse(error=ErrorDetail(code=code, message=message))
     return JSONResponse(status_code=status_code, content=payload.model_dump())
 
 

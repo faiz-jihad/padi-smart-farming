@@ -1,0 +1,402 @@
+{
+  "bacterial_leaf_blight": {
+    "display_name": {
+      "id": "Hawar Daun Bakteri",
+      "en": "Bacterial Leaf Blight"
+    },
+    "description": {
+      "id": "Penyakit bakteri yang menyebabkan daun menguning dan mengering dari tepi daun. Disebabkan oleh Xanthomonas oryzae pv. oryzae. Paling parah saat cuaca lembap dan suhu tinggi.",
+      "en": "Bacterial disease causing yellowing and drying of leaf margins. Caused by Xanthomonas oryzae pv. oryzae. Most severe in humid and high-temperature conditions."
+    },
+    "symptoms": {
+      "id": [
+        "Bercak kuning pucat di tepi daun yang meluas ke dalam",
+        "Daun mengering berwarna cokelat keputihan dari tepi",
+        "Pada kondisi parah, seluruh daun mengering"
+      ],
+      "en": [
+        "Pale yellow lesions at leaf margins spreading inward",
+        "Leaves dry out with whitish-brown color from margins",
+        "In severe cases, entire leaves dry out"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Konsultasikan dengan Penyuluh Pertanian Lapangan (PPL) untuk konfirmasi diagnosis",
+        "Perhatikan drainase lahan untuk mengurangi kelembapan berlebih",
+        "Hindari pemupukan nitrogen berlebih yang mempercepat penyebaran bakteri",
+        "Gunakan varietas padi tahan hawar daun bakteri yang direkomendasikan dinas pertanian setempat",
+        "Tanyakan kepada PPL mengenai pengelolaan lahan yang tepat"
+      ],
+      "en": [
+        "Consult your local Agriculture Extension Officer (PPL) for diagnosis confirmation",
+        "Improve field drainage to reduce excessive moisture",
+        "Avoid excess nitrogen fertilization which accelerates bacterial spread",
+        "Use resistant rice varieties recommended by local agriculture office",
+        "Ask your PPL about appropriate field management practices"
+      ]
+    },
+    "severity_note": {
+      "id": "Dapat menyebabkan kehilangan hasil hingga 70% pada kondisi epidemi. Perlu penanganan cepat.",
+      "en": "Can cause up to 70% yield loss under epidemic conditions. Requires prompt action."
+    }
+  },
+  "bacterial_leaf_streak": {
+    "display_name": {
+      "id": "Hawar Streak Bakteri",
+      "en": "Bacterial Leaf Streak"
+    },
+    "description": {
+      "id": "Penyakit bakteri yang menimbulkan garis-garis sempit berwarna cokelat di sepanjang tulang daun. Disebabkan oleh Xanthomonas oryzae pv. oryzicola.",
+      "en": "Bacterial disease causing narrow brown streaks along leaf veins. Caused by Xanthomonas oryzae pv. oryzicola."
+    },
+    "symptoms": {
+      "id": [
+        "Garis-garis sempit berwarna kuning kehijauan atau cokelat sepanjang tulang daun",
+        "Garis bisa mengeluarkan eksudat bakteri berwarna kuning saat kondisi lembap",
+        "Daun tampak terbakar dan mengering"
+      ],
+      "en": [
+        "Narrow yellowish-green to brown streaks along leaf veins",
+        "Streaks may exude yellowish bacterial ooze in humid conditions",
+        "Leaves appear scorched and dried"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Laporkan temuan ke PPL untuk konfirmasi lapangan",
+        "Hindari irigasi berlebih yang meningkatkan kelembapan",
+        "Perhatikan sanitasi lahan dari sisa tanaman terinfeksi musim sebelumnya",
+        "Konsultasikan varietas tahan dengan PPL atau dinas pertanian"
+      ],
+      "en": [
+        "Report findings to PPL for field confirmation",
+        "Avoid excessive irrigation that increases humidity",
+        "Sanitize field from infected plant debris of previous seasons",
+        "Consult PPL or agriculture office for resistant varieties"
+      ]
+    },
+    "severity_note": {
+      "id": "Umumnya kurang parah dari hawar daun bakteri, tetapi dapat signifikan pada kondisi endemik.",
+      "en": "Generally less severe than bacterial leaf blight, but can be significant in endemic conditions."
+    }
+  },
+  "bacterial_panicle_blight": {
+    "display_name": {
+      "id": "Hawar Malai Bakteri",
+      "en": "Bacterial Panicle Blight"
+    },
+    "description": {
+      "id": "Penyakit bakteri yang menyerang malai padi, menyebabkan biji hampa dan sterile. Disebabkan oleh Burkholderia glumae.",
+      "en": "Bacterial disease attacking rice panicles, causing empty and sterile grains. Caused by Burkholderia glumae."
+    },
+    "symptoms": {
+      "id": [
+        "Malai atau biji berwarna cokelat dan layu",
+        "Biji menjadi hampa atau setengah hampa",
+        "Perubahan warna cokelat dimulai dari bagian dasar malai"
+      ],
+      "en": [
+        "Panicles or grains turn brown and wilt",
+        "Grains become empty or partially filled",
+        "Brown discoloration starts from the base of panicle"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Segera hubungi PPL untuk konfirmasi diagnosis — malai rusak sulit dipulihkan",
+        "Perhatikan pengaturan suhu air irigasi — suhu tinggi memperparah serangan",
+        "Dokumentasikan area terinfeksi untuk perencanaan musim berikutnya",
+        "Tanyakan kepada PPL tentang pengelolaan benih yang sehat untuk musim mendatang"
+      ],
+      "en": [
+        "Contact PPL immediately for diagnosis confirmation — damaged panicles are hard to recover",
+        "Monitor irrigation water temperature — high temperatures worsen the attack",
+        "Document infected areas for next season planning",
+        "Ask PPL about healthy seed management for the next season"
+      ]
+    },
+    "severity_note": {
+      "id": "Serangan pada fase pembungaan dapat menyebabkan kehilangan hasil total pada malai yang terinfeksi.",
+      "en": "Attack during flowering can cause total yield loss in infected panicles."
+    }
+  },
+  "blast": {
+    "display_name": {
+      "id": "Blast",
+      "en": "Blast"
+    },
+    "description": {
+      "id": "Penyakit jamur paling merusak pada padi global. Disebabkan oleh Pyricularia oryzae. Dapat menyerang daun, batang, dan malai.",
+      "en": "Most destructive fungal disease of rice globally. Caused by Pyricularia oryzae. Can attack leaves, stems, and panicles."
+    },
+    "symptoms": {
+      "id": [
+        "Bercak berbentuk belah ketupat dengan tepi cokelat dan pusat abu-abu",
+        "Bercak daun yang banyak menyebabkan daun mengering",
+        "Pada blast leher: malai patah di leher malai (blast leher sangat merusak)"
+      ],
+      "en": [
+        "Diamond-shaped lesions with brown borders and grayish center",
+        "Numerous leaf spots cause leaves to dry out",
+        "In neck blast: panicle breaks at the neck (neck blast is very destructive)"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Segera konsultasikan dengan PPL — blast memerlukan penanganan cepat",
+        "PPL dapat merekomendasikan fungisida yang tepat sesuai kondisi lapangan",
+        "Hindari pemupukan nitrogen berlebih yang meningkatkan kerentanan",
+        "Perhatikan sirkulasi udara lahan untuk mengurangi kelembapan",
+        "Gunakan varietas tahan blast yang direkomendasikan untuk wilayah Anda"
+      ],
+      "en": [
+        "Consult PPL immediately — blast requires rapid response",
+        "PPL can recommend appropriate fungicides based on field conditions",
+        "Avoid excess nitrogen fertilization which increases susceptibility",
+        "Ensure good air circulation to reduce humidity",
+        "Use blast-resistant varieties recommended for your region"
+      ]
+    },
+    "severity_note": {
+      "id": "Blast leher dapat menyebabkan kehilangan hasil hingga 100%. Deteksi dan penanganan dini sangat penting.",
+      "en": "Neck blast can cause up to 100% yield loss. Early detection and treatment is critical."
+    }
+  },
+  "brown_spot": {
+    "display_name": {
+      "id": "Bercak Cokelat",
+      "en": "Brown Spot"
+    },
+    "description": {
+      "id": "Penyakit jamur yang disebabkan oleh Cochliobolus miyabeanus. Sering berkaitan dengan tanah miskin hara atau tanaman stres.",
+      "en": "Fungal disease caused by Cochliobolus miyabeanus. Often associated with nutrient-poor soils or stressed plants."
+    },
+    "symptoms": {
+      "id": [
+        "Bercak oval atau bulat berwarna cokelat dengan halo kuning",
+        "Bercak tersebar di seluruh permukaan daun",
+        "Dapat menyerang biji menyebabkan biji berwarna cokelat"
+      ],
+      "en": [
+        "Oval or circular brown spots with yellowish halo",
+        "Spots scattered across the leaf surface",
+        "Can infect grains causing brown discoloration"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Konsultasikan dengan PPL untuk evaluasi kondisi tanah dan nutrisi",
+        "Periksa kecukupan kalium — defisiensi kalium meningkatkan kerentanan",
+        "Pastikan kecukupan hara tanaman secara keseluruhan",
+        "Tanyakan kepada PPL tentang pengelolaan nutrisi yang tepat"
+      ],
+      "en": [
+        "Consult PPL for soil and nutrient condition evaluation",
+        "Check potassium sufficiency — potassium deficiency increases susceptibility",
+        "Ensure overall plant nutrient adequacy",
+        "Ask PPL about appropriate nutrient management"
+      ]
+    },
+    "severity_note": {
+      "id": "Umumnya kurang merusak dibanding blast, tetapi dapat signifikan pada tanaman yang stres.",
+      "en": "Generally less destructive than blast, but can be significant in stressed plants."
+    }
+  },
+  "dead_heart": {
+    "display_name": {
+      "id": "Dead Heart",
+      "en": "Dead Heart"
+    },
+    "description": {
+      "id": "Kondisi yang disebabkan oleh serangan penggerek batang pada fase vegetatif. Tunas tengah mati dan berwarna cokelat sementara daun luar masih hijau.",
+      "en": "Condition caused by stem borer attack during vegetative stage. Central shoot dies and turns brown while outer leaves remain green."
+    },
+    "symptoms": {
+      "id": [
+        "Tunas tengah (anakan) mati dan berwarna cokelat",
+        "Tunas yang terserang mudah dicabut",
+        "Daun luar tetap hijau — berbeda dengan white ear pada fase malai"
+      ],
+      "en": [
+        "Central shoot (tiller) dies and turns brown",
+        "Affected shoot can be easily pulled out",
+        "Outer leaves remain green — differs from white ear at panicle stage"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Hubungi PPL untuk identifikasi jenis penggerek batang",
+        "PPL dapat merekomendasikan pengendalian yang tepat sesuai kondisi setempat",
+        "Perhatikan populasi hama penggerek di lahan sekitar",
+        "Dokumentasikan tingkat serangan untuk laporan ke dinas pertanian"
+      ],
+      "en": [
+        "Contact PPL to identify the stem borer species",
+        "PPL can recommend appropriate control based on local conditions",
+        "Monitor stem borer populations in surrounding fields",
+        "Document infestation level for agriculture office reporting"
+      ]
+    },
+    "severity_note": {
+      "id": "Pada serangan berat, banyak anakan mati menyebabkan penurunan populasi tanaman yang signifikan.",
+      "en": "In heavy infestation, many tillers die causing significant reduction in plant population."
+    }
+  },
+  "downy_mildew": {
+    "display_name": {
+      "id": "Downy Mildew",
+      "en": "Downy Mildew"
+    },
+    "description": {
+      "id": "Penyakit yang disebabkan oleh Sclerophthora macrospora. Menyebabkan daun bergaris kuning dan klorotik. Catatan: kelas ini menunjukkan confusion tertinggi dalam validasi model.",
+      "en": "Disease caused by Sclerophthora macrospora. Causes yellowing and chlorotic streaking of leaves. Note: this class shows highest confusion in model validation."
+    },
+    "symptoms": {
+      "id": [
+        "Daun bergaris atau berbintik kuning tidak beraturan",
+        "Pertumbuhan tanaman terhambat",
+        "Dapat menyebabkan malformasi daun"
+      ],
+      "en": [
+        "Leaves show irregular yellow streaks or spots",
+        "Plant growth is stunted",
+        "Can cause leaf malformation"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "PERLU VERIFIKASI PPL: Model AI menunjukkan confusion antara downy mildew dengan tungro dan blast",
+        "Pastikan PPL melakukan pengamatan langsung untuk konfirmasi",
+        "Perhatikan drainase lahan — kelembapan tinggi mempercepat penyebaran",
+        "Konsultasikan tindakan pengendalian sepenuhnya dengan PPL"
+      ],
+      "en": [
+        "PPL VERIFICATION NEEDED: AI model shows confusion between downy mildew, tungro, and blast",
+        "Ensure PPL conducts direct observation for confirmation",
+        "Monitor field drainage — high humidity accelerates spread",
+        "Consult PPL for complete control measures"
+      ]
+    },
+    "severity_note": {
+      "id": "PENTING: Kelas ini memiliki akurasi prediksi lebih rendah dalam validasi. Verifikasi PPL sangat disarankan.",
+      "en": "IMPORTANT: This class has lower prediction accuracy in validation. PPL verification is strongly recommended."
+    }
+  },
+  "hispa": {
+    "display_name": {
+      "id": "Rice Hispa",
+      "en": "Rice Hispa"
+    },
+    "description": {
+      "id": "Kerusakan akibat serangan hama Dicladispa armigera (kumbang hispa). Larva menggerek di dalam daun, imago mengikis jaringan daun.",
+      "en": "Damage from Dicladispa armigera (hispa beetle) pest. Larvae mine inside leaves, adults scrape leaf tissue."
+    },
+    "symptoms": {
+      "id": [
+        "Garis-garis putih sejajar yang tidak beraturan di permukaan daun (bekas larva)",
+        "Permukaan daun tampak tergores atau diikis berwarna putih keperakan",
+        "Pada serangan berat, daun seluruhnya mengering"
+      ],
+      "en": [
+        "Irregular parallel white streaks on leaf surface (larval mines)",
+        "Leaf surface appears scraped or etched with silvery-white color",
+        "In heavy infestation, leaves dry out completely"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Hubungi PPL untuk konfirmasi dan penentuan tingkat serangan",
+        "Pengumpulan manual imago hispa pada serangan ringan bisa dilakukan",
+        "PPL dapat merekomendasikan pengendalian hayati atau kimia sesuai kondisi",
+        "Perhatikan pertanaman padi di sekitar sebagai sumber infestasi"
+      ],
+      "en": [
+        "Contact PPL for confirmation and infestation level assessment",
+        "Manual collection of adult hispa beetles can be done for light infestation",
+        "PPL can recommend biological or chemical control based on conditions",
+        "Monitor surrounding rice fields as infestation sources"
+      ]
+    },
+    "severity_note": {
+      "id": "Serangan parah pada fase vegetatif dapat mengurangi kapasitas fotosintesis secara signifikan.",
+      "en": "Severe attack during vegetative stage can significantly reduce photosynthesis capacity."
+    }
+  },
+  "normal": {
+    "display_name": {
+      "id": "Normal",
+      "en": "Normal"
+    },
+    "description": {
+      "id": "Tidak ditemukan pola penyakit dominan berdasarkan foto ini. Tanaman tampak dalam kondisi normal secara visual.",
+      "en": "No dominant disease pattern detected based on this photo. Plant appears visually normal."
+    },
+    "symptoms": {
+      "id": [],
+      "en": []
+    },
+    "recommended_actions": {
+      "id": [
+        "Lanjutkan pemantauan rutin kondisi lahan",
+        "Perhatikan perubahan warna atau pola baru pada daun",
+        "Tetap konsultasikan dengan PPL jika ada kekhawatiran — AI tidak dapat menggantikan pengamatan lapangan",
+        "Pastikan nutrisi, irigasi, dan pemeliharaan tanaman sesuai jadwal"
+      ],
+      "en": [
+        "Continue routine field monitoring",
+        "Watch for new color changes or patterns on leaves",
+        "Still consult PPL if concerned — AI cannot replace field observation",
+        "Ensure nutrients, irrigation, and plant maintenance are on schedule"
+      ]
+    },
+    "severity_note": {
+      "id": "Catatan: Hasil Normal tidak menjamin tanaman sepenuhnya sehat. Pengamatan lapangan tetap diperlukan.",
+      "en": "Note: Normal result does not guarantee plant is fully healthy. Field observation is still required."
+    }
+  },
+  "tungro": {
+    "display_name": {
+      "id": "Tungro",
+      "en": "Tungro"
+    },
+    "description": {
+      "id": "Penyakit virus padi yang ditularkan oleh wereng hijau (Nephotettix virescens). Disebabkan oleh kombinasi Rice Tungro Bacilliform Virus (RTBV) dan Rice Tungro Spherical Virus (RTSV).",
+      "en": "Rice viral disease transmitted by green leafhopper (Nephotettix virescens). Caused by combination of Rice Tungro Bacilliform Virus (RTBV) and Rice Tungro Spherical Virus (RTSV)."
+    },
+    "symptoms": {
+      "id": [
+        "Daun berwarna kuning-oranye dimulai dari ujung daun",
+        "Pertumbuhan tanaman sangat terhambat (kerdil)",
+        "Anakan berkurang drastis",
+        "Daun muda dapat menunjukkan bercak-bercak cokelat tidak beraturan"
+      ],
+      "en": [
+        "Leaves turn yellow-orange starting from leaf tips",
+        "Plant growth severely stunted (dwarfing)",
+        "Dramatically reduced tillering",
+        "Young leaves may show irregular brown spots"
+      ]
+    },
+    "recommended_actions": {
+      "id": [
+        "Segera hubungi PPL — tungro adalah penyakit virus serius tanpa obat kimia langsung",
+        "Pengendalian vector (wereng hijau) adalah kunci pengelolaan tungro",
+        "PPL dapat merekomendasikan strategi pengendalian vector yang tepat",
+        "Pertimbangkan penanaman serentak di wilayah untuk memutus siklus vector",
+        "Gunakan varietas tahan tungro yang direkomendasikan untuk musim berikutnya"
+      ],
+      "en": [
+        "Contact PPL immediately — tungro is a serious viral disease with no direct chemical cure",
+        "Vector (green leafhopper) control is key to tungro management",
+        "PPL can recommend appropriate vector control strategies",
+        "Consider synchronized planting in the area to break the vector cycle",
+        "Use tungro-resistant varieties recommended for the next season"
+      ]
+    },
+    "severity_note": {
+      "id": "Tungro dapat menyebabkan kehilangan hasil 20-100% bergantung pada waktu dan tingkat serangan. Verifikasi PPL sangat penting.",
+      "en": "Tungro can cause 20-100% yield loss depending on timing and severity. PPL verification is critical."
+    }
+  }
+}
