@@ -79,7 +79,8 @@ class DiseaseCatalog:
         Return disease info untuk response JSON.
         Kelas 'normal' mempunyai safety message khusus.
         """
-        locale = locale if locale in ("id", "en") else "en"
+        if class_name in ("healthy", "padi_sehat"):
+            class_name = "normal"
 
         entry = self._catalog.get(class_name, {})
         display_name = self.get_display_name(class_name, locale)

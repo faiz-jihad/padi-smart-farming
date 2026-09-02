@@ -1,8 +1,25 @@
-from __future__ import annotations
-
+import json
 import os
 from functools import lru_cache
 from pathlib import Path
+
+
+def _load_json_file(path_value: str) -> dict:
+    path = Path(path_value)
+    candidates = [
+        path,
+        Path.cwd() / path,
+        Path.cwd() / "ai-service" / path,
+        Path(__file__).resolve().parents[2] / path,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            try:
+                return json.loads(candidate.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                return {}
+    return {}
+
 
 
 def _load_local_env() -> None:

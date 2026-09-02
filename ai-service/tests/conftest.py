@@ -26,25 +26,35 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def _make_jpeg_bytes(width: int = 640, height: int = 480) -> bytes:
-    """Buat gambar JPEG sintetis berisi pola warna hijau (simulasi daun)."""
-    # Buat array RGB dengan warna hijau untuk simulasi daun
+    """Buat gambar JPEG sintetis bertekstur (simulasi daun padi dengan gradasi dan noise)."""
+    rng = np.random.default_rng(42)
+    # Background hijau daun
     arr = np.zeros((height, width, 3), dtype=np.uint8)
-    arr[:, :, 1] = 120  # Channel hijau
-    arr[:, :, 0] = 30   # Channel merah
-    arr[:, :, 2] = 30   # Channel biru
+    arr[:, :, 1] = rng.integers(100, 160, (height, width), dtype=np.uint8)  # Channel hijau
+    arr[:, :, 0] = rng.integers(40, 80, (height, width), dtype=np.uint8)    # Channel merah
+    arr[:, :, 2] = rng.integers(20, 60, (height, width), dtype=np.uint8)    # Channel biru
+    # Tambahkan garis vena daun horizontal dan vertikal
+    for i in range(0, height, 40):
+        arr[i:i+3, :, 1] = 180
+    for j in range(0, width, 50):
+        arr[:, j:j+2, 0] = 70
     img = Image.fromarray(arr, mode="RGB")
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=85)
+    img.save(buf, format="JPEG", quality=90)
     return buf.getvalue()
 
 
 def _make_png_bytes(width: int = 400, height: int = 400) -> bytes:
+    rng = np.random.default_rng(42)
     arr = np.zeros((height, width, 3), dtype=np.uint8)
-    arr[:, :, 1] = 100
+    arr[:, :, 1] = rng.integers(90, 150, (height, width), dtype=np.uint8)
+    arr[:, :, 0] = rng.integers(40, 70, (height, width), dtype=np.uint8)
+    arr[:, :, 2] = rng.integers(20, 50, (height, width), dtype=np.uint8)
     img = Image.fromarray(arr, mode="RGB")
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
+
 
 
 @pytest.fixture(scope="session")

@@ -8,11 +8,16 @@ echo           Menjalankan 3 Service Secara Bersamaan
 echo ======================================================================
 echo.
 
-:: 1. Jalankan AI Microservice (Docker)
+:: 1. Jalankan AI Microservice (Port 8003)
 echo [1/3] Menjalankan AI Microservice (FastAPI - Port 8003)...
 cd /d "D:\Hackathon KMIPN\ai-service"
-docker compose up -d
-echo [OK] AI Microservice aktif di port 8003.
+if exist ".venv\Scripts\python.exe" (
+    start "P.A.D.I. AI Service (FastAPI)" cmd /k "cd /d D:\Hackathon KMIPN\ai-service && .venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8003"
+    echo [OK] AI Microservice diluncurkan dengan Python VirtualEnv di port 8003.
+) else (
+    docker compose up -d
+    echo [OK] AI Microservice diluncurkan dengan Docker di port 8003.
+)
 echo.
 
 :: 2. Jalankan Backend Laravel di Window Terpisah

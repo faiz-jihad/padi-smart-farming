@@ -53,5 +53,16 @@ class ServiceBusyError(AppError):
     code = "SERVICE_BUSY"
 
 
+class ExternalServiceError(AppError):
+    status_code = 502
+    code = "EXTERNAL_SERVICE_ERROR"
+
+
+class ExternalServiceTimeoutError(AppError):
+    status_code = 504
+    code = "EXTERNAL_SERVICE_TIMEOUT"
+
+
 # Legacy alias — keep for backward compat
 ImageValidationError = InvalidImageError
+

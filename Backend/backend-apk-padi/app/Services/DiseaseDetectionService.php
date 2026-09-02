@@ -290,7 +290,7 @@ class DiseaseDetectionService
             'dead_heart', 'penggerek_batang', 'sundep', 'beluk' => 'dead_heart',
             'downy_mildew', 'bulu_embun' => 'downy_mildew',
             'hispa', 'hama_hispa' => 'hispa',
-            'normal', 'healthy', 'padi_sehat', 'sehat' => 'healthy',
+            'normal', 'healthy', 'padi_sehat', 'sehat' => 'normal',
             'tungro', 'penyakit_tungro' => 'tungro',
             default => null,
         };
@@ -302,35 +302,65 @@ class DiseaseDetectionService
      */
     private function detectWithAi(UploadedFile $image, array $context): array
     {
-        $baseUrl = rtrim((string) config('services.ai.base_url'), '/');
-
         $imagePath = $image->getRealPath();
         if (!$imagePath || !file_exists($imagePath)) {
             throw new RuntimeException('File foto tidak dapat dibaca untuk inferensi AI.');
         }
 
-        if (empty($baseUrl)) {
-            Log::warning('[AI Microservice Detection Skipped] AI_SERVICE_URL is empty.');
+        $configuredUrl = rtrim((string) config('services.ai.base_url', 'http://127.0.0.1:8003/api/v1'), '/');
+        $candidates = array_values(array_unique(array_filter([
+            $configuredUrl,
+            'http://127.0.0.1:8003/api/v1',
+            'http://127.0.0.1:8002/api/v1',
+            'http://localhost:8003/api/v1',
+            'http://localhost:8002/api/v1',
+        ])));
 
-            throw new RuntimeException('AI service real belum dikonfigurasi. Deteksi tidak dijalankan.');
+        $response = null;
+        $lastException = null;
+
+        foreach ($candidates as $baseUrl) {
+            $endpoints = [
+                "{$baseUrl}/diseases/detect",
+                "{$baseUrl}/ai/padi/diagnose",
+            ];
+
+            foreach ($endpoints as $url) {
+                try {
+                    $postData = array_filter([
+                        'plant_age_days' => $context['plant_age_days'] ?? null,
+                        'latitude' => $context['latitude'] ?? null,
+                        'longitude' => $context['longitude'] ?? null,
+                        'locale' => 'id',
+                    ], fn($value) => $value !== null);
+
+                    $req = Http::timeout((int) config('services.ai.timeout', 20))
+                        ->attach(
+                            'image',
+                            fopen($imagePath, 'r'),
+                            $image->getClientOriginalName()
+                        );
+
+                    $response = $req->post($url, $postData);
+
+                    if ($response->status() !== 404) {
+                        // Respon didapat (baik 200, 422, atau status lain dari endpoint aktif)
+                        break 2;
+                    }
+                } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                    $lastException = $e;
+                    continue; // Coba kandidat URL berikutnya
+                } catch (\Throwable $e) {
+                    $lastException = $e;
+                    break 2;
+                }
+            }
         }
 
-        try {
-            $response = Http::timeout((int) config('services.ai.timeout', 20))
-                ->attach(
-                    'image',
-                    fopen($imagePath, 'r'),
-                    $image->getClientOriginalName()
-                )
-                ->post("{$baseUrl}/diseases/detect", array_filter([
-                    'plant_age_days' => $context['plant_age_days'] ?? null,
-                    'latitude' => $context['latitude'] ?? null,
-                    'longitude' => $context['longitude'] ?? null,
-                ], fn($value) => $value !== null));
-        } catch (\Throwable $e) {
-            Log::warning('[AI Microservice Detection Failed] ' . $e->getMessage());
+        if ($response === null) {
+            Log::warning('[AI Microservice Detection Failed] Tidak dapat terhubung ke service: ' . ($lastException?->getMessage() ?? 'unknown'));
 
-            throw new RuntimeException('AI service real tidak dapat dihubungi. Deteksi tidak dijalankan.');
+            throw new RuntimeException('AI service real tidak dapat dihubungi. Pastikan AI service berjalan di port 8003 atau 8002.');
         }
 
         if ($response->clientError()) {
@@ -386,6 +416,24 @@ class DiseaseDetectionService
      */
     private function normalizeAiDetectionResult(array $data): array
     {
+        // Support rich format from /api/v1/ai/padi/diagnose
+        if (isset($data['prediction']['class_name'])) {
+            $data['disease_code'] = $data['prediction']['class_name'];
+            $data['disease_name'] = $data['prediction']['display_name'] ?? ucfirst(str_replace('_', ' ', (string) $data['prediction']['class_name']));
+            $data['confidence'] = $data['prediction']['confidence'] ?? 0.0;
+            $data['model_version'] = (($data['model']['name'] ?? 'paddy_doctor') . '_' . ($data['model']['version'] ?? 'v3'));
+            $data['image_quality'] = $data['quality'] ?? [];
+            $data['needs_expert_review'] = (bool) ($data['decision']['needs_ppl_review'] ?? false);
+            $data['prediction_margin'] = $data['prediction']['margin'] ?? null;
+            if (isset($data['prediction']['top_predictions']) && is_array($data['prediction']['top_predictions'])) {
+                $data['top_predictions'] = array_map(fn($p) => [
+                    'disease_code' => $p['class_name'] ?? '',
+                    'disease_name' => ucfirst(str_replace('_', ' ', (string) ($p['class_name'] ?? ''))),
+                    'confidence' => (float) ($p['confidence'] ?? 0),
+                ], $data['prediction']['top_predictions']);
+            }
+        }
+
         $diseaseCode = trim((string) ($data['disease_code'] ?? ''));
         $diseaseName = trim((string) ($data['disease_name'] ?? ''));
         $modelVersion = trim((string) ($data['model_version'] ?? ''));

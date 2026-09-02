@@ -339,3 +339,68 @@ def test_diagnose_concurrent_no_model_reload(client, sample_jpeg_bytes):
     assert all(code == 200 for code in results), f"results={results}"
     # Classifier masih objek yang sama
     assert client.app.state.classifier is original_classifier
+
+
+def test_backend_diseases_detect_endpoint(client, sample_jpeg_bytes):
+    """POST /api/v1/diseases/detect harus mengembalikan format yang diharapkan Laravel."""
+    response = client.post(
+        "/api/v1/diseases/detect",
+        files={"image": ("leaf.jpg", sample_jpeg_bytes, "image/jpeg")},
+        data={"plant_age_days": 35, "latitude": -6.32, "longitude": 108.32},
+    )
+    assert response.status_code == 200
+    res = response.json()
+    assert res["success"] is True
+    data = res["data"]
+    assert "disease_code" in data
+    assert "disease_name" in data
+    assert "confidence" in data
+    assert "model_version" in data
+    assert "image_quality" in data
+    assert "top_predictions" in data
+    assert "prediction_margin" in data
+    assert "detection_status" in data
+    assert "status_message" in data
+    assert isinstance(data["top_predictions"], list)
+
+
+def test_backend_treatments_recommend_endpoint(client):
+    """POST /api/v1/treatments/recommend harus mengembalikan rekomendasi terstruktur."""
+    response = client.post(
+        "/api/v1/treatments/recommend",
+        json={
+            "disease_code": "blast",
+            "confidence": 0.92,
+            "plant_age_days": 40,
+            "severity": "high",
+            "weather_condition": "Hujan",
+        },
+    )
+    assert response.status_code == 200
+    res = response.json()
+    assert res["success"] is True
+    data = res["data"]
+    assert data["disease_code"] == "blast"
+    assert "immediate_actions" in data
+    assert "prevention_steps" in data
+    assert "extension_officer_advice" in data
+
+
+def test_backend_diseases_learn_endpoint(client):
+    """POST /api/v1/diseases/learn harus mencatat sampel verifikasi."""
+    response = client.post(
+        "/api/v1/diseases/learn",
+        data={
+            "disease_code": "blast",
+            "disease_name": "Blast",
+            "confidence": 0.95,
+            "source": "ppl_verified",
+            "sample_id": "test-sample-123",
+        },
+    )
+    assert response.status_code == 200
+    res = response.json()
+    assert res["success"] is True
+    assert res["data"]["learned"] is True
+    assert res["data"]["sample_id"] == "test-sample-123"
+

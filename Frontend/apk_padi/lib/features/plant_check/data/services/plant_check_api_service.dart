@@ -52,11 +52,20 @@ class PlantCheckApiService {
       );
 
       final data = response.data?['data'] as Map<String, dynamic>? ?? {};
-      final scan = data['scan'] as Map<String, dynamic>? ?? {};
+      final scan = (data['scan'] as Map<String, dynamic>?) ?? data;
 
       return PlantCheckResult.fromJson(scan);
     } catch (error) {
       throw mapDioException(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> checkAiHealth() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/health');
+      return response.data ?? {'status': 'ok'};
+    } catch (e) {
+      return {'status': 'offline', 'error': e.toString()};
     }
   }
 
