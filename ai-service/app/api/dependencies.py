@@ -19,6 +19,7 @@ from app.infrastructure.llm.treatment_generator import TreatmentGenerator
 from app.infrastructure.machine_learning.disease_classifier import DiseaseClassifier
 from app.infrastructure.machine_learning.image_preprocessor import ImagePreprocessor
 from app.infrastructure.machine_learning.label_mapper import LabelMapper
+from app.infrastructure.machine_learning.yolo_disease_detector import YoloDiseaseDetector
 from app.infrastructure.persistence.knowledge_base_repository import KnowledgeBaseRepository
 from app.infrastructure.weather.weather_client import WeatherClient
 from app.infrastructure.weather.weather_repository_impl import WeatherRepositoryImpl
@@ -28,12 +29,20 @@ class ServiceContainer:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.image_preprocessor = ImagePreprocessor()
-        self.disease_classifier = DiseaseClassifier(
-            model_path=settings.model_path,
-            model_version=settings.model_version,
-            image_preprocessor=self.image_preprocessor,
-            label_mapper=LabelMapper(settings.model_class_mapping),
-        )
+        label_mapper = LabelMapper(settings.model_class_mapping)
+        if settings.model_path.suffix.lower() == ".pt":
+            self.disease_classifier = YoloDiseaseDetector(
+                model_path=settings.model_path,
+                model_version=settings.model_version,
+                label_mapper=label_mapper,
+            )
+        else:
+            self.disease_classifier = DiseaseClassifier(
+                model_path=settings.model_path,
+                model_version=settings.model_version,
+                image_preprocessor=self.image_preprocessor,
+                label_mapper=label_mapper,
+            )
         self.confidence_policy = ConfidencePolicy(
             high_threshold=settings.model_confidence_high,
             medium_threshold=settings.model_confidence_medium,

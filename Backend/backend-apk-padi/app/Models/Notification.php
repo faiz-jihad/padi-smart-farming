@@ -12,6 +12,7 @@ class Notification extends Model
         'type',
         'title',
         'body',
+        'data',
         'data_json',
         'read_at',
     ];
@@ -20,6 +21,22 @@ class Notification extends Model
         'data_json' => 'array',
         'read_at' => 'datetime',
     ];
+
+    public function setDataAttribute($value): void
+    {
+        $this->attributes['data_json'] = is_array($value) ? json_encode($value) : $value;
+    }
+
+    public function getDataAttribute(): ?array
+    {
+        if (isset($this->attributes['data_json'])) {
+            return is_array($this->attributes['data_json'])
+                ? $this->attributes['data_json']
+                : json_decode((string) $this->attributes['data_json'], true);
+        }
+
+        return null;
+    }
 
     public function user(): BelongsTo
     {

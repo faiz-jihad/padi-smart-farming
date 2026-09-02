@@ -101,14 +101,12 @@ class DiseaseClassifier:
             raise ModelUnavailableError("Model belum tersedia.", code=self._load_error or "MODEL_NOT_LOADED")
 
         flattened_probabilities = self._predict_probabilities(image_rgb)
-        class_index = int(flattened_probabilities.argmax())
-        confidence = float(flattened_probabilities[class_index])
-        disease_code, disease_name = self._label_mapper.map_index(class_index)
-
-        sorted_indices = np.argsort(flattened_probabilities)[::-1][: max(1, top_k)]
+        sorted_indices = np.argsort(flattened_probabilities)[::-1]
         top_predictions: list[dict[str, float | str]] = []
         for index in sorted_indices:
             candidate_code, candidate_name = self._label_mapper.map_index(int(index))
+            if candidate_code == "unknown":
+                continue
             top_predictions.append(
                 {
                     "disease_code": candidate_code,
@@ -116,8 +114,19 @@ class DiseaseClassifier:
                     "confidence": round(float(flattened_probabilities[int(index)]), 4),
                 }
             )
+            if len(top_predictions) >= max(1, top_k):
+                break
 
-        second_confidence = float(flattened_probabilities[int(sorted_indices[1])]) if len(sorted_indices) > 1 else 0.0
+        if not top_predictions:
+            raise ModelUnavailableError(
+                "Mapping label model belum lengkap untuk hasil deteksi ini.",
+                code="MODEL_LABEL_MAPPING_INVALID",
+            )
+
+        disease_code = str(top_predictions[0]["disease_code"])
+        disease_name = str(top_predictions[0]["disease_name"])
+        confidence = float(top_predictions[0]["confidence"])
+        second_confidence = float(top_predictions[1]["confidence"]) if len(top_predictions) > 1 else 0.0
         prediction_margin = max(0.0, confidence - second_confidence)
 
         return disease_code, disease_name, confidence, top_predictions, prediction_margin

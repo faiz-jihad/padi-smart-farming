@@ -29,7 +29,15 @@ class AppConfig {
   );
   static const _connectTimeoutSeconds = int.fromEnvironment(
     'API_CONNECT_TIMEOUT_SECONDS',
-    defaultValue: 30,
+    defaultValue: 4,
+  );
+  static const _receiveTimeoutSeconds = int.fromEnvironment(
+    'API_RECEIVE_TIMEOUT_SECONDS',
+    defaultValue: 60,
+  );
+  static const _sendTimeoutSeconds = int.fromEnvironment(
+    'API_SEND_TIMEOUT_SECONDS',
+    defaultValue: 60,
   );
 
   static final List<String> candidateHosts = _resolveCandidateHosts();
@@ -48,6 +56,9 @@ class AppConfig {
 
   static void useHost(String host) {
     if (candidateHosts.contains(host)) {
+      activeHost = host;
+    } else {
+      candidateHosts.insert(0, host);
       activeHost = host;
     }
   }
@@ -79,13 +90,12 @@ class AppConfig {
     }
 
     return switch (defaultTargetPlatform) {
-      TargetPlatform.android ||
-      TargetPlatform.iOS =>
-        _baseUrlForHost(activeHost),
+      TargetPlatform.android => _baseUrlForHost(activeHost),
+      TargetPlatform.iOS => _baseUrlForHost(activeHost),
       TargetPlatform.macOS ||
       TargetPlatform.linux ||
       TargetPlatform.windows ||
-      TargetPlatform.fuchsia => _baseUrlForHost('127.0.0.1'),
+      TargetPlatform.fuchsia => _baseUrlForHost(activeHost),
     };
   }
 
@@ -95,7 +105,19 @@ class AppConfig {
 
   static Duration get apiConnectTimeout {
     return Duration(
-      seconds: _connectTimeoutSeconds < 5 ? 5 : _connectTimeoutSeconds,
+      seconds: _connectTimeoutSeconds < 3 ? 3 : _connectTimeoutSeconds,
+    );
+  }
+
+  static Duration get apiReceiveTimeout {
+    return Duration(
+      seconds: _receiveTimeoutSeconds < 15 ? 15 : _receiveTimeoutSeconds,
+    );
+  }
+
+  static Duration get apiSendTimeout {
+    return Duration(
+      seconds: _sendTimeoutSeconds < 15 ? 15 : _sendTimeoutSeconds,
     );
   }
 
@@ -118,6 +140,8 @@ class AppConfig {
       return _dedupe([
         if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
         '10.0.2.2',
+        '127.0.0.1',
+        'localhost',
       ]);
     }
 
@@ -125,6 +149,7 @@ class AppConfig {
       return _dedupe([
         '127.0.0.1',
         'localhost',
+        if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
       ]);
     }
 
@@ -132,6 +157,7 @@ class AppConfig {
       '127.0.0.1',
       'localhost',
       '10.0.2.2',
+      if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
     ]);
   }
 

@@ -20,6 +20,28 @@ class EventRegistration extends Model
         'registered_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'ticket_code',
+        'ticket_status',
+    ];
+
+    /**
+     * Generate deterministik atau tersimpan kode tiket resmi e-ticket pertanian
+     */
+    public function getTicketCodeAttribute(): string
+    {
+        $eventId = str_pad((string) $this->event_id, 3, '0', STR_PAD_LEFT);
+        $userId = str_pad((string) $this->user_id, 3, '0', STR_PAD_LEFT);
+        $regId = str_pad((string) ($this->id ?? 1), 4, '0', STR_PAD_LEFT);
+
+        return "TKT-PAD-{$eventId}-{$userId}-{$regId}";
+    }
+
+    public function getTicketStatusAttribute(): string
+    {
+        return 'active';
+    }
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(AgricultureEvent::class, 'event_id');
@@ -30,3 +52,4 @@ class EventRegistration extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 }
+

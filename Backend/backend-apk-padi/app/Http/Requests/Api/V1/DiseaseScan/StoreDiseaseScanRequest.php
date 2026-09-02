@@ -16,11 +16,8 @@ class StoreDiseaseScanRequest extends FormRequest
     {
         return [
             'farm_id' => [
-                'required',
+                'nullable',
                 'integer',
-                Rule::exists('farms', 'id')->where(
-                    fn ($query) => $query->where('farmer_user_id', $this->user()?->id)
-                ),
             ],
             'image' => [
                 'required',

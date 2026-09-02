@@ -12,6 +12,7 @@ class FakePreprocessor:
     def __init__(self, leaf_features=None):
         self.leaf_features = leaf_features or {
             "leaf_ratio": 0.65,
+            "green_ratio": 0.55,
             "skin_ratio": 0.02,
             "unnatural_ratio": 0.01,
             "mean_saturation": 85.0,
@@ -22,6 +23,9 @@ class FakePreprocessor:
 
     def measure_quality(self, image_rgb):
         return 150.0, 120.0
+
+    def get_resolution(self, image_rgb):
+        return 480, 640  # simulasi foto portrait standar HP
 
     def analyze_leaf_features(self, image_rgb):
         return self.leaf_features
@@ -67,6 +71,7 @@ def _use_case(max_size=1024, preprocessor=None, model=None, min_confidence=0.35)
 
 
 def test_detect_disease_marks_low_confidence_for_expert_review():
+    """Confidence 0.40 → level 'low' → needs_expert_review = True."""
     prediction = _use_case().execute(
         DiseaseDetectionInput(content=b"\xff\xd8\xfffake", content_type="image/jpeg", filename="leaf.jpg")
     )
@@ -76,12 +81,50 @@ def test_detect_disease_marks_low_confidence_for_expert_review():
 
 
 def test_detect_disease_returns_ranked_candidates():
+    """RankedModel dengan margin 0.85 → top prediction = blast."""
     prediction = _use_case(model=RankedModel()).execute(
         DiseaseDetectionInput(content=b"\xff\xd8\xfffake", content_type="image/jpeg", filename="leaf.jpg")
     )
 
     assert prediction.top_predictions[0].disease_code == "blast"
     assert prediction.prediction_margin == 0.85
+
+
+def test_detect_disease_uncertain_when_margin_too_small():
+    """Confidence 0.60 dengan margin sangat kecil → UNCERTAIN (bukan DETECTED)."""
+
+    class AmbiguousModel:
+        model_version = "test"
+        is_loaded = True
+
+        def predict_top(self, image_rgb, top_k=3):
+            return (
+                "blast",
+                "Blast",
+                0.60,
+                [
+                    {"disease_code": "blast", "disease_name": "Blast", "confidence": 0.60},
+                    {"disease_code": "brown_spot", "disease_name": "Brown Spot", "confidence": 0.57},
+                ],
+                0.03,  # margin sangat sempit
+            )
+
+    prediction = _use_case(model=AmbiguousModel()).execute(
+        DiseaseDetectionInput(content=b"\xff\xd8\xfffake", content_type="image/jpeg", filename="leaf.jpg")
+    )
+
+    assert prediction.detection_status == "UNCERTAIN"
+    assert prediction.needs_expert_review is True
+    assert prediction.status_message is not None
+
+
+def test_detect_disease_detected_when_confidence_high():
+    """Confidence 0.91 dengan margin besar → DETECTED (bukan UNCERTAIN)."""
+    prediction = _use_case(model=RankedModel()).execute(
+        DiseaseDetectionInput(content=b"\xff\xd8\xfffake", content_type="image/jpeg", filename="leaf.jpg")
+    )
+
+    assert prediction.detection_status == "DETECTED"
 
 
 def test_detect_disease_rejects_empty_file():
@@ -102,6 +145,7 @@ def test_detect_disease_rejects_non_leaf_image():
     non_leaf_preprocessor = FakePreprocessor(
         leaf_features={
             "leaf_ratio": 0.02,
+            "green_ratio": 0.02,
             "skin_ratio": 0.01,
             "unnatural_ratio": 0.01,
             "mean_saturation": 30.0,
@@ -119,7 +163,8 @@ def test_detect_disease_rejects_human_skin_image():
     skin_preprocessor = FakePreprocessor(
         leaf_features={
             "leaf_ratio": 0.05,
-            "skin_ratio": 0.45,
+            "green_ratio": 0.03,
+            "skin_ratio": 0.55,
             "unnatural_ratio": 0.02,
             "mean_saturation": 50.0,
         }

@@ -31,7 +31,7 @@ class RealtimeStreamController extends Controller
 
                 // 1. Check for new notifications with projected columns
                 $notifQuery = Notification::query()
-                    ->select(['id', 'user_id', 'type', 'title', 'body', 'data', 'created_at'])
+                    ->select(['id', 'user_id', 'type', 'title', 'body', 'data_json', 'created_at'])
                     ->where('id', '>', $lastNotificationId);
 
                 if ($user) {

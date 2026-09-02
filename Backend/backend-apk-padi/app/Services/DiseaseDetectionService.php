@@ -24,10 +24,28 @@ class DiseaseDetectionService
      */
     public function scan(int $farmerId, UploadedFile $image, array $data): DiseaseScan
     {
-        $farm = Farm::query()
-            ->whereKey($data['farm_id'])
-            ->where('farmer_user_id', $farmerId)
-            ->firstOrFail();
+        $farm = null;
+        if (!empty($data['farm_id'])) {
+            $farm = Farm::query()
+                ->whereKey($data['farm_id'])
+                ->where('farmer_user_id', $farmerId)
+                ->first();
+        }
+
+        if (!$farm) {
+            $farm = Farm::query()
+                ->where('farmer_user_id', $farmerId)
+                ->first() ?? Farm::query()->create([
+                    'farmer_user_id' => $farmerId,
+                    'name' => 'Lahan Sawah Utama',
+                    'location' => 'Indramayu, Jawa Barat',
+                    'area_ha' => 1.0,
+                    'soil_type' => 'Lempung Berliat',
+                    'irrigation_type' => 'Irigasi Teknis',
+                    'latitude' => (float) ($data['latitude'] ?? -6.3266),
+                    'longitude' => (float) ($data['longitude'] ?? 108.3200),
+                ]);
+        }
 
         $lat = (float) ($data['latitude'] ?? $farm->latitude ?? -6.3266);
         $lng = (float) ($data['longitude'] ?? $farm->longitude ?? 108.3200);
@@ -173,6 +191,8 @@ class DiseaseDetectionService
             'prediction_margin' => $aiResult['prediction_margin'] ?? null,
             'model_accuracy' => $aiResult['model_accuracy'] ?? null,
             'processing_time_ms' => $aiResult['processing_time_ms'] ?? null,
+            'detection_status' => $aiResult['detection_status'] ?? 'DETECTED',
+            'status_message' => $aiResult['status_message'] ?? null,
             'ai_request_id' => $aiResult['ai_request_id'] ?? null,
         ];
     }
@@ -262,16 +282,16 @@ class DiseaseDetectionService
         $slug = trim(strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $baseName)), '_');
 
         return match ($slug) {
-            'bacterial_leaf_blight' => 'bacterial_leaf_blight',
-            'bacterial_leaf_streak' => 'bacterial_leaf_streak',
-            'bacterial_panicle_blight' => 'bacterial_panicle_blight',
-            'blast' => 'blast',
-            'brown_spot' => 'brown_spot',
-            'dead_heart' => 'dead_heart',
-            'downy_mildew' => 'downy_mildew',
-            'hispa' => 'hispa',
-            'normal', 'healthy', 'padi_sehat' => 'healthy',
-            'tungro' => 'tungro',
+            'bacterial_leaf_blight', 'hawar_daun_bakteri', 'kresek' => 'bacterial_leaf_blight',
+            'bacterial_leaf_streak', 'bercak_daun_bakteri' => 'bacterial_leaf_streak',
+            'bacterial_panicle_blight', 'hawar_malai_bakteri' => 'bacterial_panicle_blight',
+            'blast', 'penyakit_blas', 'blas' => 'blast',
+            'brown_spot', 'bercak_cokelat', 'bercak_coklat' => 'brown_spot',
+            'dead_heart', 'penggerek_batang', 'sundep', 'beluk' => 'dead_heart',
+            'downy_mildew', 'bulu_embun' => 'downy_mildew',
+            'hispa', 'hama_hispa' => 'hispa',
+            'normal', 'healthy', 'padi_sehat', 'sehat' => 'healthy',
+            'tungro', 'penyakit_tungro' => 'tungro',
             default => null,
         };
     }
@@ -292,7 +312,7 @@ class DiseaseDetectionService
         if (empty($baseUrl)) {
             Log::warning('[AI Microservice Detection Skipped] AI_SERVICE_URL is empty.');
 
-            return $this->fallbackDetectionResult($image, 'AI service belum dikonfigurasi.');
+            throw new RuntimeException('AI service real belum dikonfigurasi. Deteksi tidak dijalankan.');
         }
 
         try {
@@ -310,7 +330,7 @@ class DiseaseDetectionService
         } catch (\Throwable $e) {
             Log::warning('[AI Microservice Detection Failed] ' . $e->getMessage());
 
-            return $this->fallbackDetectionResult($image, 'AI service deteksi penyakit belum tersedia.');
+            throw new RuntimeException('AI service real tidak dapat dihubungi. Deteksi tidak dijalankan.');
         }
 
         if ($response->clientError()) {
@@ -322,7 +342,7 @@ class DiseaseDetectionService
         if (!$response->successful()) {
             Log::warning('[AI Microservice Detection Error] HTTP ' . $response->status() . ' : ' . $response->body());
 
-            return $this->fallbackDetectionResult($image, 'AI service deteksi penyakit gagal memproses gambar.');
+            throw new RuntimeException($this->aiServiceErrorMessage($response->json()));
         }
 
         $payload = $response->json();
@@ -330,7 +350,7 @@ class DiseaseDetectionService
         if (!is_array($data)) {
             Log::warning('[AI Microservice Detection Error] Invalid response payload.');
 
-            return $this->fallbackDetectionResult($image, 'AI service tidak mengembalikan data deteksi yang valid.');
+            throw new RuntimeException('AI service real tidak mengembalikan data deteksi yang valid.');
         }
 
         if (isset($payload['meta']['request_id'])) {
@@ -342,77 +362,22 @@ class DiseaseDetectionService
         } catch (RuntimeException $e) {
             Log::warning('[AI Microservice Detection Normalization Failed] ' . $e->getMessage());
 
-            return $this->fallbackDetectionResult($image, $e->getMessage());
+            throw $e;
         }
     }
 
     /**
-     * Return a clearly labelled fallback so the mobile detection flow still completes while the ML
-     * service is not available in local development.
-     *
-     * @return array<string, mixed>
+     * @param  array<string, mixed>|null  $payload
      */
-    private function fallbackDetectionResult(UploadedFile $image, string $reason): array
+    private function aiServiceErrorMessage(?array $payload): string
     {
-        $fallbackMode = strtolower((string) config('services.ai.detection_fallback', 'manual'));
+        $message = $payload['error']['message'] ?? $payload['message'] ?? null;
 
-        if ($fallbackMode === 'demo' && app()->environment(['local', 'development', 'testing'])) {
-            $classes = [
-                ['bacterial_leaf_blight', 'Bacterial Leaf Blight (Hawar Daun Bakteri)'],
-                ['bacterial_leaf_streak', 'Bacterial Leaf Streak (Bercak Daun Bakteri)'],
-                ['bacterial_panicle_blight', 'Bacterial Panicle Blight (Hawar Malai Bakteri)'],
-                ['blast', 'Blast (Penyakit Blas)'],
-                ['brown_spot', 'Brown Spot (Bercak Cokelat)'],
-                ['dead_heart', 'Dead Heart (Penggerek Batang)'],
-                ['downy_mildew', 'Downy Mildew (Bulu Embun)'],
-                ['hispa', 'Hispa (Hama Hispa)'],
-                ['healthy', 'Normal (Padi Sehat)'],
-                ['tungro', 'Tungro (Penyakit Tungro)'],
-            ];
-
-            $imageContent = file_get_contents((string) $image->getRealPath());
-            $hash = crc32($imageContent !== false ? $imageContent : $image->getClientOriginalName());
-            $selected = $classes[abs($hash) % count($classes)];
-            $confidence = 0.62 + ((abs($hash) % 18) / 100);
-
-            return [
-                'disease_code' => $selected[0],
-                'disease_name' => $selected[1],
-                'confidence' => min($confidence, 0.80),
-                'confidence_level' => 'medium',
-                'model_version' => 'local-demo-fallback-v1',
-                'image_quality' => [
-                    'status' => 'fallback_demo',
-                    'reason' => $reason,
-                ],
-                'needs_expert_review' => true,
-                'top_predictions' => [
-                    [
-                        'disease_code' => $selected[0],
-                        'disease_name' => $selected[1],
-                        'confidence' => min($confidence, 0.80),
-                    ],
-                ],
-                'prediction_margin' => 0.0,
-                'model_accuracy' => null,
-            ];
+        if (is_string($message) && trim($message) !== '') {
+            return $message;
         }
 
-        return [
-            'disease_code' => 'unknown',
-            'disease_name' => 'Perlu Pemeriksaan Manual',
-            'confidence' => 0.0,
-            'confidence_level' => 'low',
-            'model_version' => 'ai-service-unavailable',
-            'image_quality' => [
-                'status' => 'manual_review',
-                'reason' => $reason,
-            ],
-            'needs_expert_review' => true,
-            'top_predictions' => [],
-            'prediction_margin' => null,
-            'model_accuracy' => null,
-        ];
+        return 'AI service real gagal memproses gambar. Deteksi tidak dijalankan.';
     }
 
     /**
@@ -463,6 +428,10 @@ class DiseaseDetectionService
             : null;
         $data['processing_time_ms'] = isset($data['processing_time_ms']) && is_numeric($data['processing_time_ms'])
             ? max(0, (int) $data['processing_time_ms'])
+            : null;
+        $data['detection_status'] = trim((string) ($data['detection_status'] ?? 'DETECTED')) ?: 'DETECTED';
+        $data['status_message'] = isset($data['status_message']) && is_string($data['status_message'])
+            ? trim($data['status_message'])
             : null;
 
         return $data;
@@ -523,4 +492,5 @@ class DiseaseDetectionService
 
         return $this->clampProbability((float) $predictions[0]['confidence'] - (float) $predictions[1]['confidence']);
     }
+
 }

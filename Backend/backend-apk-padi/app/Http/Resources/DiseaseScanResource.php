@@ -26,6 +26,8 @@ class DiseaseScanResource extends JsonResource
             'top_predictions' => $metadata['top_predictions'] ?? [],
             'prediction_margin' => isset($metadata['prediction_margin']) ? (float) $metadata['prediction_margin'] : null,
             'model_accuracy' => isset($metadata['model_accuracy']) ? (float) $metadata['model_accuracy'] : null,
+            'detection_status' => $metadata['detection_status'] ?? 'DETECTED',
+            'status_message' => $metadata['status_message'] ?? null,
             'model_version' => $this->model_version,
             'user_feedback' => $this->user_feedback,
             'verified_class' => $this->verified_class,

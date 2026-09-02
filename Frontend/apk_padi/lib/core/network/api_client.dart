@@ -11,8 +11,8 @@ class ApiClient {
             BaseOptions(
               baseUrl: AppConfig.apiBaseUrl,
               connectTimeout: AppConfig.apiConnectTimeout,
-              receiveTimeout: const Duration(seconds: 30),
-              sendTimeout: const Duration(seconds: 30),
+              receiveTimeout: AppConfig.apiReceiveTimeout,
+              sendTimeout: AppConfig.apiSendTimeout,
             ),
           ) {
     this.dio.interceptors.add(

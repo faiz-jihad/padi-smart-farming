@@ -15,11 +15,11 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <link rel="stylesheet" href="{{ asset('css/admin/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/navbar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/layout.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/admin/theme.css') }}">
-    <script src="{{ asset('js/pwa-notification-sw.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/admin/sidebar.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/navbar.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/layout.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/theme.css') }}?v={{ time() }}">
+    <script src="{{ asset('js/pwa-notification-sw.js') }}?v={{ time() }}"></script>
 
     @stack('styles')
 </head>

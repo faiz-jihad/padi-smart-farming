@@ -47,6 +47,8 @@ async def detect_disease(
             ],
             prediction_margin=prediction.prediction_margin,
             model_accuracy=prediction.model_accuracy,
+            detection_status=prediction.detection_status,
+            status_message=prediction.status_message,
         ),
         meta=MetaResponse(request_id=request_id_context.get()),
     )

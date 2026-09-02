@@ -10,7 +10,7 @@ class PlantCheckApiService {
   final ApiClient _apiClient;
 
   Future<PlantCheckResult> scanDisease({
-    required int farmId,
+    int? farmId,
     required String imagePath,
     Uint8List? imageBytes,
     String? fileName,
@@ -37,7 +37,7 @@ class PlantCheckApiService {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/disease-scans',
         data: FormData.fromMap({
-          'farm_id': farmId,
+          if (farmId != null && farmId > 0) 'farm_id': farmId,
           if (plantAgeDays != null) 'plant_age_days': plantAgeDays,
           if (latitude != null) 'latitude': latitude,
           if (longitude != null) 'longitude': longitude,
@@ -169,6 +169,8 @@ class PlantCheckResult {
     this.predictionMargin,
     this.modelAccuracy,
     this.modelVersion,
+    this.detectionStatus,
+    this.statusMessage,
     this.imageUrl,
     this.recommendation,
     this.userFeedback,
@@ -196,6 +198,8 @@ class PlantCheckResult {
       predictionMargin: _toNullableDouble(json['prediction_margin']),
       modelAccuracy: _toNullableDouble(json['model_accuracy']),
       modelVersion: json['model_version']?.toString(),
+      detectionStatus: json['detection_status']?.toString(),
+      statusMessage: json['status_message']?.toString(),
       imageUrl: json['image_url']?.toString(),
       recommendation: rec,
       userFeedback: json['user_feedback']?.toString(),
@@ -216,6 +220,8 @@ class PlantCheckResult {
   final double? predictionMargin;
   final double? modelAccuracy;
   final String? modelVersion;
+  final String? detectionStatus;
+  final String? statusMessage;
   final String? imageUrl;
   final GeminiRecommendationData? recommendation;
   final String? userFeedback;

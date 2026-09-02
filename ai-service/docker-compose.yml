@@ -2,10 +2,13 @@ services:
   padi-ai-service:
     build: .
     ports:
-      - "8001:8000"
+      - "8003:8000"
     env_file:
       - .env
     volumes:
-      - ./models/model_penyakit_padi_v2_finetuned.h5:/models/disease_model.h5:ro
+      - ./models/YOLO11L-Rice-Disease-Detection.pt:/models/YOLO11L-Rice-Disease-Detection.pt:ro
+      - ./models/class_labels.json:/app/models/class_labels.json:ro
+      - ./models/model_metadata.json:/app/models/model_metadata.json:ro
     environment:
-      MODEL_PATH: /models/disease_model.h5
+      MODEL_PATH: /models/YOLO11L-Rice-Disease-Detection.pt
+      MODEL_VERSION: yolo11l-rice-disease

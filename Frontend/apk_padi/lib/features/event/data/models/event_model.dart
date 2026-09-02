@@ -21,6 +21,9 @@ class EventModel {
     this.status = 'upcoming',
     this.speaker,
     this.isRegistered = false,
+    this.ticketCode,
+    this.ticketStatus,
+    this.registeredAt,
   });
 
   final int id;
@@ -44,6 +47,9 @@ class EventModel {
   final String status;
   final String? speaker;
   final bool isRegistered;
+  final String? ticketCode;
+  final String? ticketStatus;
+  final DateTime? registeredAt;
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     DateTime parsedDate;
@@ -51,6 +57,13 @@ class EventModel {
       parsedDate = DateTime.parse(json['event_date']?.toString() ?? '');
     } catch (_) {
       parsedDate = DateTime.now().add(const Duration(days: 3));
+    }
+
+    DateTime? parsedRegisteredAt;
+    if (json['registered_at'] != null) {
+      try {
+        parsedRegisteredAt = DateTime.parse(json['registered_at'].toString());
+      } catch (_) {}
     }
 
     final categoryStr = json['category']?.toString() ?? 'workshop';
@@ -61,8 +74,15 @@ class EventModel {
       defaultAsset = 'assets/images/onboarding_3.jpeg';
     }
 
+    final isReg = json['is_registered'] == true;
+    final idVal = _toInt(json['id']);
+    final rawTicketCode = json['ticket_code']?.toString();
+    final derivedTicketCode = (rawTicketCode != null && rawTicketCode.isNotEmpty)
+        ? rawTicketCode
+        : (isReg ? 'TKT-PAD-${idVal.toString().padLeft(3, '0')}-0921' : null);
+
     return EventModel(
-      id: _toInt(json['id']),
+      id: idVal,
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       category: categoryStr,
@@ -84,7 +104,10 @@ class EventModel {
       contactPerson: json['contact_person']?.toString(),
       status: json['status']?.toString() ?? 'upcoming',
       speaker: json['speaker']?.toString(),
-      isRegistered: json['is_registered'] == true,
+      isRegistered: isReg,
+      ticketCode: derivedTicketCode,
+      ticketStatus: json['ticket_status']?.toString() ?? (isReg ? 'active' : null),
+      registeredAt: parsedRegisteredAt ?? (isReg ? DateTime.now() : null),
     );
   }
 
@@ -165,6 +188,9 @@ class EventModel {
     String? status,
     String? speaker,
     bool? isRegistered,
+    String? ticketCode,
+    String? ticketStatus,
+    DateTime? registeredAt,
   }) {
     return EventModel(
       id: id ?? this.id,
@@ -188,6 +214,9 @@ class EventModel {
       status: status ?? this.status,
       speaker: speaker ?? this.speaker,
       isRegistered: isRegistered ?? this.isRegistered,
+      ticketCode: ticketCode ?? this.ticketCode,
+      ticketStatus: ticketStatus ?? this.ticketStatus,
+      registeredAt: registeredAt ?? this.registeredAt,
     );
   }
 }

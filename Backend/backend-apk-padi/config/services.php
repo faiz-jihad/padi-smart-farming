@@ -44,9 +44,8 @@ return [
     ],
 
     'ai' => [
-        'base_url' => env('AI_SERVICE_URL', 'http://127.0.0.1:8001/api/v1'),
+        'base_url' => env('AI_SERVICE_URL', 'http://127.0.0.1:8003/api/v1'),
         'timeout' => env('AI_SERVICE_TIMEOUT', 30),
-        'detection_fallback' => env('AI_DETECTION_FALLBACK', env('APP_ENV') === 'production' ? 'manual' : 'demo'),
     ],
 
     'gemini' => [

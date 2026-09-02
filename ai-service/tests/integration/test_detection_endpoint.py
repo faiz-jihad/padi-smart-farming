@@ -28,9 +28,9 @@ class FakeClassifier:
 
 def _green_leaf_png() -> bytes:
     """Membuat citra daun hijau bertekstur untuk pengujian validasi daun."""
-    image = np.full((64, 64, 3), (34, 139, 34), dtype=np.uint8)
-    for x in range(64):
-        for y in range(64):
+    image = np.full((160, 160, 3), (34, 139, 34), dtype=np.uint8)
+    for x in range(160):
+        for y in range(160):
             # Pola tekstur urat daun hijau dan kuning kecokelatan
             if (x + y) % 2 == 0:
                 image[y, x] = (46, 139, 87)  # SeaGreen
@@ -40,23 +40,23 @@ def _green_leaf_png() -> bytes:
 
 
 def _checkerboard_png() -> bytes:
-    image = np.full((64, 64, 3), 255, dtype=np.uint8)
-    for x in range(64):
-        for y in range(64):
+    image = np.full((160, 160, 3), 255, dtype=np.uint8)
+    for x in range(160):
+        for y in range(160):
             if (x + y) % 2 == 0:
                 image[y, x] = (0, 0, 0)
     return _png_bytes(image)
 
 
 def _flat_png() -> bytes:
-    return _png_bytes(np.full((64, 64, 3), 120, dtype=np.uint8))
+    return _png_bytes(np.full((160, 160, 3), 120, dtype=np.uint8))
 
 
 def _skin_png() -> bytes:
     """Membuat citra warna kulit untuk pengujian penolakan wajah/manusia."""
-    image = np.full((64, 64, 3), (235, 180, 150), dtype=np.uint8)
-    for x in range(64):
-        for y in range(64):
+    image = np.full((160, 160, 3), (235, 180, 150), dtype=np.uint8)
+    for x in range(160):
+        for y in range(160):
             if (x + y) % 2 == 0:
                 image[y, x] = (210, 155, 125)
     return _png_bytes(image)

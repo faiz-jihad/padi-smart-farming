@@ -100,8 +100,12 @@ class LeafMemoryBank:
         q = q / q_norm
 
         results: list[tuple[LearnedLeafSample, float]] = []
+        skipped_dimension_mismatch = 0
         for sample in self._samples.values():
-            ref = np.array(sample.feature_vector, dtype=np.float32)
+            ref = np.array(sample.feature_vector, dtype=np.float32).flatten()
+            if ref.shape != q.shape:
+                skipped_dimension_mismatch += 1
+                continue
             ref_norm = np.linalg.norm(ref)
             if ref_norm == 0:
                 continue
@@ -110,6 +114,14 @@ class LeafMemoryBank:
             similarity = float(np.dot(q, ref))
             if similarity >= min_similarity:
                 results.append((sample, similarity))
+
+        if skipped_dimension_mismatch:
+            logger.warning(
+                "event=memory_bank_dimension_mismatch query_dim=%d skipped=%d total_memory=%d",
+                q.size,
+                skipped_dimension_mismatch,
+                len(self._samples),
+            )
 
         results.sort(key=lambda item: item[1], reverse=True)
         return results[:top_k]

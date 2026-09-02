@@ -35,6 +35,15 @@ def test_leaf_memory_bank_nearest_neighbors():
     assert neighbors[0][1] > 0.9
 
 
+def test_leaf_memory_bank_skips_vectors_from_old_model_dimension():
+    bank = LeafMemoryBank()
+    bank.add_sample("old-model-leaf", "blast", "Blast", [1.0, 0.0, 0.0], 0.95)
+
+    neighbors = bank.find_nearest_neighbors([1.0, 0.0], top_k=2)
+
+    assert neighbors == []
+
+
 def test_leaf_memory_refinement_boosts_confidence():
     bank = LeafMemoryBank()
     bank.add_sample("leaf-1", "blast", "Blast", [1.0, 0.0], 0.95, source="expert_verified")

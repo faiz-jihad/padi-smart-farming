@@ -28,3 +28,7 @@ class DiseaseDetectionResponse(BaseModel):
     top_predictions: list[PredictionCandidateResponse]
     prediction_margin: float
     model_accuracy: float | None = None
+    # Status deteksi: "DETECTED", "UNCERTAIN", "INVALID_INPUT"
+    detection_status: str = "DETECTED"
+    # Pesan penjelasan untuk kondisi UNCERTAIN atau INVALID_INPUT
+    status_message: str | None = None

@@ -58,4 +58,14 @@ class AgricultureEvent extends Model
 
         return $this->registrations()->where('user_id', $user->id)->exists();
     }
+
+    public function getRegistrationForUser(?User $user): ?EventRegistration
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return $this->registrations()->where('user_id', $user->id)->first();
+    }
 }
+

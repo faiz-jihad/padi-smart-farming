@@ -17,6 +17,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
 
   final List<Map<String, String>> _filterCategories = [
     {'value': 'all', 'label': 'Semua Acara'},
+    {'value': 'my_tickets', 'label': 'Tiket Saya'},
     {'value': 'workshop', 'label': 'Workshop'},
     {'value': 'field_day', 'label': 'Sekolah Lapang'},
     {'value': 'bazaar', 'label': 'Bazar Tani'},
@@ -26,9 +27,13 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   @override
   Widget build(BuildContext context) {
     final allEvents = ref.watch(eventsProvider);
-    final filteredEvents = _selectedCategory == 'all'
-        ? allEvents
-        : allEvents.where((e) => e.category == _selectedCategory).toList();
+    final myTicketsCount = allEvents.where((e) => e.isRegistered).length;
+
+    final filteredEvents = switch (_selectedCategory) {
+      'all' => allEvents,
+      'my_tickets' => allEvents.where((e) => e.isRegistered).toList(),
+      _ => allEvents.where((e) => e.category == _selectedCategory).toList(),
+    };
 
     return Scaffold(
       backgroundColor: HomeColors.background,
@@ -69,6 +74,18 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Tiket Saya',
+            icon: Badge(
+              isLabelVisible: myTicketsCount > 0,
+              label: Text('$myTicketsCount'),
+              backgroundColor: HomeColors.primaryGreen,
+              child: const Icon(Icons.confirmation_number_outlined, color: HomeColors.textPrimary),
+            ),
+            onPressed: () {
+              setState(() => _selectedCategory = 'my_tickets');
+            },
+          ),
           IconButton(
             tooltip: 'Admin: Buat Acara Baru',
             icon: const Icon(Icons.add_circle_outline_rounded, color: HomeColors.primaryGreen),
@@ -124,8 +141,51 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
             // Events List
             Expanded(
               child: filteredEvents.isEmpty
-                  ? const Center(
-                      child: Text('Tidak ada acara dalam kategori ini.'),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _selectedCategory == 'my_tickets'
+                                ? Icons.confirmation_number_outlined
+                                : Icons.event_busy_rounded,
+                            size: 56,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _selectedCategory == 'my_tickets'
+                                ? 'Belum Ada Tiket Acara Terdaftar'
+                                : 'Tidak ada acara dalam kategori ini.',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: HomeColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedCategory == 'my_tickets'
+                                ? 'Daftar pada pelatihan atau bazar pertanian untuk mendapatkan tiket digital Anda.'
+                                : 'Silakan pilih kategori acara lain.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: HomeColors.textSecondary,
+                            ),
+                          ),
+                          if (_selectedCategory == 'my_tickets') ...[
+                            const SizedBox(height: 16),
+                            FilledButton.tonal(
+                              onPressed: () => setState(() => _selectedCategory = 'all'),
+                              style: FilledButton.styleFrom(
+                                foregroundColor: HomeColors.primaryGreen,
+                              ),
+                              child: const Text('Jelajahi Semua Acara'),
+                            ),
+                          ],
+                        ],
+                      ),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
@@ -153,7 +213,10 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
       decoration: BoxDecoration(
         color: HomeColors.surface,
         borderRadius: BorderRadius.circular(HomeRadius.xl),
-        border: Border.all(color: HomeColors.border),
+        border: Border.all(
+          color: event.isRegistered ? const Color(0xFF86EFAC) : HomeColors.border,
+          width: event.isRegistered ? 1.5 : 1,
+        ),
         boxShadow: HomeShadows.subtle,
       ),
       child: Material(
@@ -205,6 +268,39 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                           ),
                         ),
                       ),
+                      if (event.isRegistered)
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF15803D),
+                              borderRadius: BorderRadius.circular(HomeRadius.pill),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.confirmation_number_rounded, color: Colors.white, size: 12),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Tiket Aktif',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       Positioned(
                         bottom: 10,
                         left: 10,

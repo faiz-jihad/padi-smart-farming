@@ -31,7 +31,7 @@ class DiseaseScanApiTest extends TestCase
         config(['services.ai.base_url' => 'http://ai.test/api/v1']);
 
         Http::fake([
-            'http://ai.test/api/v1/diseases/detect' => Http::response([
+            'http://ai.test/api/v1/diseases/detect*' => Http::response([
                 'success' => true,
                 'data' => [
                     'disease_code' => 'blast',
@@ -63,7 +63,7 @@ class DiseaseScanApiTest extends TestCase
                     'model_accuracy' => 0.95,
                 ],
             ], 200),
-            'http://ai.test/api/v1/treatments/recommend' => Http::response([
+            'http://ai.test/api/v1/treatments/recommend*' => Http::response([
                 'success' => true,
                 'data' => [],
             ], 200),
@@ -106,13 +106,13 @@ class DiseaseScanApiTest extends TestCase
         Http::assertNotSent(fn (Request $request) => str_contains($request->url(), '/diseases/learn'));
     }
 
-    public function test_scan_uses_labelled_fallback_when_ai_service_is_unavailable(): void
+    public function test_scan_rejects_when_real_ai_model_is_unavailable(): void
     {
         Storage::fake('public');
         config(['services.ai.base_url' => 'http://ai.test/api/v1']);
 
         Http::fake([
-            'http://ai.test/api/v1/diseases/detect' => Http::response([
+            'http://ai.test/api/v1/diseases/detect*' => Http::response([
                 'success' => false,
                 'error' => [
                     'code' => 'MODEL_UNAVAILABLE',
@@ -138,18 +138,11 @@ class DiseaseScanApiTest extends TestCase
             'image' => UploadedFile::fake()->image('leaf.jpg', 900, 900),
         ]);
 
-        $response->assertCreated()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data.scan.quality_status', 'fallback_demo')
-            ->assertJsonPath('data.scan.model_version', 'local-demo-fallback-v1');
+        $response->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Model belum tersedia.');
 
-        $this->assertDatabaseCount('disease_scans', 1);
-        $this->assertDatabaseHas('disease_scans', [
-            'farmer_id' => $farmer->id,
-            'farm_id' => $farm->id,
-            'quality_status' => 'fallback_demo',
-            'model_version' => 'local-demo-fallback-v1',
-        ]);
+        $this->assertDatabaseCount('disease_scans', 0);
     }
 
     public function test_farmer_upload_non_leaf_photo_is_rejected(): void
@@ -158,7 +151,7 @@ class DiseaseScanApiTest extends TestCase
         config(['services.ai.base_url' => 'http://ai.test/api/v1']);
 
         Http::fake([
-            'http://ai.test/api/v1/diseases/detect' => Http::response([
+            'http://ai.test/api/v1/diseases/detect*' => Http::response([
                 'success' => false,
                 'error' => [
                     'code' => 'IMAGE_NOT_LEAF',

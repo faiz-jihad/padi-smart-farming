@@ -9,7 +9,7 @@ Struktur mengikuti Clean Architecture praktis:
 - `app/api`: router FastAPI, dependency, dan response HTTP.
 - `app/application`: use case dan DTO alur aplikasi.
 - `app/domain`: entity, repository protocol, dan policy bisnis.
-- `app/infrastructure`: TensorFlow/Keras, OpenCV, LLM client, Weather API client, dan persistence KB.
+- `app/infrastructure`: Ultralytics YOLO, TensorFlow/Keras legacy loader, OpenCV, LLM client, Weather API client, dan persistence KB.
 - `app/schemas`: kontrak request/response Pydantic.
 - `knowledge_base`: panduan penyakit dan rekomendasi tervalidasi untuk MVP.
 - `scripts`: inspeksi model dan smoke test.
@@ -19,18 +19,18 @@ Dependency mengarah ke dalam: API memanggil application, application memakai dom
 
 ## Model
 
-Model yang ditemukan:
+Model utama:
 
-`models/model_penyakit_padi_v2_finetuned.h5`
+`models/YOLO11L-Rice-Disease-Detection.pt`
 
-Hasil inspeksi:
+Runtime:
 
-- Format: Keras H5.
-- Backbone: MobileNetV2.
-- Input: `224x224x3`.
-- Output: softmax `10` kelas.
+- Format: Ultralytics YOLO `.pt`.
+- Backend aplikasi mobile tetap Laravel; Laravel meneruskan gambar ke AI service.
+- Loader memilih YOLO otomatis saat `MODEL_PATH` berakhiran `.pt`.
+- Label dibaca dari `model.names` milik YOLO. `models/class_labels.json` hanya fallback bila label model tidak tersedia.
 
-Urutan class asli, label training, dan preprocessing training tidak ditemukan di repository. Service menyediakan `MODEL_CLASS_MAPPING` agar mapping output model dapat diverifikasi dan diganti dari environment tanpa mengubah kode.
+Jangan isi `MODEL_REPORTED_ACCURACY` dengan angka perkiraan. Gunakan nilai itu hanya jika ada metrik valid dari evaluasi model yang sama pada dataset uji yang benar.
 
 ## Setup Lokal
 
@@ -43,10 +43,17 @@ Copy-Item .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-Gunakan Python 3.11 untuk environment lokal. Runtime Docker juga memakai Python 3.11, dan dependency native TensorFlow perlu versi Python yang sama agar model bisa dimuat.
-Laravel API memakai port `8000`, jadi jalankan AI service lokal di port `8001` agar aplikasi Flutter tetap terhubung ke backend Laravel.
+Gunakan Python 3.11 untuk environment lokal. Runtime Docker juga memakai Python 3.11 agar dependency ML native bisa dimuat stabil.
+Laravel API memakai port `8000`, jadi aplikasi Flutter tetap hanya terhubung ke
+backend Laravel. Untuk runtime Docker lokal, AI service dipetakan ke host port
+`8003` dan Laravel memanggilnya melalui `AI_SERVICE_URL=http://127.0.0.1:8003/api/v1`.
 
-OpenAPI tersedia di `http://127.0.0.1:8001/docs`.
+Jangan jalankan service deteksi real dengan Python 3.13/3.14. Dependency ML
+native bisa gagal terpasang atau gagal load. Jika model tidak siap, health check
+akan melaporkan `model_loaded=false`; backend Laravel menolak scan agar tidak
+membuat hasil penyakit palsu.
+
+OpenAPI tersedia di `http://127.0.0.1:8003/docs` saat menjalankan Docker Compose.
 
 ## Docker
 
@@ -56,7 +63,7 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Compose me-mount model dari `./models/model_penyakit_padi_v2_finetuned.h5` ke container sebagai read-only.
+Compose me-mount model dari `./models/YOLO11L-Rice-Disease-Detection.pt` ke container sebagai read-only.
 
 ## Test dan Quality
 
@@ -76,6 +83,12 @@ Health:
 curl http://127.0.0.1:8001/api/v1/health
 ```
 
+Dengan Docker Compose lokal:
+
+```bash
+curl http://127.0.0.1:8003/api/v1/health
+```
+
 Deteksi penyakit:
 
 ```bash
@@ -83,6 +96,15 @@ curl -X POST http://127.0.0.1:8001/api/v1/diseases/detect \
   -F "image=@sample.jpg" \
   -F "plant_age_days=45"
 ```
+
+Tes Postman:
+
+- Method: `POST`
+- URL Docker lokal: `http://127.0.0.1:8003/api/v1/diseases/detect`
+- Body: `form-data`
+- Key `image`: pilih type `File`, lalu upload foto daun padi.
+- Key opsional: `plant_age_days`, `latitude`, `longitude`.
+- Jangan set header `Content-Type` manual; biarkan Postman membuat multipart boundary.
 
 Rekomendasi penanganan:
 
@@ -166,6 +188,6 @@ Simpan `request_id` dari response untuk audit dan korelasi log. Jangan kirim ser
 
 ## Keterbatasan
 
-Label class asli dan preprocessing training belum ditemukan. Default preprocessing mengikuti pola MobileNetV2, yaitu resize `224x224` dan normalisasi ke rentang `[-1, 1]`. Mapping default adalah placeholder yang harus divalidasi oleh pemilik model sebelum digunakan untuk keputusan lapangan.
+Pastikan label bawaan YOLO (`model.names`) sesuai dengan kode penyakit aplikasi: `healthy`, `blast`, `tungro`, dan `bacterial_leaf_blight`. Jika nama class dari training berbeda, tambahkan alias di `label_mapper.py` atau perbaiki label saat export model sebelum dipakai production.
 
 Service ini adalah pendukung keputusan, bukan pengganti diagnosis resmi dari penyuluh pertanian, agronom, atau laboratorium.

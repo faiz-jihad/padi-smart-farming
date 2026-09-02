@@ -256,15 +256,12 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
   Future<void> _usePicture() async {
     final image = _image;
-    final farmId = _selectedFarmId;
+    int? farmId = _selectedFarmId;
 
     if (image == null || _isScanning) return;
 
-    if (farmId == null) {
-      final lang = ref.read(languageProvider);
-      final s = AppStrings(lang);
-      _showQuickFarmSheet(context, s, lang);
-      return;
+    if (farmId == null && _farms.isNotEmpty) {
+      farmId = _farms.first.id;
     }
 
     FarmModel? farm;
@@ -1837,10 +1834,18 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.verified_rounded, color: Colors.white, size: 13),
+                                        Icon(
+                                          result.needsExpertReview
+                                              ? Icons.manage_search_rounded
+                                              : Icons.verified_rounded,
+                                          color: Colors.white,
+                                          size: 13,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          confidencePercent != null
+                                          result.needsExpertReview
+                                              ? 'Perlu review'
+                                              : confidencePercent != null
                                               ? '$confidencePercent% yakin'
                                               : 'Perlu review',
                                           style: const TextStyle(
@@ -1876,6 +1881,35 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                   height: 1.25,
                                 ),
                               ),
+                              if (result.statusMessage != null && result.statusMessage!.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF59E0B).withOpacity(0.18),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFFCD34D).withOpacity(0.45)),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.info_outline_rounded, color: Color(0xFFFDE68A), size: 17),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          result.statusMessage!,
+                                          style: const TextStyle(
+                                            color: Color(0xFFFFF7ED),
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
 
                               const SizedBox(height: 14),
 
@@ -1968,6 +2002,8 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     ),
                   ),
 
+                  const SizedBox(height: 16),
+                  _buildPredictionCandidatesCard(),
                   const SizedBox(height: 16),
 
                   // ================= B. LUXURY TAB SELECTOR =================
@@ -2075,6 +2111,111 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPredictionCandidatesCard() {
+    final candidates = widget.result.topPredictions;
+    if (candidates.isEmpty) return const SizedBox.shrink();
+
+    return _buildModernCard(
+      title: 'Kandidat Deteksi Model',
+      icon: Icons.analytics_rounded,
+      iconColor: const Color(0xFF2563EB),
+      subtitle: widget.result.needsExpertReview
+          ? 'Hasil utama perlu dikonfirmasi ulang'
+          : 'Urutan probabilitas dari model real',
+      child: Column(
+        children: [
+          for (var index = 0; index < candidates.length; index++)
+            _buildPredictionCandidateRow(candidates[index], index),
+          if ((widget.result.predictionMargin ?? 0) < 0.20) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: Color(0xFFD97706), size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Selisih kandidat dekat. Ambil foto daun lebih dekat dan fokus untuk hasil lebih kuat.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF92400E),
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPredictionCandidateRow(PredictionCandidate candidate, int index) {
+    final percent = (candidate.confidence * 100).toStringAsFixed(1);
+    final isTop = index == 0;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: index == widget.result.topPredictions.length - 1 ? 0 : 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isTop ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isTop ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isTop ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                color: isTop ? Colors.white : const Color(0xFF475569),
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              candidate.diseaseName,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                height: 1.25,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$percent%',
+            style: TextStyle(
+              color: isTop ? const Color(0xFF047857) : const Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
       ),
     );
   }

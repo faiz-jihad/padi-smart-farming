@@ -65,6 +65,8 @@ Route::middleware(['auth', 'admin.web'])
 
         Route::get('/notifications', [DashboardController::class, 'notifications'])
             ->name('notifications.index');
+        Route::get('/notifications/latest', [DashboardController::class, 'latestNotifications'])
+            ->name('notifications.latest');
 
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');

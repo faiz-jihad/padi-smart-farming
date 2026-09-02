@@ -109,7 +109,7 @@ class Settings:
     allowed_origins: list[str] = field(default_factory=lambda: _env_list("ALLOWED_ORIGINS", "http://localhost:3000"))
 
     model_path: Path = field(
-        default_factory=lambda: Path(_env("MODEL_PATH", "models/model_penyakit_padi_v2_finetuned.h5"))
+        default_factory=lambda: Path(_env("MODEL_PATH", "models/YOLO11L-Rice-Disease-Detection.pt"))
     )
     model_version: str = field(
         default_factory=lambda: _env("MODEL_VERSION", str(_model_metadata().get("version", "1.0.0")))

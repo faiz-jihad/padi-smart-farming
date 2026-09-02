@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css'])
-    <link rel="stylesheet" href="{{ asset('css/admin/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/auth.css') }}?v={{ time() }}">
 </head>
 
 <body class="admin-auth">
