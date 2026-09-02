@@ -155,15 +155,35 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('market-offers', [MarketOfferController::class, 'store']);
         Route::put('market-offers/{marketOffer}', [MarketOfferController::class, 'update']);
 
-        Route::get('purchase-contracts', [PurchaseContractController::class, 'index']);
-        Route::post('purchase-contracts', [PurchaseContractController::class, 'store']);
         Route::get(
-            'purchase-contracts/{purchaseContract}',
-            [PurchaseContractController::class, 'show']
-        );
-        Route::get('sales-report', [PurchaseContractController::class, 'salesReport']);
-        Route::get('contract-payments', [ContractPaymentController::class, 'index']);
-        Route::get('purchase-contracts/{purchaseContract}/invoice', [PurchaseContractController::class, 'invoice']);
+    'purchase-contracts/{purchaseContract}/invoice',
+    [PurchaseContractController::class, 'invoice']
+);
+
+Route::get(
+    'purchase-contracts/{purchaseContract}',
+    [PurchaseContractController::class, 'show']
+);
+
+Route::get(
+    'purchase-contracts',
+    [PurchaseContractController::class, 'index']
+);
+
+Route::post(
+    'purchase-contracts',
+    [PurchaseContractController::class, 'store']
+);
+
+Route::get(
+    'sales-report',
+    [PurchaseContractController::class, 'salesReport']
+);
+
+Route::get(
+    'contract-payments',
+    [ContractPaymentController::class, 'index']
+);
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
