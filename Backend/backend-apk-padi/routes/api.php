@@ -91,6 +91,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::delete('farms/{farm}', [ApiV1FarmController::class, 'destroy']);
         Route::get('farms/{farm}/planting-calendar', [PlantingCalendarController::class, 'byFarm'])
             ->middleware('role:farmer|extension_officer|admin');
+        Route::get('farms/{farm}/daily-priority', [\App\Http\Controllers\Api\V1\FarmPriorityController::class, 'index']);
+        Route::get('farms/{farm}/timeline', [\App\Http\Controllers\Api\V1\FarmTimelineController::class, 'index']);
+        Route::get('farms/{farm}/weather-advisory', [\App\Http\Controllers\Api\V1\WeatherAdvisoryController::class, 'index']);
 
         Route::get('planting-calendars', [PlantingCalendarController::class, 'index']);
         Route::get('planting-calendars/{plantingCalendar}', [PlantingCalendarController::class, 'show']);
@@ -200,6 +203,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream']);
         Route::get('ppl-validations', [PplValidationController::class, 'index']);
+        Route::post('ppl-validations', [PplValidationController::class, 'store'])
+            ->middleware('role:farmer|admin');
+        Route::get('ppl-validations/{pplValidation}', [PplValidationController::class, 'show']);
+        Route::patch('ppl-validations/{pplValidation}', [PplValidationController::class, 'update'])
+            ->middleware('role:extension_officer|admin');
         Route::get('disease-scans', [DiseaseScanController::class, 'index']);
         Route::post('disease-scans', [DiseaseScanController::class, 'store'])->middleware('throttle:ai-scans');
         Route::get('disease-scans/{diseaseScan}', [DiseaseScanController::class, 'show']);

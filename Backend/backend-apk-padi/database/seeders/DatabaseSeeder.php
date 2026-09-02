@@ -50,5 +50,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FertilizerRuleSeeder::class);
         $this->call(MarketListingSeeder::class);
         $this->call(EventSeeder::class);
+        $this->call(AgricultureKnowledgeSeeder::class);
+        $this->call(DiseaseRecommendationSeeder::class);
     }
 }

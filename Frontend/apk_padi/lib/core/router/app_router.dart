@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,6 +39,8 @@ import 'package:padi/features/marketplace/presentation/screens/marketplace_scree
 import 'package:padi/features/marketplace/presentation/screens/market_listing_detail_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/create_market_listing_screen.dart';
 import 'package:padi/features/plant_check/presentation/screens/plant_check_screen.dart';
+import 'package:padi/features/plant_check/presentation/screens/ppl_case_list_screen.dart';
+import 'package:padi/features/plant_check/presentation/screens/ppl_case_detail_screen.dart';
 import 'package:padi/features/cart/data/models/cart_item_model.dart';
 import 'package:padi/features/cart/presentation/screens/cart_screen.dart';
 import 'package:padi/features/cart/presentation/screens/checkout_screen.dart';
@@ -337,6 +340,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return AddActivityScreen(
             cropSeasonId: cropSeasonId,
           );
+        },
+      ),
+      GoRoute(
+        path: '/ppl-cases',
+        builder: (context, state) => const PplCaseListScreen(),
+      ),
+      GoRoute(
+        path: '/ppl-cases/detail',
+        builder: (context, state) {
+          final caseData = state.extra as Map<String, dynamic>? ?? {};
+          return PplCaseDetailScreen(caseData: caseData);
         },
       ),
       GoRoute(

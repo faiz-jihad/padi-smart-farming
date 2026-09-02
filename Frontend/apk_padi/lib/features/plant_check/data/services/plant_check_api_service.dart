@@ -1,8 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:padi/core/helpers/api_error_helper.dart';
 import 'package:padi/core/network/api_client.dart';
+import 'package:padi/core/providers/app_providers.dart';
+
+final plantCheckApiServiceProvider = Provider<PlantCheckApiService>((ref) {
+  return PlantCheckApiService(ref.read(apiClientProvider));
+});
 
 class PlantCheckApiService {
   const PlantCheckApiService(this._apiClient);
@@ -88,8 +94,52 @@ class PlantCheckApiService {
       return false;
     }
   }
-}
 
+  Future<Map<String, dynamic>?> submitToPpl(int scanId) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/ppl-validations',
+        data: {'scan_id': scanId},
+      );
+      if (response.data?['success'] == true) {
+        return response.data?['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPplValidations() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/ppl-validations');
+      final data = response.data?['data'] as Map<String, dynamic>? ?? {};
+      final list = data['validations'] as List? ?? [];
+      return list.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<bool> updatePplValidation({
+    required int validationId,
+    required String status,
+    String? notes,
+  }) async {
+    try {
+      final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+        '/ppl-validations/$validationId',
+        data: {
+          'status': status,
+          if (notes != null) 'notes': notes,
+        },
+      );
+      return response.data?['success'] == true;
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+}
 
 class GeminiProduct {
   const GeminiProduct({
@@ -248,7 +298,6 @@ class PredictionCandidate {
   final String diseaseName;
   final double confidence;
 }
-
 
 String _uploadFileName(String? fileName, String imagePath) {
   final name = (fileName?.trim().isNotEmpty ?? false)

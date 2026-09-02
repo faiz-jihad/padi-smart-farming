@@ -14,6 +14,7 @@ import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
+import 'package:padi/features/plant_check/data/services/offline_scan_queue_service.dart';
 
 class PlantCheckScreen extends ConsumerStatefulWidget {
   const PlantCheckScreen({super.key});
@@ -277,10 +278,10 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       _scanError = null;
     });
 
-    try {
-      double? lat = farm?.latitude;
-      double? lng = farm?.longitude;
+    double? lat = farm?.latitude;
+    double? lng = farm?.longitude;
 
+    try {
       try {
         final position = await const LocationService().getCurrentPosition();
         if (position != null) {
@@ -308,6 +309,18 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       final lang = ref.read(languageProvider);
       final errMsg = _friendlyError(error, lang);
 
+      // Enqueue to offline scan queue for automatic retry
+      if (farmId != null) {
+        try {
+          await ref.read(offlineScanQueueServiceProvider).enqueueScan(
+                imagePath: image.path,
+                farmId: farmId,
+                latitude: lat,
+                longitude: lng,
+              );
+        } catch (_) {}
+      }
+
       setState(() {
         _scanError = errMsg;
       });
@@ -316,19 +329,30 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
+              const Icon(Icons.cloud_off_rounded, color: Colors.white, size: 24),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  errMsg,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      errMsg,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Tersimpan di antrean offline. Otomatis diproses saat online.',
+                      style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 11),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: const Color(0xFFB45309),
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
@@ -1448,6 +1472,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
   bool _isSubmittingFeedback = false;
   bool _feedbackSent = false;
   String? _feedbackMessage;
+  bool _isSubmittingPpl = false;
+  bool _pplSubmitted = false;
+  String? _pplMessage;
 
   @override
   void initState() {
@@ -1456,6 +1483,50 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     if (widget.result.isLearned || widget.result.userFeedback != null) {
       _feedbackSent = true;
       _feedbackMessage = 'Foto daun ini telah tercatat dalam memori pembelajaran AI.';
+    }
+  }
+
+  Future<void> _submitToPpl() async {
+    if (_isSubmittingPpl || _pplSubmitted) return;
+    if (widget.plantCheckService == null) return;
+
+    setState(() => _isSubmittingPpl = true);
+    try {
+      await widget.plantCheckService!.submitToPpl(widget.result.id);
+      if (!mounted) return;
+      setState(() {
+        _isSubmittingPpl = false;
+        _pplSubmitted = true;
+        _pplMessage = 'Kasus berhasil dikirim ke Penyuluh (PPL) untuk validasi lapangan.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.verified_user_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Kasus berhasil dikirim ke Penyuluh (PPL).',
+                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0284C7),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmittingPpl = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim ke penyuluh: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
     }
   }
 
@@ -2031,6 +2102,56 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   const SizedBox(height: 20),
 
                   // ================= E. ACTION BUTTONS =================
+
+                  if (_pplSubmitted)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F9FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFBAE6FD)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.verified_user_rounded, color: Color(0xFF0284C7), size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _pplMessage ?? 'Kasus telah dikirim ke Penyuluh (PPL).',
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0369A1)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: FilledButton.icon(
+                        onPressed: _isSubmittingPpl ? null : _submitToPpl,
+                        icon: _isSubmittingPpl
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.verified_user_rounded, size: 19),
+                        label: Text(
+                          _isSubmittingPpl ? 'Mengirim ke Penyuluh...' : 'Kirim ke Penyuluh (PPL)',
+                          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
 
                   FilledButton.icon(
                     onPressed: widget.onReportAlert,
