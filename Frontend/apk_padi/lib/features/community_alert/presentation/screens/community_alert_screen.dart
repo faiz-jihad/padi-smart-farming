@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:padi/core/providers/app_providers.dart';
-import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
+import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/community_alert/data/models/community_alert_model.dart';
 import 'package:padi/features/community_alert/data/models/community_report_model.dart';
 import 'package:padi/features/community_alert/data/services/community_alert_api_service.dart';
@@ -24,6 +23,8 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
   late final CommunityReportApiService _reportService;
 
   late final TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  final Debouncer _searchDebouncer = Debouncer(milliseconds: 300);
 
   List<CommunityAlertModel> _alerts = [];
   List<CommunityReportModel> _reports = [];
@@ -46,6 +47,8 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -82,8 +85,30 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
   }
 
   List<CommunityAlertModel> get _filteredAlerts {
-    if (_selectedFilter == 'all') return _alerts;
-    return _alerts.where((a) => a.type == _selectedFilter).toList();
+    final keyword = _searchController.text.trim().toLowerCase();
+    var list = _selectedFilter == 'all'
+        ? _alerts
+        : _alerts.where((a) => a.type == _selectedFilter).toList();
+
+    if (keyword.isNotEmpty) {
+      list = list.where((a) {
+        final title = a.title.toLowerCase();
+        final msg = a.message.toLowerCase();
+        return title.contains(keyword) || msg.contains(keyword);
+      }).toList();
+    }
+    return list;
+  }
+
+  List<CommunityReportModel> get _filteredReports {
+    final keyword = _searchController.text.trim().toLowerCase();
+    if (keyword.isEmpty) return _reports;
+
+    return _reports.where((r) {
+      final disease = (r.diseaseName ?? '').toLowerCase();
+      final farmer = (r.farmerName ?? '').toLowerCase();
+      return disease.contains(keyword) || farmer.contains(keyword);
+    }).toList();
   }
 
   void _showGeminiQuickSolution(String diseaseName) {
@@ -345,6 +370,47 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
                 ),
               ),
             ),
+
+            // 3. Search Bar with Debounce
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (_) => _searchDebouncer.run(() => setState(() {})),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.white,
+                      hintText: 'Cari penyakit, nama petani, atau wilayah...',
+                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF059669)),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.cancel_rounded, size: 16, color: Color(0xFF94A3B8)),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ];
         },
         body: TabBarView(
@@ -523,15 +589,19 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
 
   // ================= REPORTS TAB (MODERNIZED CARDS) =================
   Widget _buildReportsTab() {
-    if (_reports.isEmpty) {
+    final filtered = _filteredReports;
+
+    if (filtered.isEmpty) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
         children: [
           _buildEmptyCard(
             icon: Icons.cell_tower_rounded,
-            title: 'Belum Ada Laporan Siaran',
-            subtitle: 'Petani belum menyiarkan kondisi serangan hama di hamparan ini.',
-            buttonText: 'Siarkan Laporan Pertama',
+            title: _searchController.text.isNotEmpty ? 'Laporan Tidak Ditemukan' : 'Belum Ada Laporan Siaran',
+            subtitle: _searchController.text.isNotEmpty
+                ? 'Tidak ada laporan yang cocok dengan kata kunci pencarian.'
+                : 'Petani belum menyiarkan kondisi serangan hama di hamparan ini.',
+            buttonText: 'Siarkan Laporan',
             onButtonTap: () => context.push('/community-alert/report'),
           ),
         ],
@@ -540,9 +610,9 @@ class _CommunityAlertScreenState extends ConsumerState<CommunityAlertScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-      itemCount: _reports.length,
+      itemCount: filtered.length,
       itemBuilder: (ctx, i) {
-        final r = _reports[i];
+        final r = filtered[i];
         final diseaseName = r.diseaseName ?? 'Penyakit Daun Padi';
         final isVerified = r.status == 'verified';
 

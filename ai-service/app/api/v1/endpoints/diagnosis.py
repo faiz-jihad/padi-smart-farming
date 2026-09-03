@@ -26,6 +26,8 @@ from app.schemas.diagnosis import (
     SecondPrediction,
     TopPredictionItem,
 )
+from app.services.leaf_segmenter import LeafSegmenter
+from app.services.feature_extractor import FeatureExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +105,18 @@ async def model_info(request: Request) -> ModelInfoResponse:
     tags=["diagnosis"],
     include_in_schema=False,
 )
+@router.post(
+    "/api/v1/diagnose",
+    response_model=DiagnosisResponse,
+    tags=["diagnosis"],
+    include_in_schema=False,
+)
+@router.post(
+    "/diagnose",
+    response_model=DiagnosisResponse,
+    tags=["diagnosis"],
+    include_in_schema=False,
+)
 async def diagnose(
     request: Request,
     image: UploadFile = File(...),  # noqa: B008
@@ -116,48 +130,50 @@ async def diagnose(
 ) -> DiagnosisResponse:
     """
     Diagnosa penyakit padi dari foto daun dengan schema lengkap P.A.D.I.
+    Pipeline canonical: bytes -> PIL -> EXIF transpose -> RGB -> YOLO classify.
     """
     quality_svc = request.app.state.quality_service
     classifier = request.app.state.classifier
     decision_engine = request.app.state.decision_engine
     catalog = request.app.state.disease_catalog
 
-    content = await image.read()
-
-    # Validasi upload & decode
+    # ── TAHAP 1: [Citra Input] ───────────────────────────────────────────────
+    # Baca file upload HANYA SATU KALI dan decode ke format kanonis PIL RGB
+    image_bytes = await image.read()
     quality_svc.validate_upload(
-        content=content,
+        content=image_bytes,
         content_type=image.content_type,
         filename=image.filename,
     )
-    image_rgb = quality_svc.decode_image(content)
-    quality_report = quality_svc.assess_quality(image_rgb)
+    pil_image = quality_svc.decode_pil(image_bytes)
+    quality_report = quality_svc.assess_quality(pil_image)
 
-    if quality_report.status != "INVALID":
-        classifier_result = await classifier.classify(image_rgb)
-    else:
-        from app.services.padi_classifier import ClassifierResult
-        classifier_result = ClassifierResult(
-            request_id=str(uuid.uuid4()),
-            class_id=-1,
-            class_name="unknown",
-            confidence=0.0,
-            confidence_percent=0.0,
-            margin=0.0,
-            top_predictions=[],
-            preprocessing_ms=0.0,
-            inference_ms=0.0,
-            total_latency_ms=0.0,
-            model_name=classifier.model_name,
-            model_version=classifier.model_version,
-            model_task="classify",
-            model_imgsz=classifier.model_imgsz,
-            device=classifier.device,
+    if quality_report.status == "INVALID":
+        raise InvalidImageError(
+            "Objek pada gambar bukan daun padi yang jelas atau gambar terlalu gelap/buram. "
+            "Silakan ambil foto daun padi dengan pencahayaan dan fokus yang baik."
         )
 
+    # ── TAHAP 2: [Segmentasi] ──────────────────────────────────────────────────
+    # Segmentasi area daun padi dan bercak lesi klorosis/nekrosis
+    segmenter = getattr(request.app.state, "leaf_segmenter", None)
+    if segmenter is None:
+        segmenter = LeafSegmenter()
+    seg_result = segmenter.segment(pil_image)
+
+    # ── TAHAP 3: [Ekstraksi Fitur] ────────────────────────────────────────────
+    # Ekstraksi fitur visual: Warna (ExG/HSV), Tekstur (Laplacian), Morfologi lesi
+    feature_extractor = getattr(request.app.state, "feature_extractor", None)
+    if feature_extractor is None:
+        feature_extractor = FeatureExtractor()
+    feat_result = feature_extractor.extract(pil_image, seg_result)
+
+    # ── TAHAP 4: [Klasifikasi] ────────────────────────────────────────────────
+    # Inferensi Deep Learning Ultralytics model kanonis Colab
+    classifier_result = await classifier.classify(pil_image)
     decision_result = decision_engine.decide(classifier_result, quality_report)
 
-    class_name = classifier_result.class_name if quality_report.status != "INVALID" else "normal"
+    class_name = classifier_result.class_name
     disease_info = catalog.get_disease_info(class_name, locale=locale)
     display_name = catalog.get_display_name(class_name, locale=locale)
 
@@ -177,6 +193,25 @@ async def diagnose(
             class_name=p2.class_name,
             confidence=p2.confidence,
         )
+
+    pipeline_stages = {
+        "stage_1_input": {
+            "status": "VALID",
+            "format": "RGB",
+            "width": pil_image.width,
+            "height": pil_image.height,
+        },
+        "stage_2_segmentation": seg_result.to_dict(),
+        "stage_3_feature_extraction": feat_result.to_dict(),
+        "stage_4_classification": {
+            "class_name": classifier_result.class_name,
+            "display_name": display_name,
+            "confidence": classifier_result.confidence,
+            "confidence_percent": classifier_result.confidence_percent,
+            "margin": classifier_result.margin,
+            "inference_ms": classifier_result.inference_ms,
+        },
+    }
 
     return DiagnosisResponse(
         data=DiagnosisData(
@@ -214,6 +249,9 @@ async def diagnose(
             ),
             disease=DiseaseInfo(**disease_info),
             latency_ms=classifier_result.total_latency_ms,
+            pipeline_stages=pipeline_stages,
+            segmentation=seg_result.to_dict(),
+            features=feat_result.to_dict(),
         )
     )
 
@@ -249,33 +287,39 @@ async def detect_disease_backend(
     decision_engine = request.app.state.decision_engine
     catalog = request.app.state.disease_catalog
 
-    content = await image.read()
-
-    # 1. Validasi & decode
+    # ── TAHAP 1: [Citra Input] ───────────────────────────────────────────────
+    image_bytes = await image.read()
     quality_svc.validate_upload(
-        content=content,
+        content=image_bytes,
         content_type=image.content_type,
         filename=image.filename,
     )
-    image_rgb = quality_svc.decode_image(content)
+    pil_image = quality_svc.decode_pil(image_bytes)
+    quality_report = quality_svc.assess_quality(pil_image)
 
-    # 2. Quality assessment
-    quality_report = quality_svc.assess_quality(image_rgb)
-
-    # 3. Jika kualitas INVALID (sangat buram / gelap gulita / bukan daun yang terbaca)
     if quality_report.status == "INVALID":
         raise InvalidImageError(
             "Objek pada gambar bukan daun padi yang jelas atau gambar terlalu gelap/buram. "
             "Silakan ambil foto daun padi dengan pencahayaan dan fokus yang baik."
         )
 
-    # 4. Inference dengan singleton PADIClassifier
-    classifier_result = await classifier.classify(image_rgb)
+    # ── TAHAP 2: [Segmentasi] ──────────────────────────────────────────────────
+    segmenter = getattr(request.app.state, "leaf_segmenter", None)
+    if segmenter is None:
+        segmenter = LeafSegmenter()
+    seg_result = segmenter.segment(pil_image)
 
-    # 5. Evaluasi Decision Engine (termasuk deteksi confusion pair & threshold margin)
+    # ── TAHAP 3: [Ekstraksi Fitur] ────────────────────────────────────────────
+    feature_extractor = getattr(request.app.state, "feature_extractor", None)
+    if feature_extractor is None:
+        feature_extractor = FeatureExtractor()
+    feat_result = feature_extractor.extract(pil_image, seg_result)
+
+    # ── TAHAP 4: [Klasifikasi] ────────────────────────────────────────────────
+    classifier_result = await classifier.classify(pil_image)
     decision_result = decision_engine.decide(classifier_result, quality_report)
 
-    # 6. Informasi Katalog Agronomis Kurasi
+    # Informasi Katalog Agronomis Kurasi
     disease_code = classifier_result.class_name
     disease_info = catalog.get_disease_info(disease_code, locale="id")
     display_name = catalog.get_display_name(disease_code, locale="id")
@@ -340,6 +384,26 @@ async def detect_disease_backend(
             "needs_differential_review": decision_result.needs_differential_review,
         },
         "disease": disease_info,
+        "pipeline_stages": {
+            "stage_1_input": {
+                "status": "VALID",
+                "format": "RGB",
+                "width": pil_image.width,
+                "height": pil_image.height,
+            },
+            "stage_2_segmentation": seg_result.to_dict(),
+            "stage_3_feature_extraction": feat_result.to_dict(),
+            "stage_4_classification": {
+                "class_name": classifier_result.class_name,
+                "display_name": display_name,
+                "confidence": classifier_result.confidence,
+                "confidence_percent": classifier_result.confidence_percent,
+                "margin": classifier_result.margin,
+                "inference_ms": classifier_result.inference_ms,
+            },
+        },
+        "segmentation": seg_result.to_dict(),
+        "features": feat_result.to_dict(),
     }
 
     return SuccessResponse(

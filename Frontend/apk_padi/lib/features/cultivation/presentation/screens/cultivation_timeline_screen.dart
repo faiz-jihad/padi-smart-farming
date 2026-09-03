@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +28,9 @@ class _CultivationTimelineScreenState
   List<Map<String, dynamic>> _timelineEvents = [];
 
   String _selectedFilter = 'all';
+  int _currentPage = 1;
+  static const int _pageSize = 10;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -34,11 +38,18 @@ class _CultivationTimelineScreenState
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _currentPage = 1;
     });
 
     try {
@@ -146,6 +157,7 @@ class _CultivationTimelineScreenState
         _farm = farm;
         _timelineEvents = events;
         _isLoading = false;
+        _currentPage = 1;
       });
     } catch (e) {
       if (!mounted) return;
@@ -202,7 +214,7 @@ class _CultivationTimelineScreenState
           'Perjalanan Lahan & Budidaya',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 17,
+            fontSize: 16,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -215,21 +227,17 @@ class _CultivationTimelineScreenState
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _selectedSeason == null
-            ? null
-            : () async {
-                final id = int.tryParse(_selectedSeason?['id']?.toString() ?? '');
-                if (id == null) return;
-                await context.push('/land/activity/add?cropSeasonId=$id');
-                _loadData();
-              },
         backgroundColor: const Color(0xFF059669),
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_task_rounded, size: 20),
-        label: const Text(
-          'Catat Kegiatan',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
+        icon: const Icon(Icons.edit_note_rounded),
+        label: const Text('Catat Kegiatan', style: TextStyle(fontWeight: FontWeight.w800)),
+        onPressed: () async {
+          final farmId = _farm?['id'] ?? _selectedSeason?['farm_id'];
+          final res = await context.push('/land/activity/add?farmId=$farmId');
+          if (res == true) {
+            _loadData();
+          }
+        },
       ),
       body: _buildBody(),
     );
@@ -294,12 +302,30 @@ class _CultivationTimelineScreenState
     final hst = _calculateHst();
     final farmName = _farm?['name']?.toString() ?? _selectedSeason?['farm']?['name']?.toString() ?? 'Lahan Sawah';
     final variety = _selectedSeason?['variety_name']?.toString() ?? _selectedSeason?['variety']?['name']?.toString() ?? 'Inpari 32';
+
+    // Sub-counts
+    final allCount = _timelineEvents.length;
+    final activityCount = _timelineEvents.where((e) => e['category'] == 'activity').length;
+    final diagCount = _timelineEvents.where((e) => e['category'] == 'diagnosis').length;
+    final pplCount = _timelineEvents.where((e) => e['category'] == 'ppl_visit').length;
+    final irrCount = _timelineEvents.where((e) => e['category'] == 'irrigation').length;
+    final harvestCount = _timelineEvents.where((e) => e['category'] == 'harvest').length;
+
+    // Filter & Pagination calculation
     final filtered = _filteredEvents;
+    final totalPages = (filtered.length / _pageSize).ceil();
+    final safeCurrentPage = totalPages == 0 ? 1 : _currentPage.clamp(1, totalPages);
+    final startIndex = (safeCurrentPage - 1) * _pageSize;
+    final endIndex = math.min(startIndex + _pageSize, filtered.length);
+    final pagedEvents = filtered.isEmpty
+        ? <Map<String, dynamic>>[]
+        : filtered.sublist(startIndex, endIndex);
 
     return RefreshIndicator(
       onRefresh: _loadData,
       color: const Color(0xFF059669),
       child: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
         children: [
           // 1. Season Hero Summary Banner
@@ -369,24 +395,24 @@ class _CultivationTimelineScreenState
 
           const SizedBox(height: 16),
 
-          // 2. Filter Category Pills
+          // 2. Filter Category Pills (with live sub-counts)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('all', 'Semua (${_timelineEvents.length})'),
-                _buildFilterChip('activity', 'Aktivitas Tani'),
-                _buildFilterChip('diagnosis', 'Diagnosa AI'),
-                _buildFilterChip('ppl_visit', 'Verifikasi PPL'),
-                _buildFilterChip('irrigation', 'Irigasi Air'),
-                _buildFilterChip('harvest', 'Panen Raya'),
+                _buildFilterChip('all', 'Semua ($allCount)'),
+                _buildFilterChip('activity', 'Aktivitas Tani ($activityCount)'),
+                _buildFilterChip('diagnosis', 'Diagnosa AI ($diagCount)'),
+                _buildFilterChip('ppl_visit', 'Verifikasi PPL ($pplCount)'),
+                _buildFilterChip('irrigation', 'Irigasi Air ($irrCount)'),
+                _buildFilterChip('harvest', 'Panen Raya ($harvestCount)'),
               ],
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // 3. Multi-Event Timeline List
+          // 3. Multi-Event Timeline List (Paginated 10 per page)
           if (filtered.isEmpty)
             Container(
               padding: const EdgeInsets.all(32),
@@ -405,17 +431,28 @@ class _CultivationTimelineScreenState
                 ],
               ),
             )
-          else
+          else ...[
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: filtered.length,
+              itemCount: pagedEvents.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final event = filtered[index];
+                final event = pagedEvents[index];
                 return _buildTimelineCard(event);
               },
             ),
+
+            // 4. Pagination Controls (muncul jika data > 10)
+            if (filtered.length > _pageSize)
+              _buildPaginationControls(
+                currentPage: safeCurrentPage,
+                totalPages: totalPages,
+                startIndex: startIndex,
+                endIndex: endIndex,
+                totalItems: filtered.length,
+              ),
+          ],
         ],
       ),
     );
@@ -444,7 +481,171 @@ class _CultivationTimelineScreenState
             color: isSelected ? const Color(0xFF042F1E) : const Color(0xFFE2E8F0),
           ),
         ),
-        onSelected: (_) => setState(() => _selectedFilter = key),
+        onSelected: (_) {
+          setState(() {
+            _selectedFilter = key;
+            _currentPage = 1;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls({
+    required int currentPage,
+    required int totalPages,
+    required int startIndex,
+    required int endIndex,
+    required int totalItems,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Data ${startIndex + 1}–$endIndex dari $totalItems riwayat',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF475569),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Text(
+                  'Hal $currentPage / $totalPages',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF065F46),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Previous Button
+              IconButton.filledTonal(
+                tooltip: 'Halaman Sebelumnya',
+                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                style: IconButton.styleFrom(
+                  backgroundColor: currentPage > 1 ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
+                  foregroundColor: currentPage > 1 ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1),
+                ),
+                onPressed: currentPage > 1
+                    ? () {
+                        setState(() => _currentPage = currentPage - 1);
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    : null,
+              ),
+              const SizedBox(width: 8),
+
+              // Page Numbers
+              ...List.generate(totalPages, (index) {
+                final pageNum = index + 1;
+                final isCurrent = pageNum == currentPage;
+
+                // Show ellipsis if too many pages
+                if (totalPages > 5) {
+                  if (pageNum != 1 && pageNum != totalPages && (pageNum < currentPage - 1 || pageNum > currentPage + 1)) {
+                    if (pageNum == currentPage - 2 || pageNum == currentPage + 2) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Text('...', style: TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.bold)),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }
+                }
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() => _currentPage = pageNum);
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: isCurrent ? const Color(0xFF059669) : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isCurrent ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$pageNum',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: isCurrent ? Colors.white : const Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(width: 8),
+
+              // Next Button
+              IconButton.filledTonal(
+                tooltip: 'Halaman Selanjutnya',
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                style: IconButton.styleFrom(
+                  backgroundColor: currentPage < totalPages ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
+                  foregroundColor: currentPage < totalPages ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1),
+                ),
+                onPressed: currentPage < totalPages
+                    ? () {
+                        setState(() => _currentPage = currentPage + 1);
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    : null,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -462,7 +663,7 @@ class _CultivationTimelineScreenState
 
     switch (category) {
       case 'diagnosis':
-        final isDiseased = event['status'] == 'diseased';
+        final isDiseased = event['status'] == 'diseased' || title.toLowerCase().contains('terdeteksi');
         badgeColor = isDiseased ? const Color(0xFFDC2626) : const Color(0xFF059669);
         badgeBg = isDiseased ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5);
         iconData = Icons.biotech_rounded;
@@ -498,16 +699,16 @@ class _CultivationTimelineScreenState
     final currencyFmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -515,23 +716,24 @@ class _CultivationTimelineScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(9),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: badgeBg,
               shape: BoxShape.circle,
               border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
             ),
-            child: Icon(iconData, size: 18, color: badgeColor),
+            child: Icon(iconData, size: 20, color: badgeColor),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: badgeBg,
                         borderRadius: BorderRadius.circular(6),
@@ -539,42 +741,133 @@ class _CultivationTimelineScreenState
                       child: Text(
                         categoryBadge,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: badgeColor,
                         ),
                       ),
                     ),
-                    const Spacer(),
                     Text(
                       dateHuman,
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.2,
+                  ),
                 ),
                 if (description.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    description,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.35),
-                  ),
+                  const SizedBox(height: 6),
+                  _buildFormattedDescription(description),
                 ],
                 if (event['cost'] != null && (event['cost'] as num) > 0) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    'Biaya: ${currencyFmt.format(event['cost'])}',
-                    style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF059669)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: Text(
+                      'Biaya: ${currencyFmt.format(event['cost'])}',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF065F46),
+                      ),
+                    ),
                   ),
                 ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFormattedDescription(String text) {
+    // If the text contains numbered recommendations (1. ... 2. ...)
+    if (text.contains('1. ') && text.contains('2. ')) {
+      final parts = text.split(RegExp(r'\s*(?=\d+\.\s)'));
+      final intro = parts.isNotEmpty && !parts[0].trim().startsWith('1.') ? parts[0].trim() : '';
+      final items = parts.where((p) => RegExp(r'^\d+\.\s').hasMatch(p.trim())).toList();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (intro.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                intro,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '• ',
+                        style: TextStyle(
+                          color: Color(0xFF059669),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.replaceFirst(RegExp(r'^\d+\.\s*'), '').trim(),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF334155),
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12.5,
+        color: Color(0xFF475569),
+        height: 1.4,
       ),
     );
   }

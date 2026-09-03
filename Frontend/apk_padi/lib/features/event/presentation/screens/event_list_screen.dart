@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/event/data/models/event_model.dart';
 import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
@@ -14,6 +15,8 @@ class EventListScreen extends ConsumerStatefulWidget {
 
 class _EventListScreenState extends ConsumerState<EventListScreen> {
   String _selectedCategory = 'all';
+  final TextEditingController _searchController = TextEditingController();
+  final Debouncer _searchDebouncer = Debouncer(milliseconds: 300);
 
   final List<Map<String, String>> _filterCategories = [
     {'value': 'all', 'label': 'Semua Acara'},
@@ -25,15 +28,36 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   ];
 
   @override
+  void dispose() {
+    _searchDebouncer.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final allEvents = ref.watch(eventsProvider);
     final myTicketsCount = allEvents.where((e) => e.isRegistered).length;
+    final keyword = _searchController.text.trim().toLowerCase();
 
-    final filteredEvents = switch (_selectedCategory) {
+    var filteredEvents = switch (_selectedCategory) {
       'all' => allEvents,
       'my_tickets' => allEvents.where((e) => e.isRegistered).toList(),
       _ => allEvents.where((e) => e.category == _selectedCategory).toList(),
     };
+
+    if (keyword.isNotEmpty) {
+      filteredEvents = filteredEvents.where((e) {
+        final title = e.title.toLowerCase();
+        final desc = e.description.toLowerCase();
+        final loc = e.locationName.toLowerCase();
+        final speaker = (e.speaker ?? '').toLowerCase();
+        return title.contains(keyword) ||
+            desc.contains(keyword) ||
+            loc.contains(keyword) ||
+            speaker.contains(keyword);
+      }).toList();
+    }
 
     return Scaffold(
       backgroundColor: HomeColors.background,
@@ -104,6 +128,45 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // Search Input with Debounce
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Container(
+                height: 42,
+                decoration: BoxDecoration(
+                  color: HomeColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: HomeColors.border, width: 1),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (_) => _searchDebouncer.run(() => setState(() {})),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: HomeColors.textPrimary),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: HomeColors.surface,
+                    hintText: 'Cari acara, topik, pembicara, atau lokasi...',
+                    hintStyle: const TextStyle(fontSize: 12, color: HomeColors.textSecondary),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: HomeColors.primaryGreen),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.cancel_rounded, size: 16, color: HomeColors.textSecondary),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                ),
+              ),
+            ),
+
             // Category Chips Bar
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,

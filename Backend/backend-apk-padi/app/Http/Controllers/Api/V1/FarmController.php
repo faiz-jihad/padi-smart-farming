@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Farm\StoreFarmRequest;
 use App\Http\Requests\Api\V1\Farm\UpdateFarmRequest;
 use App\Http\Resources\FarmResource;
+use App\Models\AlertSubscription;
+use App\Models\CropSeason;
+use App\Models\DiseaseScan;
 use App\Models\Farm;
+use App\Models\MarketListing;
 use App\Services\Geography\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FarmController extends Controller
 {
@@ -130,7 +135,18 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        $farm->delete();
+        DB::transaction(function () use ($farm) {
+            // Bersihkan atau lepaskan relasi terkait agar tidak melanggar foreign key constraint
+            $farm->irrigationSchedules()->delete();
+            $farm->soilDetections()->delete();
+            $farm->weatherSnapshots()->delete();
+            AlertSubscription::where('farm_id', $farm->id)->delete();
+            $farm->cropSeasons()->delete();
+            DiseaseScan::where('farm_id', $farm->id)->update(['farm_id' => null]);
+            MarketListing::where('farm_id', $farm->id)->update(['farm_id' => null]);
+
+            $farm->delete();
+        });
 
         return response()->json([
             'success' => true,

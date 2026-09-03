@@ -46,4 +46,9 @@ class DiseaseScan extends Model
     {
         return $this->hasOne(DiseaseRecommendation::class, 'scan_id');
     }
+
+    public function pplValidation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PplValidation::class, 'scan_id');
+    }
 }

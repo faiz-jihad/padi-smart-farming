@@ -28,6 +28,9 @@ class DiseaseScanResource extends JsonResource
             'model_accuracy' => isset($metadata['model_accuracy']) ? (float) $metadata['model_accuracy'] : null,
             'detection_status' => $metadata['detection_status'] ?? 'DETECTED',
             'status_message' => $metadata['status_message'] ?? null,
+            'pipeline_stages' => $metadata['pipeline_stages'] ?? null,
+            'segmentation' => $metadata['segmentation'] ?? null,
+            'features' => $metadata['features'] ?? null,
             'model_version' => $this->model_version,
             'user_feedback' => $this->user_feedback,
             'verified_class' => $this->verified_class,
@@ -35,6 +38,14 @@ class DiseaseScanResource extends JsonResource
             'feedback_notes' => $this->feedback_notes,
             'scanned_at' => optional($this->scanned_at)->toIso8601String(),
             'created_at' => optional($this->created_at)->toIso8601String(),
+            'ppl_validation' => $this->relationLoaded('pplValidation') && $this->pplValidation ? [
+                'id' => $this->pplValidation->id,
+                'status' => $this->pplValidation->status,
+                'notes' => $this->pplValidation->notes,
+                'ppl_name' => $this->pplValidation->ppl?->name,
+                'validated_at' => optional($this->pplValidation->validated_at)->toIso8601String(),
+            ] : null,
+            'is_submitted_to_ppl' => (bool) ($this->relationLoaded('pplValidation') ? $this->pplValidation : $this->pplValidation()->exists()),
             'recommendation' => $this->gemini_recommendations ?? (
                 $this->relationLoaded('recommendation') && $this->recommendation ? [
                     'analisis' => $this->recommendation->explanation,

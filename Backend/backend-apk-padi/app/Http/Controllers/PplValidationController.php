@@ -59,28 +59,30 @@ class PplValidationController extends Controller
 
         $validated = $request->validate([
             'scan_id' => 'required|integer|exists:disease_scans,id',
+            'notes'   => 'nullable|string|max:1000',
+            'ppl_id'  => 'nullable|integer|exists:users,id',
         ]);
 
         $scan = DiseaseScan::findOrFail($validated['scan_id']);
 
-        // Pastikan scan milik petani yang sedang login
-        if ($scan->farmer_id !== $user->id && ! $user->hasRole('admin')) {
+        // Pastikan scan milik petani yang sedang login atau admin/penyuluh
+        if ($scan->farmer_id !== $user->id && ! $user->hasRole('admin') && ! $user->hasRole('extension_officer')) {
             return ApiResponse::error('Anda tidak memiliki akses ke scan ini.', 403);
         }
 
-        // Cegah duplikat submission untuk scan yang sama
+        // Cegah duplikat submission untuk scan yang sama (hanya 1 kali setiap test)
         $existing = PplValidation::where('scan_id', $scan->id)->first();
         if ($existing) {
-            return ApiResponse::success('Kasus ini sudah pernah dikirim ke penyuluh sebelumnya.', [
+            return ApiResponse::error('Laporan ke penyuluh hanya dapat dilakukan 1 kali untuk setiap hasil tes diagnosa.', 422, [
                 'validation' => PplValidationResource::make($existing->load(['scan.farm', 'scan.farmer', 'ppl'])),
             ]);
         }
 
         $validation = PplValidation::create([
             'scan_id' => $scan->id,
-            'ppl_id'  => null, // Belum ditugaskan ke PPL tertentu
+            'ppl_id'  => $validated['ppl_id'] ?? null, // Bisa ditugaskan ke PPL tertentu atau antrean umum
             'status'  => 'pending',
-            'notes'   => null,
+            'notes'   => $validated['notes'] ?? null,
         ]);
 
         // Kirim notifikasi ke semua PPL aktif
@@ -88,15 +90,19 @@ class PplValidationController extends Controller
         $confidence = $scan->confidence
             ? round((float) $scan->confidence * 100, 1) . '%'
             : '-';
+        $notesSnippet = ! empty($validated['notes'])
+            ? "\nCatatan petani: \"{$validated['notes']}\""
+            : '';
 
         $this->notif->notifyExtensionOfficers(
             title: 'Kasus Baru Menunggu Validasi',
-            body: "Petani {$user->name} melaporkan dugaan {$disease} (keyakinan AI: {$confidence}). Mohon validasi lapangan.",
+            body: "Petani {$user->name} melaporkan dugaan {$disease} (keyakinan AI: {$confidence}).{$notesSnippet} Mohon validasi lapangan.",
             type: 'ppl_case',
             data: [
                 'validation_id' => $validation->id,
                 'scan_id'       => $scan->id,
                 'farmer_name'   => $user->name,
+                'farmer_notes'  => $validated['notes'] ?? null,
                 'disease'       => $disease,
                 'confidence'    => $confidence,
                 'action_url'    => "/ppl-cases/{$validation->id}",

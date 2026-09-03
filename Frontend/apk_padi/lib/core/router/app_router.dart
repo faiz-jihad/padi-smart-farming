@@ -414,19 +414,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-      path: '/marketplace',
-      builder: (context, state) {
-        final category =
-            state.uri.queryParameters['category'] ?? 'all';
+        path: '/marketplace',
+        builder: (context, state) {
+          final category =
+              state.uri.queryParameters['category'] ?? 'all';
+          final isBuyer = ref.watch(isBuyerRoleProvider);
 
-        return _MainTabScaffold(
-          currentIndex: 1,
-          child: MarketplaceScreen(
-            initialCategory: category,
-          ),
-        );
-      },
-    ),
+          return _MainTabScaffold(
+            currentIndex: isBuyer ? 1 : 3,
+            child: MarketplaceScreen(
+              initialCategory: category,
+            ),
+          );
+        },
+      ),
       GoRoute(
         path: '/cart',
         builder: (context, state) {

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
+import time
 import uuid
+from collections import defaultdict
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -19,8 +20,15 @@ from app.services.decision_engine import DecisionEngine
 from app.services.disease_catalog import DiseaseCatalog
 from app.services.image_quality import ImageQualityService
 from app.services.padi_classifier import PADIClassifier
+from app.services.leaf_segmenter import LeafSegmenter
+from app.services.feature_extractor import FeatureExtractor
 
 logger = logging.getLogger(__name__)
+
+# Sliding window rate limit tracker
+_rate_limit_records: dict[str, list[float]] = defaultdict(list)
+RATE_LIMIT_MAX_REQUESTS = 60
+RATE_LIMIT_WINDOW_SECONDS = 60
 
 
 @asynccontextmanager
@@ -65,52 +73,15 @@ async def lifespan(app: FastAPI):
     # 4. Disease Catalog
     app.state.disease_catalog = DiseaseCatalog(catalog_path=settings.disease_catalog_path)
 
+    # 5. Leaf Segmenter & Feature Extractor (Tahap 2 & 3 Pipeline)
+    app.state.leaf_segmenter = LeafSegmenter()
+    app.state.feature_extractor = FeatureExtractor()
+
     logger.info("event=startup_complete model_loaded=%s", classifier.is_loaded)
 
     yield
 
     logger.info("event=shutdown")
-
-
-def create_app() -> FastAPI:
-    settings = get_settings()
-
-    app = FastAPI(
-        title="P.A.D.I. AI Service",
-        description=(
-            "Production AI service untuk diagnosa penyakit padi berbasis YOLO classify. "
-            "Confidence tinggi tidak menjamin diagnosis pasti — selalu libatkan PPL untuk verifikasi lapangan."
-        ),
-        version=f"{settings.model_name}_{settings.model_version}",
-        debug=settings.app_debug,
-        lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
-    )
-
-    # CORS — tidak allow * di production
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Request ID middleware
-    app.middleware("http")(request_id_middleware)
-
-    # Error handlers
-    app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
-    app.add_exception_handler(RequestValidationError, validation_error_handler)  # type: ignore[arg-type]
-    app.add_exception_handler(StarletteHTTPException, http_error_handler)  # type: ignore[arg-type]
-    app.add_exception_handler(Exception, unhandled_error_handler)  # type: ignore[arg-type]
-
-    # Routers — semua endpoint didaftarkan di sini (bukan di api_v1_prefix terpisah)
-    from app.api.v1.endpoints.diagnosis import router as diagnosis_router
-    app.include_router(diagnosis_router)
-
-    return app
 
 
 async def request_id_middleware(request: Request, call_next):
@@ -122,6 +93,30 @@ async def request_id_middleware(request: Request, call_next):
         return response
     finally:
         request_id_context.reset(token)
+
+
+async def rate_limit_middleware(request: Request, call_next):
+    # Bypass health check & API docs from rate limit
+    if request.url.path in ("/api/v1/health", "/health", "/docs", "/openapi.json", "/redoc"):
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+
+    # Sliding window cleanup
+    timestamps = [t for t in _rate_limit_records[client_ip] if now - t < RATE_LIMIT_WINDOW_SECONDS]
+
+    if len(timestamps) >= RATE_LIMIT_MAX_REQUESTS:
+        logger.warning("event=ai_service_rate_limit_exceeded ip=%s count=%d", client_ip, len(timestamps))
+        return _error_response(429, "RATE_LIMIT_EXCEEDED", "Terlalu banyak permintaan ke AI service. Harap tunggu beberapa detik.")
+
+    timestamps.append(now)
+    _rate_limit_records[client_ip] = timestamps
+
+    response = await call_next(request)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX_REQUESTS)
+    response.headers["X-RateLimit-Remaining"] = str(max(0, RATE_LIMIT_MAX_REQUESTS - len(timestamps)))
+    return response
 
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
@@ -150,6 +145,48 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> JSONRespo
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     payload = ErrorResponse(error=ErrorDetail(code=code, message=message))
     return JSONResponse(status_code=status_code, content=payload.model_dump())
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+
+    app = FastAPI(
+        title="P.A.D.I. AI Service",
+        description=(
+            "Production AI service untuk diagnosa penyakit padi berbasis YOLO classify. "
+            "Confidence tinggi tidak menjamin diagnosis pasti — selalu libatkan PPL untuk verifikasi lapangan."
+        ),
+        version=f"{settings.model_name}_{settings.model_version}",
+        debug=settings.app_debug,
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
+
+    # CORS — tidak allow * di production
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Middlewares (Request ID & Rate Limiter)
+    app.middleware("http")(request_id_middleware)
+    app.middleware("http")(rate_limit_middleware)
+
+    # Error handlers
+    app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, validation_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, http_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, unhandled_error_handler)  # type: ignore[arg-type]
+
+    # Routers
+    from app.api.v1.endpoints.diagnosis import router as diagnosis_router
+    app.include_router(diagnosis_router)
+
+    return app
 
 
 app = create_app()

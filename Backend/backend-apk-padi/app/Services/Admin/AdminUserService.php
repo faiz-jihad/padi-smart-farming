@@ -36,13 +36,15 @@ class AdminUserService
         AdminAuditLogger $audit,
         AdminNotificationService $notifications,
     ): User {
-        $user = User::query()->create($data);
-        $user->syncRoles([$this->spatieRole($data['role'])]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data, $request, $audit, $notifications) {
+            $user = User::query()->create($data);
+            $user->syncRoles([$this->spatieRole($data['role'])]);
 
-        $audit->write('admin_user_created', $user, null, $this->auditValues($user), $request);
-        $notifications->notifyAdmins('Pengguna dibuat', "{$user->name} ditambahkan sebagai {$user->role}.");
+            $audit->write('admin_user_created', $user, null, $this->auditValues($user), $request);
+            $notifications->notifyAdmins('Pengguna dibuat', "{$user->name} ditambahkan sebagai {$user->role}.");
 
-        return $user;
+            return $user;
+        });
     }
 
     /**
@@ -60,25 +62,27 @@ class AdminUserService
             return false;
         }
 
-        $oldValues = $this->auditValues($target);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($target, $actor, $data, $request, $audit, $notifications) {
+            $oldValues = $this->auditValues($target);
 
-        if (empty($data['password'])) {
-            unset($data['password']);
-        }
+            if (empty($data['password'])) {
+                unset($data['password']);
+            }
 
-        $target->update($data);
-        $target->syncRoles([$this->spatieRole($data['role'])]);
+            $target->update($data);
+            $target->syncRoles([$this->spatieRole($data['role'])]);
 
-        $audit->write(
-            'admin_user_updated',
-            $target,
-            $oldValues,
-            $this->auditValues($target),
-            $request,
-        );
-        $notifications->notifyAdmins('Pengguna diperbarui', "{$target->name} diperbarui oleh {$actor->name}.");
+            $audit->write(
+                'admin_user_updated',
+                $target,
+                $oldValues,
+                $this->auditValues($target),
+                $request,
+            );
+            $notifications->notifyAdmins('Pengguna diperbarui', "{$target->name} diperbarui oleh {$actor->name}.");
 
-        return true;
+            return true;
+        });
     }
 
     public function destroy(
@@ -92,13 +96,15 @@ class AdminUserService
             return false;
         }
 
-        $oldValues = $this->auditValues($target);
-        $target->delete();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($target, $actor, $request, $audit, $notifications) {
+            $oldValues = $this->auditValues($target);
+            $target->delete();
 
-        $audit->write('admin_user_deleted', User::class, $oldValues, null, $request, $target->id);
-        $notifications->notifyAdmins('Pengguna dihapus', "{$oldValues['name']} dihapus oleh {$actor->name}.");
+            $audit->write('admin_user_deleted', User::class, $oldValues, null, $request, $target->id);
+            $notifications->notifyAdmins('Pengguna dihapus', "{$oldValues['name']} dihapus oleh {$actor->name}.");
 
-        return true;
+            return true;
+        });
     }
 
     private function usersQuery(string $search): Builder

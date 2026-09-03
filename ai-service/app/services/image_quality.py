@@ -93,9 +93,10 @@ class ImageQualityService:
                 "Format file tidak didukung. Gunakan JPG, PNG, atau WebP."
             )
 
-    def decode_image(self, content: bytes) -> np.ndarray:
+    def decode_pil(self, content: bytes) -> Image.Image:
         """
-        Decode bytes ke RGB numpy array.
+        Decode bytes ke PIL Image RGB (canonical pipeline).
+        - Validasi corrupt
         - Perbaiki EXIF orientation
         - Convert ke RGB
         - Validasi resolusi minimum
@@ -111,29 +112,45 @@ class ImageQualityService:
 
         try:
             pil_img = Image.open(io.BytesIO(content))  # Re-open setelah verify
-            # Fix EXIF orientation
             pil_img = ImageOps.exif_transpose(pil_img)
-            # Convert ke RGB
             pil_img = pil_img.convert("RGB")
         except Exception as exc:
             raise InvalidImageError(f"Gagal memproses gambar: {exc}") from exc
 
-        image_rgb = np.array(pil_img, dtype=np.uint8)
-
-        h, w = image_rgb.shape[:2]
+        w, h = pil_img.size
         if w < self._min_width or h < self._min_height:
             raise ImageTooSmallError(
                 f"Resolusi gambar terlalu kecil: {w}x{h}. "
                 f"Minimum: {self._min_width}x{self._min_height}."
             )
 
-        return image_rgb
+        return pil_img
 
-    def assess_quality(self, image_rgb: np.ndarray) -> QualityReport:
+    def decode_image(self, content: bytes) -> np.ndarray:
+        """
+        Decode bytes ke RGB numpy array (kompatibilitas).
+        """
+        pil_img = self.decode_pil(content)
+        return np.array(pil_img, dtype=np.uint8)
+
+    def assess_quality(self, image_input: np.ndarray | Image.Image | bytes) -> QualityReport:
         """
         Hitung blur score, brightness, dan klasifikasikan kualitas.
+        Mendukung PIL Image, raw bytes, atau numpy array.
         """
-        h, w = image_rgb.shape[:2]
+        if isinstance(image_input, (bytes, bytearray)):
+            pil_img = self.decode_pil(image_input)
+            w, h = pil_img.size
+            image_rgb = np.array(pil_img, dtype=np.uint8)
+        elif isinstance(image_input, Image.Image):
+            w, h = image_input.size
+            image_rgb = np.array(image_input, dtype=np.uint8)
+        elif isinstance(image_input, np.ndarray):
+            h, w = image_input.shape[:2]
+            image_rgb = image_input
+        else:
+            raise TypeError(f"Expected Image.Image, np.ndarray, or bytes, got {type(image_input)}")
+
         blur_score = self._compute_blur_score(image_rgb)
         brightness = self._compute_brightness(image_rgb)
 

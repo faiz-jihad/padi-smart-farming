@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
 
 final pplValidationsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -18,6 +18,8 @@ class PplCaseListScreen extends ConsumerStatefulWidget {
 
 class _PplCaseListScreenState extends ConsumerState<PplCaseListScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  final Debouncer _searchDebouncer = Debouncer(milliseconds: 300);
 
   @override
   void initState() {
@@ -27,6 +29,8 @@ class _PplCaseListScreenState extends ConsumerState<PplCaseListScreen> with Sing
 
   @override
   void dispose() {
+    _searchDebouncer.dispose();
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -66,41 +70,103 @@ class _PplCaseListScreenState extends ConsumerState<PplCaseListScreen> with Sing
           ],
         ),
       ),
-      body: validationsAsync.when(
-        data: (list) {
-          final pendingList = list.where((item) => item['status'] == 'pending').toList();
-          final historyList = list.where((item) => item['status'] != 'pending').toList();
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildCaseList(pendingList, isPending: true),
-              _buildCaseList(historyList, isPending: false),
-            ],
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF0284C7)),
-        ),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline_rounded, size: 40, color: Color(0xFF94A3B8)),
-              const SizedBox(height: 10),
-              Text(
-                'Gagal memuat data kasus: $error',
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+      body: Column(
+        children: [
+          // Search Bar with Debounce
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => ref.refresh(pplValidationsProvider),
-                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
-                child: const Text('Coba Lagi'),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => _searchDebouncer.run(() => setState(() {})),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'Cari nama petani, lahan, atau diagnosa penyakit...',
+                  hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF0284C7)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.cancel_rounded, size: 16, color: Color(0xFF94A3B8)),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+          Expanded(
+            child: validationsAsync.when(
+              data: (list) {
+                final keyword = _searchController.text.trim().toLowerCase();
+                var filtered = list;
+                if (keyword.isNotEmpty) {
+                  filtered = list.where((item) {
+                    final scan = item['scan'] as Map<String, dynamic>? ?? {};
+                    final farmer = scan['farmer'] as Map<String, dynamic>? ?? {};
+                    final farm = scan['farm'] as Map<String, dynamic>? ?? {};
+                    final disease = (scan['predicted_class']?.toString() ?? '').toLowerCase();
+                    final farmerName = (farmer['name']?.toString() ?? '').toLowerCase();
+                    final farmName = (farm['name']?.toString() ?? '').toLowerCase();
+                    final notes = (item['notes']?.toString() ?? '').toLowerCase();
+                    return disease.contains(keyword) ||
+                        farmerName.contains(keyword) ||
+                        farmName.contains(keyword) ||
+                        notes.contains(keyword);
+                  }).toList();
+                }
+
+                final pendingList = filtered.where((item) => item['status'] == 'pending').toList();
+                final historyList = filtered.where((item) => item['status'] != 'pending').toList();
+
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildCaseList(pendingList, isPending: true),
+                    _buildCaseList(historyList, isPending: false),
+                  ],
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF0284C7)),
+              ),
+              error: (error, _) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, size: 40, color: Color(0xFF94A3B8)),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Gagal memuat data kasus: $error',
+                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => ref.refresh(pplValidationsProvider),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -258,7 +258,7 @@ class _FarmCardState extends State<FarmCard> {
             Container(color: const Color(0xFFE2EFE7)),
             if (farm.boundaryCoordinates.length >= 3)
               CustomPaint(
-                painter: _FarmPolygonThumbnailPainter(farm.boundaryCoordinates),
+                painter: FarmPolygonThumbnailPainter(farm.boundaryCoordinates),
               )
             else
               const Center(
@@ -371,8 +371,8 @@ class _FarmCardState extends State<FarmCard> {
   }
 }
 
-class _FarmPolygonThumbnailPainter extends CustomPainter {
-  const _FarmPolygonThumbnailPainter(this.points);
+class FarmPolygonThumbnailPainter extends CustomPainter {
+  const FarmPolygonThumbnailPainter(this.points);
 
   final List<FarmBoundaryPoint> points;
 
@@ -417,7 +417,7 @@ class _FarmPolygonThumbnailPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _FarmPolygonThumbnailPainter oldDelegate) {
+  bool shouldRepaint(covariant FarmPolygonThumbnailPainter oldDelegate) {
     return oldDelegate.points != points;
   }
 }

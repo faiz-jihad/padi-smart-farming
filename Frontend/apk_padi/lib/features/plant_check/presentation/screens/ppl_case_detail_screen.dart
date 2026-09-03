@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
 
 class PplCaseDetailScreen extends ConsumerStatefulWidget {

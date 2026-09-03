@@ -194,6 +194,9 @@ class DiseaseDetectionService
             'detection_status' => $aiResult['detection_status'] ?? 'DETECTED',
             'status_message' => $aiResult['status_message'] ?? null,
             'ai_request_id' => $aiResult['ai_request_id'] ?? null,
+            'pipeline_stages' => $aiResult['pipeline_stages'] ?? null,
+            'segmentation' => $aiResult['segmentation'] ?? null,
+            'features' => $aiResult['features'] ?? null,
         ];
     }
 

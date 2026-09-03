@@ -7,7 +7,11 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('admin.notifications.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id && $user->role === 'admin';
+    return (int) $user->id === (int) $id;
+});
+
+Broadcast::channel('notifications.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
 });
 
 // Telemetri Cuaca & Sensor Tanah Real-Time (WebSockets)

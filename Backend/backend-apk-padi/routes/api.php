@@ -34,7 +34,10 @@ use App\Http\Controllers\RiceVarietyController;
 use App\Http\Controllers\WeatherSnapshotController;
 use App\Http\Controllers\AdminBroadcastController;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+Broadcast::routes(['prefix' => 'v1', 'middleware' => ['auth:sanctum', 'throttle:ws-auth']]);
 
 Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::get('health', function (): JsonResponse {
@@ -128,7 +131,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
         Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
 
-        Route::prefix('weather')->group(function (): void {
+        Route::prefix('weather')->middleware('throttle:weather-refresh')->group(function (): void {
             Route::post('current', [WeatherController::class, 'currentWeather']);
             Route::post('forecast', [WeatherController::class, 'forecast']);
             Route::post('bmkg-forecast', [WeatherController::class, 'bmkgForecast']);
@@ -136,7 +139,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             Route::post('city', [WeatherController::class, 'byCity']);
         });
 
-        Route::prefix('soil-detections')->middleware('role:farmer|extension_officer|admin')->group(function (): void {
+        Route::prefix('soil-detections')->middleware(['role:farmer|extension_officer|admin', 'throttle:soil-scans'])->group(function (): void {
             Route::get('/', [SoilDetectionController::class, 'index']);
             Route::post('/', [SoilDetectionController::class, 'store']);
             Route::get('fetch-api-data', [SoilDetectionController::class, 'fetchApiData']);
@@ -174,57 +177,57 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         Route::get('market-listings', [MarketListingController::class, 'index']);
         Route::post('market-listings', [MarketListingController::class, 'store'])
-            ->middleware('role:farmer|admin');
+            ->middleware(['role:farmer|admin', 'throttle:marketplace-write']);
         Route::get('market-listings/{marketListing}', [MarketListingController::class, 'show']);
-        Route::patch('market-listings/{marketListing}', [MarketListingController::class, 'update']);
-        Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy']);
+        Route::patch('market-listings/{marketListing}', [MarketListingController::class, 'update'])
+            ->middleware('throttle:marketplace-write');
+        Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy'])
+            ->middleware('throttle:marketplace-write');
 
         Route::get('listing-images', [ListingImageController::class, 'index']);
 
         Route::get('market-listings/{marketListing}/offers', [MarketOfferController::class, 'listingOffers']);
         Route::get('market-offers', [MarketOfferController::class, 'index']);
-        Route::post('market-offers', [MarketOfferController::class, 'store']);
-        Route::put('market-offers/{marketOffer}', [MarketOfferController::class, 'update']);
+        Route::post('market-offers', [MarketOfferController::class, 'store'])
+            ->middleware('throttle:marketplace-write');
+        Route::put('market-offers/{marketOffer}', [MarketOfferController::class, 'update'])
+            ->middleware('throttle:marketplace-write');
 
         Route::get(
-    'purchase-contracts/{purchaseContract}/invoice',
-    [PurchaseContractController::class, 'invoice']
-);
-
-Route::get(
-    'purchase-contracts/{purchaseContract}',
-    [PurchaseContractController::class, 'show']
-);
-
-Route::get(
-    'purchase-contracts',
-    [PurchaseContractController::class, 'index']
-);
-
-Route::post(
-    'purchase-contracts',
-    [PurchaseContractController::class, 'store']
-);
-
-Route::get(
-    'sales-report',
-    [PurchaseContractController::class, 'salesReport']
-);
-
-Route::get(
-    'contract-payments',
-    [ContractPaymentController::class, 'index']
-);
+            'purchase-contracts/{purchaseContract}/invoice',
+            [PurchaseContractController::class, 'invoice']
+        );
+        Route::get(
+            'purchase-contracts/{purchaseContract}',
+            [PurchaseContractController::class, 'show']
+        );
+        Route::get(
+            'purchase-contracts',
+            [PurchaseContractController::class, 'index']
+        );
+        Route::post(
+            'purchase-contracts',
+            [PurchaseContractController::class, 'store']
+        )->middleware('throttle:marketplace-write');
+        Route::get(
+            'sales-report',
+            [PurchaseContractController::class, 'salesReport']
+        );
+        Route::get(
+            'contract-payments',
+            [ContractPaymentController::class, 'index']
+        );
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
             ->middleware(['role:extension_officer|admin', 'throttle:push-notifications']);
         Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
         Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
-        Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream']);
+        Route::get('realtime/stream', [\App\Http\Controllers\RealtimeStreamController::class, 'stream'])
+            ->middleware('throttle:realtime-stream');
         Route::get('ppl-validations', [PplValidationController::class, 'index']);
         Route::post('ppl-validations', [PplValidationController::class, 'store'])
-            ->middleware('role:farmer|admin');
+            ->middleware('role:farmer|extension_officer|admin');
         Route::get('ppl-validations/{pplValidation}', [PplValidationController::class, 'show']);
         Route::patch('ppl-validations/{pplValidation}', [PplValidationController::class, 'update'])
             ->middleware('role:extension_officer|admin');
@@ -234,7 +237,8 @@ Route::get(
         Route::post('disease-scans/{diseaseScan}/feedback', [DiseaseScanController::class, 'feedback']);
 
         Route::get('community-reports', [CommunityReportController::class, 'index']);
-        Route::post('community-reports', [CommunityReportController::class, 'store']);
+        Route::post('community-reports', [CommunityReportController::class, 'store'])
+            ->middleware('throttle:community-reports');
         Route::get('alert-subscriptions', [AlertSubscriptionController::class, 'index'])
             ->middleware('role:farmer|extension_officer|admin');
         Route::get('device-tokens', [DeviceTokenController::class, 'index'])

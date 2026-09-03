@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from io import BytesIO
 import logging
 import time
 import uuid
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from PIL import Image, ImageOps
 
 logger = logging.getLogger(__name__)
 
@@ -194,29 +196,34 @@ class PADIClassifier:
             self._device,
         )
 
-        # Warmup
-        self._warmup()
+    def _prepare_image(self, image_input: bytes | bytearray | Image.Image | np.ndarray) -> Image.Image:
+        """
+        Canonical Colab Pipeline:
+        bytes / PIL -> EXIF transpose -> RGB PIL Image.
+        Ultralytics menangani PIL Image RGB secara langsung tanpa manipulasi atau color inversion BGR.
+        """
+        if isinstance(image_input, (bytes, bytearray)):
+            image = Image.open(BytesIO(image_input))
+        elif isinstance(image_input, Image.Image):
+            image = image_input
+        elif isinstance(image_input, np.ndarray):
+            image = Image.fromarray(image_input)
+        else:
+            raise TypeError(f"Expected bytes, PIL.Image, or ndarray, got {type(image_input)}")
 
-    def _warmup(self) -> None:
-        """Jalankan dummy inference untuk memastikan request pertama tidak lambat."""
-        import numpy as np
+        image = ImageOps.exif_transpose(image)
+        return image.convert("RGB")
 
-        try:
-            dummy = np.zeros((self._model_imgsz, self._model_imgsz, 3), dtype=np.uint8)
-            t0 = time.perf_counter()
-            self._run_inference(dummy)
-            elapsed_ms = (time.perf_counter() - t0) * 1000
-            logger.info("event=model_warmup_done latency_ms=%.1f", elapsed_ms)
-        except Exception as exc:
-            logger.warning("event=warmup_failed error=%s", exc)
-
-    def _run_inference(self, image_rgb: np.ndarray) -> Any:
-        """Internal synchronous inference. Harus dipanggil dalam semaphore context."""
+    def _run_inference(self, image: Image.Image) -> Any:
+        """
+        Internal synchronous inference persis seperti Google Colab.
+        Ultralytics predict dengan source=PIL.Image RGB murni tanpa preprocessing tambahan.
+        """
         import torch
 
         with torch.inference_mode():
             results = self._model.predict(
-                source=image_rgb,
+                source=image,
                 imgsz=self._model_imgsz,
                 device=self._device,
                 batch=1,
@@ -225,10 +232,11 @@ class PADIClassifier:
             )
         return results
 
-    async def classify(self, image_rgb: np.ndarray) -> ClassifierResult:
+    async def classify(self, image_input: bytes | bytearray | Image.Image | np.ndarray) -> ClassifierResult:
         """
         Public async classify method.
-        Menggunakan semaphore untuk GPU concurrency control.
+        Pipeline canonical:
+        image_bytes -> PIL -> EXIF transpose -> RGB -> YOLO classification.
         """
         from app.core.exceptions import InferenceFailedError, ModelUnavailableError
 
@@ -241,18 +249,23 @@ class PADIClassifier:
         request_id = str(uuid.uuid4())
         t_start = time.perf_counter()
 
+        # Canonical Colab preprocessing: PIL + EXIF transpose + RGB
+        pil_image = self._prepare_image(image_input)
+        t_prep_done = time.perf_counter()
+        prep_ms = (t_prep_done - t_start) * 1000
+
         try:
             async with self._semaphore:
                 t_infer_start = time.perf_counter()
                 loop = asyncio.get_event_loop()
-                results = await loop.run_in_executor(None, self._run_inference, image_rgb)
+                results = await loop.run_in_executor(None, self._run_inference, pil_image)
                 inference_ms = (time.perf_counter() - t_infer_start) * 1000
         except Exception as exc:
             logger.error("event=inference_failed request_id=%s error=%s", request_id, exc)
             raise InferenceFailedError(f"Inference gagal: {exc}") from exc
 
         total_ms = (time.perf_counter() - t_start) * 1000
-        preprocessing_ms = total_ms - inference_ms
+        preprocessing_ms = prep_ms
 
         if not results:
             raise InferenceFailedError("Model tidak menghasilkan output.")

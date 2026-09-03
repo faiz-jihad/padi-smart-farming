@@ -104,11 +104,14 @@ class PlantCheckApiService {
     }
   }
 
-  Future<Map<String, dynamic>?> submitToPpl(int scanId) async {
+  Future<Map<String, dynamic>?> submitToPpl(int scanId, {String? notes}) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/ppl-validations',
-        data: {'scan_id': scanId},
+        data: {
+          'scan_id': scanId,
+          if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+        },
       );
       if (response.data?['success'] == true) {
         return response.data?['data'] as Map<String, dynamic>?;
@@ -235,6 +238,11 @@ class PlantCheckResult {
     this.userFeedback,
     this.verifiedClass,
     this.isLearned = false,
+    this.isSubmittedToPpl = false,
+    this.pplValidation,
+    this.pipelineStages,
+    this.segmentation,
+    this.features,
   });
 
   factory PlantCheckResult.fromJson(Map<String, dynamic> json) {
@@ -242,6 +250,30 @@ class PlantCheckResult {
     GeminiRecommendationData? rec;
     if (recRaw is Map) {
       rec = GeminiRecommendationData.fromJson(Map<String, dynamic>.from(recRaw));
+    }
+
+    final pplValRaw = json['ppl_validation'];
+    Map<String, dynamic>? pplVal;
+    if (pplValRaw is Map) {
+      pplVal = Map<String, dynamic>.from(pplValRaw);
+    }
+
+    final stagesRaw = json['pipeline_stages'] ?? (json['detection_metadata'] is Map ? (json['detection_metadata'] as Map)['pipeline_stages'] : null);
+    Map<String, dynamic>? stages;
+    if (stagesRaw is Map) {
+      stages = Map<String, dynamic>.from(stagesRaw);
+    }
+
+    final segRaw = json['segmentation'] ?? (json['detection_metadata'] is Map ? (json['detection_metadata'] as Map)['segmentation'] : null);
+    Map<String, dynamic>? seg;
+    if (segRaw is Map) {
+      seg = Map<String, dynamic>.from(segRaw);
+    }
+
+    final featRaw = json['features'] ?? (json['detection_metadata'] is Map ? (json['detection_metadata'] as Map)['features'] : null);
+    Map<String, dynamic>? feat;
+    if (featRaw is Map) {
+      feat = Map<String, dynamic>.from(featRaw);
     }
 
     return PlantCheckResult(
@@ -264,6 +296,11 @@ class PlantCheckResult {
       userFeedback: json['user_feedback']?.toString(),
       verifiedClass: json['verified_class']?.toString(),
       isLearned: json['is_learned'] == true,
+      isSubmittedToPpl: json['is_submitted_to_ppl'] == true || pplVal != null,
+      pplValidation: pplVal,
+      pipelineStages: stages,
+      segmentation: seg,
+      features: feat,
     );
   }
 
@@ -286,6 +323,11 @@ class PlantCheckResult {
   final String? userFeedback;
   final String? verifiedClass;
   final bool isLearned;
+  final bool isSubmittedToPpl;
+  final Map<String, dynamic>? pplValidation;
+  final Map<String, dynamic>? pipelineStages;
+  final Map<String, dynamic>? segmentation;
+  final Map<String, dynamic>? features;
 }
 
 class PredictionCandidate {

@@ -72,6 +72,9 @@ class DiagnosisData(BaseModel):
     quality: QualityResult
     disease: DiseaseInfo
     latency_ms: float
+    pipeline_stages: dict[str, Any] | None = None
+    segmentation: dict[str, Any] | None = None
+    features: dict[str, Any] | None = None
 
 
 class DiagnosisResponse(BaseModel):

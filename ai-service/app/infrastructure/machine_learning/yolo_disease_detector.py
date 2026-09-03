@@ -71,7 +71,28 @@ class YoloDiseaseDetector:
         if self._model is None:
             raise ModelUnavailableError("Model YOLO belum tersedia.", code=self._load_error or "MODEL_NOT_LOADED")
 
-        results = self._model.predict(source=image_rgb, verbose=False)
+        from io import BytesIO
+        from PIL import Image, ImageOps
+
+        if isinstance(image_rgb, (bytes, bytearray)):
+            img = Image.open(BytesIO(image_rgb))
+            img = ImageOps.exif_transpose(img)
+            source_img = img.convert("RGB")
+        elif isinstance(image_rgb, Image.Image):
+            img = ImageOps.exif_transpose(image_rgb)
+            source_img = img.convert("RGB")
+        elif isinstance(image_rgb, np.ndarray):
+            img = Image.fromarray(image_rgb)
+            source_img = img.convert("RGB")
+        else:
+            source_img = image_rgb
+
+        results = self._model.predict(
+            source=source_img,
+            imgsz=384,
+            verbose=False,
+            save=False,
+        )
         if not results:
             return self._healthy_no_detection_result()
 

@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
@@ -17,7 +19,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   int? _loadedUserId;
-  String _cacheSize = '14.2 MB';
+  String _cacheSize = '0.0 B';
+  bool _isLoadingCache = false;
+  bool _isClearingCache = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRealCacheSize();
+    });
+  }
 
   @override
   void dispose() {
@@ -340,7 +352,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               _buildFaqTile(
                 question: 'Apakah aplikasi bisa digunakan dalam Basa Jawa?',
-                answer: 'Ya! P.A.D.I. mendukung penuh Basa Jawa sehari-hari. Anda bisa mengganti bahasa di halaman Profil > Bahasa Aplikasi > pilih "🌾 Basa Jawa". Seluruh menu akan otomatis berubah seketika.',
+                answer: 'Ya! P.A.D.I. mendukung penuh Basa Jawa sehari-hari. Anda bisa mengganti bahasa di halaman Profil > Bahasa Aplikasi > pilih "Basa Jawa". Seluruh menu akan otomatis berubah seketika.',
               ),
             ],
           ),
@@ -893,29 +905,300 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Future<void> _loadRealCacheSize() async {
+    if (_isLoadingCache || _isClearingCache) return;
+    if (mounted) {
+      setState(() => _isLoadingCache = true);
+    }
+
+    try {
+      int totalBytes = 0;
+
+      // 1. Temporary directory (foto kamera, file sementara upload, dsb)
+      try {
+        final tempDir = await getTemporaryDirectory();
+        totalBytes += await _computeDirectorySize(tempDir);
+      } catch (_) {}
+
+      // 2. Application cache directory (cache http, thumbnail, dsb)
+      try {
+        final appCacheDir = await getApplicationCacheDirectory();
+        totalBytes += await _computeDirectorySize(appCacheDir);
+      } catch (_) {}
+
+      // 3. In-memory image cache
+      try {
+        totalBytes += PaintingBinding.instance.imageCache.currentSizeBytes;
+      } catch (_) {}
+
+      if (!mounted) return;
+      setState(() {
+        _cacheSize = _formatBytes(totalBytes);
+        _isLoadingCache = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _cacheSize = '0.0 B';
+        _isLoadingCache = false;
+      });
+    }
+  }
+
+  Future<int> _computeDirectorySize(Directory dir) async {
+    int size = 0;
+    try {
+      if (await dir.exists()) {
+        final entities = dir.listSync(recursive: true, followLinks: false);
+        for (final entity in entities) {
+          if (entity is File) {
+            try {
+              size += entity.lengthSync();
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (_) {}
+    return size;
+  }
+
+  Future<void> _deleteDirectoryContents(Directory dir) async {
+    try {
+      if (await dir.exists()) {
+        final entities = dir.listSync(followLinks: false);
+        for (final entity in entities) {
+          try {
+            if (entity is Directory) {
+              entity.deleteSync(recursive: true);
+            } else if (entity is File) {
+              entity.deleteSync();
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes <= 0) return '0.0 B';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    }
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
+
   void _clearAppCache(BuildContext context, AppStrings s) {
+    if (_isClearingCache) return;
     final lang = ref.read(languageProvider);
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: const Icon(
+                      Icons.cleaning_services_rounded,
+                      color: Color(0xFF059669),
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lang == AppLanguage.id
+                              ? 'Bersihkan Cache Aplikasi'
+                              : (lang == AppLanguage.jv ? 'Resiki Cache Aplikasi' : 'Clear App Cache'),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          lang == AppLanguage.id
+                              ? 'Kosongkan memori sementara untuk meringankan HP'
+                              : (lang == AppLanguage.jv ? 'Kosongake memori sauntara ben entheng' : 'Free up temporary storage'),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          lang == AppLanguage.id
+                              ? 'Ukuran Cache Saat Ini:'
+                              : (lang == AppLanguage.jv ? 'Ukuran Cache Saiki:' : 'Current Cache Size:'),
+                          style: const TextStyle(fontSize: 13, color: Color(0xFF475569), fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          _isLoadingCache ? 'Menghitung...' : _cacheSize,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      lang == AppLanguage.id
+                          ? 'Membersihkan cache akan menghapus file sementara kamera, gambar pratinjau, dan data unduhan sementara untuk melegakan memori HP Anda.\n\nAkun, data lahan sawah, dan riwayat Anda tetap aman tersimpan.'
+                          : (lang == AppLanguage.jv
+                              ? 'Ngresiki cache bakal mbusak file sauntara kamera lan gambar pratinjau.\n\nAkun lan data sawah tetep aman.'
+                              : 'Clearing cache removes temporary camera pictures and cached images.\n\nYour account and farm data remain safe.'),
+                      style: const TextStyle(fontSize: 12.5, height: 1.45, color: Color(0xFF334155)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: _isClearingCache
+                    ? null
+                    : () async {
+                        Navigator.of(modalContext).pop();
+                        await _executeCacheClear(context);
+                      },
+                icon: const Icon(Icons.delete_sweep_rounded, size: 20),
+                label: Text(
+                  lang == AppLanguage.id
+                      ? 'Bersihkan Cache Sekarang'
+                      : (lang == AppLanguage.jv ? 'Resiki Saiki' : 'Clear Cache Now'),
+                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF065F46),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 1.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.of(modalContext).pop(),
+                child: Text(
+                  lang == AppLanguage.id ? 'Batal' : (lang == AppLanguage.jv ? 'Batal' : 'Cancel'),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _executeCacheClear(BuildContext context) async {
+    final lang = ref.read(languageProvider);
     setState(() {
-      _cacheSize = '0.0 MB';
+      _isClearingCache = true;
     });
+
+    try {
+      // 1. Bersihkan memory cache
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      // 2. Bersihkan temporary folder
+      try {
+        final tempDir = await getTemporaryDirectory();
+        await _deleteDirectoryContents(tempDir);
+      } catch (_) {}
+
+      // 3. Bersihkan application cache directory
+      try {
+        final appCacheDir = await getApplicationCacheDirectory();
+        await _deleteDirectoryContents(appCacheDir);
+      } catch (_) {}
+
+      // 4. Hitung ulang ukuran sebenarnya
+      await _loadRealCacheSize();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isClearingCache = false;
+        });
+      }
+    }
+
+    if (!context.mounted) return;
+
     final msg = switch (lang) {
-      AppLanguage.id => 'Cache aplikasi berhasil dibersihkan (0.0 MB)',
-      AppLanguage.jv => 'Cache aplikasi kasil dibersihake (0.0 MB)',
-      AppLanguage.en => 'App cache cleared successfully (0.0 MB)',
+      AppLanguage.id => 'Cache aplikasi berhasil dibersihkan (Ukuran sekarang: $_cacheSize)',
+      AppLanguage.jv => 'Cache aplikasi kasil dibersihake (Ukuran saiki: $_cacheSize)',
+      AppLanguage.en => 'App cache cleared successfully (Current size: $_cacheSize)',
     };
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(msg)),
+            const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                msg,
+                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+              ),
+            ),
           ],
         ),
-        backgroundColor: HomeColors.primaryGreen,
+        backgroundColor: const Color(0xFF065F46),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -1065,7 +1348,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         icon: Icons.language_rounded,
                         title: s.language,
                         subtitle: s.languageSubtitle,
-                        valueText: '${currentLang.flagEmoji} ${currentLang.nativeName}',
+                        valueText: currentLang.nativeName,
                         onTap: () => context.push('/profile/language'),
                       ),
                       const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
@@ -1082,7 +1365,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onTap: () => _showNotificationSettingsSheet(context, s),
                       ),
                       const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
-                      // Bersihkan Cache & Penyimpanan
+                      // Bersihkan Cache & Penyimpanan (Real Disk & Memory Size)
                       _buildSettingsTile(
                         icon: Icons.cleaning_services_rounded,
                         title: currentLang == AppLanguage.id
@@ -1095,7 +1378,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             : (currentLang == AppLanguage.jv
                                 ? 'Kosongake memori sauntara ben entheng'
                                 : 'Free up temporary storage for faster performance'),
-                        valueText: _cacheSize,
+                        valueText: _isLoadingCache
+                            ? 'Menghitung...'
+                            : (_isClearingCache ? 'Membersihkan...' : _cacheSize),
                         onTap: () => _clearAppCache(context, s),
                       ),
                     ],

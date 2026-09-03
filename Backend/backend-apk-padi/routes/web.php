@@ -31,8 +31,11 @@ Route::get('/profile/{subdomain}', [FarmerPublicProfileController::class, 'show'
     ->name('farmer.public.direct');
 
 
-// ─── Default Redirects (Apex domain only) ───────────────────────────────────
-Route::redirect('/', '/admin');
+// ─── Public Welcome Page (Apex domain) ───────────────────────────────────────
+Route::get('/', function () {
+    return view('welcome');
+})->name('home');
+
 Route::redirect('/login', '/admin/login')->name('login');
 Route::get('/reset-password/{token}', function (string $token) {
     $email = request()->query('email');
