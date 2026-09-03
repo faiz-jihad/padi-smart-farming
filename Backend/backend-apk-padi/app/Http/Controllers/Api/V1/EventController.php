@@ -77,6 +77,15 @@ class EventController extends Controller
      */
     public function show(Request $request, AgricultureEvent $event): JsonResponse
     {
+        $user = $request->user();
+
+        // Load the registration status for the authenticated user
+        if ($user) {
+            $event->is_user_registered = $event->registrations()
+                ->where('user_id', $user->id)
+                ->exists();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Detail acara berhasil diambil.',
@@ -99,8 +108,14 @@ class EventController extends Controller
         if ($existing) {
             return response()->json([
                 'success' => true,
-                'message' => 'Anda sudah terdaftar pada acara ini.',
+                'already_registered' => true,
+                'message' => 'Anda sudah terdaftar pada acara ini. Tiket Anda tetap aktif.',
                 'data' => new EventResource($event),
+                'ticket' => [
+                    'ticket_code' => $existing->ticket_code,
+                    'ticket_status' => $existing->ticket_status,
+                    'registered_at' => $existing->registered_at?->toIso8601String(),
+                ],
             ]);
         }
 
@@ -112,8 +127,8 @@ class EventController extends Controller
             ], 422);
         }
 
-        DB::transaction(function () use ($event, $user, $request): void {
-            EventRegistration::create([
+        $registration = DB::transaction(function () use ($event, $user, $request): EventRegistration {
+            $reg = EventRegistration::create([
                 'event_id' => $event->id,
                 'user_id' => $user->id,
                 'notes' => $request->input('notes'),
@@ -121,14 +136,22 @@ class EventController extends Controller
             ]);
 
             $event->increment('registered_count');
+
+            return $reg;
         });
 
         $event->refresh();
 
         return response()->json([
             'success' => true,
-            'message' => 'Pendaftaran acara berhasil! Tiket Anda telah aktif.',
+            'already_registered' => false,
+            'message' => 'Pendaftaran acara berhasil! Tiket Anda telah diterbitkan.',
             'data' => new EventResource($event),
+            'ticket' => [
+                'ticket_code' => $registration->ticket_code,
+                'ticket_status' => $registration->ticket_status,
+                'registered_at' => $registration->registered_at?->toIso8601String(),
+            ],
         ]);
     }
 }

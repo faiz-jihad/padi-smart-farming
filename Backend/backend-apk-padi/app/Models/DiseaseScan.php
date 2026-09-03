@@ -15,14 +15,22 @@ class DiseaseScan extends Model
         'quality_status',
         'predicted_class',
         'confidence',
+        'detection_metadata',
         'model_version',
+        'user_feedback',
+        'verified_class',
+        'is_learned',
+        'feedback_notes',
         'scanned_at',
     ];
 
     protected $casts = [
         'confidence' => 'decimal:4',
+        'detection_metadata' => 'array',
+        'is_learned' => 'boolean',
         'scanned_at' => 'datetime',
     ];
+
 
     public function farmer(): BelongsTo
     {

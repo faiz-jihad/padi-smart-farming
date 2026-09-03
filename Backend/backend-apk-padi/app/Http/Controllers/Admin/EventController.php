@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AgricultureEvent;
+use App\Services\Admin\AdminAuditLogger;
+use App\Services\Admin\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class EventController extends Controller
 {
+    public function __construct(
+        private AdminAuditLogger $auditLogger,
+        private AdminNotificationService $notificationService
+    ) {}
+
     /**
      * Display a listing of agriculture events.
      */
@@ -92,10 +99,28 @@ class EventController extends Controller
             };
         }
 
-        AgricultureEvent::create($validated);
+        $event = AgricultureEvent::create($validated);
+
+        // Audit Log & Notifications
+        $this->auditLogger->write('admin_event_created', $event, null, $event->toArray(), $request);
+        $this->notificationService->notifyAdmins(
+            'Acara Pertanian Baru',
+            "Kegiatan \"{$event->title}\" ({$event->category}) pada {$event->event_date} telah ditambahkan ke agenda.",
+            'system'
+        );
+        $this->notificationService->notifyFarmers(
+            'Undangan Kegiatan & Pelatihan Pertanian',
+            "Tersedia kegiatan baru: \"{$event->title}\" pada tanggal {$event->event_date} di {$event->location_name}.",
+            'crop_alert'
+        );
+        $this->notificationService->notifyExtensionOfficers(
+            'Agenda Penyuluhan Pertanian Baru',
+            "Kegiatan \"{$event->title}\" dijadwalkan pada {$event->event_date}.",
+            'ppl_validation'
+        );
 
         return redirect()->route('admin.events.index')
-            ->with('status', 'Acara pertanian baru berhasil ditambahkan.');
+            ->with('status', 'Acara pertanian baru berhasil ditambahkan dan notifikasi agenda telah disiarkan.');
     }
 
     /**
@@ -139,20 +164,40 @@ class EventController extends Controller
             'status' => 'required|string|in:upcoming,ongoing,completed,cancelled',
         ]);
 
+        $oldValues = $event->toArray();
         $validated['is_online'] = $request->has('is_online');
 
         $event->update($validated);
 
+        // Audit Log & Notifications
+        $this->auditLogger->write('admin_event_updated', $event, $oldValues, $event->toArray(), $request);
+        $this->notificationService->notifyAdmins(
+            'Acara Pertanian Diperbarui',
+            "Jadwal/data acara \"{$event->title}\" telah diperbarui.",
+            'system'
+        );
+
         return redirect()->route('admin.events.index')
-            ->with('status', 'Data acara pertanian berhasil diperbarui.');
+            ->with('status', 'Data acara pertanian berhasil diperbarui dan notifikasi telah dikirim.');
     }
 
     /**
      * Remove the specified event from storage.
      */
-    public function destroy(AgricultureEvent $event): RedirectResponse
+    public function destroy(Request $request, AgricultureEvent $event): RedirectResponse
     {
+        $oldValues = $event->toArray();
+        $eventTitle = $event->title;
+        $eventId = $event->id;
+
         $event->delete();
+
+        $this->auditLogger->write('admin_event_deleted', AgricultureEvent::class, $oldValues, null, $request, $eventId);
+        $this->notificationService->notifyAdmins(
+            'Acara Pertanian Dihapus',
+            "Kegiatan \"{$eventTitle}\" telah dihapus dari agenda sistem.",
+            'system'
+        );
 
         return redirect()->route('admin.events.index')
             ->with('status', 'Acara berhasil dihapus dari jadwal.');

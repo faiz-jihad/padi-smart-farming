@@ -6,6 +6,7 @@ use App\Models\Farm;
 use App\Models\SoilDetection;
 use App\Services\Weather\WeatherService;
 use Illuminate\Support\Str;
+use App\Models\IrrigationSchedule;
 
 class SoilDetectionService
 {
@@ -41,6 +42,12 @@ class SoilDetectionService
         $organic = (float) ($data['organic_matter_percentage'] ?? 2.5);
 
         $evaluation = $this->evaluateSoilHealth($ph, $n, $p, $k, $moisture, $organic);
+
+        $evaluation['irrigation_schedule'] = $this->calculateIrrigationSchedule(
+            $moisture,
+            $data['soil_temp_celsius'] ?? null,
+            $farm->id
+        );
 
         $sampleCode = $data['sample_code'] ?? 'SOIL-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
@@ -221,50 +228,124 @@ class SoilDetectionService
      *
      * @return array<string, mixed>
      */
-    public function calculateIrrigationSchedule(float $moisture, ?float $soilTemp = null): array
-    {
+    public function calculateIrrigationSchedule(
+        float $moisture,
+        ?float $soilTemp = null,
+        ?int $farmId = null
+    ): array {
         $now = now();
 
+        // Cari jadwal irigasi terdekat dari lahan
+        $schedule = null;
+
+        if ($farmId) {
+            $schedule = IrrigationSchedule::where('farm_id', $farmId)
+                ->where('status', 'scheduled')
+                ->whereDate('schedule_date', '>=', $now->toDateString())
+                ->orderBy('schedule_date')
+                ->orderBy('start_time')
+                ->first();
+        }
+
+        // Kondisi tanah sangat kering
         if ($moisture < 35.0) {
             $status = 'urgent';
             $statusLabel = 'Pengairan Urgen (Sangat Kering)';
-            $recommendedSlot = 'Pagi Hari (06:00 - 08:00 WIB) / Sore (16:00 - 18:00 WIB)';
-            $exactDateTime = $now->hour < 12 
-                ? $now->translatedFormat('d F Y') . ', Jam 16:00 - 18:00 WIB'
-                : $now->copy()->addDay()->translatedFormat('d F Y') . ', Jam 06:00 - 08:00 WIB';
             $targetDepthCm = '5 - 7 cm';
             $waterVolumeM3Ha = '60 - 80 m3/ha';
-            $nextSchedule = 'Hari Ini (Segera Mungkin)';
-            $action = 'Segera alirkan air irigasi ke lahan padi untuk mencegah kekeringan zona perakaran. Hindari pengairan saat terik matahari siang.';
-        } elseif ($moisture < 45.0) {
+
+            if ($schedule) {
+                $scheduleDate = $schedule->schedule_date->translatedFormat('d F Y');
+
+                $exactDateTime = $scheduleDate .
+                    ($schedule->start_time
+                        ? ', Jam ' . substr($schedule->start_time, 0, 5)
+                        : '');
+
+                $recommendedSlot = $schedule->start_time && $schedule->end_time
+                    ? $scheduleDate . ', ' .
+                        substr($schedule->start_time, 0, 5) . ' - ' .
+                        substr($schedule->end_time, 0, 5) . ' WIB'
+                    : $scheduleDate;
+
+                $nextSchedule = $scheduleDate;
+
+                $action = 'Kelembaban tanah sangat rendah. '
+                    . 'Lahan membutuhkan air dan terdapat jadwal irigasi pada '
+                    . $scheduleDate . '. Prioritaskan pengairan sesuai jadwal yang tersedia.';
+            } else {
+                $recommendedSlot = 'Menunggu jadwal irigasi';
+                $exactDateTime = 'Belum tersedia';
+                $nextSchedule = 'Belum ada jadwal irigasi';
+
+                $action = 'Kelembaban tanah sangat rendah dan belum terdapat jadwal irigasi '
+                    . 'untuk lahan ini. Periksa ketersediaan sumber air atau tambahkan jadwal irigasi.';
+            }
+        }
+
+        // Kondisi agak kering
+        elseif ($moisture < 45.0) {
             $status = 'intermittent';
             $statusLabel = 'Pengairan Berkala (Agak Kering)';
-            $recommendedSlot = 'Sore Hari (16:00 - 18:00 WIB)';
-            $exactDateTime = $now->hour < 16
-                ? $now->translatedFormat('d F Y') . ', Jam 16:00 - 18:00 WIB'
-                : $now->copy()->addDay()->translatedFormat('d F Y') . ', Jam 06:00 - 08:00 WIB';
             $targetDepthCm = '3 - 5 cm';
             $waterVolumeM3Ha = '40 - 50 m3/ha';
-            $nextSchedule = 'Sore Ini atau Besok Pagi';
-            $action = 'Lakukan pengairan berselang (intermittent irrigation) secara bertahap untuk menjaga kelembaban optimal tanpa menggenangi berlebihan.';
-        } elseif ($moisture <= 80.0) {
+
+            if ($schedule) {
+                $scheduleDate = $schedule->schedule_date->translatedFormat('d F Y');
+
+                $recommendedSlot = $scheduleDate;
+
+                if ($schedule->start_time && $schedule->end_time) {
+                    $recommendedSlot .= ', ' .
+                        substr($schedule->start_time, 0, 5) . ' - ' .
+                        substr($schedule->end_time, 0, 5) . ' WIB';
+                }
+
+                $exactDateTime = $recommendedSlot;
+                $nextSchedule = $scheduleDate;
+
+                $action = 'Kelembaban tanah mulai rendah. '
+                    . 'Lakukan pengairan berselang pada jadwal irigasi yang tersedia.';
+            } else {
+                $recommendedSlot = 'Menunggu jadwal irigasi';
+                $exactDateTime = 'Belum tersedia';
+                $nextSchedule = 'Belum ada jadwal irigasi';
+
+                $action = 'Kelembaban tanah mulai rendah, tetapi belum terdapat jadwal irigasi. '
+                    . 'Pantau kelembaban tanah dan tambahkan jadwal ketika air tersedia.';
+            }
+        }
+
+        // Kondisi optimal
+        elseif ($moisture <= 80.0) {
             $status = 'optimal';
             $statusLabel = 'Kelembaban Lembab Optimal';
             $recommendedSlot = 'Tunda Pengairan (Monitoring Cukup)';
-            $exactDateTime = $now->copy()->addDays(2)->translatedFormat('d F Y') . ', Jam 16:00 WIB';
+            $exactDateTime = 'Tidak perlu irigasi saat ini';
             $targetDepthCm = '2 - 3 cm';
             $waterVolumeM3Ha = '0 - 20 m3/ha';
-            $nextSchedule = '2 Hari Lagi (Jika Tidak Ada Hujan)';
-            $action = 'Kondisi air & kelembaban tanah optimal untuk tanaman padi. Pertahankan ketinggian air 2-3 cm dan periksa drainase secara berkala.';
-        } else {
+
+            $nextSchedule = $schedule
+                ? $schedule->schedule_date->translatedFormat('d F Y')
+                : 'Belum ada jadwal';
+
+            $action = 'Kelembaban tanah masih optimal. '
+                . 'Tidak perlu melakukan pengairan tambahan saat ini. '
+                . 'Pantau kondisi tanah dan gunakan jadwal irigasi berikutnya jika diperlukan.';
+        }
+
+        // Tergenang
+        else {
             $status = 'drainage';
             $statusLabel = 'Jenuh / Tergenang Penuh';
             $recommendedSlot = 'Pembukaan Saluran Drainase (Segera)';
             $exactDateTime = 'Segera Sekarang (' . $now->translatedFormat('d F Y, H:i') . ' WIB)';
             $targetDepthCm = 'Drainase / Pengeringan Lahan';
             $waterVolumeM3Ha = '0 m3/ha (Keluarkan Air)';
-            $nextSchedule = 'Saat Kelembaban Kembali ke 60%';
-            $action = 'Lahan tergenang penuh (>80%). Buka pintu drainase pembuangan air agar terjadi sirkulasi oksigen di akar padi dan mencegah pembusukan batang.';
+            $nextSchedule = 'Saat Kelembaban Kembali Optimal';
+
+            $action = 'Lahan memiliki kelembaban sangat tinggi. '
+                . 'Tunda pengairan dan buka drainase untuk mengurangi genangan.';
         }
 
         return [
@@ -278,6 +359,13 @@ class SoilDetectionService
             'water_volume' => $waterVolumeM3Ha,
             'next_schedule' => $nextSchedule,
             'action_recommendation' => $action,
+
+            // Informasi jadwal aktual
+            'has_schedule' => $schedule !== null,
+            'schedule_source' => $schedule?->source,
+            'schedule_date' => $schedule?->schedule_date?->format('Y-m-d'),
+            'schedule_start_time' => $schedule?->start_time,
+            'schedule_end_time' => $schedule?->end_time,
         ];
     }
 }

@@ -30,10 +30,12 @@ endpoints:
       -
         custom: []
         status: 200
-        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-26T01:33:58+00:00"}'
+        content: '{"status":"ok","system":"P.A.D.I. Smart Farming API","version":"1.0.0","timestamp":"2026-08-30T16:27:42+00:00"}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -74,6 +76,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -126,6 +130,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -178,6 +184,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -230,6 +238,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -294,6 +304,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -353,11 +365,13 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
-        content: '{"success":true,"message":"Wilayah administratif berhasil dideteksi","data":{"province":{"id":19,"code":"53","name":"Nusa Tenggara Timur","latitude":-10.1713148,"longitude":123.6074369},"regency":{"id":306,"code":"5314","name":"Rote Ndao","type":"regency","latitude":-10.7578032,"longitude":123.0625908},"district":{"id":4508,"code":"531401","name":"Rote Barat Daya","latitude":-10.8763178,"longitude":122.9555167},"village":null,"formatted_address":"Kec. Rote Barat Daya, Kab. Rote Ndao, Prov. Nusa Tenggara Timur","resolution_method":"nearest_centroid"}}'
+        status: 404
+        content: '{"success":false,"message":"Koordinat tidak berada di dalam wilayah administratif yang terdaftar","data":null}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -410,6 +424,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -462,6 +478,8 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-ratelimit-limit: '120'
+          x-ratelimit-remaining: '119'
           access-control-allow-origin: '*'
         description: null
     responseFields: []
@@ -1203,7 +1221,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: inactive
+        example: fallow
         type: string
         enumValues:
           - active
@@ -1246,7 +1264,7 @@ endpoints:
       district_id: 16
       village_id: 16
       soil_type: 'n'
-      status: inactive
+      status: fallow
       boundary_coordinates:
         - lat: -90
           lng: -179
@@ -1481,7 +1499,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: active
+        example: fallow
         type: string
         enumValues:
           - active
@@ -1524,7 +1542,7 @@ endpoints:
       district_id: 16
       village_id: 16
       soil_type: 'n'
-      status: active
+      status: fallow
       boundary_coordinates:
         - lat: -90
           lng: -179
@@ -1702,7 +1720,7 @@ endpoints:
         name: season
         description: ''
         required: false
-        example: transition
+        example: rainy
         type: string
         enumValues:
           - rainy
@@ -1741,7 +1759,7 @@ endpoints:
       regency_id: 16
       district_id: 16
       village_id: 16
-      season: transition
+      season: rainy
       year: 22
       status: draft
     fileParameters: []
@@ -1903,7 +1921,7 @@ endpoints:
         name: planned_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:25'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1922,7 +1940,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       farm_id: 16
-      planned_date: '2026-08-26T01:34:25'
+      planned_date: '2026-08-30T16:27:53'
       variety_id: 16
     fileParameters: []
     responses: []
@@ -2028,7 +2046,7 @@ endpoints:
         name: planting_start
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-26T01:34:25'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2039,7 +2057,7 @@ endpoints:
         name: planting_end
         description: 'Must be a valid date. Must be a date after or equal to <code>planting_start</code>.'
         required: true
-        example: '2052-09-18'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2121,8 +2139,8 @@ endpoints:
       village_id: 16
       season: dry
       year: 22
-      planting_start: '2026-08-26T01:34:25'
-      planting_end: '2052-09-18'
+      planting_start: '2026-08-30T16:27:53'
+      planting_end: '2052-09-22'
       planting_pattern: 'n'
       rice_variety: g
       recommended_area: 12
@@ -2245,7 +2263,7 @@ endpoints:
         name: planting_start
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:25'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2256,7 +2274,7 @@ endpoints:
         name: planting_end
         description: 'Must be a valid date. Must be a date after or equal to <code>planting_start</code>.'
         required: false
-        example: '2052-09-18'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2338,8 +2356,8 @@ endpoints:
       village_id: 16
       season: dry
       year: 22
-      planting_start: '2026-08-26T01:34:25'
-      planting_end: '2052-09-18'
+      planting_start: '2026-08-30T16:27:53'
+      planting_end: '2052-09-22'
       planting_pattern: 'n'
       rice_variety: g
       recommended_area: 12
@@ -2437,7 +2455,7 @@ endpoints:
         name: season
         description: ''
         required: false
-        example: rainy
+        example: dry
         type: string
         enumValues:
           - rainy
@@ -2462,7 +2480,7 @@ endpoints:
         name: planting_start
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:25'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2473,7 +2491,7 @@ endpoints:
         name: planting_end
         description: 'Must be a valid date. Must be a date after or equal to <code>planting_start</code>.'
         required: false
-        example: '2052-09-18'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2517,7 +2535,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: draft
+        example: active
         type: string
         enumValues:
           - draft
@@ -2553,14 +2571,14 @@ endpoints:
       regency_id: 16
       district_id: 16
       village_id: 16
-      season: rainy
+      season: dry
       year: 22
-      planting_start: '2026-08-26T01:34:25'
-      planting_end: '2052-09-18'
+      planting_start: '2026-08-30T16:27:53'
+      planting_end: '2052-09-22'
       planting_pattern: 'n'
       rice_variety: g
       recommended_area: 12
-      status: draft
+      status: active
       source: m
       notes: i
     fileParameters: []
@@ -2824,7 +2842,7 @@ endpoints:
         name: type
         description: ''
         required: true
-        example: land_preparation
+        example: spraying
         type: string
         enumValues:
           - land_preparation
@@ -2841,7 +2859,7 @@ endpoints:
         name: occurred_at
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-26T01:34:26'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2871,8 +2889,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       crop_season_id: 16
-      type: land_preparation
-      occurred_at: '2026-08-26T01:34:26'
+      type: spraying
+      occurred_at: '2026-08-30T16:27:53'
       notes: architecto
       cost: 39
     fileParameters: []
@@ -2985,7 +3003,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: planting
+        example: other
         type: string
         enumValues:
           - land_preparation
@@ -3002,7 +3020,7 @@ endpoints:
         name: occurred_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:26'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3032,8 +3050,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       crop_season_id: 16
-      type: planting
-      occurred_at: '2026-08-26T01:34:26'
+      type: other
+      occurred_at: '2026-08-30T16:27:53'
       notes: architecto
       cost: 39
     fileParameters: []
@@ -3165,7 +3183,7 @@ endpoints:
         name: harvest_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-26T01:34:26'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3217,7 +3235,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       crop_season_id: 16
-      harvest_date: '2026-08-26T01:34:26'
+      harvest_date: '2026-08-30T16:27:53'
       quantity: 4326.41688
       unit: miyvdljnikhwaykc
       quality_grade: m
@@ -3332,7 +3350,7 @@ endpoints:
         name: harvest_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:26'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -3384,7 +3402,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       crop_season_id: 16
-      harvest_date: '2026-08-26T01:34:26'
+      harvest_date: '2026-08-30T16:27:53'
       quantity: 4326.41688
       unit: miyvdljnikhwaykc
       quality_grade: m
@@ -3622,7 +3640,7 @@ endpoints:
         name: force_refresh
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3632,7 +3650,7 @@ endpoints:
       farm_id: 16
       units: metric
       lang: ngzmiy
-      force_refresh: false
+      force_refresh: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -3703,7 +3721,7 @@ endpoints:
         name: force_refresh
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -3713,7 +3731,7 @@ endpoints:
       farm_id: 16
       units: metric
       lang: ngzmiy
-      force_refresh: true
+      force_refresh: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -3903,7 +3921,7 @@ endpoints:
         name: units
         description: ''
         required: false
-        example: imperial
+        example: metric
         type: string
         enumValues:
           - metric
@@ -3924,7 +3942,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       city: b
-      units: imperial
+      units: metric
       lang: ngzmiy
     fileParameters: []
     responses: []
@@ -4141,7 +4159,7 @@ endpoints:
         name: tested_at
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-26T01:34:27'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4180,7 +4198,7 @@ endpoints:
       organic_matter_percentage: 1
       soil_temp_celsius: 1
       soil_type: sandy_loam
-      tested_at: '2026-08-26T01:34:27'
+      tested_at: '2026-08-30T16:27:53'
       notes: l
       sync_agromonitoring: true
     fileParameters: []
@@ -4436,7 +4454,7 @@ endpoints:
         name: planned_planting_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-08-26T01:34:27'
+        example: '2026-08-30T16:27:53'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4447,7 +4465,7 @@ endpoints:
         name: planting_date
         description: 'Must be a valid date. Must be a date after or equal to <code>planned_planting_date</code>.'
         required: false
-        example: '2052-09-18'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4458,7 +4476,7 @@ endpoints:
         name: estimated_harvest_date
         description: 'Must be a valid date. Must be a date after or equal to <code>planting_date</code>.'
         required: false
-        example: '2052-09-18'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4482,9 +4500,9 @@ endpoints:
     cleanBodyParameters:
       farm_id: 16
       variety_id: 16
-      planned_planting_date: '2026-08-26T01:34:27'
-      planting_date: '2052-09-18'
-      estimated_harvest_date: '2052-09-18'
+      planned_planting_date: '2026-08-30T16:27:53'
+      planting_date: '2052-09-22'
+      estimated_harvest_date: '2052-09-22'
       status: planned
     fileParameters: []
     responses: []
@@ -4549,7 +4567,7 @@ endpoints:
       authenticated: false
       deprecated: false
     headers:
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
@@ -4666,12 +4684,23 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      image:
+        custom: []
+        name: image
+        description: 'Must be an image. Must not be greater than 5120 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       expires_at:
         custom: []
         name: expires_at
-        description: 'Must be a valid date. Must be a date after <code>published_at</code>.'
+        description: 'Must be a valid date. Must be a date after <code>today</code>.'
         required: false
-        example: '2045-07-19'
+        example: '2052-09-22'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -4688,8 +4717,9 @@ endpoints:
       description: 'Eius et animi quos velit et.'
       sales_link: v
       image_url: 'http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html'
-      expires_at: '2045-07-19'
-    fileParameters: []
+      expires_at: '2052-09-22'
+    fileParameters:
+      image: null
     responses: []
     responseFields: []
     auth: []
@@ -4764,7 +4794,7 @@ endpoints:
       authenticated: false
       deprecated: false
     headers:
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
       marketListing_id:
@@ -4860,6 +4890,17 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      image:
+        custom: []
+        name: image
+        description: 'Must be an image. Must not be greater than 5120 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       commodity: b
       quantity: 4326.41688
@@ -4868,7 +4909,8 @@ endpoints:
       description: 'Eius et animi quos velit et.'
       sales_link: v
       image_url: 'http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html'
-    fileParameters: []
+    fileParameters:
+      image: null
     responses: []
     responseFields: []
     auth: []
@@ -5076,7 +5118,7 @@ endpoints:
       listing_id:
         custom: []
         name: listing_id
-        description: 'Must match an existing stored value.'
+        description: ''
         required: true
         example: 16
         type: integer
@@ -5169,16 +5211,53 @@ endpoints:
         name: status
         description: ''
         required: true
-        example: rejected
+        example: accepted
         type: string
         enumValues:
           - accepted
           - rejected
+          - countered
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      counter_price:
+        custom: []
+        name: counter_price
+        description: 'Must be at least 0.'
+        required: false
+        example: 27
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      counter_quantity:
+        custom: []
+        name: counter_quantity
+        description: 'Must be at least 0.01.'
+        required: false
+        example: 39
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      counter_notes:
+        custom: []
+        name: counter_notes
+        description: 'Must not be greater than 1000 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
-      status: rejected
+      status: accepted
+      counter_price: 27
+      counter_quantity: 39
+      counter_notes: g
     fileParameters: []
     responses: []
     responseFields: []
@@ -5191,6 +5270,125 @@ endpoints:
     httpMethods:
       - GET
     uri: api/v1/purchase-contracts
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/purchase-contracts
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      listing_id:
+        custom: []
+        name: listing_id
+        description: ''
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      quantity:
+        custom: []
+        name: quantity
+        description: 'Must be at least 0.01.'
+        required: true
+        example: 39
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      agreed_price:
+        custom: []
+        name: agreed_price
+        description: 'Must be at least 0.'
+        required: false
+        example: 84
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: 'Must not be greater than 1000 characters.'
+        required: false
+        example: z
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      listing_id: 16
+      quantity: 39
+      agreed_price: 84
+      notes: z
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/sales-report
     metadata:
       custom: []
       groupName: Endpoints
@@ -5357,7 +5555,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Dispatch a notification payload to device service workers / database.'
+      title: 'Dispatch a notification payload to device service workers / database per role or target user.'
       description: ''
       authenticated: false
       deprecated: false
@@ -5377,6 +5575,22 @@ endpoints:
         example: 16
         type: integer
         enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      target_role:
+        custom: []
+        name: target_role
+        description: ''
+        required: false
+        example: farmer
+        type: string
+        enumValues:
+          - farmer
+          - extension_officer
+          - buyer
+          - admin
+          - all
         exampleWasSpecified: false
         nullable: true
         deprecated: false
@@ -5448,11 +5662,43 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       user_id: 16
+      target_role: farmer
       title: 'n'
       body: g
       type: z
       url: 'http://rempel.com/sunt-nihil-accusantium-harum-mollitia'
       icon: k
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/notifications/mark-all-read
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Mark all notifications for the authenticated user as read.'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses: []
     responseFields: []
@@ -5471,7 +5717,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Mark notification as read.'
+      title: 'Mark single notification as read.'
       description: ''
       authenticated: false
       deprecated: false
@@ -5498,6 +5744,46 @@ endpoints:
     cleanBodyParameters: []
     fileParameters: []
     responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/realtime/stream
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Real-time Server-Sent Events (SSE) & WebSocket-compatible Live Stream.'
+      description: 'Delivers sub-5ms cached updates for notifications, live ticker, and radar alerts.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"success":false,"message":"Token tidak valid atau sesi telah berakhir."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth: []
     controller: null
@@ -5698,14 +5984,14 @@ endpoints:
         name: diseaseScan_id
         description: 'The ID of the diseaseScan.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      diseaseScan_id: 16
+      diseaseScan_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -5721,6 +6007,87 @@ endpoints:
           content-type: application/json
           access-control-allow-origin: '*'
         description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/disease-scans/{diseaseScan_id}/feedback'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      diseaseScan_id:
+        custom: []
+        name: diseaseScan_id
+        description: 'The ID of the diseaseScan.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      diseaseScan_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: true
+        example: confirmed
+        type: string
+        enumValues:
+          - confirmed
+          - corrected
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      corrected_class:
+        custom: []
+        name: corrected_class
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      status: confirmed
+      corrected_class: b
+      notes: 'n'
+    fileParameters: []
+    responses: []
     responseFields: []
     auth: []
     controller: null
@@ -5982,6 +6349,7 @@ endpoints:
           - web
           - android
           - ios
+          - flutter
         exampleWasSpecified: false
         nullable: true
         deprecated: false
@@ -6128,7 +6496,7 @@ endpoints:
         name: category
         description: ''
         required: true
-        example: workshop
+        example: irrigation
         type: string
         enumValues:
           - workshop
@@ -6143,7 +6511,7 @@ endpoints:
         name: event_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-08-26T01:34:30'
+        example: '2026-08-30T16:27:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -6264,8 +6632,8 @@ endpoints:
     cleanBodyParameters:
       title: b
       description: 'Eius et animi quos velit et.'
-      category: workshop
-      event_date: '2026-08-26T01:34:30'
+      category: irrigation
+      event_date: '2026-08-30T16:27:56'
       event_time: v
       location_name: d
       location_address: l

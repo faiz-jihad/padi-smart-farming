@@ -153,6 +153,33 @@ class AdminBladeDashboardTest extends TestCase
             ->assertSee('Broadcast perlu ditinjau');
     }
 
+    public function test_legacy_admin_role_column_gets_full_sidebar_permissions(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin Legacy',
+            'role' => UserRole::Admin->value,
+            'status' => UserStatus::Active->value,
+        ]);
+
+        $admin->syncRoles([]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Pengguna')
+            ->assertSee('Pertanian')
+            ->assertSee('Cuaca')
+            ->assertSee('Deteksi Tanah')
+            ->assertSee('Pusat Pengetahuan')
+            ->assertSee('Laporan Penyakit')
+            ->assertSee('Marketplace')
+            ->assertSee('Profil Petani')
+            ->assertSee('Broadcast')
+            ->assertSee('Audit Log');
+
+        $this->assertTrue($admin->refresh()->hasRole(UserRole::Admin->value));
+    }
+
     public function test_admin_can_mark_notifications_as_read_from_blade(): void
     {
         $user = User::factory()->create([

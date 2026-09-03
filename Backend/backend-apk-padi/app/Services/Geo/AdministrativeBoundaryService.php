@@ -316,7 +316,7 @@ class AdministrativeBoundaryService
      */
     public function getFarmsGeoJson(int $villageId): array
     {
-        $farms = Farm::with(['farmer', 'cropSeasons'])
+        $farms = Farm::with(['farmer', 'cropSeasons', 'weatherSnapshots' => fn ($q) => $q->latest('observed_at')->limit(1)])
             ->where('village_id', $villageId)
             ->get();
 
@@ -324,8 +324,8 @@ class AdministrativeBoundaryService
 
         foreach ($farms as $farm) {
             $geometry = $this->resolveFarmGeometry($farm);
-
             $latestSeason = $farm->cropSeasons->sortByDesc('created_at')->first();
+            $latestWeather = $farm->weatherSnapshots->first();
 
             $features[] = [
                 'type'     => 'Feature',
@@ -341,6 +341,13 @@ class AdministrativeBoundaryService
                     'crop_status'   => $latestSeason?->status ?? 'idle',
                     'lat'           => $farm->latitude,
                     'lng'           => $farm->longitude,
+                    'weather'       => $latestWeather ? [
+                        'temperature' => $latestWeather->temperature_celsius,
+                        'humidity'    => $latestWeather->humidity_percentage,
+                        'condition'   => $latestWeather->weather_condition,
+                        'rain_rate'   => $latestWeather->rain_rate_mm,
+                        'observed_at' => $latestWeather->observed_at?->format('d M Y H:i'),
+                    ] : null,
                 ],
             ];
         }
@@ -372,15 +379,28 @@ class AdministrativeBoundaryService
         $irrigationPct = $farms->count() > 0 ? round(($irrigated / $farms->count()) * 100) : 0;
         $waterStatus   = $farms->count() > 0 ? $this->resolveWaterStatus($irrigationPct) : 'Belum Ada Lahan';
 
+        $lat = (float) ($district->latitude ?? -6.25);
+        $lng = (float) ($district->longitude ?? 108.08);
+
+        // Fetch weather data for district
+        $weatherService = app(\App\Services\Weather\WeatherService::class);
+        $weatherRes = $weatherService->getCurrentWeather($lat, $lng);
+        $weather = $weatherRes['success'] ? $weatherService->parseWeatherData($weatherRes['data']) : null;
+        $soilRes = $weatherService->getSoilData($lat, $lng);
+        $soil = $soilRes['success'] ? $soilRes['data'] : null;
+        $bmkgRes = $weatherService->getBMKGForecast($lat, $lng, 5);
+
         // Risk heuristics
-        $risk = $this->calculateRisk($district->latitude ?? -6.25, $district->longitude ?? 108.08, $farms);
+        $risk = $this->calculateRisk($lat, $lng, $farms);
 
         return [
             'district' => [
-                'id'      => $district->id,
-                'name'    => $district->name,
-                'code'    => $district->code,
-                'regency' => $district->regency?->name,
+                'id'        => $district->id,
+                'name'      => $district->name,
+                'code'      => $district->code,
+                'regency'   => $district->regency?->name,
+                'latitude'  => $lat,
+                'longitude' => $lng,
             ],
             'statistics' => [
                 'villages'          => $villageCount,
@@ -400,8 +420,12 @@ class AdministrativeBoundaryService
             'water' => [
                 'status' => $waterStatus,
             ],
+            'weather'          => $weather,
+            'soil'             => $soil,
+            'forecast'         => $bmkgRes['data']['forecast'] ?? [],
+            'warning'          => $bmkgRes['data']['warning'] ?? null,
             'has_sub_villages' => $villageCount > 0,
-            'risk' => $risk,
+            'risk'             => $risk,
         ];
     }
 
@@ -418,25 +442,46 @@ class AdministrativeBoundaryService
 
         $totalArea = round((float) $farms->sum('area_ha'), 1);
 
+        $planting     = $farms->where('status', 'planting')->count();
+        $harvestReady = $farms->where('status', 'harvest_ready')->count();
+        $idle         = $farms->where('status', 'idle')->count();
+
         $irrigated = $farms->whereNotNull('irrigation_type')->count();
         $irrigationPct = $farms->count() > 0
             ? round(($irrigated / $farms->count()) * 100)
             : 0;
 
-        $risk = $this->calculateRisk($village->latitude ?? -6.25, $village->longitude ?? 108.08, $farms);
+        $lat = (float) ($village->latitude ?? -6.25);
+        $lng = (float) ($village->longitude ?? 108.08);
+
+        $weatherService = app(\App\Services\Weather\WeatherService::class);
+        $weatherRes = $weatherService->getCurrentWeather($lat, $lng);
+        $weather = $weatherRes['success'] ? $weatherService->parseWeatherData($weatherRes['data']) : null;
+        $soilRes = $weatherService->getSoilData($lat, $lng);
+        $soil = $soilRes['success'] ? $soilRes['data'] : null;
+        $bmkgRes = $weatherService->getBMKGForecast($lat, $lng, 5);
+
+        $risk = $this->calculateRisk($lat, $lng, $farms);
 
         return [
             'village' => [
-                'id'       => $village->id,
-                'name'     => $village->name,
-                'code'     => $village->code,
-                'type'     => $village->type?->value ?? 'village',
-                'district' => $village->district?->name,
+                'id'        => $village->id,
+                'name'      => $village->name,
+                'code'      => $village->code,
+                'type'      => $village->type?->value ?? 'village',
+                'district'  => $village->district?->name,
+                'latitude'  => $lat,
+                'longitude' => $lng,
             ],
             'statistics' => [
                 'farmers'           => $farmers,
                 'farms'             => $farms->count(),
                 'farm_area_hectare' => $totalArea,
+            ],
+            'agriculture' => [
+                'planting'      => $planting,
+                'harvest_ready' => $harvestReady,
+                'idle'          => $idle,
             ],
             'irrigation' => [
                 'coverage_percentage' => $irrigationPct,
@@ -444,7 +489,11 @@ class AdministrativeBoundaryService
             'water' => [
                 'status' => $this->resolveWaterStatus($irrigationPct),
             ],
-            'risk' => $risk,
+            'weather'  => $weather,
+            'soil'     => $soil,
+            'forecast' => $bmkgRes['data']['forecast'] ?? [],
+            'warning'  => $bmkgRes['data']['warning'] ?? null,
+            'risk'     => $risk,
         ];
     }
 

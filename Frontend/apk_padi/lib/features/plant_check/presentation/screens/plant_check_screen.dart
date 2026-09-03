@@ -6,11 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:padi/core/location/location_service.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
+import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
+import 'package:padi/features/plant_check/data/services/offline_scan_queue_service.dart';
 
 class PlantCheckScreen extends ConsumerStatefulWidget {
   const PlantCheckScreen({super.key});
@@ -20,7 +24,7 @@ class PlantCheckScreen extends ConsumerStatefulWidget {
 }
 
 class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   CameraController? _controller;
   List<CameraDescription> _availableCameras = const [];
   int _currentCameraIndex = 0;
@@ -39,12 +43,14 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   bool _isClosing = false;
   String? _errorMessage;
   String? _farmError;
+  String? _scanError;
 
   late AnimationController _scanAnimController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final apiClient = ref.read(apiClientProvider);
     _farmService = FarmApiService(apiClient);
     _plantCheckService = PlantCheckApiService(apiClient);
@@ -60,11 +66,29 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scanAnimController.dispose();
     final controller = _controller;
     _controller = null;
     controller?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _controller = null;
+      controller.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_image == null && mounted) {
+        _initializeCamera();
+      }
+    }
   }
 
   Future<void> _loadFarms() async {
@@ -227,14 +251,19 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     setState(() {
       _image = null;
       _imageBytes = null;
+      _scanError = null;
     });
   }
 
   Future<void> _usePicture() async {
     final image = _image;
-    final farmId = _selectedFarmId;
+    int? farmId = _selectedFarmId;
 
-    if (image == null || farmId == null || _isScanning) return;
+    if (image == null || _isScanning) return;
+
+    if (farmId == null && _farms.isNotEmpty) {
+      farmId = _farms.first.id;
+    }
 
     FarmModel? farm;
     for (final item in _farms) {
@@ -244,26 +273,87 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       }
     }
 
-    setState(() => _isScanning = true);
+    setState(() {
+      _isScanning = true;
+      _scanError = null;
+    });
+
+    double? lat = farm?.latitude;
+    double? lng = farm?.longitude;
 
     try {
+      try {
+        final position = await const LocationService().getCurrentPosition();
+        if (position != null) {
+          lat = position.latitude;
+          lng = position.longitude;
+        }
+      } catch (_) {}
+
       final result = await _plantCheckService.scanDisease(
         farmId: farmId,
         imagePath: image.path,
-        latitude: farm?.latitude,
-        longitude: farm?.longitude,
+        imageBytes: _imageBytes,
+        fileName: image.name,
+        latitude: lat,
+        longitude: lng,
       );
 
       if (!mounted) return;
 
+      setState(() => _scanError = null);
       await _showScanResult(result);
     } catch (error) {
       if (!mounted) return;
 
+      final lang = ref.read(languageProvider);
+      final errMsg = _friendlyError(error, lang);
+
+      // Enqueue to offline scan queue for automatic retry
+      if (farmId != null) {
+        try {
+          await ref.read(offlineScanQueueServiceProvider).enqueueScan(
+                imagePath: image.path,
+                farmId: farmId,
+                latitude: lat,
+                longitude: lng,
+              );
+        } catch (_) {}
+      }
+
+      setState(() {
+        _scanError = errMsg;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_friendlyError(error)),
+          content: Row(
+            children: [
+              const Icon(Icons.cloud_off_rounded, color: Colors.white, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      errMsg,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Tersimpan di antrean offline. Otomatis diproses saat online.',
+                      style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFB45309),
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } finally {
@@ -273,12 +363,215 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     }
   }
 
-  String _friendlyError(Object error) {
-    final message = error.toString();
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
+  Future<void> _showQuickFarmSheet(BuildContext context, AppStrings s, AppLanguage lang) async {
+    final defaultName = switch (lang) {
+      AppLanguage.id => 'Sawah Utama',
+      AppLanguage.jv => 'Sawah Utama',
+      AppLanguage.en => 'Main Farm',
+    };
+    final nameCtrl = TextEditingController(text: defaultName);
+    bool isSubmitting = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          decoration: const BoxDecoration(
+            color: HomeColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: HomeColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: HomeColors.lightGreen,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.grass_rounded, color: HomeColors.primaryGreen, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          switch (lang) {
+                            AppLanguage.id => 'Daftarkan Lahan Cepat',
+                            AppLanguage.jv => 'Daftar Sawah Cepet',
+                            AppLanguage.en => 'Quick Farm Registration',
+                          },
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: HomeColors.textPrimary),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          switch (lang) {
+                            AppLanguage.id => 'Diperlukan untuk menyimpan rekam jejak penyakit tanaman',
+                            AppLanguage.jv => 'Kanggo nyathet riwayat penyakit ing sawah sampeyan',
+                            AppLanguage.en => 'Required to map and record plant disease history',
+                          },
+                          style: const TextStyle(fontSize: 11.5, color: HomeColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: switch (lang) {
+                    AppLanguage.id => 'Nama Petak Sawah',
+                    AppLanguage.jv => 'Jeneng Sawah',
+                    AppLanguage.en => 'Farm Plot Name',
+                  },
+                  hintText: 'Misal: Sawah Blok Barat',
+                  filled: true,
+                  fillColor: HomeColors.surfaceMuted,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  prefixIcon: const Icon(Icons.edit_location_alt_outlined, color: HomeColors.primaryGreen),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final name = nameCtrl.text.trim();
+                          if (name.isEmpty) return;
+
+                          setSheetState(() => isSubmitting = true);
+
+                          try {
+                            double lat = -7.250445;
+                            double lng = 112.768845;
+                            try {
+                              final pos = await const LocationService().getCurrentPosition();
+                              if (pos != null) {
+                                lat = pos.latitude;
+                                lng = pos.longitude;
+                              }
+                            } catch (_) {}
+
+                            final newFarm = await _farmService.createFarm(
+                              name: name,
+                              areaHa: 0.5,
+                              latitude: lat,
+                              longitude: lng,
+                              irrigationType: 'irigasi_teknis',
+                            );
+
+                            if (!mounted) return;
+                            setState(() {
+                              _farms = [..._farms, newFarm];
+                              _selectedFarmId = newFarm.id;
+                            });
+
+                            if (sheetCtx.mounted) {
+                              Navigator.of(sheetCtx).pop();
+                            }
+
+                            _usePicture();
+                          } catch (e) {
+                            setSheetState(() => isSubmitting = false);
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text('Gagal mendaftarkan lahan: $e')),
+                              );
+                            }
+                          }
+                        },
+                  icon: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_circle_outline_rounded),
+                  label: Text(
+                    isSubmitting
+                        ? (switch (lang) {
+                            AppLanguage.id => 'Menyimpan...',
+                            AppLanguage.jv => 'Nyimpen...',
+                            AppLanguage.en => 'Saving...',
+                          })
+                        : (switch (lang) {
+                            AppLanguage.id => 'Simpan & Lanjutkan Diagnosa',
+                            AppLanguage.jv => 'Simpen & Teruske Priksa',
+                            AppLanguage.en => 'Save & Continue Diagnosis',
+                          }),
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: HomeColors.primaryGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _friendlyError(Object error, AppLanguage lang) {
+    final str = error.toString().toLowerCase();
+    if (str.contains('timeout') || str.contains('deadline')) {
+      return switch (lang) {
+        AppLanguage.id => 'Waktu koneksi habis. Sinyal internet di sawah sedang lambat, silakan coba lagi.',
+        AppLanguage.jv => 'Wektu sambungan entek. Sinyal ing sawah lagi lemot, mangga dicoba maneh.',
+        AppLanguage.en => 'Connection timed out. Mobile signal is weak, please try again.',
+      };
     }
-    return message;
+    if (str.contains('connection refused') || str.contains('socket') || str.contains('network') || str.contains('offline')) {
+      return switch (lang) {
+        AppLanguage.id => 'Tidak dapat terhubung ke server AI. Pastikan ponsel terhubung ke internet.',
+        AppLanguage.jv => 'Ora bisa nyambung neng server AI. Priksa paket data internet sampeyan.',
+        AppLanguage.en => 'Cannot connect to AI server. Please check your internet connection.',
+      };
+    }
+    if (str.contains('503') || str.contains('busy') || str.contains('overload')) {
+      return switch (lang) {
+        AppLanguage.id => 'Server Gemini AI sedang sibuk. Silakan coba analisis kembali beberapa saat lagi.',
+        AppLanguage.jv => 'Server Gemini AI lagi repot. Mangga dipriksa sedhela maneh.',
+        AppLanguage.en => 'Gemini AI server is currently busy. Please try again shortly.',
+      };
+    }
+    if (str.contains('5120') || str.contains('too large') || str.contains('ukuran')) {
+      return switch (lang) {
+        AppLanguage.id => 'Ukuran foto terlalu besar (maksimal 5 MB).',
+        AppLanguage.jv => 'Ukuran foto kegeden (maksimal 5 MB).',
+        AppLanguage.en => 'Photo file size is too large (maximum 5 MB).',
+      };
+    }
+    final rawMsg = error.toString();
+    if (rawMsg.startsWith('Exception: ')) {
+      return rawMsg.substring(11);
+    }
+    return rawMsg;
   }
 
   Future<void> _showScanResult(PlantCheckResult result) async {
@@ -288,7 +581,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       backgroundColor: Colors.transparent,
       builder: (ctx) => _GeminiScanResultSheet(
         result: result,
+        plantCheckService: _plantCheckService,
         onReportAlert: () {
+
           Navigator.of(ctx).pop();
           context.push('/community-alert/report?scan_id=${result.id}');
         },
@@ -322,36 +617,57 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     context.go('/home');
   }
 
-  void _showGuidelineDialog() {
+  void _showGuidelineDialog(AppStrings s, AppLanguage lang) {
+    final guide1 = switch (lang) {
+      AppLanguage.id => 'Gunakan pencahayaan cukup dan hindari bayangan tebal.',
+      AppLanguage.jv => 'Gunakake pepadhang sing cukup lan adohi ayang-ayang kandel.',
+      AppLanguage.en => 'Ensure sufficient lighting and avoid dark shadows.',
+    };
+    final guide2 = switch (lang) {
+      AppLanguage.id => 'Arahkan kamera tepat ke bercak atau daun padi yang bergejala.',
+      AppLanguage.jv => 'Arahake kamera pas marang bercak utawa godhong pari sing lara.',
+      AppLanguage.en => 'Point camera directly at leaf spots or symptomatic areas.',
+    };
+    final guide3 = switch (lang) {
+      AppLanguage.id => 'Jaga jarak sekitar 10-25 cm agar tekstur daun terlihat tajam.',
+      AppLanguage.jv => 'Jaga jarak udakara 10-25 cm supaya tekstur godhong cetha.',
+      AppLanguage.en => 'Keep distance around 10-25 cm for crisp leaf texture.',
+    };
+    final guide4 = switch (lang) {
+      AppLanguage.id => 'Anda juga bisa memilih foto daun padi yang sudah tersimpan di Galeri.',
+      AppLanguage.jv => 'Sampeyan uga bisa milih foto godhong pari saka Galeri.',
+      AppLanguage.en => 'You can also select existing paddy leaf photos from Gallery.',
+    };
+
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFEAB308)),
-            SizedBox(width: 8),
-            Text('Petunjuk Foto Daun', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFEAB308)),
+            const SizedBox(width: 8),
+            Text(s.photoGuideTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _GuideItem(icon: Icons.wb_sunny_outlined, text: 'Gunakan pencahayaan cukup dan hindari bayangan tebal.'),
-            SizedBox(height: 10),
-            _GuideItem(icon: Icons.center_focus_strong_rounded, text: 'Arahkan kamera tepat ke bercak atau daun padi yang bergejala.'),
-            SizedBox(height: 10),
-            _GuideItem(icon: Icons.photo_size_select_large_rounded, text: 'Jaga jarak sekitar 10-25 cm agar tekstur daun terlihat tajam.'),
-            SizedBox(height: 10),
-            _GuideItem(icon: Icons.photo_library_outlined, text: 'Anda juga bisa memilih foto daun padi yang sudah tersimpan di Galeri.'),
+            _GuideItem(icon: Icons.wb_sunny_outlined, text: guide1),
+            const SizedBox(height: 10),
+            _GuideItem(icon: Icons.center_focus_strong_rounded, text: guide2),
+            const SizedBox(height: 10),
+            _GuideItem(icon: Icons.photo_size_select_large_rounded, text: guide3),
+            const SizedBox(height: 10),
+            _GuideItem(icon: Icons.photo_library_outlined, text: guide4),
           ],
         ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: FilledButton.styleFrom(backgroundColor: padiGreen),
-            child: const Text('Mengerti'),
+            child: Text(s.photoGuideGotIt),
           ),
         ],
       ),
@@ -360,6 +676,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -369,25 +688,25 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         backgroundColor: Colors.black,
         body: SafeArea(
           child: _image == null
-              ? _buildModernCameraHUD()
-              : _buildModernImagePreview(),
+              ? _buildModernCameraHUD(s, lang)
+              : _buildModernImagePreview(s, lang),
         ),
       ),
     );
   }
 
   // ================= MODERN CAMERA HUD =================
-  Widget _buildModernCameraHUD() {
+  Widget _buildModernCameraHUD(AppStrings s, AppLanguage lang) {
     if (_isInitializing) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Color(0xFF22C55E)),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(color: Color(0xFF22C55E)),
+            const SizedBox(height: 16),
             Text(
-              'Menyiapkan kamera AI...',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              s.aiCameraPreparing,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
             ),
           ],
         ),
@@ -434,12 +753,12 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
             children: [
               _buildCircularGlassButton(
                 icon: Icons.arrow_back_rounded,
-                tooltip: 'Kembali',
+                tooltip: s.back,
                 onTap: _goHome,
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildModernFarmSelector(),
+                child: _buildModernFarmSelector(s),
               ),
               const SizedBox(width: 8),
               _buildCircularGlassButton(
@@ -457,8 +776,8 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
               const SizedBox(width: 6),
               _buildCircularGlassButton(
                 icon: Icons.help_outline_rounded,
-                tooltip: 'Petunjuk Foto',
-                onTap: _showGuidelineDialog,
+                tooltip: s.photoGuideTitle,
+                onTap: () => _showGuidelineDialog(s, lang),
               ),
             ],
           ),
@@ -477,14 +796,14 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withOpacity(0.15)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF4ADE80), size: 14),
-                  SizedBox(width: 6),
+                  const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4ADE80), size: 14),
+                  const SizedBox(width: 6),
                   Text(
-                    'Posisikan bercak daun di dalam kotak hijau',
-                    style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                    s.positionLeafInFrame,
+                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -497,7 +816,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
           bottom: 20,
           left: 0,
           right: 0,
-          child: _buildBottomCaptureControls(),
+          child: _buildBottomCaptureControls(s),
         ),
       ],
     );
@@ -615,7 +934,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     );
   }
 
-  Widget _buildModernFarmSelector() {
+  Widget _buildModernFarmSelector(AppStrings s) {
     if (_isLoadingFarms) {
       return Container(
         height: 44,
@@ -646,14 +965,14 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: const Color(0xFFFBBF24)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 16),
-              SizedBox(width: 6),
+              const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 6),
               Text(
-                'Daftarkan Lahan',
-                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                s.registerFarmFirst,
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -711,7 +1030,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     );
   }
 
-  Widget _buildBottomCaptureControls() {
+  Widget _buildBottomCaptureControls(AppStrings s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
@@ -741,9 +1060,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Galeri',
-                style: TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+              Text(
+                s.galleryLabel,
+                style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -813,8 +1132,44 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   }
 
   // ================= MODERN PREVIEW SCREEN =================
-  Widget _buildModernImagePreview() {
+  Widget _buildModernImagePreview(AppStrings s, AppLanguage lang) {
     final bytes = _imageBytes;
+
+    final previewTitle = switch (lang) {
+      AppLanguage.id => 'Pratinjau Daun Padi',
+      AppLanguage.jv => 'Pratinjau Godhong Pari',
+      AppLanguage.en => 'Paddy Leaf Preview',
+    };
+
+    final retakeLabel = switch (lang) {
+      AppLanguage.id => 'Ambil Ulang',
+      AppLanguage.jv => 'Jupuk Maneh',
+      AppLanguage.en => 'Retake Photo',
+    };
+
+    final analyzingTitle = switch (lang) {
+      AppLanguage.id => 'Menganalisis dengan Gemini AI...',
+      AppLanguage.jv => 'Mriksa nganggo Gemini AI...',
+      AppLanguage.en => 'Analyzing with Gemini AI...',
+    };
+
+    final analyzingDesc = switch (lang) {
+      AppLanguage.id => 'Mendeteksi patogen & menyusun rekomendasi',
+      AppLanguage.jv => 'Mriksa ama & ngrumusake solusi',
+      AppLanguage.en => 'Detecting pathogens & preparing recommendations',
+    };
+
+    final diagnoseLabel = _isScanning
+        ? (switch (lang) {
+            AppLanguage.id => 'Mendiagnosa...',
+            AppLanguage.jv => 'Mriksa...',
+            AppLanguage.en => 'Diagnosing...',
+          })
+        : (switch (lang) {
+            AppLanguage.id => 'Diagnosa Gemini AI',
+            AppLanguage.jv => 'Priksa Gemini AI',
+            AppLanguage.en => 'Gemini AI Diagnosis',
+          });
 
     return Container(
       color: const Color(0xFF0F172A),
@@ -829,11 +1184,11 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
               IconButton(
                 onPressed: _retakePicture,
                 icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                tooltip: 'Ambil Ulang',
+                tooltip: retakeLabel,
               ),
-              const Text(
-                'Pratinjau Daun Padi',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+              Text(
+                previewTitle,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
               ),
               const SizedBox(width: 48), // Balance spacing
             ],
@@ -857,7 +1212,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                     const Icon(Icons.grass_rounded, color: Color(0xFF4ADE80), size: 16),
                     const SizedBox(width: 6),
                     Text(
-                      'Sawah: ${_farms.firstWhere((f) => f.id == _selectedFarmId, orElse: () => _farms.first).name}',
+                      '${s.navFarms}: ${_farms.firstWhere((f) => f.id == _selectedFarmId, orElse: () => _farms.first).name}',
                       style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -880,27 +1235,27 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                   if (_isScanning)
                     Container(
                       color: Colors.black.withOpacity(0.65),
-                      child: const Center(
+                      child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(
+                            const CircularProgressIndicator(
                               color: Color(0xFF4ADE80),
                               strokeWidth: 3,
                             ),
-                            SizedBox(height: 20),
+                            const SizedBox(height: 20),
                             Text(
-                              'Menganalisis dengan Gemini AI...',
-                              style: TextStyle(
+                              analyzingTitle,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
-                              'Mendeteksi patogen & menyusun rekomendasi',
-                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                              analyzingDesc,
+                              style: const TextStyle(color: Colors.white70, fontSize: 12),
                             ),
                           ],
                         ),
@@ -911,7 +1266,32 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
             ),
           ),
 
-          const SizedBox(height: 20),
+          // Error Banner (If any failure occurred)
+          if (_scanError != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7F1D1D).withOpacity(0.85),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFEF4444), width: 1.2),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFFCA5A5), size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _scanError!,
+                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 16),
 
           // Action Buttons
           Row(
@@ -921,7 +1301,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                 child: OutlinedButton.icon(
                   onPressed: _isScanning ? null : _retakePicture,
                   icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Ambil Ulang'),
+                  label: Text(retakeLabel),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: BorderSide(color: Colors.white.withOpacity(0.3)),
@@ -934,11 +1314,38 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
               Expanded(
                 flex: 2,
                 child: FilledButton.icon(
-                  onPressed: _isScanning || _selectedFarmId == null ? null : _usePicture,
-                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                  label: Text(_isScanning ? 'Mendiagnosa...' : 'Diagnosa Gemini AI'),
+                  onPressed: _isScanning
+                      ? null
+                      : (_selectedFarmId == null
+                          ? () => _showQuickFarmSheet(context, s, lang)
+                          : _usePicture),
+                  icon: Icon(
+                    _selectedFarmId == null
+                        ? Icons.add_location_alt_rounded
+                        : (_scanError != null ? Icons.refresh_rounded : Icons.auto_awesome_rounded),
+                    size: 18,
+                  ),
+                  label: Text(
+                    _isScanning
+                        ? diagnoseLabel
+                        : (_selectedFarmId == null
+                            ? (switch (lang) {
+                                AppLanguage.id => 'Daftar Sawah & Diagnosa',
+                                AppLanguage.jv => 'Daftar Sawah & Priksa',
+                                AppLanguage.en => 'Register Farm & Diagnose',
+                              })
+                            : (_scanError != null
+                                ? (switch (lang) {
+                                    AppLanguage.id => 'Coba Analisis Lagi',
+                                    AppLanguage.jv => 'Coba Priksa Maneh',
+                                    AppLanguage.en => 'Retry Diagnosis',
+                                  })
+                                : diagnoseLabel)),
+                  ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF16A34A),
+                    backgroundColor: _selectedFarmId == null
+                        ? const Color(0xFFD97706)
+                        : (_scanError != null ? const Color(0xFF0284C7) : const Color(0xFF16A34A)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1044,26 +1451,290 @@ class _GeminiScanResultSheet extends StatefulWidget {
     required this.onReportAlert,
     required this.onRetake,
     required this.onSearchProduct,
+    this.plantCheckService,
   });
 
   final PlantCheckResult result;
   final VoidCallback onReportAlert;
   final VoidCallback onRetake;
   final ValueChanged<String> onSearchProduct;
+  final PlantCheckApiService? plantCheckService;
 
   @override
   State<_GeminiScanResultSheet> createState() => _GeminiScanResultSheetState();
 }
 
+
 class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
   int _selectedTab = 0; // 0: Analisis, 1: Pencegahan, 2: Obat, 3: Produk, 4: DIY
   final FlutterTts _flutterTts = FlutterTts();
   bool _isPlayingVoice = false;
+  bool _isSubmittingFeedback = false;
+  bool _feedbackSent = false;
+  String? _feedbackMessage;
+  bool _isSubmittingPpl = false;
+  bool _pplSubmitted = false;
+  String? _pplMessage;
 
   @override
   void initState() {
     super.initState();
     _initTts();
+    if (widget.result.isLearned || widget.result.userFeedback != null) {
+      _feedbackSent = true;
+      _feedbackMessage = 'Foto daun ini telah tercatat dalam memori pembelajaran AI.';
+    }
+  }
+
+  Future<void> _submitToPpl() async {
+    if (_isSubmittingPpl || _pplSubmitted) return;
+    if (widget.plantCheckService == null) return;
+
+    setState(() => _isSubmittingPpl = true);
+    try {
+      await widget.plantCheckService!.submitToPpl(widget.result.id);
+      if (!mounted) return;
+      setState(() {
+        _isSubmittingPpl = false;
+        _pplSubmitted = true;
+        _pplMessage = 'Kasus berhasil dikirim ke Penyuluh (PPL) untuk validasi lapangan.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.verified_user_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Kasus berhasil dikirim ke Penyuluh (PPL).',
+                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0284C7),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmittingPpl = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim ke penyuluh: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+  }
+
+  Future<void> _submitFeedback(String status, [String? correctedClass]) async {
+    if (_isSubmittingFeedback || _feedbackSent) return;
+    if (widget.plantCheckService == null) return;
+
+    setState(() => _isSubmittingFeedback = true);
+    final success = await widget.plantCheckService!.submitFeedback(
+      scanId: widget.result.id,
+      status: status,
+      correctedClass: correctedClass,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _isSubmittingFeedback = false;
+      if (success) {
+        _feedbackSent = true;
+        _feedbackMessage = status == 'confirmed'
+            ? 'Terima kasih! Foto daun ini dipelajari AI untuk meningkatkan akurasi diagnosa berikutnya.'
+            : 'Koreksi dicatat! AI telah memperbarui data pembelajaran daun ini.';
+      }
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _feedbackMessage!,
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF059669),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  void _showCorrectionDialog() {
+    final diseases = [
+      'Bacterial Leaf Blight (Hawar Daun Bakteri)',
+      'Bacterial Leaf Streak (Bercak Daun Bakteri)',
+      'Bacterial Panicle Blight (Hawar Malai Bakteri)',
+      'Blast (Penyakit Blas)',
+      'Brown Spot (Bercak Cokelat)',
+      'Dead Heart (Penggerek Batang)',
+      'Downy Mildew (Bulu Embun)',
+      'Hispa (Hama Hispa)',
+      'Normal (Padi Sehat)',
+      'Tungro (Penyakit Tungro)',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pilih Diagnosa Daun yang Tepat',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Koreksi Anda akan langsung melatih memori AI agar lebih cerdas.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: diseases.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, index) {
+                    final d = diseases[index];
+                    return ListTile(
+                      dense: true,
+                      title: Text(d, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8)),
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _submitFeedback('corrected', d);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdaptiveLearningCard() {
+    return Container(
+      margin: const EdgeInsets.only(top: 14, bottom: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F766E).withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.psychology_alt_rounded, color: Color(0xFF0F766E), size: 20),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pembelajaran AI Berkelanjutan',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                    ),
+                    Text(
+                      'Sistem belajar dari setiap daun yang Anda scan',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_feedbackSent)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _feedbackMessage ?? 'Foto daun ini telah dipelajari oleh AI!',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF065F46)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _isSubmittingFeedback ? null : () => _submitFeedback('confirmed'),
+                    icon: const Icon(Icons.thumb_up_alt_rounded, size: 15),
+                    label: const Text('Diagnosa Tepat', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF059669),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _isSubmittingFeedback ? null : _showCorrectionDialog,
+                    icon: const Icon(Icons.edit_note_rounded, size: 16),
+                    label: const Text('Koreksi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF475569),
+                      side: const BorderSide(color: Color(0xFFCBD5E1)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _initTts() async {
@@ -1079,6 +1750,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
       });
     } catch (_) {}
   }
+
 
   @override
   void dispose() {
@@ -1114,7 +1786,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     final confidence = result.confidence;
     final confidencePercent = confidence != null
         ? (confidence * 100).toStringAsFixed(1)
-        : '94.2';
+        : null;
+    final modelAccuracyPercent = result.modelAccuracy != null
+        ? (result.modelAccuracy! * 100).toStringAsFixed(1)
+        : null;
 
     return Container(
       constraints: BoxConstraints(
@@ -1201,7 +1876,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                         Icon(Icons.auto_awesome_rounded, color: Color(0xFFFDE68A), size: 14),
                                         SizedBox(width: 5),
                                         Text(
-                                          'Gemini 1.5 Pro AI',
+                                          'P.A.D.I. Vision AI',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11.5,
@@ -1213,7 +1888,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                     ),
                                   ),
 
-                                  // Accuracy Pill
+                                  // Confidence Pill
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
@@ -1230,10 +1905,20 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.verified_rounded, color: Colors.white, size: 13),
+                                        Icon(
+                                          result.needsExpertReview
+                                              ? Icons.manage_search_rounded
+                                              : Icons.verified_rounded,
+                                          color: Colors.white,
+                                          size: 13,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '$confidencePercent% Akurat',
+                                          result.needsExpertReview
+                                              ? 'Perlu review'
+                                              : confidencePercent != null
+                                              ? '$confidencePercent% yakin'
+                                              : 'Perlu review',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 11.5,
@@ -1267,6 +1952,35 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                   height: 1.25,
                                 ),
                               ),
+                              if (result.statusMessage != null && result.statusMessage!.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF59E0B).withOpacity(0.18),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFFCD34D).withOpacity(0.45)),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.info_outline_rounded, color: Color(0xFFFDE68A), size: 17),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          result.statusMessage!,
+                                          style: const TextStyle(
+                                            color: Color(0xFFFFF7ED),
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
 
                               const SizedBox(height: 14),
 
@@ -1298,7 +2012,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                           ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'}',
+                                          modelAccuracyPercent != null
+                                              ? 'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'} | Validasi: $modelAccuracyPercent%'
+                                              : 'Model: ${result.modelVersion ?? 'MobileNetV2 Fine-Tuned'}',
                                           style: TextStyle(
                                             color: Colors.white.withOpacity(0.65),
                                             fontSize: 11,
@@ -1358,6 +2074,8 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   ),
 
                   const SizedBox(height: 16),
+                  _buildPredictionCandidatesCard(),
+                  const SizedBox(height: 16),
 
                   // ================= B. LUXURY TAB SELECTOR =================
                   SingleChildScrollView(
@@ -1378,9 +2096,63 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   // ================= C. TAB BODY CONTENT =================
                   _buildTabContent(rec),
 
+                  // ================= D. ADAPTIVE CONTINUOUS LEARNING =================
+                  _buildAdaptiveLearningCard(),
+
                   const SizedBox(height: 20),
 
-                  // ================= D. ACTION BUTTONS =================
+                  // ================= E. ACTION BUTTONS =================
+
+                  if (_pplSubmitted)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F9FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFBAE6FD)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.verified_user_rounded, color: Color(0xFF0284C7), size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _pplMessage ?? 'Kasus telah dikirim ke Penyuluh (PPL).',
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0369A1)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: FilledButton.icon(
+                        onPressed: _isSubmittingPpl ? null : _submitToPpl,
+                        icon: _isSubmittingPpl
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.verified_user_rounded, size: 19),
+                        label: Text(
+                          _isSubmittingPpl ? 'Mengirim ke Penyuluh...' : 'Kirim ke Penyuluh (PPL)',
+                          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+
                   FilledButton.icon(
                     onPressed: widget.onReportAlert,
                     icon: const Icon(Icons.cell_tower_rounded, size: 19),
@@ -1460,6 +2232,111 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPredictionCandidatesCard() {
+    final candidates = widget.result.topPredictions;
+    if (candidates.isEmpty) return const SizedBox.shrink();
+
+    return _buildModernCard(
+      title: 'Kandidat Deteksi Model',
+      icon: Icons.analytics_rounded,
+      iconColor: const Color(0xFF2563EB),
+      subtitle: widget.result.needsExpertReview
+          ? 'Hasil utama perlu dikonfirmasi ulang'
+          : 'Urutan probabilitas dari model real',
+      child: Column(
+        children: [
+          for (var index = 0; index < candidates.length; index++)
+            _buildPredictionCandidateRow(candidates[index], index),
+          if ((widget.result.predictionMargin ?? 0) < 0.20) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: Color(0xFFD97706), size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Selisih kandidat dekat. Ambil foto daun lebih dekat dan fokus untuk hasil lebih kuat.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF92400E),
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPredictionCandidateRow(PredictionCandidate candidate, int index) {
+    final percent = (candidate.confidence * 100).toStringAsFixed(1);
+    final isTop = index == 0;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: index == widget.result.topPredictions.length - 1 ? 0 : 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isTop ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isTop ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isTop ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                color: isTop ? Colors.white : const Color(0xFF475569),
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              candidate.diseaseName,
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                height: 1.25,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$percent%',
+            style: TextStyle(
+              color: isTop ? const Color(0xFF047857) : const Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
       ),
     );
   }

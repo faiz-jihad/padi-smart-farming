@@ -93,6 +93,9 @@ class DashboardController extends Controller
 
         $notifications = collect();
         $unreadCount = 0;
+        $totalCount = 0;
+        $alertCount = 0;
+        $infoCount = 0;
 
         if ($adminId && Schema::hasTable('notifications')) {
             $notifications = Notification::query()
@@ -104,11 +107,65 @@ class DashboardController extends Controller
                 ->where('user_id', $adminId)
                 ->whereNull('read_at')
                 ->count();
+
+            $totalCount = Notification::query()
+                ->where('user_id', $adminId)
+                ->count();
+
+            $alertCount = Notification::query()
+                ->where('user_id', $adminId)
+                ->where(function ($q) {
+                    $q->where('type', 'like', '%alert%')
+                      ->orWhere('type', 'like', '%warning%')
+                      ->orWhere('type', 'like', '%disease%')
+                      ->orWhere('type', 'like', '%weather%')
+                      ->orWhere('type', 'like', '%bencana%');
+                })
+                ->count();
+
+            $infoCount = max(0, $totalCount - $alertCount);
         }
 
         return view('admin.notifications.index', [
             'notifications' => $notifications,
             'unreadCount' => $unreadCount,
+            'totalCount' => $totalCount,
+            'alertCount' => $alertCount,
+            'infoCount' => $infoCount,
+        ]);
+    }
+
+    public function latestNotifications(): JsonResponse
+    {
+        $adminId = Auth::id();
+        $unreadCount = 0;
+        $items = [];
+
+        if ($adminId && Schema::hasTable('notifications')) {
+            $unreadCount = Notification::query()
+                ->where('user_id', $adminId)
+                ->whereNull('read_at')
+                ->count();
+
+            $items = Notification::query()
+                ->where('user_id', $adminId)
+                ->latest('id')
+                ->limit(6)
+                ->get()
+                ->map(fn ($n) => [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'title' => $n->title,
+                    'body' => $n->body,
+                    'is_read' => $n->read_at !== null,
+                    'created_at_human' => $n->created_at?->diffForHumans(),
+                ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'unread_count' => $unreadCount,
+            'items' => $items,
         ]);
     }
 }

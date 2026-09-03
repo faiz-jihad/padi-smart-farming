@@ -1,15 +1,91 @@
 /* ==========================================================
-   P.A.D.I Geo Intelligence Map — Administrative Drill-Down
-   Design System aligned with admin color tokens.
-   
-   Tokens inherited from admin layout:
-     --admin-primary:  #166534
-     --admin-surface:  #ffffff
-     --admin-border:   #d6ead8
-     --admin-text:     #0f3d16
+   P.A.D.I Geo Intelligence & Interactive Weather Radar Map
+   Ultra-Clean, High-Aesthetic Agricultural Design System
    ========================================================== */
 
-/* ── Leaflet Tile & Image Resets ────────────────────────── */
+/* ── Page Layout & Header ────────────────────────────────── */
+.admin-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.admin-page__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.admin-page__title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.admin-page__subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 4px 0 0;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.admin-page__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.admin-btn--primary {
+    background: #166534;
+    border: 1px solid #166534;
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(22, 101, 52, 0.2);
+}
+
+.admin-btn--primary:hover {
+    background: #14532d;
+    border-color: #14532d;
+    box-shadow: 0 4px 10px rgba(22, 101, 52, 0.3);
+}
+
+.admin-btn--secondary {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.admin-btn--secondary:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a !important;
+}
+
+/* ── Leaflet Core Resets & Canvas ────────────────────────── */
 .leaflet-pane,
 .leaflet-tile,
 .leaflet-marker-icon,
@@ -36,92 +112,292 @@
     max-width: none !important;
 }
 
-/* ── Map Container ─────────────────────────────────────── */
-
+/* ── Map Container Wrapper ───────────────────────────────── */
 .geo-map-wrapper {
     position: relative;
     width: 100%;
     overflow: hidden;
+    background: #f1f5f9;
+    border-radius: 0 0 12px 12px;
 }
 
 .geo-map {
     width: 100% !important;
-    height: 640px !important;
-    min-height: 640px !important;
-    border-radius: 0;
+    height: 680px !important;
+    min-height: 680px !important;
     display: block !important;
     background: #e2e8f0;
 }
 
-/* ── Breadcrumb Navigation Bar ─────────────────────────── */
-
-.geo-breadcrumb {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 1000;
-    background: #ffffff;
-    border: 1px solid #d6ead8;
-    border-radius: 8px;
-    padding: 8px 14px;
+/* ── Region Toolbar Bar ──────────────────────────────────── */
+.geo-region-bar {
     display: flex;
     align-items: center;
-    gap: 0;
+    justify-content: space-between;
+    gap: 12px;
     flex-wrap: wrap;
-    box-shadow: 0 2px 8px rgba(22, 101, 52, 0.1);
-    max-width: calc(100% - 140px);
+    padding: 10px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.geo-region-bar__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.geo-region-bar__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.geo-region-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.geo-region-bar__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.geo-region-select {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0f172a;
+    background: #f8fafc;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.geo-region-select:hover {
+    border-color: #94a3b8;
+    background: #ffffff;
+}
+
+.geo-region-select:focus {
+    border-color: #166534;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.12);
+}
+
+.geo-btn-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.geo-btn-chip:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.geo-btn-chip--active,
+.geo-btn-chip.is-active {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #14532d;
+    font-weight: 700;
+}
+
+.geo-btn-chip--primary {
+    background: #166534;
+    border-color: #166534;
+    color: #ffffff;
+}
+
+.geo-btn-chip--primary:hover {
+    background: #14532d;
+    color: #ffffff;
+}
+
+.geo-info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #166534;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 5px 11px;
+    border-radius: 7px;
+    white-space: nowrap;
+}
+
+/* ── Top Floating Overlay Controls ──────────────────────── */
+.geo-top-controls {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.geo-breadcrumb {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 10px;
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    pointer-events: auto;
+    max-width: 60%;
 }
 
 .geo-breadcrumb__item {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: #64748b;
     cursor: default;
     white-space: nowrap;
+    transition: color 0.15s ease;
 }
 
 .geo-breadcrumb__item.is-link {
     color: #166534;
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
 }
 
 .geo-breadcrumb__item.is-link:hover {
-    color: #14532d;
+    color: #0f3d16;
+    text-decoration: underline;
 }
 
 .geo-breadcrumb__item.is-current {
-    color: #0f3d16;
+    color: #0f172a;
     font-weight: 700;
-    cursor: default;
-    text-decoration: none;
 }
 
 .geo-breadcrumb__sep {
     color: #94a3b8;
-    margin: 0 6px;
     font-size: 0.75rem;
-    user-select: none;
 }
 
-/* ── Side Panel ─────────────────────────────────────────── */
+/* Basemap & Layer Control Group */
+.geo-map-toggles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    pointer-events: auto;
+}
 
+.geo-toggle-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #475569;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.geo-toggle-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.geo-toggle-btn.is-active {
+    background: #166534;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(22, 101, 52, 0.25);
+}
+
+/* ── Level Indicator Pill ────────────────────────────────── */
+.geo-level-pill {
+    position: absolute;
+    bottom: 24px;
+    left: 14px;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(6px);
+    color: #ffffff;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.geo-level-pill__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: geo-pulse 2s infinite;
+}
+
+@keyframes geo-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* ── Side Panel Drawer ───────────────────────────────────── */
 .geo-side-panel {
     position: absolute;
     top: 0;
     right: 0;
-    width: 320px;
+    width: 400px;
     height: 100%;
     z-index: 1050;
     background: #ffffff;
-    border-left: 1px solid #d6ead8;
+    border-left: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: -4px 0 20px rgba(22, 101, 52, 0.08);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
 }
 
 .geo-side-panel.is-open {
@@ -129,145 +405,421 @@
 }
 
 .geo-side-panel__header {
-    padding: 16px 18px 14px;
-    border-bottom: 1px solid #d6ead8;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-shrink: 0;
-    background: #f0fdf4;
+    background: #ffffff;
 }
 
 .geo-side-panel__level-badge {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: #166534;
     background: #dcfce7;
     border: 1px solid #bbf7d0;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 2px 8px;
     display: inline-block;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .geo-side-panel__title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #0f3d16;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
     margin: 0;
-    line-height: 1.3;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
 }
 
 .geo-side-panel__subtitle {
-    font-size: 0.78rem;
-    color: #4b7c5e;
-    margin: 3px 0 0;
+    font-size: 0.76rem;
+    color: #64748b;
+    margin: 2px 0 0;
+    font-weight: 500;
 }
 
 .geo-side-panel__close {
-    background: none;
+    background: #f1f5f9;
     border: none;
     cursor: pointer;
     color: #64748b;
-    padding: 4px;
-    border-radius: 4px;
-    line-height: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
     flex-shrink: 0;
-    margin-left: 8px;
+    margin-left: 10px;
     margin-top: 2px;
 }
 
 .geo-side-panel__close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* ── Panel Segmented Tabs ───────────────────────────────── */
+.geo-panel-tabs {
+    display: flex;
     background: #f1f5f9;
-    color: #334155;
+    padding: 3px;
+    margin: 10px 16px 4px;
+    border-radius: 8px;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.geo-panel-tab {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.geo-panel-tab:hover {
+    color: #0f172a;
+}
+
+.geo-panel-tab.is-active {
+    color: #166534;
+    background: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .geo-side-panel__body {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 18px;
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.geo-side-panel__body::-webkit-scrollbar {
+    width: 5px;
+}
+.geo-side-panel__body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
 .geo-side-panel__footer {
-    padding: 14px 18px;
-    border-top: 1px solid #d6ead8;
+    padding: 12px 16px;
+    border-top: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
     flex-shrink: 0;
     background: #ffffff;
 }
 
-/* ── Side Panel Stat Blocks ─────────────────────────────── */
-
-.geo-stat-section {
-    margin-bottom: 16px;
+/* ── Weather Hero Card ──────────────────────────────────── */
+.geo-weather-hero {
+    background: linear-gradient(135deg, #065f46 0%, #0d9488 100%);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(6, 95, 70, 0.2);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
-.geo-stat-section__label {
-    font-size: 0.7rem;
+.geo-weather-hero::after {
+    content: '';
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    width: 110px;
+    height: 110px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.geo-weather-hero__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.geo-weather-hero__condition-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #64748b;
-    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 2px 9px;
+    border-radius: 100px;
+    text-transform: capitalize;
 }
 
-.geo-stat-grid {
+.geo-weather-hero__source {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.geo-weather-hero__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.geo-weather-hero__temp {
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.geo-weather-hero__feels {
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.geo-weather-hero__icon-box {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+/* ── 4-Grid Meteorological Metric Cards ─────────────────── */
+.geo-metric-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
 }
 
-.geo-stat-card {
+.geo-metric-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: 9px;
+    padding: 9px 11px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    transition: all 0.15s ease;
 }
 
-.geo-stat-card__value {
-    font-size: 1.3rem;
+.geo-metric-card:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+
+.geo-metric-card__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.geo-metric-card__icon--humidity { background: #e0f2fe; color: #0284c7; }
+.geo-metric-card__icon--wind     { background: #f1f5f9; color: #475569; }
+.geo-metric-card__icon--rain     { background: #dbeafe; color: #2563eb; }
+.geo-metric-card__icon--pressure { background: #fef3c7; color: #d97706; }
+.geo-metric-card__icon--soil-temp{ background: #ffedd5; color: #ea580c; }
+.geo-metric-card__icon--soil-moist{ background: #dcfce7; color: #16a34a; }
+
+.geo-metric-card__val {
+    font-size: 0.88rem;
     font-weight: 700;
-    color: #0f3d16;
-    line-height: 1;
-    margin-bottom: 4px;
+    color: #0f172a;
+    line-height: 1.2;
 }
 
-.geo-stat-card__label {
-    font-size: 0.72rem;
+.geo-metric-card__lbl {
+    font-size: 0.66rem;
     color: #64748b;
     font-weight: 500;
 }
 
-/* ── Risk Badges ────────────────────────────────────────── */
+/* ── Advisory & Recommendations Alert ───────────────────── */
+.geo-advisory-card {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 9px;
+    padding: 10px 12px;
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+}
+
+.geo-advisory-card--warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.geo-advisory-card__icon {
+    color: #166534;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.geo-advisory-card--warning .geo-advisory-card__icon {
+    color: #b45309;
+}
+
+.geo-advisory-card__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #166534;
+    margin-bottom: 2px;
+}
+
+.geo-advisory-card--warning .geo-advisory-card__title {
+    color: #92400e;
+}
+
+.geo-advisory-card__desc {
+    font-size: 0.74rem;
+    color: #1e3a2b;
+    line-height: 1.4;
+}
+
+.geo-advisory-card--warning .geo-advisory-card__desc {
+    color: #78350f;
+}
+
+/* ── 5-Day Forecast Strip ───────────────────────────────── */
+.geo-forecast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.geo-forecast-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 11px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    font-size: 0.76rem;
+    transition: all 0.15s ease;
+}
+
+.geo-forecast-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+
+.geo-forecast-item__day {
+    font-weight: 700;
+    color: #0f172a;
+    min-width: 70px;
+}
+
+.geo-forecast-item__cond {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    flex: 1;
+    font-weight: 500;
+    padding: 0 6px;
+}
+
+.geo-forecast-item__temp {
+    font-weight: 700;
+    color: #0f172a;
+    text-align: right;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.geo-forecast-item__pop {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+/* ── Agronomy & Risk Blocks ─────────────────────────────── */
+.geo-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #475569;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
 .geo-risk-grid {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
 }
 
 .geo-risk-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 7px 10px;
+    padding: 6px 11px;
     background: #f8fafc;
-    border-radius: 6px;
+    border-radius: 7px;
     border: 1px solid #e2e8f0;
 }
 
 .geo-risk-row__name {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 600;
     color: #334155;
 }
 
 .geo-risk-badge {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 100px;
@@ -275,36 +827,35 @@
     letter-spacing: 0.04em;
 }
 
-.geo-risk-badge--low {
+.geo-risk-badge.is-low {
     background: #dcfce7;
     color: #166534;
     border: 1px solid #bbf7d0;
 }
 
-.geo-risk-badge--medium {
+.geo-risk-badge.is-medium {
     background: #fef9c3;
     color: #854d0e;
     border: 1px solid #fde68a;
 }
 
-.geo-risk-badge--high {
+.geo-risk-badge.is-high {
     background: #fee2e2;
     color: #991b1b;
     border: 1px solid #fecaca;
 }
 
-/* ── Progress Bar (Irrigation) ──────────────────────────── */
-
+/* ── Progress Bars ──────────────────────────────────────── */
 .geo-progress {
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 .geo-progress__label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
-    font-size: 0.78rem;
+    margin-bottom: 4px;
+    font-size: 0.74rem;
     font-weight: 600;
     color: #334155;
 }
@@ -325,17 +876,38 @@
     height: 100%;
     background: #16a34a;
     border-radius: 100px;
-    transition: width 0.5s ease;
+    transition: width 0.4s ease;
 }
 
-/* ── Agriculture Bar ────────────────────────────────────── */
+.geo-progress__fill--soil {
+    background: linear-gradient(90deg, #ca8a04 0%, #16a34a 100%);
+}
 
+.geo-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+}
+
+.geo-water-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.geo-water-badge.is-safe { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.geo-water-badge.is-warning { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+.geo-water-badge.is-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* ── Agriculture Status Bar ─────────────────────────────── */
 .geo-agri-bar {
     display: flex;
-    height: 8px;
+    height: 7px;
     border-radius: 100px;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
     background: #e2e8f0;
 }
 
@@ -350,22 +922,22 @@
 
 .geo-agri-legend {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .geo-agri-legend__item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.72rem;
+    gap: 4px;
+    font-size: 0.7rem;
     color: #475569;
     font-weight: 500;
 }
 
 .geo-agri-legend__dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -375,35 +947,36 @@
 .geo-agri-legend__dot--idle     { background: #cbd5e1; }
 
 /* ── Panel Action Buttons ───────────────────────────────── */
-
 .geo-panel-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: 6px;
+    padding: 9px 14px;
     border-radius: 8px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
     border: none;
     cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s;
+    transition: all 0.15s ease;
     width: 100%;
     text-align: center;
+    text-decoration: none;
 }
 
 .geo-panel-btn--primary {
     background: #166534;
-    color: #ffffff;
+    color: #ffffff !important;
 }
 
 .geo-panel-btn--primary:hover {
     background: #14532d;
+    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.2);
 }
 
 .geo-panel-btn--secondary {
     background: #f0fdf4;
-    color: #166534;
+    color: #166534 !important;
     border: 1px solid #d6ead8;
 }
 
@@ -413,7 +986,7 @@
 
 .geo-panel-btn--back {
     background: #f8fafc;
-    color: #334155;
+    color: #334155 !important;
     border: 1px solid #e2e8f0;
 }
 
@@ -421,19 +994,65 @@
     background: #f1f5f9;
 }
 
-/* ── Map Loading Overlay ────────────────────────────────── */
-
-.geo-loading-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.75);
-    z-index: 1100;
+/* ── Custom Map Marker Pins ─────────────────────────────── */
+.geo-pin-marker {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+.geo-pin-bubble {
+    background: #ffffff;
+    border: 2px solid #166534;
+    border-radius: 100px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #166534;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.geo-pin-bubble:hover {
+    transform: scale(1.12);
+}
+
+.geo-inspect-pin {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.35), 0 4px 10px rgba(0,0,0,0.3);
+    animation: geo-pin-drop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes geo-pin-drop {
+    0% { transform: translateY(-20px) scale(0.5); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Loading Overlay ────────────────────────────────────── */
+.geo-loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(4px);
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease;
 }
 
 .geo-loading-overlay.is-visible {
@@ -442,114 +1061,25 @@
 }
 
 .geo-loading-spinner {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border: 3px solid #d6ead8;
     border-top-color: #166534;
     border-radius: 50%;
     animation: geo-spin 0.7s linear infinite;
 }
 
+.geo-loading-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #166534;
+}
+
 @keyframes geo-spin {
     to { transform: rotate(360deg); }
 }
 
-/* ── Level Indicator Pill ────────────────────────────────── */
-
-.geo-level-pill {
-    position: absolute;
-    bottom: 28px;
-    left: 12px;
-    z-index: 1000;
-    background: #0f3d16;
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 5px 12px;
-    border-radius: 100px;
-    box-shadow: 0 2px 8px rgba(15, 61, 22, 0.35);
-}
-
-/* ── Farm Popup ─────────────────────────────────────────── */
-
-.geo-farm-popup {
-    font-family: inherit;
-    min-width: 220px;
-    padding: 4px;
-}
-
-.geo-farm-popup__name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #0f3d16;
-    margin: 0 0 4px;
-}
-
-.geo-farm-popup__farmer {
-    font-size: 0.78rem;
-    color: #475569;
-    margin: 0 0 10px;
-}
-
-.geo-farm-popup__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 0.78rem;
-}
-
-.geo-farm-popup__row:last-of-type {
-    border-bottom: none;
-}
-
-.geo-farm-popup__key   { color: #64748b; font-weight: 500; }
-.geo-farm-popup__val   { color: #0f3d16; font-weight: 700; }
-
-.geo-farm-popup__link {
-    display: block;
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid #e2e8f0;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #166534;
-    text-decoration: none;
-}
-
-.geo-farm-popup__link:hover {
-    text-decoration: underline;
-}
-
-/* ── Water Status Badge ─────────────────────────────────── */
-
-.geo-water-badge {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 100px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.geo-water-badge--normal  { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-.geo-water-badge--limited { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-.geo-water-badge--critical{ background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* ── Divider ────────────────────────────────────────────── */
-
-.geo-divider {
-    height: 1px;
-    background: #e2e8f0;
-    margin: 14px 0;
-}
-
-/* ── Leaflet Polygon Tooltip ─────────────────────────────── */
-
+/* ── Tooltips & Legend ──────────────────────────────────── */
 .geo-polygon-tooltip {
     background: #0f3d16;
     color: #ffffff;
@@ -560,144 +1090,38 @@
     font-weight: 600;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
-
-.geo-polygon-tooltip::before {
-    display: none;
-}
-
-/* ── Region Selector Bar ─────────────────────────────────── */
-
-.geo-region-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    padding: 0.9rem 1.25rem;
-    border-bottom: 1px solid #d6ead8;
-}
-
-.geo-region-bar__label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #334155;
-    white-space: nowrap;
-}
-
-.geo-region-select {
-    padding: 6px 1px;
-    border: 1px solid #d6ead8;
-    border-radius: 6px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #0f3d16;
-    background: #ffffff;
-    cursor: pointer;
-    outline: none;
-}
-
-.geo-region-select:focus {
-    border-color: #166534;
-    box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.15);
-}
-
-/* ── Legend Strip ───────────────────────────────────────── */
+.geo-polygon-tooltip::before { display: none; }
 
 .geo-legend-strip {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.25rem;
     flex-wrap: wrap;
-    padding: 1rem 1.25rem;
+    padding: 0.8rem 1.25rem;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
 }
 
 .geo-legend-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
+    gap: 0.45rem;
+    font-size: 0.74rem;
     font-weight: 500;
     color: #475569;
 }
 
 .geo-legend-swatch {
-    width: 18px;
-    height: 12px;
+    width: 15px;
+    height: 9px;
     border-radius: 3px;
     flex-shrink: 0;
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
-
+/* ── Responsive Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
-    .geo-map { height: 450px; }
-    .geo-side-panel { width: 100%; top: auto; bottom: 0; height: 55%; border-left: none; border-top: 1px solid #d6ead8; transform: translateY(100%); }
+    .geo-map { height: 480px !important; min-height: 480px !important; }
+    .geo-side-panel { width: 100%; top: auto; bottom: 0; height: 65%; border-left: none; border-top: 1px solid #e2e8f0; transform: translateY(100%); }
     .geo-side-panel.is-open { transform: translateY(0); }
-    .geo-breadcrumb { max-width: calc(100% - 24px); }
-}
-
-/* ── Legacy weather-map compat (preserve existing styles) ── */
-
-.weather-map {
-    width: 100%;
-    height: 600px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
-
-.weather-marker-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.weather-marker {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.weather-marker:hover {
-    transform: scale(1.2);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-}
-
-.leaflet-control {
-    font-family: Poppins, sans-serif;
-}
-
-.leaflet-control-zoom {
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.6; }
-}
-
-.weather-marker-loading {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* ==========================================================
-   Navbar — Stay on top of Leaflet & remain visible on scroll
-   ========================================================== */
-
-.admin-navbar {
-    position: sticky;
-    top: 0;
-    z-index: 2000 !important;
-}
-
-.geo-map-wrapper {
-    position: relative;
-    z-index: 1;
+    .geo-top-controls { flex-direction: column; }
+    .geo-breadcrumb { max-width: 100%; }
 }

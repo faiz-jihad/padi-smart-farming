@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/admin/login');
 
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             'admin.web'      => EnsureAdminWebAccess::class,

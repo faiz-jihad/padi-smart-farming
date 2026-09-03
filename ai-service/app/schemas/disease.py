@@ -10,6 +10,12 @@ class ImageQualityResponse(BaseModel):
     warnings: list[str]
 
 
+class PredictionCandidateResponse(BaseModel):
+    disease_code: str
+    disease_name: str
+    confidence: float
+
+
 class DiseaseDetectionResponse(BaseModel):
     disease_code: str
     disease_name: str
@@ -19,3 +25,10 @@ class DiseaseDetectionResponse(BaseModel):
     needs_expert_review: bool
     model_version: str
     processing_time_ms: int
+    top_predictions: list[PredictionCandidateResponse]
+    prediction_margin: float
+    model_accuracy: float | None = None
+    # Status deteksi: "DETECTED", "UNCERTAIN", "INVALID_INPUT"
+    detection_status: str = "DETECTED"
+    # Pesan penjelasan untuk kondisi UNCERTAIN atau INVALID_INPUT
+    status_message: str | None = None

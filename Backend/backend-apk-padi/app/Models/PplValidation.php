@@ -23,4 +23,20 @@ class PplValidation extends Model
     {
         return $this->belongsTo(User::class, 'ppl_id');
     }
+
+    public function scan(): BelongsTo
+    {
+        return $this->belongsTo(DiseaseScan::class, 'scan_id');
+    }
+
+    /**
+     * Resolve the farmer who submitted this scan.
+     */
+    public function farmer(): BelongsTo
+    {
+        // farmer is accessed through the disease_scan -> farmer_id
+        return $this->belongsTo(User::class, 'scan_id', 'id')
+            ->join('disease_scans', 'disease_scans.id', '=', 'ppl_validations.scan_id')
+            ->select('users.*');
+    }
 }

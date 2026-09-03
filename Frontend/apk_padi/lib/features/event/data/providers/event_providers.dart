@@ -132,21 +132,56 @@ class EventsNotifier extends Notifier<List<EventModel>> {
     ];
   }
 
-  Future<void> registerForEvent(int eventId) async {
+  Future<EventModel?> registerForEvent(int eventId) async {
+    // Cari event sasaran
+    final existingIndex = state.indexWhere((e) => e.id == eventId);
+    if (existingIndex == -1) return null;
+
+    final targetEvent = state[existingIndex];
+
+    // Jika sudah terdaftar, jangan lakukan penambahan kuota berulang!
+    if (targetEvent.isRegistered) {
+      return targetEvent;
+    }
+
+    // Generate kode tiket deterministik/unik
+    final ticketNumber = (targetEvent.registeredCount + 1).toString().padLeft(4, '0');
+    final generatedCode = 'TKT-PAD-${eventId.toString().padLeft(3, '0')}-$ticketNumber';
+
+    final optimisticEvent = targetEvent.copyWith(
+      registeredCount: targetEvent.registeredCount + 1,
+      isRegistered: true,
+      ticketCode: targetEvent.ticketCode ?? generatedCode,
+      ticketStatus: 'active',
+      registeredAt: DateTime.now(),
+    );
+
+    // Update state secara optimis
     state = [
       for (final event in state)
-        if (event.id == eventId)
-          event.copyWith(
-            registeredCount: event.registeredCount + 1,
-            isRegistered: true,
-          )
-        else
-          event,
+        if (event.id == eventId) optimisticEvent else event,
     ];
 
     try {
       final service = ref.read(eventApiServiceProvider);
-      await service.registerForEvent(eventId);
+      final apiUpdatedEvent = await service.registerForEvent(eventId);
+      if (apiUpdatedEvent != null) {
+        state = [
+          for (final event in state)
+            if (event.id == eventId)
+              apiUpdatedEvent.copyWith(
+                ticketCode: apiUpdatedEvent.ticketCode ?? optimisticEvent.ticketCode,
+                ticketStatus: apiUpdatedEvent.ticketStatus ?? optimisticEvent.ticketStatus,
+                registeredAt: apiUpdatedEvent.registeredAt ?? optimisticEvent.registeredAt,
+                isRegistered: true,
+              )
+            else
+              event,
+        ];
+        return apiUpdatedEvent;
+      }
     } catch (_) {}
+
+    return optimisticEvent;
   }
 }

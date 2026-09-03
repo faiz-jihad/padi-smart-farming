@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
@@ -12,7 +13,6 @@ import 'package:padi/features/marketplace/presentation/widgets/marketplace_heade
 import 'package:padi/features/marketplace/presentation/widgets/marketplace_hero_banner.dart';
 import 'package:padi/features/marketplace/presentation/widgets/marketplace_price_ticker.dart';
 import 'package:padi/features/marketplace/presentation/widgets/marketplace_skeleton.dart';
-
 
 // ============================================================
 // MARKETPLACE API PROVIDER
@@ -25,35 +25,30 @@ final marketplaceApiServiceProvider =
   );
 });
 
-
 // ============================================================
 // MARKETPLACE LISTINGS PROVIDER
-//
-// Semua produk Marketplace berasal dari API yang sama.
-// Home juga menggunakan provider ini.
-//
-// Jadi data Home dan Marketplace tetap sinkron.
 // ============================================================
 
 final marketplaceListingsProvider =
-    FutureProvider.autoDispose<List<MarketListingModel>>((ref) async {
-  final service = ref.read(
-    marketplaceApiServiceProvider,
-  );
+    FutureProvider.autoDispose<List<MarketListingModel>>(
+  (ref) async {
+    final service = ref.read(
+      marketplaceApiServiceProvider,
+    );
 
-  try {
-    final listings = await service
-        .fetchListings()
-        .timeout(
-          const Duration(seconds: 8),
-        );
+    try {
+      final listings = await service
+          .fetchListings()
+          .timeout(
+            const Duration(seconds: 8),
+          );
 
-    return listings;
-  } catch (_) {
-    return <MarketListingModel>[];
-  }
-});
-
+      return listings;
+    } catch (_) {
+      return <MarketListingModel>[];
+    }
+  },
+);
 
 // ============================================================
 // MARKETPLACE SCREEN
@@ -65,13 +60,17 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
     this.initialCategory = 'all',
   });
 
-  /// Kategori yang dikirim dari Home.
+  /// Kategori awal.
   ///
-  /// gkp
-  /// gkg
-  /// beras
-  /// benih
-  /// all
+  /// Bisa berasal dari:
+  /// - constructor
+  /// - query parameter dari GoRouter
+  ///
+  /// Contoh:
+  /// /marketplace?category=gkp
+  /// /marketplace?category=gkg
+  /// /marketplace?category=beras
+  /// /marketplace?category=benih
   final String initialCategory;
 
   @override
@@ -79,21 +78,18 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
       _MarketplaceScreenState();
 }
 
-
 // ============================================================
 // STATE
 // ============================================================
 
 class _MarketplaceScreenState
     extends ConsumerState<MarketplaceScreen> {
-
   // ==========================================================
   // SEARCH
   // ==========================================================
 
   final TextEditingController _searchController =
       TextEditingController();
-
 
   // ==========================================================
   // FILTER
@@ -103,6 +99,11 @@ class _MarketplaceScreenState
 
   String _selectedSort = 'newest';
 
+  // ==========================================================
+  // LAST ROUTE CATEGORY
+  // ==========================================================
+
+  String _lastRouteCategory = '';
 
   // ==========================================================
   // INIT
@@ -117,9 +118,72 @@ class _MarketplaceScreenState
     );
   }
 
+  // ==========================================================
+  // ROUTE CATEGORY
+  // ==========================================================
+
+  String _getRouteCategory(BuildContext context) {
+    try {
+      final state = GoRouterState.of(context);
+
+      final queryCategory =
+          state.uri.queryParameters['category'];
+
+      if (queryCategory != null &&
+          queryCategory.trim().isNotEmpty) {
+        return _normalizeCategory(
+          queryCategory,
+        );
+      }
+    } catch (_) {
+      // Jika halaman tidak berada langsung di bawah GoRouter,
+      // gunakan initialCategory.
+    }
+
+    return _normalizeCategory(
+      widget.initialCategory,
+    );
+  }
 
   // ==========================================================
-  // UPDATE KETIKA ROUTE BERUBAH
+  // SYNC CATEGORY DARI ROUTE
+  // ==========================================================
+
+  void _syncRouteCategory(
+    BuildContext context,
+  ) {
+    final routeCategory =
+        _getRouteCategory(context);
+
+    if (_lastRouteCategory ==
+        routeCategory) {
+      return;
+    }
+
+    _lastRouteCategory =
+        routeCategory;
+
+    if (_selectedCategory !=
+        routeCategory) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        if (_selectedCategory !=
+            routeCategory) {
+          setState(() {
+            _selectedCategory =
+                routeCategory;
+          });
+        }
+      });
+    }
+  }
+
+  // ==========================================================
+  // UPDATE KETIKA CONSTRUCTOR BERUBAH
   // ==========================================================
 
   @override
@@ -130,69 +194,105 @@ class _MarketplaceScreenState
 
     if (oldWidget.initialCategory !=
         widget.initialCategory) {
-      final newCategory = _normalizeCategory(
+      final newCategory =
+          _normalizeCategory(
         widget.initialCategory,
       );
 
-      if (_selectedCategory != newCategory) {
+      if (_selectedCategory !=
+          newCategory) {
         setState(() {
-          _selectedCategory = newCategory;
+          _selectedCategory =
+              newCategory;
         });
       }
+
+      _lastRouteCategory = '';
     }
   }
-
 
   // ==========================================================
   // NORMALIZE CATEGORY
   // ==========================================================
 
-  String _normalizeCategory(String category) {
-    final value = category
-        .trim()
-        .toLowerCase();
+  String _normalizeCategory(
+    String category,
+  ) {
+    final value =
+        category.trim().toLowerCase();
 
     switch (value) {
+      // ======================================================
+      // GKP
+      // ======================================================
+
       case 'gkp':
       case 'gkp_panen':
+      case 'gkp-panen':
       case 'gabah_kering_panen':
+      case 'gabah-kering-panen':
+      case 'gabah kering panen':
         return 'gkp';
+
+      // ======================================================
+      // GKG
+      // ======================================================
 
       case 'gkg':
       case 'gkg_giling':
+      case 'gkg-giling':
       case 'gabah_kering_giling':
+      case 'gabah-kering-giling':
+      case 'gabah kering giling':
         return 'gkg';
+
+      // ======================================================
+      // BERAS
+      // ======================================================
 
       case 'beras':
       case 'beras_premium':
+      case 'beras-premium':
+      case 'beras super':
       case 'beras_super':
         return 'beras';
 
+      // ======================================================
+      // BENIH
+      // ======================================================
+
       case 'benih':
       case 'benih_bersertifikat':
+      case 'benih-bersertifikat':
+      case 'benih bersertifikat':
+      case 'bibit':
         return 'benih';
 
+      // ======================================================
+      // ALL
+      // ======================================================
+
       case 'all':
+      case '':
       default:
         return 'all';
     }
   }
 
-
-  // ==========================================================
+  // ============================================================
   // DISPOSE
-  // ==========================================================
+  // ============================================================
 
   @override
   void dispose() {
     _searchController.dispose();
+
     super.dispose();
   }
 
-
-  // ==========================================================
+  // ============================================================
   // CREATE LISTING
-  // ==========================================================
+  // ============================================================
 
   Future<void> _openCreateListing() async {
     final result = await context.push(
@@ -216,33 +316,47 @@ class _MarketplaceScreenState
     }
   }
 
-
-  // ==========================================================
+  // ============================================================
   // CHANGE CATEGORY
-  // ==========================================================
+  // ============================================================
 
-  void _changeCategory(String category) {
-    final normalized = _normalizeCategory(
-      category,
-    );
+  void _changeCategory(
+    String category,
+  ) {
+    final normalized =
+        _normalizeCategory(category);
 
     setState(() {
-      _selectedCategory = normalized;
+      _selectedCategory =
+          normalized;
     });
+
+    // ========================================================
+    // Update URL
+    // ========================================================
+
+    if (normalized == 'all') {
+      context.go(
+        '/marketplace',
+      );
+    } else {
+      context.go(
+        '/marketplace?category=$normalized',
+      );
+    }
   }
 
-
-  // ==========================================================
+  // ============================================================
   // FILTER LISTING
-  // ==========================================================
+  // ============================================================
 
   List<MarketListingModel> _filterListings(
     List<MarketListingModel> listings,
   ) {
-    var result = List<MarketListingModel>.from(
+    var result =
+        List<MarketListingModel>.from(
       listings,
     );
-
 
     // ========================================================
     // CATEGORY
@@ -250,48 +364,61 @@ class _MarketplaceScreenState
 
     if (_selectedCategory != 'all') {
       result = result.where((listing) {
-        final commodity = listing.commodity
-            .trim()
-            .toLowerCase();
+        final commodity =
+            listing.commodity
+                .trim()
+                .toLowerCase();
 
         switch (_selectedCategory) {
-
-          // --------------------------------------------------
-          // GKP PANEN
-          // --------------------------------------------------
+          // ==================================================
+          // GKP
+          // ==================================================
 
           case 'gkp':
             return commodity.contains('gkp') ||
-                commodity.contains('gabah kering panen') ||
-                commodity.contains('gkp panen');
+                commodity.contains(
+                  'gabah kering panen',
+                ) ||
+                commodity.contains(
+                  'gabah kering panen',
+                ) ||
+                commodity.contains(
+                  'gkp panen',
+                );
 
-
-          // --------------------------------------------------
-          // GKG GILING
-          // --------------------------------------------------
+          // ==================================================
+          // GKG
+          // ==================================================
 
           case 'gkg':
             return commodity.contains('gkg') ||
-                commodity.contains('gabah kering giling') ||
-                commodity.contains('gkg giling');
+                commodity.contains(
+                  'gabah kering giling',
+                ) ||
+                commodity.contains(
+                  'gkg giling',
+                );
 
-
-          // --------------------------------------------------
-          // BERAS PREMIUM
-          // --------------------------------------------------
+          // ==================================================
+          // BERAS
+          // ==================================================
 
           case 'beras':
-            return commodity.contains('beras');
+            return commodity.contains(
+              'beras',
+            );
 
-
-          // --------------------------------------------------
-          // BENIH BERSERTIFIKAT
-          // --------------------------------------------------
+          // ==================================================
+          // BENIH
+          // ==================================================
 
           case 'benih':
-            return commodity.contains('benih') ||
-                commodity.contains('bibit');
-
+            return commodity.contains(
+                  'benih',
+                ) ||
+                commodity.contains(
+                  'bibit',
+                );
 
           default:
             return true;
@@ -299,20 +426,20 @@ class _MarketplaceScreenState
       }).toList();
     }
 
-
     // ========================================================
     // SEARCH
     // ========================================================
 
-    final keyword = _searchController.text
-        .trim()
-        .toLowerCase();
+    final keyword =
+        _searchController.text
+            .trim()
+            .toLowerCase();
 
     if (keyword.isNotEmpty) {
       result = result.where((listing) {
-
-        final commodity = listing.commodity
-            .toLowerCase();
+        final commodity =
+            listing.commodity
+                .toLowerCase();
 
         final description =
             (listing.description ?? '')
@@ -326,52 +453,59 @@ class _MarketplaceScreenState
             (listing.farmerName ?? '')
                 .toLowerCase();
 
-        return commodity.contains(keyword) ||
-            description.contains(keyword) ||
-            variety.contains(keyword) ||
-            farmer.contains(keyword);
+        return commodity.contains(
+              keyword,
+            ) ||
+            description.contains(
+              keyword,
+            ) ||
+            variety.contains(
+              keyword,
+            ) ||
+            farmer.contains(
+              keyword,
+            );
       }).toList();
     }
-
 
     // ========================================================
     // SORT
     // ========================================================
 
     switch (_selectedSort) {
-
       case 'price_asc':
         result.sort(
-          (a, b) => a.pricePerUnit.compareTo(
+          (a, b) =>
+              a.pricePerUnit.compareTo(
             b.pricePerUnit,
           ),
         );
         break;
 
-
       case 'price_desc':
         result.sort(
-          (a, b) => b.pricePerUnit.compareTo(
+          (a, b) =>
+              b.pricePerUnit.compareTo(
             a.pricePerUnit,
           ),
         );
         break;
 
-
       case 'qty_desc':
         result.sort(
-          (a, b) => b.quantity.compareTo(
+          (a, b) =>
+              b.quantity.compareTo(
             a.quantity,
           ),
         );
         break;
 
-
       case 'newest':
       case 'relevance':
       default:
         result.sort(
-          (a, b) => b.id.compareTo(
+          (a, b) =>
+              b.id.compareTo(
             a.id,
           ),
         );
@@ -381,31 +515,77 @@ class _MarketplaceScreenState
     return result;
   }
 
-
-  // ==========================================================
+  // ============================================================
   // BUILD
-  // ==========================================================
+  // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    // ========================================================
+    // SYNC CATEGORY DARI URL
+    // ========================================================
 
-    final cartState = ref.watch(
-      cartProvider,
-    );
+    _syncRouteCategory(context);
 
-    final listingsAsync = ref.watch(
+    // ========================================================
+    // LANGUAGE
+    // ========================================================
+
+    final lang =
+        ref.watch(languageProvider);
+
+    final s = AppStrings(lang);
+
+    // ========================================================
+    // CART
+    // ========================================================
+
+    final cartState =
+        ref.watch(cartProvider);
+
+    // ========================================================
+    // LISTINGS
+    // ========================================================
+
+    final listingsAsync =
+        ref.watch(
       marketplaceListingsProvider,
     );
 
-    final isBuyer = ref.watch(
+    // ========================================================
+    // ROLE
+    // ========================================================
+
+    final isBuyer =
+        ref.watch(
       isBuyerRoleProvider,
     );
 
+    // ========================================================
+    // ROUTE CATEGORY
+    // ========================================================
+
+    final routeCategory =
+        _getRouteCategory(context);
+
+    // ========================================================
+    // Jika route membawa kategori dan berbeda,
+    // gunakan kategori route untuk tampilan saat ini.
+    // ========================================================
+
+    if (routeCategory !=
+            'all' &&
+        _selectedCategory ==
+            'all') {
+      _selectedCategory =
+          routeCategory;
+    }
 
     return Scaffold(
       backgroundColor:
           const Color(0xFFF5F7F4),
-
 
       // ======================================================
       // APP BAR
@@ -420,6 +600,8 @@ class _MarketplaceScreenState
         scrolledUnderElevation: 0,
 
         leading: IconButton(
+          tooltip: s.back,
+
           icon: const Icon(
             Icons.arrow_back_rounded,
             color: Colors.white,
@@ -437,7 +619,6 @@ class _MarketplaceScreenState
 
         titleSpacing: 0,
 
-
         // ====================================================
         // SEARCH
         // ====================================================
@@ -445,15 +626,19 @@ class _MarketplaceScreenState
         title: Container(
           height: 38,
 
-          margin: const EdgeInsets.only(
+          margin:
+              const EdgeInsets.only(
             right: 6,
           ),
 
-          decoration: BoxDecoration(
+          decoration:
+              BoxDecoration(
             color: Colors.white,
 
             borderRadius:
-                BorderRadius.circular(8),
+                BorderRadius.circular(
+              8,
+            ),
           ),
 
           child: TextField(
@@ -464,18 +649,39 @@ class _MarketplaceScreenState
               setState(() {});
             },
 
+            style:
+                const TextStyle(
+              color:
+                  Color(0xFF17251E),
+              fontSize: 13,
+              fontWeight:
+                  FontWeight.w600,
+            ),
+
             decoration:
-                const InputDecoration(
+                InputDecoration(
+              isDense: true,
+
+              filled: true,
+
+              fillColor:
+                  Colors.white,
+
               hintText:
-                  'Cari gabah panen, beras, varietas...',
+                  s.searchMarketplaceHint,
+
+              hintStyle:
+                  const TextStyle(
+                color:
+                    Color(0xFF999999),
+                fontSize: 12,
+              ),
 
               prefixIcon:
-                  Icon(
+                  const Icon(
                 Icons.search_rounded,
-
                 color:
                     Color(0xFF777777),
-
                 size: 22,
               ),
 
@@ -489,7 +695,8 @@ class _MarketplaceScreenState
                   InputBorder.none,
 
               contentPadding:
-                  EdgeInsets.symmetric(
+                  const EdgeInsets
+                      .symmetric(
                 horizontal: 8,
                 vertical: 8,
               ),
@@ -497,35 +704,30 @@ class _MarketplaceScreenState
           ),
         ),
 
-
         // ====================================================
         // ACTION
         // ====================================================
 
         actions: [
-
-          // --------------------------------------------------
+          // ==================================================
           // CART
-          // --------------------------------------------------
+          // ==================================================
 
           Stack(
             clipBehavior:
                 Clip.none,
 
             children: [
-
               IconButton(
                 tooltip:
-                    'Keranjang',
+                    s.buyerCart,
 
                 icon:
                     const Icon(
                   Icons
                       .shopping_cart_outlined,
-
                   color:
                       Colors.white,
-
                   size: 22,
                 ),
 
@@ -536,8 +738,9 @@ class _MarketplaceScreenState
                 },
               ),
 
-
-              if (cartState.totalCount > 0)
+              if (cartState
+                      .totalCount >
+                  0)
                 Positioned(
                   top: 4,
                   right: 4,
@@ -554,7 +757,6 @@ class _MarketplaceScreenState
                         const BoxDecoration(
                       color:
                           Color(0xFFEF4444),
-
                       shape:
                           BoxShape.circle,
                     ),
@@ -562,17 +764,17 @@ class _MarketplaceScreenState
                     alignment:
                         Alignment.center,
 
-                    child:
-                        Text(
-                      '${cartState.totalCount}',
+                    child: Text(
+                      cartState.totalCount >
+                              99
+                          ? '99+'
+                          : '${cartState.totalCount}',
 
                       style:
                           const TextStyle(
                         color:
                             Colors.white,
-
-                        fontSize: 9,
-
+                        fontSize: 8,
                         fontWeight:
                             FontWeight.bold,
                       ),
@@ -582,22 +784,21 @@ class _MarketplaceScreenState
             ],
           ),
 
-
-          // --------------------------------------------------
+          // ==================================================
           // KONTRAK / PENAWARAN
-          // --------------------------------------------------
+          // ==================================================
 
           IconButton(
-            tooltip:
-                isBuyer
-                    ? 'Kontrak Saya'
-                    : 'Penawaran Saya',
+            tooltip: isBuyer
+                ? s.buyerOrders
+                : s.buyerOffers,
 
-            icon:
-                Icon(
+            icon: Icon(
               isBuyer
-                  ? Icons.receipt_long_rounded
-                  : Icons.gavel_rounded,
+                  ? Icons
+                      .receipt_long_rounded
+                  : Icons
+                      .gavel_rounded,
 
               color:
                   Colors.white,
@@ -606,7 +807,6 @@ class _MarketplaceScreenState
             ),
 
             onPressed: () {
-
               if (isBuyer) {
                 context.push(
                   '/buyer/orders',
@@ -619,22 +819,29 @@ class _MarketplaceScreenState
             },
           ),
 
-
-          // --------------------------------------------------
+          // ==================================================
           // REFRESH
-          // --------------------------------------------------
+          // ==================================================
 
           IconButton(
             tooltip:
+                switch (lang) {
+              AppLanguage.id =>
+                'Segarkan',
+
+              AppLanguage.jv =>
+                'Anyari',
+
+              AppLanguage.en =>
                 'Refresh',
+            },
 
             icon:
                 const Icon(
-              Icons.refresh_rounded,
-
+              Icons
+                  .refresh_rounded,
               color:
                   Colors.white,
-
               size: 22,
             ),
 
@@ -651,7 +858,6 @@ class _MarketplaceScreenState
         ],
       ),
 
-
       // ======================================================
       // FLOATING BUTTON
       // ======================================================
@@ -660,7 +866,8 @@ class _MarketplaceScreenState
           isBuyer
               ? (
                   cartState.hasItems
-                      ? FloatingActionButton.extended(
+                      ? FloatingActionButton
+                          .extended(
                           onPressed: () {
                             context.push(
                               '/cart',
@@ -674,63 +881,64 @@ class _MarketplaceScreenState
                           foregroundColor:
                               Colors.white,
 
+                          elevation: 4,
+
                           icon:
                               const Icon(
                             Icons
                                 .shopping_cart_rounded,
-
                             size: 20,
                           ),
 
-                          label:
-                              Text(
-                            'Keranjang (${cartState.totalCount})',
+                          label: Text(
+                            '${s.buyerCart} '
+                            '(${cartState.totalCount})',
 
                             style:
                                 const TextStyle(
-                              fontSize:
-                                  13,
-
                               fontWeight:
-                                  FontWeight.w800,
+                                  FontWeight
+                                      .w800,
+                              fontSize:
+                                  13.5,
                             ),
                           ),
                         )
                       : null
                 )
-              : FloatingActionButton.extended(
+              : FloatingActionButton
+                  .extended(
                   onPressed:
                       _openCreateListing,
 
                   backgroundColor:
-                      HomeColors.primaryGreen,
+                      HomeColors
+                          .primaryGreen,
 
                   foregroundColor:
                       Colors.white,
+
+                  elevation: 4,
 
                   icon:
                       const Icon(
                     Icons
                         .add_shopping_cart_rounded,
-
                     size: 20,
                   ),
 
-                  label:
-                      const Text(
-                    'Mulai Jual Panen',
+                  label: Text(
+                    s.startSelling,
 
                     style:
-                        TextStyle(
-                      fontSize:
-                          13,
-
+                        const TextStyle(
                       fontWeight:
                           FontWeight.w800,
+                      fontSize:
+                          13.5,
                     ),
                   ),
                 ),
-
 
       // ======================================================
       // BODY
@@ -753,20 +961,17 @@ class _MarketplaceScreenState
           );
         },
 
-
-        child: listingsAsync.when(
-
+        child:
+            listingsAsync.when(
           // ==================================================
           // DATA
           // ==================================================
 
           data: (listings) {
-
             final filteredListings =
                 _filterListings(
               listings,
             );
-
 
             return ListView(
               physics:
@@ -781,7 +986,6 @@ class _MarketplaceScreenState
               ),
 
               children: [
-
                 // ==========================================
                 // HEADER MARKETPLACE
                 // ==========================================
@@ -811,7 +1015,8 @@ class _MarketplaceScreenState
                       listings.length,
 
                   filteredListings:
-                      filteredListings.length,
+                      filteredListings
+                          .length,
 
                   onSearchChanged:
                       () {
@@ -819,11 +1024,9 @@ class _MarketplaceScreenState
                   },
                 ),
 
-
                 const SizedBox(
                   height: 6,
                 ),
-
 
                 // ==========================================
                 // PRICE TICKER
@@ -834,11 +1037,9 @@ class _MarketplaceScreenState
                       listings,
                 ),
 
-
                 const SizedBox(
                   height: 8,
                 ),
-
 
                 // ==========================================
                 // HERO
@@ -864,12 +1065,12 @@ class _MarketplaceScreenState
                   ),
                 ],
 
-
                 // ==========================================
                 // HASIL PRODUK
                 // ==========================================
 
-                if (filteredListings.isEmpty)
+                if (filteredListings
+                    .isEmpty)
                   _buildEmptyState(
                     context,
                   )
@@ -890,7 +1091,8 @@ class _MarketplaceScreenState
                           const NeverScrollableScrollPhysics(),
 
                       itemCount:
-                          filteredListings.length,
+                          filteredListings
+                              .length,
 
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
@@ -912,11 +1114,9 @@ class _MarketplaceScreenState
                         context,
                         index,
                       ) {
-
                         final listing =
                             filteredListings[
                                 index];
-
 
                         return MarketListingCard(
                           listing:
@@ -934,7 +1134,6 @@ class _MarketplaceScreenState
               ],
             );
           },
-
 
           // ==================================================
           // LOADING
@@ -963,12 +1162,14 @@ class _MarketplaceScreenState
             );
           },
 
-
           // ==================================================
           // ERROR
           // ==================================================
 
-          error: (error, stack) {
+          error: (
+            error,
+            stack,
+          ) {
             return ListView(
               physics:
                   const AlwaysScrollableScrollPhysics(
@@ -996,7 +1197,6 @@ class _MarketplaceScreenState
     );
   }
 
-
   // ==========================================================
   // EMPTY STATE
   // ==========================================================
@@ -1004,13 +1204,12 @@ class _MarketplaceScreenState
   Widget _buildEmptyState(
     BuildContext context,
   ) {
-
     final hasFilter =
-        _selectedCategory != 'all' ||
-        _searchController.text
-            .trim()
-            .isNotEmpty;
-
+        _selectedCategory !=
+                'all' ||
+            _searchController.text
+                .trim()
+                .isNotEmpty;
 
     return Container(
       margin:
@@ -1025,7 +1224,9 @@ class _MarketplaceScreenState
             Colors.white,
 
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(
+          12,
+        ),
 
         border:
             Border.all(
@@ -1037,7 +1238,6 @@ class _MarketplaceScreenState
       child:
           Column(
         children: [
-
           Container(
             width: 68,
             height: 68,
@@ -1046,7 +1246,6 @@ class _MarketplaceScreenState
                 const BoxDecoration(
               color:
                   Color(0xFFF4F8F4),
-
               shape:
                   BoxShape.circle,
             ),
@@ -1065,11 +1264,9 @@ class _MarketplaceScreenState
             ),
           ),
 
-
           const SizedBox(
             height: 14,
           ),
-
 
           Text(
             hasFilter
@@ -1092,11 +1289,9 @@ class _MarketplaceScreenState
             ),
           ),
 
-
           const SizedBox(
             height: 6,
           ),
-
 
           Text(
             hasFilter
@@ -1116,7 +1311,6 @@ class _MarketplaceScreenState
             ),
           ),
 
-
           if (hasFilter) ...[
             const SizedBox(
               height: 16,
@@ -1134,6 +1328,10 @@ class _MarketplaceScreenState
                   _searchController
                       .clear();
                 });
+
+                context.go(
+                  '/marketplace',
+                );
               },
 
               icon:
@@ -1167,7 +1365,6 @@ class _MarketplaceScreenState
     );
   }
 
-
   // ==========================================================
   // ERROR STATE
   // ==========================================================
@@ -1175,7 +1372,6 @@ class _MarketplaceScreenState
   Widget _buildErrorState(
     BuildContext context,
   ) {
-
     return Container(
       margin:
           const EdgeInsets.all(12),
@@ -1189,7 +1385,9 @@ class _MarketplaceScreenState
             Colors.white,
 
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(
+          12,
+        ),
 
         border:
             Border.all(
@@ -1201,22 +1399,16 @@ class _MarketplaceScreenState
       child:
           Column(
         children: [
-
           const Icon(
             Icons.cloud_off_rounded,
-
-            size:
-                42,
-
+            size: 42,
             color:
                 Color(0xFF94A3B8),
           ),
 
-
           const SizedBox(
             height: 12,
           ),
-
 
           const Text(
             'Gagal Memuat Data',
@@ -1234,11 +1426,9 @@ class _MarketplaceScreenState
             ),
           ),
 
-
           const SizedBox(
             height: 6,
           ),
-
 
           const Text(
             'Periksa koneksi internet lalu coba lagi.',
@@ -1256,11 +1446,9 @@ class _MarketplaceScreenState
             ),
           ),
 
-
           const SizedBox(
             height: 16,
           ),
-
 
           FilledButton.icon(
             onPressed: () {

@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:padi/features/event/data/models/event_model.dart';
 import 'package:padi/features/event/data/providers/event_providers.dart';
+import 'package:padi/features/event/presentation/widgets/event_ticket_dialog.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
-  const EventDetailScreen({
-    super.key,
-    required this.event,
-  });
+  const EventDetailScreen({super.key, required this.event});
 
   final EventModel event;
 
@@ -18,78 +16,143 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
-  bool _isRegistered = false;
+  bool _isRegistering = false;
 
-  void _handleRegistration() {
-    if (_isRegistered) return;
+  void _handleRegistration(EventModel currentEvent) async {
+    if (currentEvent.isRegistered || _isRegistering) {
+      _showTicketDialog(currentEvent);
+      return;
+    }
 
-    setState(() => _isRegistered = true);
-    ref.read(eventsProvider.notifier).registerForEvent(widget.event.id);
+    setState(() => _isRegistering = true);
 
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(HomeRadius.xl),
-        ),
-        backgroundColor: Colors.white,
-        title: const Row(
-          children: [
-            Icon(
-              Icons.check_circle_rounded,
-              color: HomeColors.primaryGreen,
-              size: 26,
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Pendaftaran Berhasil!',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+    try {
+      final updated = await ref.read(eventsProvider.notifier).registerForEvent(currentEvent.id);
+      final activeEvent = updated ?? currentEvent.copyWith(isRegistered: true);
+
+      if (!mounted) return;
+
+      showDialog<void>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(HomeRadius.xl),
+          ),
+          backgroundColor: Colors.white,
+          title: const Row(
+            children: [
+              Icon(
+                Icons.check_circle_rounded,
+                color: HomeColors.primaryGreen,
+                size: 26,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Pendaftaran Berhasil!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: HomeColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Anda telah resmi terdaftar pada acara "${activeEvent.title}". Tiket digital Anda telah aktif!',
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
                   color: HomeColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: HomeColors.primaryGreen.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: HomeColors.primaryGreen.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.confirmation_number_rounded, color: HomeColors.primaryGreen, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        activeEvent.ticketCode ?? 'TKT-PAD-${activeEvent.id.toString().padLeft(3, '0')}-ACTIVE',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          color: HomeColors.primaryGreen,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Nanti Saja', style: TextStyle(color: HomeColors.textSecondary)),
+            ),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogCtx);
+                _showTicketDialog(activeEvent);
+              },
+              icon: const Icon(Icons.qr_code_rounded, size: 16),
+              label: const Text('Buka E-Tiket', style: TextStyle(fontWeight: FontWeight.w800)),
+              style: FilledButton.styleFrom(
+                backgroundColor: HomeColors.primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(HomeRadius.md),
                 ),
               ),
             ),
           ],
         ),
-        content: Text(
-          'Anda telah resmi terdaftar pada acara "${widget.event.title}".',
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.45,
-            color: HomeColors.textPrimary,
-          ),
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            style: FilledButton.styleFrom(
-              backgroundColor: HomeColors.primaryGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(HomeRadius.md),
-              ),
-            ),
-            child: const Text(
-              'Tutup',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRegistering = false);
+      }
+    }
+  }
+
+  void _showTicketDialog(EventModel event) {
+    EventTicketDialog.show(
+      context,
+      event: event,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final event = widget.event;
-    final registeredCount =
-        _isRegistered ? event.registeredCount + 1 : event.registeredCount;
+    // Watch eventsProvider reaktif agar jika event diupdate di state, detail langsung sinkron
+    final allEvents = ref.watch(eventsProvider);
+    final event = allEvents.firstWhere(
+      (e) => e.id == widget.event.id,
+      orElse: () => widget.event,
+    );
+
+    final isRegistered = event.isRegistered;
+    final registeredCount = event.registeredCount;
     final safeQuota = event.quota > 0 ? event.quota : 50;
     final progress = (registeredCount / safeQuota).clamp(0.0, 1.0).toDouble();
-    final remainingQuota =
-        (safeQuota - registeredCount).clamp(0, safeQuota).toInt();
+    final remainingQuota = (safeQuota - registeredCount)
+        .clamp(0, safeQuota)
+        .toInt();
+    final isFull = remainingQuota <= 0 && !isRegistered;
 
     return Scaffold(
       backgroundColor: HomeColors.background,
@@ -113,11 +176,16 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           event.categoryLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
         ),
+        actions: [
+          if (isRegistered)
+            IconButton(
+              tooltip: 'Lihat E-Tiket',
+              icon: const Icon(Icons.qr_code_2_rounded, size: 24),
+              onPressed: () => _showTicketDialog(event),
+            ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -130,6 +198,60 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               ),
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
+                if (isRegistered) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(HomeRadius.md),
+                      border: Border.all(color: const Color(0xFF86EFAC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: HomeColors.primaryGreen, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Anda Sudah Terdaftar pada Acara Ini',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF166534),
+                                ),
+                              ),
+                              Text(
+                                'Nomor Tiket: ${event.ticketCode ?? "TKT-PAD-RESMI"}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => _showTicketDialog(event),
+                          icon: const Icon(Icons.open_in_new_rounded, size: 14, color: HomeColors.primaryGreen),
+                          label: const Text(
+                            'E-Tiket',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: HomeColors.primaryGreen),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 _buildHeroCard(event),
                 const SizedBox(height: HomeSpacing.md),
                 _buildInfoCard(event),
@@ -157,24 +279,32 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: _isRegistered ? null : _handleRegistration,
+                onPressed: _isRegistering
+                    ? null
+                    : (isRegistered
+                        ? () => _showTicketDialog(event)
+                        : (isFull ? null : () => _handleRegistration(event))),
                 icon: Icon(
-                  _isRegistered
-                      ? Icons.check_circle_rounded
-                      : Icons.how_to_reg_rounded,
+                  isRegistered
+                      ? Icons.qr_code_scanner_rounded
+                      : (isFull ? Icons.block_rounded : Icons.how_to_reg_rounded),
                   size: 20,
                 ),
                 label: Text(
-                  _isRegistered ? 'Sudah Terdaftar' : 'Daftar Acara (Gratis)',
+                  _isRegistering
+                      ? 'Memproses Pendaftaran...'
+                      : (isRegistered
+                          ? 'Lihat E-Tiket Saya'
+                          : (isFull ? 'Kuota Penuh' : 'Daftar Acara (Gratis)')),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: _isRegistered
-                      ? Colors.grey.shade400
-                      : HomeColors.primaryGreen,
+                  backgroundColor: isRegistered
+                      ? const Color(0xFF15803D)
+                      : (isFull ? Colors.grey.shade400 : HomeColors.primaryGreen),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -199,10 +329,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       ),
       child: Stack(
         children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: _buildHeroImage(event),
-          ),
+          AspectRatio(aspectRatio: 16 / 9, child: _buildHeroImage(event)),
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -471,10 +598,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     );
   }
 
-  Widget _buildHeroBadge(
-    String label, {
-    required Color backgroundColor,
-  }) {
+  Widget _buildHeroBadge(String label, {required Color backgroundColor}) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 260),
       child: Container(

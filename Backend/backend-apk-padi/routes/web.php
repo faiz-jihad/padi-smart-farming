@@ -65,6 +65,8 @@ Route::middleware(['auth', 'admin.web'])
 
         Route::get('/notifications', [DashboardController::class, 'notifications'])
             ->name('notifications.index');
+        Route::get('/notifications/latest', [DashboardController::class, 'latestNotifications'])
+            ->name('notifications.latest');
 
         Route::post('/notifications/read', [DashboardController::class, 'markNotificationsRead'])
             ->name('notifications.read');
@@ -109,6 +111,16 @@ Route::middleware(['auth', 'admin.web'])
         Route::post('/soil', [SoilController::class, 'store'])->name('soil.store');
         Route::post('/soil/export', [SoilController::class, 'export'])->name('soil.export');
         Route::get('/soil/{soil}', [SoilController::class, 'show'])->name('soil.show');
+        Route::get('/soil/{soil}/report/pdf', [SoilController::class, 'downloadReport'])
+            ->name('soil.report.pdf');
+
+        // Irrigation Schedule Web Routes
+        Route::post('/irrigation-schedules', [SoilController::class, 'storeIrrigationSchedule'])
+            ->name('irrigation-schedules.store');
+        Route::patch('/irrigation-schedules/{schedule}', [SoilController::class, 'updateIrrigationSchedule'])
+            ->name('irrigation-schedules.update');
+        Route::delete('/irrigation-schedules/{schedule}', [SoilController::class, 'destroyIrrigationSchedule'])
+            ->name('irrigation-schedules.destroy');
 
         // Knowledge Base Routes
         Route::get('/knowledge', [\App\Http\Controllers\Admin\KnowledgeController::class, 'index'])->name('knowledge.index');

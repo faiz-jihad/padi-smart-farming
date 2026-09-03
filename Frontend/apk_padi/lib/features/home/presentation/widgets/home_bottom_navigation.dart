@@ -38,7 +38,7 @@ class HomeBottomNavigation extends ConsumerWidget {
         );
 
     if (isBuyer) {
-      return _buildBuyerNavigation(context, cartState.totalCount, activeContractsCount);
+      return _buildBuyerNavigation(context, s, cartState.totalCount, activeContractsCount);
     }
 
     return _buildFarmerNavigation(context, s);
@@ -47,13 +47,13 @@ class HomeBottomNavigation extends ConsumerWidget {
   // ══════════════════════════════════════════════════
   // 1. BUYER BOTTOM NAVIGATION — Hijau & Putih
   // ══════════════════════════════════════════════════
-  Widget _buildBuyerNavigation(BuildContext context, int cartCount, int activeContractsCount) {
+  Widget _buildBuyerNavigation(BuildContext context, AppStrings s, int cartCount, int activeContractsCount) {
     final buyerItems = [
-      _NavItem(index: 0, label: 'Beranda', icon: Icons.storefront_rounded),
-      _NavItem(index: 1, label: 'Pasar', icon: Icons.grid_view_rounded),
-      _NavItem(index: 2, label: 'Keranjang', icon: Icons.shopping_cart_rounded, badgeCount: cartCount),
-      _NavItem(index: 3, label: 'Pesanan', icon: Icons.receipt_long_rounded, badgeCount: activeContractsCount),
-      _NavItem(index: 4, label: 'Profil', icon: Icons.person_rounded),
+      _NavItem(index: 0, label: s.navHome, icon: Icons.storefront_rounded),
+      _NavItem(index: 1, label: s.navMarket, icon: Icons.grid_view_rounded),
+      _NavItem(index: 2, label: s.navCart, icon: Icons.shopping_cart_rounded, badgeCount: cartCount),
+      _NavItem(index: 3, label: s.navOrders, icon: Icons.receipt_long_rounded, badgeCount: activeContractsCount),
+      _NavItem(index: 4, label: s.navProfile, icon: Icons.person_rounded),
     ];
 
     return SafeArea(
@@ -255,7 +255,7 @@ class HomeBottomNavigation extends ConsumerWidget {
             ),
             const SizedBox(height: 3),
             Text(
-              'Keranjang',
+              item.label,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,

@@ -45,7 +45,7 @@ class EventApiService {
     }
   }
 
-  Future<bool> registerForEvent(int eventId, {String? notes}) async {
+  Future<EventModel?> registerForEvent(int eventId, {String? notes}) async {
     try {
       final response = await _apiClient.dio.post(
         '/events/$eventId/register',
@@ -54,9 +54,13 @@ class EventApiService {
         },
       );
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      final data = response.data;
+      if (data is Map && data['data'] is Map) {
+        return EventModel.fromJson(Map<String, dynamic>.from(data['data'] as Map));
+      }
+      return null;
     } catch (_) {
-      return false;
+      return null;
     }
   }
 }

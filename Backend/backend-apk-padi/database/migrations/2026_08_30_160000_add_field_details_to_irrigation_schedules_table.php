@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('irrigation_schedules', function (Blueprint $table) {
+            $table->string('officer_name', 100)->nullable()->after('source')->comment('Nama petugas irigasi / Raksa Bumi');
+            $table->string('irrigation_block', 100)->nullable()->after('officer_name')->comment('Blok / Petak Tersier irigasi');
+            $table->string('water_source', 100)->nullable()->after('irrigation_block')->comment('Sumber air irigasi');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('irrigation_schedules', function (Blueprint $table) {
+            $table->dropColumn([
+                'officer_name',
+                'irrigation_block',
+                'water_source',
+            ]);
+        });
+    }
+};

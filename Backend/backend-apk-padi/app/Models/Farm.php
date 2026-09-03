@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\IrrigationSchedule;
 
 class Farm extends Model
 {
@@ -34,6 +35,11 @@ class Farm extends Model
     public function farmer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'farmer_user_id');
+    }
+
+    public function irrigationSchedules(): HasMany
+    {
+        return $this->hasMany(IrrigationSchedule::class);
     }
 
     public function cropSeasons(): HasMany

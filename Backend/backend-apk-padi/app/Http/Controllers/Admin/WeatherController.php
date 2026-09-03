@@ -197,6 +197,7 @@ class WeatherController extends Controller
 
         $weather = $this->externalWeatherService->getCurrentWeather($lat, $lng);
         $soil = $this->externalWeatherService->getSoilData($lat, $lng);
+        $bmkg = $this->externalWeatherService->getBMKGForecast($lat, $lng, 5);
 
         $parsedWeather = $weather['success'] ? $this->externalWeatherService->parseWeatherData($weather['data']) : null;
 
@@ -207,7 +208,11 @@ class WeatherController extends Controller
             'weather' => $parsedWeather,
             'weather_raw' => $weather['data'] ?? null,
             'soil' => $soil['success'] ? $soil['data'] : null,
+            'forecast' => $bmkg['data']['forecast'] ?? [],
+            'warning' => $bmkg['data']['warning'] ?? null,
+            'source' => $bmkg['data']['source'] ?? 'BMKG & Sensor Satelit',
             'provider' => $weather['provider'] ?? 'system_sensor',
+            'timestamp' => time(),
         ]);
     }
 }

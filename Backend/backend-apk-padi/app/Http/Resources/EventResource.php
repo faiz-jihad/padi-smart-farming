@@ -33,6 +33,9 @@ class EventResource extends JsonResource
             'contact_person' => $this->contact_person,
             'status' => $this->status,
             'is_registered' => $user ? (isset($this->is_user_registered) ? (bool) $this->is_user_registered : $this->isRegisteredBy($user)) : false,
+            'ticket_code' => $user ? $this->getRegistrationForUser($user)?->ticket_code : null,
+            'ticket_status' => $user ? $this->getRegistrationForUser($user)?->ticket_status : null,
+            'registered_at' => $user ? $this->getRegistrationForUser($user)?->registered_at?->toIso8601String() : null,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

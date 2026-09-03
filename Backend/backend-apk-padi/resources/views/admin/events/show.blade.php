@@ -193,11 +193,12 @@
             <table class="events-table">
                 <thead>
                     <tr>
-                        <th style="width: 6%;">No</th>
-                        <th style="width: 32%;">Nama Petani</th>
-                        <th style="width: 26%;">Kontak (Email / WhatsApp)</th>
-                        <th style="width: 22%;">Waktu Pendaftaran</th>
-                        <th style="width: 14%; text-align: right;">Status Tiket</th>
+                        <th style="width: 5%;">No</th>
+                        <th style="width: 25%;">Nama Petani</th>
+                        <th style="width: 22%;">Kontak</th>
+                        <th style="width: 18%;">Waktu Daftar</th>
+                        <th style="width: 18%;">Kode Tiket</th>
+                        <th style="width: 12%; text-align: right;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -223,6 +224,11 @@
                             <td>
                                 <div style="font-size: 12.5px; color: #1e293b; font-weight: 500;">
                                     {{ $reg->registered_at ? $reg->registered_at->format('d M Y H:i') : $reg->created_at->format('d M Y H:i') }} WIB
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: inline-block; font-family: monospace; font-size: 12px; font-weight: 700; background: #f0fdf4; color: #166534; border: 1px dashed #86efac; border-radius: 6px; padding: 3px 8px;">
+                                    {{ $reg->ticket_code }}
                                 </div>
                             </td>
                             <td style="text-align: right;">

@@ -12,6 +12,13 @@ class ImageQuality:
 
 
 @dataclass(frozen=True)
+class PredictionCandidate:
+    disease_code: str
+    disease_name: str
+    confidence: float
+
+
+@dataclass(frozen=True)
 class DiseasePrediction:
     disease_code: str
     disease_name: str
@@ -21,3 +28,10 @@ class DiseasePrediction:
     needs_expert_review: bool
     model_version: str
     processing_time_ms: int
+    top_predictions: list[PredictionCandidate]
+    prediction_margin: float
+    model_accuracy: float | None = None
+    # Status deteksi: "DETECTED", "UNCERTAIN", "INVALID_INPUT"
+    detection_status: str = "DETECTED"
+    # Pesan tambahan untuk status UNCERTAIN / INVALID_INPUT
+    status_message: str | None = None

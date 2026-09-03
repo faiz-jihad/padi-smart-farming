@@ -110,3 +110,55 @@ ThemeData buildPadiTheme() {
     ),
   );
 }
+
+ThemeData buildPadiDarkTheme() {
+  final scheme = ColorScheme.fromSeed(
+    seedColor: const Color(0xFF10B981),
+    brightness: Brightness.dark,
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: scheme.copyWith(
+      primary: const Color(0xFF10B981),
+      secondary: const Color(0xFF34D399),
+      surface: const Color(0xFF1E293B),
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0F172A),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF0F172A),
+      foregroundColor: Color(0xFFF8FAFC),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        color: Color(0xFFF8FAFC),
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: const Color(0xFF1E293B),
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF334155)),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF064E3B),
+      contentTextStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+        fontSize: 13,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      elevation: 6,
+    ),
+  );
+}

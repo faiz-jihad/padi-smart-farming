@@ -50,7 +50,7 @@ class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(languageProvider);
     final s = AppStrings(lang);
-    final displayName = name.trim().isNotEmpty ? name.trim() : 'Petani';
+    final displayName = name.trim().isNotEmpty ? name.trim() : s.roleFarmer;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: HomeSpacing.xs),

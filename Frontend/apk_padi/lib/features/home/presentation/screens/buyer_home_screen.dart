@@ -7,6 +7,28 @@ import 'package:padi/features/cart/presentation/providers/cart_providers.dart';
 import 'package:padi/features/marketplace/data/models/market_listing_model.dart';
 import 'package:padi/features/marketplace/presentation/screens/marketplace_screen.dart';
 
+// ============================================================
+// GLOBAL COLORS
+// ============================================================
+
+const Color primaryGreen = Color(0xFF0F5132);
+const Color lightGreen = Color(0xFFE8F8EF);
+const Color background = Color(0xFFF8FAFC);
+
+const Color textDark = Color(0xFF0F172A);
+const Color textGrey = Color(0xFF64748B);
+const Color borderColor = Color(0xFFE2E8F0);
+
+// ============================================================
+// ASSET
+// ============================================================
+
+const String padiLogo = 'assets/images/padi-logo.png';
+
+// ============================================================
+// BUYER HOME
+// ============================================================
+
 class BuyerHomeScreen extends ConsumerStatefulWidget {
   const BuyerHomeScreen({super.key});
 
@@ -17,22 +39,10 @@ class BuyerHomeScreen extends ConsumerStatefulWidget {
 
 class _BuyerHomeScreenState
     extends ConsumerState<BuyerHomeScreen> {
+  String _selectedTab = 'Rekomendasi';
 
   // ============================================================
-  // WARNA
-  // ============================================================
-
-  static const Color primaryGreen =
-      Color(0xFF0F5132);
-
-  static const Color lightGreen =
-      Color(0xFFE8F8EF);
-
-  static const Color background =
-      Color(0xFFF8FAFC);
-
-  // ============================================================
-  // FORMAT HARGA
+  // FORMAT PRICE
   // ============================================================
 
   String _formatPrice(num value) {
@@ -46,6 +56,24 @@ class _BuyerHomeScreenState
   }
 
   // ============================================================
+  // OPEN MARKETPLACE WITH CATEGORY
+  // ============================================================
+
+  void _openMarketplaceCategory(
+    BuildContext context,
+    String category,
+  ) {
+    final uri = Uri(
+      path: '/marketplace',
+      queryParameters: {
+        'category': category,
+      },
+    );
+
+    context.push(uri.toString());
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -53,13 +81,8 @@ class _BuyerHomeScreenState
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
 
-    // ==========================================================
-    // DATA HOME MENGAMBIL DATA YANG SAMA DENGAN MARKETPLACE
-    // ==========================================================
-
-    final listingsAsync = ref.watch(
-      marketplaceListingsProvider,
-    );
+    final listingsAsync =
+        ref.watch(marketplaceListingsProvider);
 
     return Scaffold(
       backgroundColor: background,
@@ -73,35 +96,53 @@ class _BuyerHomeScreenState
             ref.invalidate(
               marketplaceListingsProvider,
             );
+
+            await Future<void>.delayed(
+              const Duration(
+                milliseconds: 300,
+              ),
+            );
           },
 
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
+            physics:
+                const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
 
             slivers: [
-
               // ==================================================
               // HEADER
-              // LOGO PADI KIRI
-              // CHAT + KERANJANG KANAN
               // ==================================================
 
-              SliverToBoxAdapter(
-                child: _buildHeader(
-                  context,
-                  cartState.totalCount,
+              SliverPersistentHeader(
+                pinned: true,
+
+                delegate:
+                    _BuyerHomeHeaderDelegate(
+                  cartCount:
+                      cartState.totalCount,
+
+                  onCartTap: () {
+                    context.push('/cart');
+                  },
+
+                  onNotificationTap: () {
+                    context.push(
+                      '/notifications',
+                    );
+                  },
                 ),
               ),
 
               // ==================================================
-              // CONTENT HOME
+              // CONTENT
               // ==================================================
 
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
+                  padding:
+                      const EdgeInsets.fromLTRB(
                     16,
                     10,
                     16,
@@ -113,12 +154,11 @@ class _BuyerHomeScreenState
                         CrossAxisAlignment.start,
 
                     children: [
+                      // =================================================
+                      // CATEGORY
+                      // =================================================
 
-                      // ==========================================
-                      // KATEGORI 3 X 2
-                      // ==========================================
-
-                      _buildCategorySection(
+                      _buildQuickCategoryGrid(
                         context,
                       ),
 
@@ -126,13 +166,13 @@ class _BuyerHomeScreenState
                         height: 16,
                       ),
 
-                      // ==========================================
+                      // =================================================
                       // BURSA PANEN KILAT
-                      // ==========================================
+                      // =================================================
 
                       listingsAsync.when(
                         data: (listings) {
-                          return _buildFlashSection(
+                          return _buildFlashSaleSection(
                             context,
                             listings,
                           );
@@ -151,39 +191,64 @@ class _BuyerHomeScreenState
                         height: 16,
                       ),
 
-                      // ==========================================
-                      // PESANAN & TIMBANGAN
-                      // ==========================================
+                      // =================================================
+                      // FILTER FEED
+                      // =================================================
 
-                      _buildOrderTracking(),
+                      _buildMarketplaceFeedTabs(),
 
                       const SizedBox(
-                        height: 18,
+                        height: 12,
                       ),
 
-                      // ==========================================
-                      // REKOMENDASI
-                      //
-                      // 1 PRODUK GKP
-                      // 1 PRODUK GKG
-                      // 1 PRODUK BERAS
-                      // 1 PRODUK BENIH
-                      // ==========================================
+                      // =================================================
+                      // PRODUCT
+                      // =================================================
 
                       listingsAsync.when(
                         data: (listings) {
-                          return _buildRecommendationSection(
-                            context,
+                          final filtered =
+                              _filterListings(
                             listings,
+                          );
+
+                          if (filtered.isEmpty) {
+                            return _buildEmptyState();
+                          }
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+
+                            physics:
+                                const NeverScrollableScrollPhysics(),
+
+                            itemCount:
+                                filtered.length,
+
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              mainAxisExtent: 285,
+                            ),
+
+                            itemBuilder:
+                                (context, index) {
+                              return _buildProductCard(
+                                context,
+                                filtered[index],
+                              );
+                            },
                           );
                         },
 
                         loading: () {
-                          return const Center(
-                            child: Padding(
-                              padding:
-                                  EdgeInsets.all(30),
+                          return const Padding(
+                            padding:
+                                EdgeInsets.all(40),
 
+                            child: Center(
                               child:
                                   CircularProgressIndicator(
                                 color:
@@ -193,8 +258,11 @@ class _BuyerHomeScreenState
                           );
                         },
 
-                        error: (_, __) {
-                          return const SizedBox.shrink();
+                        error: (
+                          error,
+                          stackTrace,
+                        ) {
+                          return _buildErrorState();
                         },
                       ),
                     ],
@@ -209,417 +277,218 @@ class _BuyerHomeScreenState
   }
 
   // ============================================================
-  // HEADER
+  // CATEGORY
   // ============================================================
 
-  Widget _buildHeader(
-    BuildContext context,
-    int cartCount,
-  ) {
-    return Container(
-      height: 72,
+  Widget _buildQuickCategoryGrid(
+  BuildContext context,
+) {
+  final categories = [
+    // =========================================================
+    // GKP PANEN
+    // =========================================================
+    _BuyerCategory(
+      title: 'GKP Panen',
+      icon: Icons.grass_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: 'gkp',
+      route: '/marketplace',
+    ),
 
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
+    // =========================================================
+    // GKG GILING
+    // =========================================================
+    _BuyerCategory(
+      title: 'GKG Giling',
+      icon: Icons.grain_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: 'gkg',
+      route: '/marketplace',
+    ),
+
+    // =========================================================
+    // BERAS PREMIUM
+    // =========================================================
+    _BuyerCategory(
+      title: 'Beras Premium',
+      icon: Icons.rice_bowl_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: 'beras',
+      route: '/marketplace',
+    ),
+
+    // =========================================================
+    // BENIH BERSERTIFIKAT
+    // =========================================================
+    _BuyerCategory(
+      title: 'Benih Bersertifikat',
+      icon: Icons.spa_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: 'benih',
+      route: '/marketplace',
+    ),
+
+    // =========================================================
+    // BURSA LELANG
+    // =========================================================
+    _BuyerCategory(
+      title: 'Bursa Lelang',
+      icon: Icons.gavel_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: '',
+      route: '/marketplace/offers',
+    ),
+
+    // =========================================================
+    // KONTRAK SAYA
+    // =========================================================
+    _BuyerCategory(
+      title: 'Kontrak Saya',
+      icon: Icons.receipt_long_rounded,
+      backgroundColor: const Color(0xFFE8F8EF),
+      iconColor: primaryGreen,
+      category: '',
+      route: '/buyer/orders',
+    ),
+  ];
+
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: borderColor,
       ),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Kategori Hasil Panen',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: textDark,
           ),
         ),
 
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.035),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+        const SizedBox(height: 14),
+
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: categories.length,
+
+          gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisExtent: 92,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 8,
           ),
-        ],
-      ),
 
-      child: Row(
-        children: [
+          itemBuilder: (
+            context,
+            index,
+          ) {
+            final category = categories[index];
 
-          // ==================================================
-          // LOGO PADI
-          // ==================================================
+            return InkWell(
+              borderRadius: BorderRadius.circular(12),
 
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
+              onTap: () {
+                // =================================================
+                // LELANG
+                // =================================================
 
-              child: Image.asset(
-                'assets/images/padi-logo.png',
-
-                height: 48,
-
-                fit: BoxFit.contain,
-
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
-                  return const Text(
-                    'P.A.D.I.',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight:
-                          FontWeight.w900,
-                      color:
-                          primaryGreen,
-                    ),
+                if (category.title == 'Bursa Lelang') {
+                  context.push(
+                    '/marketplace/offers',
                   );
-                },
-              ),
-            ),
-          ),
+                  return;
+                }
 
-          // ==================================================
-          // CHAT
-          // ==================================================
+                // =================================================
+                // KONTRAK
+                // =================================================
 
-          IconButton(
-            tooltip: 'Pesan',
+                if (category.title == 'Kontrak Saya') {
+                  context.push(
+                    '/buyer/orders',
+                  );
+                  return;
+                }
 
-            onPressed: () {
-              context.push(
-                '/notifications',
-              );
-            },
+                // =================================================
+                // MARKETPLACE + CATEGORY
+                // =================================================
 
-            icon: const Icon(
-              Icons.chat_bubble_outline_rounded,
-              color: Color(0xFF334155),
-              size: 24,
-            ),
-          ),
+                context.push(
+                  Uri(
+                    path: category.route,
+                    queryParameters: {
+                      'category': category.category,
+                    },
+                  ).toString(),
+                );
+              },
 
-          // ==================================================
-          // KERANJANG
-          // ==================================================
+              child: Column(
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
 
-          Stack(
-            clipBehavior: Clip.none,
-
-            children: [
-
-              IconButton(
-                tooltip: 'Keranjang',
-
-                onPressed: () {
-                  context.push('/cart');
-                },
-
-                icon: const Icon(
-                  Icons.shopping_cart_outlined,
-                  color: primaryGreen,
-                  size: 25,
-                ),
-              ),
-
-              if (cartCount > 0)
-                Positioned(
-                  right: 1,
-                  top: 1,
-
-                  child: Container(
-                    constraints:
-                        const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
-                    ),
-
-                    padding:
-                        const EdgeInsets.symmetric(
-                      horizontal: 4,
-                    ),
-
-                    decoration:
-                        const BoxDecoration(
-                      color: Color(0xFFDC2626),
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: const BoxDecoration(
+                      color: lightGreen,
                       shape: BoxShape.circle,
                     ),
 
-                    child: Center(
-                      child: Text(
-                        cartCount > 99
-                            ? '99+'
-                            : '$cartCount',
-
-                        style:
-                            const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight:
-                              FontWeight.w900,
-                        ),
-                      ),
+                    child: Icon(
+                      category.icon,
+                      size: 25,
+                      color: category.iconColor,
                     ),
                   ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  // ============================================================
-  // KATEGORI
-  //
-  // 3 ATAS
-  // GKP | GKG | BERAS
-  //
-  // 3 BAWAH
-  // BENIH | LELANG | KONTRAK
-  // ============================================================
+                  const SizedBox(height: 6),
 
-  Widget _buildCategorySection(
-    BuildContext context,
-  ) {
-    final categories = [
-      _HomeCategory(
-        label: 'GKP Panen',
-        icon: Icons.grass_rounded,
-        category: 'gkp',
-      ),
+                  Text(
+                    category.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
 
-      _HomeCategory(
-        label: 'GKG Giling',
-        icon: Icons.grain_rounded,
-        category: 'gkg',
-      ),
-
-      _HomeCategory(
-        label: 'Beras Premium',
-        icon: Icons.rice_bowl_rounded,
-        category: 'beras',
-      ),
-
-      _HomeCategory(
-        label: 'Benih Bersertifikat',
-        icon: Icons.spa_rounded,
-        category: 'benih',
-      ),
-
-      _HomeCategory(
-        label: 'Bursa Lelang',
-        icon: Icons.gavel_rounded,
-        category: 'lelang',
-      ),
-
-      _HomeCategory(
-        label: 'Kontrak Saya',
-        icon: Icons.receipt_long_rounded,
-        category: 'kontrak',
-      ),
-    ];
-
-    return Container(
-      width: double.infinity,
-
-      padding: const EdgeInsets.fromLTRB(
-        14,
-        14,
-        14,
-        12,
-      ),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius:
-            BorderRadius.circular(16),
-
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
-      ),
-
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-        children: [
-
-          // ================================================
-          // JUDUL
-          // ================================================
-
-          const Text(
-            'Kategori Hasil Panen',
-
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight:
-                  FontWeight.w900,
-              color:
-                  Color(0xFF0F172A),
-            ),
-          ),
-
-          const SizedBox(
-            height: 14,
-          ),
-
-          // ================================================
-          // GRID 3 X 2
-          // ================================================
-
-          GridView.builder(
-            shrinkWrap: true,
-
-            physics:
-                const NeverScrollableScrollPhysics(),
-
-            itemCount:
-                categories.length,
-
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-
-              mainAxisExtent: 92,
-
-              crossAxisSpacing: 4,
-
-              mainAxisSpacing: 8,
-            ),
-
-            itemBuilder: (
-              context,
-              index,
-            ) {
-              final category =
-                  categories[index];
-
-              return InkWell(
-                borderRadius:
-                    BorderRadius.circular(12),
-
-                onTap: () {
-                  _handleCategoryTap(
-                    context,
-                    category.category,
-                  );
-                },
-
-                child: Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-
-                    // ======================================
-                    // ICON
-                    // ======================================
-
-                    Container(
-                      width: 52,
-                      height: 52,
-
-                      decoration:
-                          const BoxDecoration(
-                        color: lightGreen,
-                        shape:
-                            BoxShape.circle,
-                      ),
-
-                      child: Icon(
-                        category.icon,
-
-                        size: 25,
-
-                        color:
-                            primaryGreen,
-                      ),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF334155),
                     ),
-
-                    const SizedBox(
-                      height: 6,
-                    ),
-
-                    // ======================================
-                    // TEXT
-                    // ======================================
-
-                    Text(
-                      category.label,
-
-                      textAlign:
-                          TextAlign.center,
-
-                      maxLines: 2,
-
-                      overflow:
-                          TextOverflow.ellipsis,
-
-                      style:
-                          const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight:
-                            FontWeight.w700,
-                        color:
-                            Color(0xFF334155),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // HANDLE CATEGORY
-  // ============================================================
-
-  void _handleCategoryTap(
-  BuildContext context,
-  String category,
-) {
-  switch (category) {
-    case 'lelang':
-      context.push('/marketplace/offers');
-      return;
-
-    case 'kontrak':
-      context.push('/buyer/orders');
-      return;
-
-    case 'gkp':
-    case 'gkg':
-    case 'beras':
-    case 'benih':
-      context.push(
-        Uri(
-          path: '/marketplace',
-          queryParameters: {
-            'category': category,
+                  ),
+                ],
+              ),
+            );
           },
-        ).toString(),
-      );
-      return;
-
-    default:
-      context.push('/marketplace');
-  }
+        ),
+      ],
+    ),
+  );
 }
 
   // ============================================================
-  // BURSA PANEN KILAT
+  // FLASH SALE
   // ============================================================
 
-  Widget _buildFlashSection(
+  Widget _buildFlashSaleSection(
     BuildContext context,
     List<MarketListingModel> listings,
   ) {
@@ -628,7 +497,7 @@ class _BuyerHomeScreenState
     }
 
     final flashListings =
-        listings.take(3).toList();
+        listings.take(4).toList();
 
     return Container(
       width: double.infinity,
@@ -641,7 +510,7 @@ class _BuyerHomeScreenState
             const Color(0xFFFFFBEB),
 
         borderRadius:
-            BorderRadius.circular(14),
+            BorderRadius.circular(16),
 
         border: Border.all(
           color:
@@ -654,73 +523,56 @@ class _BuyerHomeScreenState
             CrossAxisAlignment.start,
 
         children: [
-
-          // ================================================
-          // HEADER
-          // ================================================
-
           Row(
             children: [
-
               const Icon(
-                Icons.local_fire_department_rounded,
+                Icons.bolt_rounded,
                 color:
-                    Color(0xFFEA580C),
-                size: 19,
+                    Color(0xFFD97706),
+                size: 21,
               ),
 
               const SizedBox(
-                width: 5,
+                width: 6,
               ),
 
-              const Text(
-                'BURSA PANEN KILAT',
+              const Expanded(
+                child: Text(
+                  'Bursa Panen Kilat',
 
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight:
-                      FontWeight.w900,
-                  color:
-                      Color(0xFF9A3412),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight:
+                        FontWeight.w900,
+                    color:
+                        Color(0xFF92400E),
+                  ),
                 ),
               ),
 
-              const Spacer(),
-
-              InkWell(
-                onTap: () {
+              TextButton(
+                onPressed: () {
                   context.push(
                     '/marketplace',
                   );
                 },
 
                 child: const Text(
-                  'Lihat Semua >',
-
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight:
-                        FontWeight.w900,
-                    color:
-                        Color(0xFFEA580C),
-                  ),
+                  'Lihat Semua',
                 ),
               ),
             ],
           ),
 
           const SizedBox(
-            height: 10,
+            height: 8,
           ),
 
-          // ================================================
-          // PRODUK
-          // ================================================
-
           SizedBox(
-            height: 185,
+            height: 195,
 
-            child: ListView.separated(
+            child:
+                ListView.separated(
               scrollDirection:
                   Axis.horizontal,
 
@@ -728,7 +580,7 @@ class _BuyerHomeScreenState
                   flashListings.length,
 
               separatorBuilder:
-                  (_, __) {
+                  (context, index) {
                 return const SizedBox(
                   width: 10,
                 );
@@ -736,13 +588,9 @@ class _BuyerHomeScreenState
 
               itemBuilder:
                   (context, index) {
-
-                final listing =
-                    flashListings[index];
-
                 return _buildFlashCard(
                   context,
-                  listing,
+                  flashListings[index],
                 );
               },
             ),
@@ -760,422 +608,250 @@ class _BuyerHomeScreenState
     BuildContext context,
     MarketListingModel listing,
   ) {
-    return InkWell(
-      borderRadius:
-          BorderRadius.circular(12),
+    return SizedBox(
+      width: 145,
 
-      onTap: () {
-        context.push(
-          '/marketplace/${listing.id}',
-        );
-      },
-
-      child: Container(
-        width: 132,
-
-        decoration: BoxDecoration(
-          color: Colors.white,
-
-          borderRadius:
-              BorderRadius.circular(12),
-
-          border: Border.all(
-            color:
-                const Color(0xFFFDE68A),
-          ),
-        ),
-
-        clipBehavior:
-            Clip.antiAlias,
-
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-
-          children: [
-
-            // ==============================================
-            // GAMBAR
-            // ==============================================
-
-            SizedBox(
-              width: double.infinity,
-              height: 85,
-
-              child: _buildItemImage(
-                listing.imageUrl,
-              ),
-            ),
-
-            // ==============================================
-            // INFORMASI
-            // ==============================================
-
-            Padding(
-              padding:
-                  const EdgeInsets.all(8),
-
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                children: [
-
-                  Text(
-                    listing.commodity
-                        .toString(),
-
-                    maxLines: 1,
-
-                    overflow:
-                        TextOverflow.ellipsis,
-
-                    style:
-                        const TextStyle(
-                      fontSize: 11,
-                      fontWeight:
-                          FontWeight.w800,
-                      color:
-                          Color(0xFF1E293B),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 5,
-                  ),
-
-                  Text(
-                    _formatPrice(
-                      listing.pricePerUnit,
-                    ),
-
-                    style:
-                        const TextStyle(
-                      fontSize: 13,
-                      fontWeight:
-                          FontWeight.w900,
-                      color:
-                          Color(0xFFEA580C),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 5,
-                  ),
-
-                  Text(
-                    'Stok ${_formatStock(listing)}',
-
-                    style:
-                        const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight:
-                          FontWeight.w600,
-                      color:
-                          Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // PESANAN & TIMBANGAN
-  // ============================================================
-
-  Widget _buildOrderTracking() {
-    return Container(
-      width: double.infinity,
-
-      padding:
-          const EdgeInsets.fromLTRB(
-        14,
-        14,
-        14,
-        16,
-      ),
-
-      decoration: BoxDecoration(
-        color:
-            const Color(0xFFECFDF5),
-
+      child: InkWell(
         borderRadius:
-            BorderRadius.circular(16),
+            BorderRadius.circular(12),
 
-        border: Border.all(
-          color:
-              const Color(0xFFA7F3D0),
-        ),
-      ),
+        onTap: () {
+          context.push(
+            '/marketplace/${listing.id}',
+          );
+        },
 
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        child: Container(
+          decoration:
+              BoxDecoration(
+            color: Colors.white,
 
-        children: [
+            borderRadius:
+                BorderRadius.circular(12),
 
-          Row(
+            border: Border.all(
+              color:
+                  const Color(0xFFFDE68A),
+            ),
+          ),
+
+          clipBehavior:
+              Clip.antiAlias,
+
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+
             children: [
+              SizedBox(
+                width:
+                    double.infinity,
 
-              const Icon(
-                Icons.local_shipping_rounded,
-                color:
-                    primaryGreen,
-                size: 22,
-              ),
+                height: 85,
 
-              const SizedBox(
-                width: 8,
-              ),
-
-              const Expanded(
-                child: Text(
-                  'Pesanan & Timbangan Sawah Berjalan',
-
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight:
-                        FontWeight.w900,
-                    color:
-                        primaryGreen,
-                  ),
+                child:
+                    _buildItemImage(
+                  listing.imageUrl,
                 ),
               ),
 
-              const Text(
-                'Lacak >',
+              Padding(
+                padding:
+                    const EdgeInsets.all(
+                  8,
+                ),
 
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      FontWeight.w900,
-                  color:
-                      primaryGreen,
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
+
+                  children: [
+                    Text(
+                      listing.commodity,
+
+                      maxLines: 2,
+
+                      overflow:
+                          TextOverflow.ellipsis,
+
+                      style:
+                          const TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            FontWeight.w800,
+                        color:
+                            Color(0xFF1E293B),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 5,
+                    ),
+
+                    Text(
+                      _formatPrice(
+                        listing
+                            .pricePerUnit,
+                      ),
+
+                      style:
+                          const TextStyle(
+                        fontSize: 13,
+                        fontWeight:
+                            FontWeight.w900,
+                        color:
+                            Color(0xFFEA580C),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 3,
+                    ),
+
+                    Text(
+                      '/ ${listing.unit}',
+
+                      style:
+                          const TextStyle(
+                        fontSize: 9.5,
+                        color:
+                            Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
-          const Text(
-            'Gabah Padi • 100.0 kg',
-
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight:
-                  FontWeight.w800,
-              color:
-                  Color(0xFF0F172A),
-            ),
-          ),
-
-          const SizedBox(
-            height: 4,
-          ),
-
-          const Text(
-            'Petani: Petani Audi • Siap Timbang & Jemput',
-
-            style: TextStyle(
-              fontSize: 11,
-              color:
-                  Color(0xFF047857),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   // ============================================================
-  // REKOMENDASI
-  //
-  // PENTING:
-  // HANYA 1 PRODUK PER KATEGORI
+  // FEED TABS
   // ============================================================
 
-  Widget _buildRecommendationSection(
-    BuildContext context,
-    List<MarketListingModel> listings,
-  ) {
-    final recommendations =
-        _getOneProductPerCategory(
-      listings,
-    );
+  Widget _buildMarketplaceFeedTabs() {
+    const tabs = [
+      'Rekomendasi',
+      'Terbaru',
+      'Harga Terendah',
+    ];
 
-    if (recommendations.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    return SizedBox(
+      height: 42,
 
-    return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      child:
+          ListView.separated(
+        scrollDirection:
+            Axis.horizontal,
 
-      children: [
+        itemCount:
+            tabs.length,
 
-        const Text(
-          'Rekomendasi Untuk Anda',
+        separatorBuilder:
+            (context, index) {
+          return const SizedBox(
+            width: 8,
+          );
+        },
 
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight:
-                FontWeight.w900,
-            color:
-                Color(0xFF0F172A),
-          ),
-        ),
+        itemBuilder:
+            (context, index) {
+          final tab =
+              tabs[index];
 
-        const SizedBox(
-          height: 10,
-        ),
+          final selected =
+              _selectedTab == tab;
 
-        GridView.builder(
-          shrinkWrap: true,
+          return ChoiceChip(
+            label: Text(tab),
 
-          physics:
-              const NeverScrollableScrollPhysics(),
+            selected: selected,
 
-          itemCount:
-              recommendations.length,
+            onSelected: (_) {
+              setState(() {
+                _selectedTab = tab;
+              });
+            },
 
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+            selectedColor:
+                primaryGreen,
 
-            crossAxisSpacing: 10,
+            backgroundColor:
+                Colors.white,
 
-            mainAxisSpacing: 10,
+            labelStyle:
+                TextStyle(
+              color: selected
+                  ? Colors.white
+                  : const Color(
+                      0xFF475569,
+                    ),
 
-            mainAxisExtent: 285,
-          ),
+              fontWeight:
+                  FontWeight.w700,
 
-          itemBuilder:
-              (context, index) {
+              fontSize: 11,
+            ),
 
-            final listing =
-                recommendations[index];
-
-            return _buildRecommendationCard(
-              context,
-              listing,
-            );
-          },
-        ),
-      ],
+            side: BorderSide(
+              color: selected
+                  ? primaryGreen
+                  : borderColor,
+            ),
+          );
+        },
+      ),
     );
   }
 
   // ============================================================
-  // AMBIL 1 PRODUK PER KATEGORI
+  // FILTER LISTINGS
   // ============================================================
 
   List<MarketListingModel>
-      _getOneProductPerCategory(
-    List<MarketListingModel> listings,
+      _filterListings(
+    List<MarketListingModel>
+        listings,
   ) {
     final result =
-        <MarketListingModel>[];
+        List<MarketListingModel>.from(
+      listings,
+    );
 
-    // ==========================================================
-    // KATEGORI YANG DIBUTUHKAN
-    // ==========================================================
+    switch (_selectedTab) {
+      case 'Terbaru':
+        result.sort(
+          (a, b) =>
+              b.id.compareTo(a.id),
+        );
+        break;
 
-    const categories = [
-      'gkp',
-      'gkg',
-      'beras',
-      'benih',
-    ];
+      case 'Harga Terendah':
+        result.sort(
+          (a, b) =>
+              a.pricePerUnit.compareTo(
+            b.pricePerUnit,
+          ),
+        );
+        break;
 
-    // ==========================================================
-    // CARI 1 PRODUK PERTAMA DARI SETIAP KATEGORI
-    // ==========================================================
-
-    for (final category in categories) {
-      for (final listing in listings) {
-
-        if (_getListingCategory(listing) ==
-            category) {
-
-          result.add(listing);
-
-          // Berhenti setelah menemukan
-          // 1 produk kategori ini.
-          break;
-        }
-      }
+      case 'Rekomendasi':
+      default:
+        break;
     }
 
     return result;
   }
 
   // ============================================================
-  // IDENTIFIKASI KATEGORI PRODUK
+  // PRODUCT CARD
   // ============================================================
 
-  String _getListingCategory(
-    MarketListingModel listing,
-  ) {
-    final commodity =
-        listing.commodity
-            .toString()
-            .toLowerCase()
-            .trim();
-
-    // ==========================================================
-    // GKP
-    // ==========================================================
-
-    if (commodity.contains('gkp') ||
-        commodity.contains(
-          'gabah kering panen',
-        )) {
-      return 'gkp';
-    }
-
-    // ==========================================================
-    // GKG
-    // ==========================================================
-
-    if (commodity.contains('gkg') ||
-        commodity.contains(
-          'gabah kering giling',
-        )) {
-      return 'gkg';
-    }
-
-    // ==========================================================
-    // BENIH
-    // ==========================================================
-
-    if (commodity.contains('benih')) {
-      return 'benih';
-    }
-
-    // ==========================================================
-    // BERAS
-    // ==========================================================
-
-    if (commodity.contains('beras')) {
-      return 'beras';
-    }
-
-    return '';
-  }
-
-  // ============================================================
-  // CARD REKOMENDASI
-  // ============================================================
-
-  Widget _buildRecommendationCard(
+  Widget _buildProductCard(
     BuildContext context,
     MarketListingModel listing,
   ) {
@@ -1190,15 +866,15 @@ class _BuyerHomeScreenState
       },
 
       child: Container(
-        decoration: BoxDecoration(
+        decoration:
+            BoxDecoration(
           color: Colors.white,
 
           borderRadius:
               BorderRadius.circular(14),
 
           border: Border.all(
-            color:
-                const Color(0xFFE2E8F0),
+            color: borderColor,
           ),
         ),
 
@@ -1210,37 +886,35 @@ class _BuyerHomeScreenState
               CrossAxisAlignment.start,
 
           children: [
-
-            // ==============================================
-            // GAMBAR PRODUK
-            // ==============================================
+            // ==================================================
+            // IMAGE
+            // ==================================================
 
             SizedBox(
-              width: double.infinity,
+              width:
+                  double.infinity,
+
               height: 145,
 
               child: Stack(
                 children: [
-
                   Positioned.fill(
-                    child: _buildItemImage(
+                    child:
+                        _buildItemImage(
                       listing.imageUrl,
                     ),
                   ),
 
-                  // ========================================
-                  // LABEL MITRA
-                  // ========================================
-
                   Positioned(
-                    left: 8,
                     top: 8,
+                    left: 8,
 
                     child: Container(
                       padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 7,
+                        vertical: 4,
                       ),
 
                       decoration:
@@ -1249,18 +923,21 @@ class _BuyerHomeScreenState
                             primaryGreen,
 
                         borderRadius:
-                            BorderRadius.circular(
-                          7,
+                            BorderRadius
+                                .circular(
+                          6,
                         ),
                       ),
 
-                      child: const Text(
+                      child:
+                          const Text(
                         'MITRA RESMI',
 
-                        style: TextStyle(
+                        style:
+                            TextStyle(
                           color:
                               Colors.white,
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight:
                               FontWeight.w800,
                         ),
@@ -1271,24 +948,25 @@ class _BuyerHomeScreenState
               ),
             ),
 
-            // ==============================================
-            // DETAIL
-            // ==============================================
+            // ==================================================
+            // INFORMATION
+            // ==================================================
 
             Expanded(
               child: Padding(
                 padding:
-                    const EdgeInsets.all(10),
+                    const EdgeInsets.all(
+                  10,
+                ),
 
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
 
                   children: [
-
                     Text(
-                      listing.commodity
-                          .toString(),
+                      listing.commodity,
 
                       maxLines: 2,
 
@@ -1311,7 +989,8 @@ class _BuyerHomeScreenState
 
                     Text(
                       _formatPrice(
-                        listing.pricePerUnit,
+                        listing
+                            .pricePerUnit,
                       ),
 
                       style:
@@ -1325,7 +1004,7 @@ class _BuyerHomeScreenState
                     ),
 
                     const SizedBox(
-                      height: 5,
+                      height: 3,
                     ),
 
                     Text(
@@ -1343,9 +1022,9 @@ class _BuyerHomeScreenState
 
                     Row(
                       children: [
-
                         const Icon(
-                          Icons.inventory_2_outlined,
+                          Icons
+                              .inventory_2_outlined,
                           size: 14,
                           color:
                               Color(0xFF64748B),
@@ -1362,7 +1041,8 @@ class _BuyerHomeScreenState
                             maxLines: 1,
 
                             overflow:
-                                TextOverflow.ellipsis,
+                                TextOverflow
+                                    .ellipsis,
 
                             style:
                                 const TextStyle(
@@ -1370,7 +1050,9 @@ class _BuyerHomeScreenState
                               fontWeight:
                                   FontWeight.w600,
                               color:
-                                  Color(0xFF64748B),
+                                  Color(
+                                0xFF64748B,
+                              ),
                             ),
                           ),
                         ),
@@ -1387,41 +1069,185 @@ class _BuyerHomeScreenState
   }
 
   // ============================================================
-  // IMAGE PRODUK
+  // EMPTY STATE
+  // ============================================================
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+
+      padding:
+          const EdgeInsets.all(30),
+
+      decoration:
+          BoxDecoration(
+        color: Colors.white,
+
+        borderRadius:
+            BorderRadius.circular(14),
+
+        border: Border.all(
+          color: borderColor,
+        ),
+      ),
+
+      child: Column(
+        children: [
+          const Icon(
+            Icons.inventory_2_outlined,
+            size: 42,
+            color:
+                Color(0xFF94A3B8),
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          const Text(
+            'Belum Ada Hasil Panen',
+
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight:
+                  FontWeight.w800,
+              color:
+                  Color(0xFF334155),
+            ),
+          ),
+
+          const SizedBox(
+            height: 5,
+          ),
+
+          const Text(
+            'Belum ada produk yang tersedia di marketplace.',
+
+            textAlign:
+                TextAlign.center,
+
+            style: TextStyle(
+              fontSize: 11,
+              color:
+                  Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // ERROR STATE
+  // ============================================================
+
+  Widget _buildErrorState() {
+    return Container(
+      width: double.infinity,
+
+      padding:
+          const EdgeInsets.all(24),
+
+      decoration:
+          BoxDecoration(
+        color: Colors.white,
+
+        borderRadius:
+            BorderRadius.circular(14),
+
+        border: Border.all(
+          color: borderColor,
+        ),
+      ),
+
+      child: Column(
+        children: [
+          const Icon(
+            Icons.cloud_off_rounded,
+            size: 40,
+            color:
+                Color(0xFF94A3B8),
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          const Text(
+            'Gagal Memuat Marketplace',
+
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight:
+                  FontWeight.w800,
+              color:
+                  Color(0xFF334155),
+            ),
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          OutlinedButton.icon(
+            onPressed: () {
+              ref.invalidate(
+                marketplaceListingsProvider,
+              );
+            },
+
+            icon: const Icon(
+              Icons.refresh_rounded,
+            ),
+
+            label: const Text(
+              'Coba Lagi',
+            ),
+
+            style:
+                OutlinedButton.styleFrom(
+              foregroundColor:
+                  primaryGreen,
+
+              side:
+                  const BorderSide(
+                color:
+                    primaryGreen,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // ITEM IMAGE
   // ============================================================
 
   Widget _buildItemImage(
     String? imageUrl,
   ) {
-    final url =
-        imageUrl?.trim() ?? '';
-
-    final validUrl =
-        url.startsWith('http://') ||
-        url.startsWith('https://');
-
-    if (!validUrl) {
+    if (imageUrl == null ||
+        imageUrl.trim().isEmpty) {
       return Container(
-        color:
-            const Color(0xFFF1F5F9),
+        color: lightGreen,
 
         child: const Center(
           child: Icon(
-            Icons.image_outlined,
+            Icons.agriculture_rounded,
             size: 42,
             color:
-                Color(0xFF94A3B8),
+                primaryGreen,
           ),
         ),
       );
     }
 
     return Image.network(
-      url,
+      imageUrl,
 
       fit: BoxFit.cover,
-
-      width: double.infinity,
 
       errorBuilder: (
         context,
@@ -1429,15 +1255,14 @@ class _BuyerHomeScreenState
         stackTrace,
       ) {
         return Container(
-          color:
-              const Color(0xFFF1F5F9),
+          color: lightGreen,
 
           child: const Center(
             child: Icon(
-              Icons.image_outlined,
-              size: 42,
+              Icons.broken_image_outlined,
+              size: 36,
               color:
-                  Color(0xFF94A3B8),
+                  primaryGreen,
             ),
           ),
         );
@@ -1446,7 +1271,7 @@ class _BuyerHomeScreenState
   }
 
   // ============================================================
-  // FORMAT STOCK
+  // STOCK
   // ============================================================
 
   String _formatStock(
@@ -1455,29 +1280,301 @@ class _BuyerHomeScreenState
     final quantity =
         listing.quantity;
 
-    if (quantity >= 1000) {
-      return
-          '${(quantity / 1000).toStringAsFixed(1)} Ton';
+    if (quantity % 1 == 0) {
+      return '${quantity.toInt()} ${listing.unit}';
     }
 
-    return
-        '${quantity.toStringAsFixed(0)} ${listing.unit}';
+    return '$quantity ${listing.unit}';
   }
 }
 
+// ================================================================
+// CATEGORY MODEL
+// ================================================================
 
-// ============================================================================
-// MODEL KATEGORI
-// ============================================================================
-
-class _HomeCategory {
-  const _HomeCategory({
-    required this.label,
+class _BuyerCategory {
+  const _BuyerCategory({
+    required this.title,
     required this.icon,
+    required this.backgroundColor,
+    required this.iconColor,
     required this.category,
+    required this.route,
   });
 
-  final String label;
+  final String title;
   final IconData icon;
+  final Color backgroundColor;
+  final Color iconColor;
+
+  // Nilai yang dikirim ke MarketplaceScreen
   final String category;
+
+  // Route khusus untuk lelang / kontrak
+  final String route;
+}
+
+// ================================================================
+// BUYER HOME HEADER
+// ================================================================
+
+class _BuyerHomeHeaderDelegate
+    extends SliverPersistentHeaderDelegate {
+  const _BuyerHomeHeaderDelegate({
+    required this.cartCount,
+    required this.onCartTap,
+    required this.onNotificationTap,
+  });
+
+  final int cartCount;
+
+  final VoidCallback onCartTap;
+
+  final VoidCallback onNotificationTap;
+
+  @override
+  double get minExtent => 72;
+
+  @override
+  double get maxExtent => 72;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Material(
+      color: Colors.white,
+
+      elevation:
+          overlapsContent ? 2 : 0,
+
+      child: Container(
+        height: 72,
+
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 16,
+        ),
+
+        decoration:
+            const BoxDecoration(
+          color: Colors.white,
+
+          border: Border(
+            bottom: BorderSide(
+              color:
+                  Color(0xFFE5E7EB),
+              width: 1,
+            ),
+          ),
+        ),
+
+        child: Row(
+          children: [
+            // ==================================================
+            // PADI LOGO
+            // ==================================================
+
+            SizedBox(
+              width: 64,
+              height: 54,
+
+              child: Image.asset(
+                padiLogo,
+
+                fit: BoxFit.contain,
+
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons
+                        .image_not_supported_outlined,
+                    color:
+                        Color(0xFF94A3B8),
+                    size: 28,
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(
+              width: 8,
+            ),
+
+            // ==================================================
+            // BRAND
+            // ==================================================
+
+            const Expanded(
+              child: Column(
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
+                children: [
+                  Text(
+                    'PADI',
+
+                    style: TextStyle(
+                      color: textDark,
+
+                      fontSize: 18,
+
+                      fontWeight:
+                          FontWeight.w900,
+
+                      letterSpacing:
+                          0.5,
+                    ),
+                  ),
+
+                  Text(
+                    'Marketplace',
+
+                    style: TextStyle(
+                      color: textGrey,
+
+                      fontSize: 10,
+
+                      fontWeight:
+                          FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ==================================================
+            // NOTIFICATION
+            // ==================================================
+
+            IconButton(
+              onPressed:
+                  onNotificationTap,
+
+              tooltip:
+                  'Notifikasi',
+
+              splashRadius: 24,
+
+              icon: const Icon(
+                Icons
+                    .notifications_none_rounded,
+
+                color:
+                    primaryGreen,
+
+                size: 26,
+              ),
+            ),
+
+            // ==================================================
+            // CART
+            // ==================================================
+
+            Stack(
+              clipBehavior:
+                  Clip.none,
+
+              children: [
+                IconButton(
+                  onPressed:
+                      onCartTap,
+
+                  tooltip:
+                      'Keranjang',
+
+                  splashRadius: 24,
+
+                  icon: const Icon(
+                    Icons
+                        .shopping_cart_outlined,
+
+                    color:
+                        primaryGreen,
+
+                    size: 27,
+                  ),
+                ),
+
+                // ==================================================
+                // CART BADGE
+                // ==================================================
+
+                if (cartCount > 0)
+                  Positioned(
+                    top: 2,
+                    right: 0,
+
+                    child: Container(
+                      constraints:
+                          const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 4,
+                      ),
+
+                      decoration:
+                          const BoxDecoration(
+                        color:
+                            Color(0xFFEF4444),
+
+                        shape:
+                            BoxShape.circle,
+                      ),
+
+                      child: Text(
+                        cartCount > 99
+                            ? '99+'
+                            : '$cartCount',
+
+                        textAlign:
+                            TextAlign.center,
+
+                        style:
+                            const TextStyle(
+                          color:
+                              Colors.white,
+
+                          fontSize: 8,
+
+                          fontWeight:
+                              FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(
+    covariant
+        _BuyerHomeHeaderDelegate
+            oldDelegate,
+  ) {
+    return oldDelegate.cartCount !=
+            cartCount ||
+        oldDelegate.onCartTap !=
+            onCartTap ||
+        oldDelegate.onNotificationTap !=
+            onNotificationTap;
+  }
 }

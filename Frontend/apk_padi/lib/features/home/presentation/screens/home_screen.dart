@@ -10,6 +10,7 @@ import 'package:padi/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/home/presentation/widgets/community_alert_card.dart';
 import 'package:padi/features/home/presentation/widgets/crop_journey_card.dart';
+import 'package:padi/features/home/presentation/widgets/daily_priority_section.dart';
 import 'package:padi/features/home/presentation/widgets/farm_hero_card.dart';
 import 'package:padi/features/home/presentation/widgets/harvest_marketplace_cta.dart';
 import 'package:padi/features/home/presentation/widgets/home_header.dart';
@@ -21,6 +22,27 @@ import 'package:padi/features/home/presentation/widgets/smart_insight_card.dart'
 import 'package:padi/features/home/presentation/widgets/today_activity_section.dart';
 import 'package:padi/features/home/presentation/widgets/upcoming_events_banner.dart';
 import 'package:padi/features/home/presentation/widgets/weather_card.dart';
+
+// --- Daily Priority Family Provider ---
+final _dailyPriorityFamilyProvider = FutureProvider.family<({int? hst, List<DailyPriorityItem> priorities}), int?>((ref, farmId) async {
+  if (farmId == null || farmId <= 0) {
+    return (hst: null, priorities: <DailyPriorityItem>[]);
+  }
+  final apiClient = ref.read(apiClientProvider);
+  try {
+    final res = await apiClient.dio.get('/farms/$farmId/daily-priority');
+    final data = res.data?['data'] as Map<String, dynamic>? ?? {};
+    final rawList = data['priorities'] as List? ?? [];
+    final hst = (data['hst'] as num?)?.toInt();
+    final list = rawList
+        .whereType<Map>()
+        .map((e) => DailyPriorityItem.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+    return (hst: hst, priorities: list);
+  } catch (_) {
+    return (hst: null, priorities: <DailyPriorityItem>[]);
+  }
+});
 
 // --- Global Data Provider for Smart Home Dashboard ---
 final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((ref) async {
@@ -174,10 +196,10 @@ List<dynamic> _parseActivities(dynamic response) {
 
       final severity =
           severityStr.contains('high') || severityStr.contains('critical')
-          ? AlertSeverity.high
-          : severityStr.contains('low')
-              ? AlertSeverity.low
-              : AlertSeverity.medium;
+              ? AlertSeverity.high
+              : severityStr.contains('low')
+                  ? AlertSeverity.low
+                  : AlertSeverity.medium;
 
       return (
         '$pestName Terdeteksi',
@@ -331,6 +353,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   const SizedBox(height: HomeSpacing.md),
 
+                  // PPL Verification Desk Banner (for Extension Officers)
+                  if (user?.role == 'extension_officer') ...[
+                    InkWell(
+                      onTap: () => context.push('/ppl-cases'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0284C7),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.assignment_turned_in_rounded, color: Color(0xFF0284C7), size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Meja Validasi Kasus PPL',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Buka antrean diagnosa daun petani untuk validasi lapangan',
+                                    style: TextStyle(fontSize: 11, color: Color(0xFFE0F2FE)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 22),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: HomeSpacing.md),
+                  ],
+
                   // Dashboard Content with State Management
                   dashboardAsync.when(
                     data: (data) => _buildDashboardContent(data, s),
@@ -406,6 +485,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       AppLanguage.en => 'Check Crops Now',
     };
 
+    final dailyPriorityAsync = ref.watch(_dailyPriorityFamilyProvider(selectedFarm?.id));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -423,7 +504,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         const SizedBox(height: HomeSpacing.md),
 
-        // C. Smart Contextual Insight (Single Priority Attention)
+        // C. Daily Farm Action Priorities
+        dailyPriorityAsync.when(
+          data: (pData) => DailyPrioritySection(
+            priorities: pData.priorities,
+            hst: pData.hst,
+            farmName: selectedFarm?.name,
+          ),
+          loading: () => const DailyPrioritySection(
+            priorities: [],
+            isLoading: true,
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+
+        const SizedBox(height: HomeSpacing.md),
+
+        // D. Smart Contextual Insight (Single Priority Attention)
         SmartInsightCard(
           title: insightTitle,
           description: insightDesc,
@@ -433,9 +530,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         const SizedBox(height: HomeSpacing.md),
 
-        // D. Modern Weather & Agroklimat Card
+        // E. Modern Weather & Agroklimat Card
         WeatherCard(
           locationName: weatherLocation,
+          farmId: selectedFarm?.id,
           onTapCalendar: () => context.push('/planting-calendar'),
         ),
 
@@ -464,7 +562,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             border: Border.all(color: const Color(0xFFA7F3D0)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF059669).withOpacity(0.04),
+                color: const Color(0xFF059669).withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -487,17 +585,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Icon(Icons.handshake_outlined, color: Color(0xFF059669), size: 18),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Nego Penawaran',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              s.negoOffers,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                             ),
                             Text(
-                              'Kelola tawar balik',
-                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                              s.manageCounterOffers,
+                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                             ),
                           ],
                         ),
@@ -523,17 +621,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: const Icon(Icons.assessment_outlined, color: Color(0xFF047857), size: 18),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Laporan Penjualan',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              s.salesReport,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                             ),
                             Text(
-                              'Omzet & faktur sah',
-                              style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                              s.verifiedRevenue,
+                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                             ),
                           ],
                         ),

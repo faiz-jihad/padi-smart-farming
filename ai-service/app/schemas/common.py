@@ -32,3 +32,4 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     model_version: str
     model_error: str | None = Field(default=None)
+    python_version: str

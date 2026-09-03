@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class HarvestMarketplaceCta extends StatelessWidget {
@@ -13,12 +15,41 @@ class HarvestMarketplaceCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final lang = ref.watch(languageProvider);
+        final s = AppStrings(lang);
+
+    final title = switch (lang) {
+      AppLanguage.id => 'Jual Hasil Panen Petani',
+      AppLanguage.jv => 'Adol Asil Panen Petani',
+      AppLanguage.en => 'Sell Farmer Crop Harvest',
+    };
+
+    final subtitle = switch (lang) {
+      AppLanguage.id => 'Hubungkan gabah langsung ke mitra pembeli & penggilingan.',
+      AppLanguage.jv => 'Sambungake gabah langsung marang bakul & panggilingan.',
+      AppLanguage.en => 'Connect grain directly to verified buyers & mills.',
+    };
+
+    final createOfferLabel = switch (lang) {
+      AppLanguage.id => '+ Buat Penawaran',
+      AppLanguage.jv => '+ Gawe Tawaran',
+      AppLanguage.en => '+ Create Offer',
+    };
+
+    final openMarketLabel = switch (lang) {
+      AppLanguage.id => 'Buka Pasar',
+      AppLanguage.jv => 'Bukak Pasar',
+      AppLanguage.en => 'Open Market',
+    };
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(HomeRadius.xl),
         boxShadow: [
           BoxShadow(
-            color: HomeColors.harvestGold.withOpacity(0.25),
+            color: HomeColors.harvestGold.withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -35,9 +66,9 @@ class HarvestMarketplaceCta extends StatelessWidget {
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
             colors: [
-              const Color(0xFF78350F).withOpacity(0.94),
-              const Color(0xFF92400E).withOpacity(0.88),
-              const Color(0xFFB45309).withOpacity(0.80),
+              const Color(0xFF78350F).withValues(alpha: 0.94),
+              const Color(0xFF92400E).withValues(alpha: 0.88),
+              const Color(0xFFB45309).withValues(alpha: 0.80),
             ],
           ),
         ),
@@ -52,12 +83,12 @@ class HarvestMarketplaceCta extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
+                      color: Colors.white.withValues(alpha: 0.22),
                       borderRadius: BorderRadius.circular(HomeRadius.pill),
                     ),
-                    child: const Text(
-                      'PASAR GABAH & BERAS',
-                      style: TextStyle(
+                    child: Text(
+                      s.harvestMarketTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 9.5,
                         fontWeight: FontWeight.w900,
@@ -66,9 +97,9 @@ class HarvestMarketplaceCta extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Jual Hasil Panen Petani',
-                    style: TextStyle(
+                  Text(
+                    title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -77,11 +108,11 @@ class HarvestMarketplaceCta extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Hubungkan gabah langsung ke mitra pembeli & penggilingan.',
+                    subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.90),
+                      color: Colors.white.withValues(alpha: 0.90),
                       fontSize: 11.5,
                       height: 1.3,
                     ),
@@ -105,9 +136,9 @@ class HarvestMarketplaceCta extends StatelessWidget {
                             borderRadius: BorderRadius.circular(HomeRadius.sm),
                           ),
                         ),
-                        child: const Text(
-                          '+ Buat Penawaran',
-                          style: TextStyle(
+                        child: Text(
+                          createOfferLabel,
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w900,
                           ),
@@ -124,9 +155,9 @@ class HarvestMarketplaceCta extends StatelessWidget {
                           ),
                           minimumSize: const Size(40, 32),
                         ),
-                        child: const Text(
-                          'Buka Pasar',
-                          style: TextStyle(
+                        child: Text(
+                          openMarketLabel,
+                          style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             decoration: TextDecoration.underline,
@@ -139,22 +170,25 @@ class HarvestMarketplaceCta extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: HomeSpacing.sm),
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.16),
+                color: Colors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.storefront_rounded,
-                color: Color(0xFFFDE68A),
-                size: 28,
+                color: Colors.white,
+                size: 26,
               ),
             ),
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

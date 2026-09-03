@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import platform
+
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import ServiceContainer, get_container
@@ -17,4 +19,5 @@ def health_check(container: ServiceContainer = Depends(get_container)) -> Health
         model_loaded=classifier.is_loaded,
         model_version=classifier.model_version,
         model_error=classifier.load_error,
+        python_version=platform.python_version(),
     )

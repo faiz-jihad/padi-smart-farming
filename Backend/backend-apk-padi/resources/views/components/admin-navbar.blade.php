@@ -183,14 +183,18 @@
         var toggle = document.getElementById(toggleId);
         var panel  = document.getElementById(panelId);
         if (!toggle || !panel) return;
+        if (toggle.dataset.popoverBound === 'true') return;
+
+        toggle.dataset.popoverBound = 'true';
 
         function open()  { panel.hidden = false; toggle.setAttribute('aria-expanded', 'true'); }
         function close() { panel.hidden = true;  toggle.setAttribute('aria-expanded', 'false'); }
 
         toggle.addEventListener('click', function (e) {
             e.stopPropagation();
+            e.stopImmediatePropagation();
             panel.hidden ? open() : close();
-        });
+        }, true);
 
         panel.addEventListener('click', function (e) { e.stopPropagation(); });
 

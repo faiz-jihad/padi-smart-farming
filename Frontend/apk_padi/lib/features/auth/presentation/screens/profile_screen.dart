@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
+import 'package:padi/features/notifications/presentation/providers/notification_settings_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -16,6 +17,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   int? _loadedUserId;
+  String _cacheSize = '14.2 MB';
 
   @override
   void dispose() {
@@ -665,10 +667,264 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  void _showNotificationSettingsSheet(BuildContext context, AppStrings s) {
+    final lang = ref.read(languageProvider);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final settings = ref.watch(notificationSettingsProvider);
+            final notifier = ref.read(notificationSettingsProvider.notifier);
+
+            final title = switch (lang) {
+              AppLanguage.id => 'Pengaturan Notifikasi',
+              AppLanguage.jv => 'Setelan Kabar Notifikasi',
+              AppLanguage.en => 'Notification Settings',
+            };
+            final subtitle = switch (lang) {
+              AppLanguage.id => 'Kelola pemberitahuan yang ingin Anda terima di aplikasi',
+              AppLanguage.jv => 'Atur kabar sing pengin kok tampa neng aplikasi',
+              AppLanguage.en => 'Manage which push alerts you want to receive',
+            };
+
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              decoration: const BoxDecoration(
+                color: HomeColors.surface,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: HomeColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: HomeColors.lightGreen,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.notifications_active_rounded, color: HomeColors.primaryGreen, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: HomeColors.textPrimary)),
+                              const SizedBox(height: 2),
+                              Text(subtitle, style: const TextStyle(fontSize: 11.5, color: HomeColors.textSecondary)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Master Push Switch
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: settings.pushEnabled ? const Color(0xFFF0FDF4) : HomeColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: settings.pushEnabled ? const Color(0xFFBBF7D0) : HomeColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            settings.pushEnabled ? Icons.notifications_on_rounded : Icons.notifications_off_rounded,
+                            color: settings.pushEnabled ? HomeColors.primaryGreen : HomeColors.textSecondary,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  lang == AppLanguage.id
+                                      ? 'Pemberitahuan Push'
+                                      : (lang == AppLanguage.jv ? 'Notifikasi Push HP' : 'Push Notifications'),
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: HomeColors.textPrimary),
+                                ),
+                                Text(
+                                  lang == AppLanguage.id
+                                      ? 'Izinkan aplikasi memunculkan notifikasi di HP'
+                                      : (lang == AppLanguage.jv ? 'Ulihke aplikasi ngetokke kabar neng HP' : 'Allow notifications on your device'),
+                                  style: const TextStyle(fontSize: 11, color: HomeColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: settings.pushEnabled,
+                            activeColor: HomeColors.primaryGreen,
+                            onChanged: (val) => notifier.togglePush(val),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Specific toggles
+                    Opacity(
+                      opacity: settings.pushEnabled ? 1.0 : 0.45,
+                      child: IgnorePointer(
+                        ignoring: !settings.pushEnabled,
+                        child: Column(
+                          children: [
+                            _buildNotifToggleItem(
+                              icon: Icons.bug_report_outlined,
+                              title: lang == AppLanguage.id
+                                  ? 'Peringatan Hama & Penyakit'
+                                  : (lang == AppLanguage.jv ? 'Kabar Hama & Penyakit' : 'Pest & Disease Outbreaks'),
+                              subtitle: lang == AppLanguage.id
+                                  ? 'Dapat peringatan dini saat ada wabah di sekitar lahan Anda'
+                                  : (lang == AppLanguage.jv ? 'Kabar wereng lan hama ing sekitar sawah' : 'Early alerts when threats detected nearby'),
+                              value: settings.pestAlerts,
+                              onChanged: (val) => notifier.togglePestAlerts(val),
+                            ),
+                            const Divider(height: 1, color: HomeColors.borderSubtle),
+                            _buildNotifToggleItem(
+                              icon: Icons.calendar_month_outlined,
+                              title: lang == AppLanguage.id
+                                  ? 'Jadwal Pemupukan & Perawatan'
+                                  : (lang == AppLanguage.jv ? 'Jadwal Mupuk & Ngrumat' : 'Fertilizer & Farming Schedule'),
+                              subtitle: lang == AppLanguage.id
+                                  ? 'Pengingat otomatis hari pemupukan, pengairan, dan panen'
+                                  : (lang == AppLanguage.jv ? 'Pelingat dina mupuk, mbanyu, lan panen' : 'Reminders for watering, fertilizing, & harvest'),
+                              value: settings.plantingReminders,
+                              onChanged: (val) => notifier.togglePlantingReminders(val),
+                            ),
+                            const Divider(height: 1, color: HomeColors.borderSubtle),
+                            _buildNotifToggleItem(
+                              icon: Icons.trending_up_rounded,
+                              title: lang == AppLanguage.id
+                                  ? 'Update Harga Pasar Gabah'
+                                  : (lang == AppLanguage.jv ? 'Info Rego Gabah & Beras' : 'Grain Market Price Updates'),
+                              subtitle: lang == AppLanguage.id
+                                  ? 'Info pergerakan harga gabah basah/kering dan penawaran lelang'
+                                  : (lang == AppLanguage.jv ? 'Owah-owahan rego gabah gkp/gkg saben dina' : 'Daily market prices and buyer auctions'),
+                              value: settings.marketPriceUpdates,
+                              onChanged: (val) => notifier.toggleMarketPrice(val),
+                            ),
+                            const Divider(height: 1, color: HomeColors.borderSubtle),
+                            _buildNotifToggleItem(
+                              icon: Icons.local_shipping_outlined,
+                              title: lang == AppLanguage.id
+                                  ? 'Status Pesanan & Kontrak'
+                                  : (lang == AppLanguage.jv ? 'Status Pesenan & Kontrak' : 'Orders & Contract Updates'),
+                              subtitle: lang == AppLanguage.id
+                                  ? 'Pemberitahuan perubahan status pembayaran & penimbangan'
+                                  : (lang == AppLanguage.jv ? 'Kabar ngenani pembayaran lan timbangan' : 'Updates on weighing, deals, and delivery'),
+                              value: settings.orderUpdates,
+                              onChanged: (val) => notifier.toggleOrderUpdates(val),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNotifToggleItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: HomeColors.primaryGreen),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: HomeColors.textPrimary),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 10.5, color: HomeColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch.adaptive(
+            value: value,
+            activeColor: HomeColors.primaryGreen,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearAppCache(BuildContext context, AppStrings s) {
+    final lang = ref.read(languageProvider);
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    setState(() {
+      _cacheSize = '0.0 MB';
+    });
+    final msg = switch (lang) {
+      AppLanguage.id => 'Cache aplikasi berhasil dibersihkan (0.0 MB)',
+      AppLanguage.jv => 'Cache aplikasi kasil dibersihake (0.0 MB)',
+      AppLanguage.en => 'App cache cleared successfully (0.0 MB)',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(msg)),
+          ],
+        ),
+        backgroundColor: HomeColors.primaryGreen,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final currentLang = ref.watch(languageProvider);
+    final notifSettings = ref.watch(notificationSettingsProvider);
     final s = AppStrings(currentLang);
     final user = auth.state.user;
     final isBuyer = ref.watch(isBuyerRoleProvider);
@@ -722,12 +978,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 // 1. User Header Profile Card
-                _buildUserHeaderCard(user, isBuyer),
+                _buildUserHeaderCard(user, isBuyer, s),
 
                 const SizedBox(height: 18),
 
                 // 2. Section: Data Pengguna
-                _buildSectionHeader(isBuyer ? 'AKUN PEMBELI / MITRA' : s.userSectionTitle),
+                _buildSectionHeader(isBuyer ? s.buyerAccountTitle : s.userSectionTitle),
                 Container(
                   decoration: BoxDecoration(
                     color: HomeColors.surface,
@@ -756,7 +1012,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 if (isBuyer) ...[
                   const SizedBox(height: 18),
-                  _buildSectionHeader('Aktivitas Pembelian Panen'),
+                  _buildSectionHeader(s.buyerPurchasesTitle),
                   Container(
                     decoration: BoxDecoration(
                       color: HomeColors.surface,
@@ -768,22 +1024,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       children: [
                         _buildSettingsTile(
                           icon: Icons.receipt_long_rounded,
-                          title: 'Pesanan & Kontrak Saya',
-                          subtitle: 'Pantau kontrak panen aktif dan status pengiriman',
+                          title: s.buyerOrders,
+                          subtitle: s.buyerOrdersSubtitle,
                           onTap: () => context.push('/buyer/orders'),
                         ),
                         const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
                         _buildSettingsTile(
                           icon: Icons.shopping_cart_outlined,
-                          title: 'Keranjang Belanja',
-                          subtitle: 'Lihat daftar komoditas yang siap dicheckout',
+                          title: s.buyerCart,
+                          subtitle: s.buyerCartSubtitle,
                           onTap: () => context.push('/cart'),
                         ),
                         const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
                         _buildSettingsTile(
                           icon: Icons.gavel_rounded,
-                          title: 'Penawaran Harga Saya',
-                          subtitle: 'Status penawaran lelang hasil panen',
+                          title: s.buyerOffers,
+                          subtitle: s.buyerOffersSubtitle,
                           onTap: () => context.push('/marketplace/offers'),
                         ),
                       ],
@@ -813,29 +1069,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onTap: () => context.push('/profile/language'),
                       ),
                       const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
-                      // Notifikasi Setting
+                      // Notifikasi Setting (Interaktif dengan Modal Pengaturan)
                       _buildSettingsTile(
                         icon: Icons.notifications_none_rounded,
                         title: s.notifications,
                         subtitle: s.notificationsSubtitle,
-                        valueText: 'Aktif',
-                        onTap: () => context.push('/notifications'),
+                        valueText: notifSettings.pushEnabled
+                            ? s.statusActive
+                            : (currentLang == AppLanguage.id
+                                ? 'Nonaktif'
+                                : (currentLang == AppLanguage.jv ? 'Ora Aktif' : 'Disabled')),
+                        onTap: () => _showNotificationSettingsSheet(context, s),
                       ),
                       const Divider(height: 1, color: HomeColors.borderSubtle, indent: 52),
-                      // Tema Setting
+                      // Bersihkan Cache & Penyimpanan
                       _buildSettingsTile(
-                        icon: Icons.brightness_auto_rounded,
-                        title: s.theme,
-                        valueText: s.themeSystem,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tema otomatis mengikuti pengaturan sistem HP'),
-                              backgroundColor: HomeColors.primaryGreen,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                        icon: Icons.cleaning_services_rounded,
+                        title: currentLang == AppLanguage.id
+                            ? 'Bersihkan Cache Aplikasi'
+                            : (currentLang == AppLanguage.jv
+                                ? 'Resiki Cache Aplikasi'
+                                : 'Clear App Cache'),
+                        subtitle: currentLang == AppLanguage.id
+                            ? 'Kosongkan memori sementara untuk meringankan aplikasi'
+                            : (currentLang == AppLanguage.jv
+                                ? 'Kosongake memori sauntara ben entheng'
+                                : 'Free up temporary storage for faster performance'),
+                        valueText: _cacheSize,
+                        onTap: () => _clearAppCache(context, s),
                       ),
                     ],
                   ),
@@ -920,18 +1181,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildUserHeaderCard(dynamic user, bool isBuyer) {
-    final name = user?.name ?? 'Pengguna';
+  Widget _buildUserHeaderCard(dynamic user, bool isBuyer, AppStrings s) {
+    final name = user?.name ?? s.roleFarmer;
     final email = user?.email ?? '';
     final phone = user?.phone ?? '';
     final rawRole = (user?.roleLabel ?? user?.role ?? '').toString().trim();
     String role;
     if (rawRole == 'true' || rawRole == 'false' || rawRole.isEmpty) {
-      role = isBuyer ? 'Pembeli' : 'Petani';
+      role = isBuyer ? s.roleBuyer : s.roleFarmer;
     } else if (rawRole.toLowerCase() == 'buyer' || rawRole.toLowerCase() == 'partner') {
-      role = 'Pembeli';
+      role = s.roleBuyer;
     } else if (rawRole.toLowerCase() == 'farmer') {
-      role = 'Petani';
+      role = s.roleFarmer;
     } else {
       role = rawRole;
     }

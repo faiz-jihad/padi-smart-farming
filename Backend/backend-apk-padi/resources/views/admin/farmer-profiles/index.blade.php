@@ -24,13 +24,13 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="m7 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span class="fp-breadcrumb-current">Profil Publik Petani</span>
+        <span class="fp-breadcrumb-current">Website Usaha Tani</span>
     </nav>
 
     {{-- Header with Create Action --}}
     <div class="fp-header">
         <div>
-            <h1 class="fp-title">Profil Publik Petani</h1>
+            <h1 class="fp-title">Website Usaha Tani</h1>
             <p class="fp-description">Monitor, verifikasi, buat, dan kelola website publik seluruh kelompok & usaha tani di bawah domain P.A.D.I.</p>
         </div>
 
@@ -40,7 +40,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
-                Tambah Profil Publik
+                Tambah Website Usaha Tani
             </a>
         </div>
     </div>
@@ -96,11 +96,8 @@
                     <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
                     <path d="M2 12h20"/>
                 </svg>
-                <p style="font-size:14px; font-weight:700; color:#334155; margin:0 0 4px;">Belum ada profil publik petani</p>
+                <p style="font-size:14px; font-weight:700; color:#334155; margin:0 0 4px;">Belum ada website usaha tani</p>
                 <p style="font-size:12px; margin:0 0 16px;">Klik tombol di bawah untuk membuat website company profile pertama petani.</p>
-                <a href="{{ route('admin.farmer-profiles.create') }}" class="admin-btn">
-                    + Tambah Profil Publik Baru
-                </a>
             </div>
         @else
             <div style="overflow-x:auto;">

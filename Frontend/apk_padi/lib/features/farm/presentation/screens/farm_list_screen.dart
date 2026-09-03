@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/core/utils/debouncer.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
@@ -147,6 +148,8 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final s = AppStrings(lang);
     final farmsAsync = ref.watch(userFarmsProvider);
 
     return Scaffold(
@@ -166,12 +169,12 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
             }
           },
         ),
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Lahan Pertanian',
-              style: TextStyle(
+              s.navFarms,
+              style: const TextStyle(
                 color: HomeColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
@@ -179,8 +182,8 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
               ),
             ),
             Text(
-              'Kelola petak sawah & GIS',
-              style: TextStyle(
+              s.farmPlotsGis,
+              style: const TextStyle(
                 color: HomeColors.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -193,7 +196,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
           farmsAsync.maybeWhen(
             data: (farms) => farms.isNotEmpty
                 ? IconButton(
-                    tooltip: _isMapMode ? 'Buka Mode Daftar' : 'Buka Mode Peta GIS',
+                    tooltip: _isMapMode ? 'Mode Daftar' : 'Mode Peta GIS',
                     onPressed: () => setState(() => _isMapMode = !_isMapMode),
                     icon: Icon(
                       _isMapMode ? Icons.view_list_rounded : Icons.map_rounded,
@@ -204,7 +207,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
             orElse: () => const SizedBox.shrink(),
           ),
           IconButton(
-            tooltip: 'Segarkan data',
+            tooltip: 'Segarkan',
             onPressed: () => ref.invalidate(userFarmsProvider),
             icon: const Icon(Icons.refresh_rounded, color: HomeColors.textPrimary),
           ),
@@ -222,15 +225,15 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.add_location_alt_outlined, size: 20),
-        label: const Text(
-          'Tambah Lahan',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+        label: Text(
+          s.addFarm,
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.2),
         ),
       ),
       body: farmsAsync.when(
         data: (farms) {
           if (farms.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(s);
           }
 
           if (_isMapMode) {
@@ -244,7 +247,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
             );
           }
 
-          return _buildListView(farms);
+          return _buildListView(farms, s);
         },
         loading: () => Center(
           child: ConstrainedBox(
@@ -260,7 +263,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
     );
   }
 
-  Widget _buildListView(List<FarmModel> farms) {
+  Widget _buildListView(List<FarmModel> farms, AppStrings s) {
     final keyword = _searchController.text.trim().toLowerCase();
     final filteredFarms = keyword.isEmpty
         ? farms
@@ -315,7 +318,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Cari nama lahan, desa, atau jenis tanah...',
+                            hintText: s.searchFarmsHint,
                             hintStyle: const TextStyle(
                               color: HomeColors.textSecondary,
                               fontSize: 13,
@@ -351,8 +354,8 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                       // Filter Count
                       Text(
                         filteredFarms.length == farms.length
-                            ? 'Menampilkan ${farms.length} petak lahan aktif'
-                            : '${filteredFarms.length} dari ${farms.length} lahan ditemukan',
+                            ? s.activeFarmsCount(farms.length)
+                            : '${filteredFarms.length} / ${farms.length} ${s.navFarms}',
                         style: HomeTypography.caption.copyWith(
                           color: HomeColors.textSecondary,
                           fontWeight: FontWeight.w600,
@@ -377,13 +380,13 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                     children: [
                       const Icon(Icons.search_off_rounded, size: 42, color: HomeColors.textSecondary),
                       const SizedBox(height: 12),
-                      const Text(
-                        'Tidak ada lahan yang cocok',
+                      Text(
+                        s.noMatchingFarms,
                         style: HomeTypography.cardTitle,
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Coba periksa kata kunci pencarian Anda.',
+                      Text(
+                        s.checkSearchKeyword,
                         style: HomeTypography.supporting,
                       ),
                     ],
@@ -425,12 +428,12 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppStrings s) {
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -448,9 +451,9 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                 ),
               ),
               const SizedBox(height: HomeSpacing.lg),
-              const Text(
-                'Belum Ada Lahan Terdaftar',
-                style: TextStyle(
+              Text(
+                s.noFarmsYet,
+                style: const TextStyle(
                   color: HomeColors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -458,8 +461,8 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Daftarkan petak sawah Anda untuk mendapatkan rekomendasi kalender tanam, takaran pupuk, dan pemantauan satelit.',
+              Text(
+                s.noFarmsDesc,
                 style: HomeTypography.supporting,
                 textAlign: TextAlign.center,
               ),
@@ -472,7 +475,7 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                   }
                 },
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Tambah Lahan Pertama'),
+                label: Text(s.addFirstFarm),
                 style: FilledButton.styleFrom(
                   backgroundColor: HomeColors.primaryGreen,
                   foregroundColor: Colors.white,

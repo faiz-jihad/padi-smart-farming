@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,6 +39,8 @@ import 'package:padi/features/marketplace/presentation/screens/marketplace_scree
 import 'package:padi/features/marketplace/presentation/screens/market_listing_detail_screen.dart';
 import 'package:padi/features/marketplace/presentation/screens/create_market_listing_screen.dart';
 import 'package:padi/features/plant_check/presentation/screens/plant_check_screen.dart';
+import 'package:padi/features/plant_check/presentation/screens/ppl_case_list_screen.dart';
+import 'package:padi/features/plant_check/presentation/screens/ppl_case_detail_screen.dart';
 import 'package:padi/features/cart/data/models/cart_item_model.dart';
 import 'package:padi/features/cart/presentation/screens/cart_screen.dart';
 import 'package:padi/features/cart/presentation/screens/checkout_screen.dart';
@@ -53,6 +56,7 @@ import 'package:padi/features/event/data/providers/event_providers.dart';
 import 'package:padi/features/event/presentation/screens/create_event_screen.dart';
 import 'package:padi/features/event/presentation/screens/event_detail_screen.dart';
 import 'package:padi/features/event/presentation/screens/event_list_screen.dart';
+import 'package:padi/core/widgets/app_error_screen.dart';
 
 export 'package:padi/core/providers/app_providers.dart';
 
@@ -192,6 +196,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/error/offline',
+        builder: (context, state) => AppErrorScreen.offline(
+          onRetry: () async {
+            final returnTo = state.uri.queryParameters['returnTo'] ?? '/home';
+            context.go(returnTo);
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/error/technical',
+        builder: (context, state) {
+          final message = state.uri.queryParameters['message'];
+          return AppErrorScreen.technical(
+            details: message,
+            onRetry: () async {
+              final returnTo = state.uri.queryParameters['returnTo'] ?? '/home';
+              context.go(returnTo);
+            },
+          );
+        },
+      ),
+      GoRoute(
         path: '/reset-password/new',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
@@ -205,6 +231,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
           return NewPasswordScreen(email: email, code: code);
         },
+      ),
+      GoRoute(
+        path: '/error/maintenance',
+        builder: (context, state) => AppErrorScreen.maintenance(
+          onBack: () => context.go('/home'),
+        ),
       ),
       GoRoute(
         path: '/home',
@@ -267,6 +299,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
 
           return AddActivityScreen(cropSeasonId: cropSeasonId);
+        },
+      ),
+      GoRoute(
+        path: '/ppl-cases',
+        builder: (context, state) => const PplCaseListScreen(),
+      ),
+      GoRoute(
+        path: '/ppl-cases/detail',
+        builder: (context, state) {
+          final caseData = state.extra as Map<String, dynamic>? ?? {};
+          return PplCaseDetailScreen(caseData: caseData);
         },
       ),
       GoRoute(

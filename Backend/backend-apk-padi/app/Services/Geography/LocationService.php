@@ -91,25 +91,57 @@ class LocationService
     /**
      * Find a boundary record whose geometry contains the point (lat, lng).
      */
-    private function findBoundaryContainingPoint(string $modelClass, float $latitude, float $longitude): ?object
-    {
-        $boundaries = $modelClass::all();
+    private function findBoundaryContainingPoint(
+        string $modelClass,
+        float $latitude,
+        float $longitude
+    ): ?object {
+        $foreignKey = $modelClass === VillageBoundary::class
+            ? 'village_id'
+            : 'district_id';
 
-        foreach ($boundaries as $boundary) {
-            // Check bounding box first for rapid pruning
-            if ($boundary->bbox && is_array($boundary->bbox) && count($boundary->bbox) >= 4) {
-                [$minLng, $minLat, $maxLng, $maxLat] = $boundary->bbox;
-                if ($longitude < $minLng || $longitude > $maxLng || $latitude < $minLat || $latitude > $maxLat) {
-                    continue;
+        $candidates = $modelClass::query()
+            ->select(['id', 'bbox'])
+            ->whereNotNull('bbox')
+            ->get()
+            ->filter(function ($boundary) use ($latitude, $longitude) {
+                if (!is_array($boundary->bbox) || count($boundary->bbox) < 4) {
+                    return false;
                 }
+
+                [$minLng, $minLat, $maxLng, $maxLat] = $boundary->bbox;
+
+                return $longitude >= (float) $minLng
+                    && $longitude <= (float) $maxLng
+                    && $latitude >= (float) $minLat
+                    && $latitude <= (float) $maxLat;
+            });
+
+        foreach ($candidates as $candidate) {
+            $boundary = $modelClass::query()
+                ->select([
+                    'id',
+                    $foreignKey,
+                    'geometry',
+                    'bbox',
+                ])
+                ->find($candidate->id);
+
+            if (!$boundary) {
+                continue;
             }
 
             $geometry = $boundary->geometry_array;
+
             if (!$geometry) {
                 continue;
             }
 
-            if ($this->isPointInGeometry($longitude, $latitude, $geometry)) {
+            if ($this->isPointInGeometry(
+                $longitude,
+                $latitude,
+                $geometry
+            )) {
                 return $boundary;
             }
         }
