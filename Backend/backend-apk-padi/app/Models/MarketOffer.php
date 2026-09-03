@@ -14,6 +14,7 @@ class MarketOffer extends Model
         'quantity',
         'message',
         'status',
+        'last_offer_by',
     ];
 
     public function listing(): BelongsTo
