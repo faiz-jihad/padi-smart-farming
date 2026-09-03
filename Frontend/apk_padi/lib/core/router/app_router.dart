@@ -572,6 +572,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EventListScreen(),
       ),
       GoRoute(
+        path: '/events/create',
+        builder: (context, state) => const CreateEventScreen(),
+      ),
+      GoRoute(
         path: '/events/detail',
         builder: (context, state) {
           final event = state.extra as EventModel?;
@@ -614,11 +618,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
           return EventDetailScreen(event: event);
         },
-      ),
-      GoRoute(
-        path: '/events/create',
-        builder: (context, state) => const CreateEventScreen(),
-      ),
+      ),  
     ],
     redirect: (context, state) {
       final location = state.matchedLocation;
