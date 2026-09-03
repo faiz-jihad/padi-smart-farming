@@ -13,23 +13,10 @@ class ApiClient {
           Dio(
             BaseOptions(
               baseUrl: AppConfig.apiBaseUrl,
-
-              // Gunakan konfigurasi dari AppConfig
-              connectTimeout:
-                  AppConfig.apiConnectTimeout,
-              receiveTimeout:
-                  AppConfig.apiReceiveTimeout,
-              sendTimeout:
-                  AppConfig.apiSendTimeout,
-
-              // =====================================================
-              // PENTING
-              // Paksa Dio meminta dan decode response sebagai JSON.
-              // Ini diperlukan untuk endpoint marketplace/invoice.
-              // =====================================================
-              responseType:
-                  ResponseType.json,
-
+              connectTimeout: AppConfig.apiConnectTimeout,
+              receiveTimeout: AppConfig.apiReceiveTimeout,
+              sendTimeout: AppConfig.apiSendTimeout,
+              responseType: ResponseType.json,
               headers: {
                 'Accept': 'application/json',
               },
@@ -37,53 +24,53 @@ class ApiClient {
           ) {
     this.dio.interceptors.add(
       InterceptorsWrapper(
-        // ===========================================================
-        // REQUEST
-        // ===========================================================
-
         onRequest: (
           options,
           handler,
         ) async {
-          // Selalu gunakan host aktif dari AppConfig.
-          options.baseUrl =
-              AppConfig.apiBaseUrl;
+          // ============================================================
+          // REQUEST
+          // ============================================================
 
-          // =========================================================
-          // RESPONSE JSON
-          // =========================================================
+          options.baseUrl = AppConfig.apiBaseUrl;
 
-          options.responseType =
-              ResponseType.json;
+          var path = options.path.trim();
 
-          options.headers['Accept'] =
-              'application/json';
+          path = path.replaceFirst(
+            RegExp(r'^/?api/v1/?'),
+            '',
+          );
 
-          // =========================================================
+          if (!path.startsWith('/')) {
+            path = '/$path';
+          }
+
+          options.path = path;
+
+          options.responseType = ResponseType.json;
+
+          options.headers['Accept'] = 'application/json';
+
+          // ============================================================
           // TOKEN
-          // =========================================================
+          // ============================================================
 
-          final token =
-              await _tokenStorage.readToken();
+          final token = await _tokenStorage.readToken();
 
           if (kDebugMode) {
-            final tokenPreview =
-                token == null
-                    ? 'NULL'
-                    : '${token.substring(
-                        0,
-                        token.length > 15
-                            ? 15
-                            : token.length,
-                      )}...';
+            final tokenPreview = token == null
+                ? 'NULL'
+                : '${token.substring(
+                    0,
+                    token.length > 15 ? 15 : token.length,
+                  )}...';
 
             debugPrint(
               '🔑 TOKEN: $tokenPreview',
             );
           }
 
-          if (token != null &&
-              token.isNotEmpty) {
+          if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] =
                 'Bearer $token';
           } else {
@@ -92,9 +79,9 @@ class ApiClient {
             );
           }
 
-          // =========================================================
-          // DEBUG LOG
-          // =========================================================
+          // ============================================================
+          // DEBUG REQUEST
+          // ============================================================
 
           if (kDebugMode) {
             debugPrint(
@@ -113,14 +100,14 @@ class ApiClient {
           handler.next(options);
         },
 
-        // ===========================================================
-        // RESPONSE
-        // ===========================================================
-
         onResponse: (
           response,
           handler,
         ) {
+          // ============================================================
+          // DEBUG RESPONSE
+          // ============================================================
+
           if (kDebugMode) {
             debugPrint(
               '======================================',
@@ -148,10 +135,8 @@ class ApiClient {
               '${response.data.runtimeType}',
             );
 
-            // Jangan membuat log terlalu panjang.
             final dataString =
-                response.data?.toString() ??
-                'NULL';
+                response.data?.toString() ?? 'NULL';
 
             if (dataString.length > 3000) {
               debugPrint(
@@ -173,14 +158,14 @@ class ApiClient {
           handler.next(response);
         },
 
-        // ===========================================================
-        // ERROR
-        // ===========================================================
-
         onError: (
           error,
           handler,
         ) async {
+          // ============================================================
+          // DEBUG ERROR
+          // ============================================================
+
           if (kDebugMode) {
             debugPrint(
               '======================================',
@@ -226,9 +211,9 @@ class ApiClient {
             );
           }
 
-          // =========================================================
+          // ============================================================
           // UNAUTHORIZED
-          // =========================================================
+          // ============================================================
 
           if (error.response?.statusCode == 401) {
             await _tokenStorage.clearToken();
@@ -239,30 +224,20 @@ class ApiClient {
             return;
           }
 
-          // =========================================================
-          // CEK APAKAH PERLU PINDAH HOST
-          // =========================================================
+          // ============================================================
+          // RETRY HOST
+          // ============================================================
 
-          if (!_shouldRetryWithAnotherHost(
-            error,
-          )) {
+          if (!_shouldRetryWithAnotherHost(error)) {
             handler.next(error);
             return;
           }
 
-          // =========================================================
-          // RETRY HOST
-          // =========================================================
-
           final retryResponse =
-              await _retryWithAvailableHosts(
-            error,
-          );
+              await _retryWithAvailableHosts(error);
 
           if (retryResponse != null) {
-            handler.resolve(
-              retryResponse,
-            );
+            handler.resolve(retryResponse);
             return;
           }
 
@@ -272,33 +247,29 @@ class ApiClient {
     );
   }
 
-  // ===============================================================
+  // ============================================================
   // FIELDS
-  // ===============================================================
+  // ============================================================
 
   final TokenStorage _tokenStorage;
 
   final Dio dio;
 
-  // ===============================================================
-  // CEK RETRY HOST
-  // ===============================================================
+  // ============================================================
+  // HOST RETRY
+  // ============================================================
 
   bool _shouldRetryWithAnotherHost(
     DioException error,
   ) {
-    // Jika user memang menentukan base URL secara eksplisit,
-    // jangan pindah-pindah host.
     if (AppConfig.hasExplicitBaseUrl) {
       return false;
     }
 
-    // Tidak ada host lain untuk dicoba.
     if (AppConfig.candidateHosts.length <= 1) {
       return false;
     }
 
-    // Jangan retry lagi jika request ini sudah merupakan retry.
     if (error.requestOptions
             .extra['skip_api_host_retry'] ==
         true) {
@@ -331,20 +302,17 @@ class ApiClient {
         );
   }
 
-  // ===============================================================
-  // CEK RESPONSE YANG MUNGKIN BERASAL DARI BACKEND SALAH
-  // ===============================================================
+  // ============================================================
+  // WRONG BACKEND CHECK
+  // ============================================================
 
   bool _isLikelyWrongBackend(
     DioException error,
   ) {
-    final response =
-        error.response;
+    final response = error.response;
 
-    final data =
-        response?.data;
+    final data = response?.data;
 
-    // Hanya tangani 404 dengan response Map.
     if (response?.statusCode != 404 ||
         data is! Map) {
       return false;
@@ -359,20 +327,13 @@ class ApiClient {
         data.containsKey('message') ||
         data.containsKey('errors');
 
-    // Backend tertentu mengembalikan:
-    //
-    // {
-    //   "detail": "Not Found"
-    // }
-    //
-    // Ini kemungkinan bukan Laravel backend kita.
     return detail == 'not found' &&
         !hasLaravelErrorShape;
   }
 
-  // ===============================================================
-  // RETRY KE HOST BERIKUTNYA
-  // ===============================================================
+  // ============================================================
+  // RETRY AVAILABLE HOSTS
+  // ============================================================
 
   Future<Response<dynamic>?>
       _retryWithAvailableHosts(
@@ -388,45 +349,29 @@ class ApiClient {
             .toSet() ??
         <String>{};
 
-    // Host yang sedang digunakan dianggap sudah dicoba.
     triedHosts.add(
       AppConfig.activeHost,
     );
 
-    // ===========================================================
-    // COBA SEMUA CANDIDATE HOST
-    // ===========================================================
-
-    for (final host
-        in AppConfig.candidateHosts) {
+    for (final host in AppConfig.candidateHosts) {
       if (triedHosts.contains(host)) {
         continue;
       }
 
       triedHosts.add(host);
 
-      // Pindah host.
       AppConfig.useHost(host);
 
-      // =========================================================
-      // UPDATE REQUEST
-      // =========================================================
-
       error.requestOptions
-        ..baseUrl =
-            AppConfig.apiBaseUrl
-        ..responseType =
-            ResponseType.json
+        ..baseUrl = AppConfig.apiBaseUrl
+        ..responseType = ResponseType.json
         ..extra['tried_api_hosts'] =
             triedHosts.toList(
           growable: false,
         )
-        ..extra['skip_api_host_retry'] =
-            true;
+        ..extra['skip_api_host_retry'] = true;
 
-      // Pastikan Accept JSON.
-      error.requestOptions
-          .headers['Accept'] =
+      error.requestOptions.headers['Accept'] =
           'application/json';
 
       if (kDebugMode) {
@@ -439,10 +384,6 @@ class ApiClient {
       }
 
       try {
-        // =======================================================
-        // REQUEST ULANG
-        // =======================================================
-
         final response =
             await dio.fetch<dynamic>(
           error.requestOptions,
@@ -483,17 +424,12 @@ class ApiClient {
           );
         }
 
-        // Izinkan proses retry berikutnya
-        // untuk menentukan host selanjutnya.
-        error.requestOptions
-            .extra
-            .remove(
+        error.requestOptions.extra.remove(
           'skip_api_host_retry',
         );
       }
     }
 
-    // Tidak ada host yang berhasil.
     return null;
   }
 }

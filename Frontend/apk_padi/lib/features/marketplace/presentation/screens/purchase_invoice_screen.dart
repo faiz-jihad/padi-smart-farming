@@ -53,16 +53,16 @@ class _PurchaseInvoiceScreenState
 
   @override
   void initState() {
-  super.initState();
+    super.initState();
 
-  _service = MarketplaceApiService(
-    ApiClient(
-      const SecureTokenStorage(),
-    ),
-  );
+    _service = MarketplaceApiService(
+      ApiClient(
+        const SecureTokenStorage(),
+      ),
+    );
 
-  _loadContract();
-}
+    _loadContract();
+  }
 
   // ============================================================
   // LOAD CONTRACT
@@ -150,7 +150,7 @@ class _PurchaseInvoiceScreenState
   }
 
   // ============================================================
-  // NOMOR WHATSAPP
+  // WHATSAPP
   // ============================================================
 
   String _normalizePhone(String? rawPhone) {
@@ -164,37 +164,30 @@ class _PurchaseInvoiceScreenState
       return '';
     }
 
-    // Hilangkan semua karakter selain angka.
     phone = phone.replaceAll(
       RegExp(r'[^0-9]'),
       '',
     );
 
-    // 08xxxxxxxx -> 628xxxxxxxx
-    if (phone.startsWith('0')) {
-      phone = '62${phone.substring(1)}';
-    }
-
-    // +62xxxxxxxx -> setelah regex sudah menjadi 62xxxxxxxx.
     if (phone.startsWith('620')) {
       phone = '62${phone.substring(3)}';
+    } else if (phone.startsWith('0')) {
+      phone = '62${phone.substring(1)}';
+    } else if (phone.startsWith('8')) {
+      phone = '62$phone';
+    }
+
+    if (!phone.startsWith('62')) {
+      return '';
     }
 
     return phone;
   }
 
-  // ============================================================
-  // WHATSAPP
-  // ============================================================
-
   Future<void> _shareToWhatsApp() async {
     final contract = _contract;
 
-    if (contract == null) {
-      return;
-    }
-
-    if (_isWhatsAppLoading) {
+    if (contract == null || _isWhatsAppLoading) {
       return;
     }
 
@@ -203,19 +196,11 @@ class _PurchaseInvoiceScreenState
     });
 
     try {
-      // --------------------------------------------------------
-      // Cek role user yang sedang login.
-      //
-      // BUYER  -> WhatsApp PETANI
-      // FARMER -> WhatsApp PEMBELI
-      // --------------------------------------------------------
-
       final isBuyer = ref.read(
         isBuyerRoleProvider,
       );
 
       final String? targetPhone;
-
       final String targetName;
 
       if (isBuyer) {
@@ -303,33 +288,42 @@ Mohon dapat melanjutkan koordinasi terkait proses penimbangan, pengiriman, dan p
 Terima kasih.
 ''';
 
-      final uri = Uri.parse(
-        'https://wa.me/$phone?text=${Uri.encodeComponent(message)}',
+      final encodedMessage =
+          Uri.encodeComponent(message);
+
+      final whatsappUri = Uri.parse(
+        'whatsapp://send?phone=$phone&text=$encodedMessage',
       );
 
-      final canLaunch = await canLaunchUrl(
-        uri,
+      final webUri = Uri.parse(
+        'https://wa.me/$phone?text=$encodedMessage',
       );
 
-      if (!canLaunch) {
-        if (!mounted) return;
+      bool launched = false;
 
-        _showSnackBar(
-          'WhatsApp tidak dapat dibuka di perangkat ini.',
-          color: const Color(0xFFDC2626),
+      try {
+        launched = await launchUrl(
+          whatsappUri,
+          mode: LaunchMode.externalApplication,
         );
-
-        return;
+      } catch (_) {
+        launched = false;
       }
 
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      if (!launched) {
+        try {
+          launched = await launchUrl(
+            webUri,
+            mode: LaunchMode.externalApplication,
+          );
+        } catch (_) {
+          launched = false;
+        }
+      }
 
       if (!launched && mounted) {
         _showSnackBar(
-          'WhatsApp tidak dapat dibuka.',
+          'WhatsApp tidak dapat dibuka. Pastikan aplikasi WhatsApp terpasang.',
           color: const Color(0xFFDC2626),
         );
       }
@@ -356,11 +350,7 @@ Terima kasih.
   Future<void> _showPrintDialog() async {
     final contract = _contract;
 
-    if (contract == null) {
-      return;
-    }
-
-    if (_isPrinting) {
+    if (contract == null || _isPrinting) {
       return;
     }
 
@@ -455,13 +445,11 @@ Terima kasih.
             crossAxisAlignment:
                 pw.CrossAxisAlignment.stretch,
             children: [
-              // ==================================================
-              // HEADER
-              // ==================================================
-
               pw.Container(
-                padding: const pw.EdgeInsets.all(20),
-                decoration: pw.BoxDecoration(
+                padding:
+                    const pw.EdgeInsets.all(20),
+                decoration:
+                    pw.BoxDecoration(
                   color: light,
                   borderRadius:
                       pw.BorderRadius.circular(14),
@@ -487,7 +475,6 @@ Terima kasih.
                           fit: pw.BoxFit.contain,
                         ),
                       ),
-
                     pw.Expanded(
                       child: pw.Column(
                         crossAxisAlignment:
@@ -502,9 +489,7 @@ Terima kasih.
                               color: darkGreen,
                             ),
                           ),
-
                           pw.SizedBox(height: 10),
-
                           pw.Text(
                             'FAKTUR PEMBELIAN RESMI',
                             style: pw.TextStyle(
@@ -514,9 +499,7 @@ Terima kasih.
                               color: dark,
                             ),
                           ),
-
                           pw.SizedBox(height: 4),
-
                           pw.Text(
                             _invoiceNumber(c),
                             style: pw.TextStyle(
@@ -526,9 +509,7 @@ Terima kasih.
                               color: green,
                             ),
                           ),
-
                           pw.SizedBox(height: 3),
-
                           pw.Text(
                             'Waktu Kontrak: ${_formatDate(c.contractedAt)} WIB',
                             style: pw.TextStyle(
@@ -539,14 +520,14 @@ Terima kasih.
                         ],
                       ),
                     ),
-
                     pw.Container(
                       padding:
                           const pw.EdgeInsets.symmetric(
                         horizontal: 9,
                         vertical: 5,
                       ),
-                      decoration: pw.BoxDecoration(
+                      decoration:
+                          pw.BoxDecoration(
                         color: PdfColors.white,
                         borderRadius:
                             pw.BorderRadius.circular(6),
@@ -567,24 +548,17 @@ Terima kasih.
                   ],
                 ),
               ),
-
               pw.SizedBox(height: 20),
-
-              // ==================================================
-              // PIHAK
-              // ==================================================
-
               pw.Text(
                 'PIHAK TRANSAKSI',
                 style: pw.TextStyle(
                   fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
+                  fontWeight:
+                      pw.FontWeight.bold,
                   color: muted,
                 ),
               ),
-
               pw.SizedBox(height: 8),
-
               pw.Row(
                 children: [
                   pw.Expanded(
@@ -602,9 +576,7 @@ Terima kasih.
                       softGrey: softGrey,
                     ),
                   ),
-
                   pw.SizedBox(width: 12),
-
                   pw.Expanded(
                     child: _pdfPartyBox(
                       title: 'PIHAK PEMBELI',
@@ -612,7 +584,7 @@ Terima kasih.
                           c.partnerName ??
                           'Mitra Pembeli P.A.D.I.',
                       phone:
-                          c.partnerEmail ??
+                          c.partnerPhone ??
                           '-',
                       green: green,
                       dark: dark,
@@ -622,28 +594,22 @@ Terima kasih.
                   ),
                 ],
               ),
-
               pw.SizedBox(height: 20),
-
-              // ==================================================
-              // DETAIL KOMODITAS
-              // ==================================================
-
               pw.Text(
                 'RINCIAN TRANSAKSI KOMODITAS',
                 style: pw.TextStyle(
                   fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
+                  fontWeight:
+                      pw.FontWeight.bold,
                   color: muted,
                 ),
               ),
-
               pw.SizedBox(height: 8),
-
               pw.Container(
                 padding:
                     const pw.EdgeInsets.all(14),
-                decoration: pw.BoxDecoration(
+                decoration:
+                    pw.BoxDecoration(
                   color: softGrey,
                   borderRadius:
                       pw.BorderRadius.circular(10),
@@ -657,13 +623,15 @@ Terima kasih.
                   children: [
                     pw.Row(
                       mainAxisAlignment:
-                          pw.MainAxisAlignment.spaceBetween,
+                          pw.MainAxisAlignment
+                              .spaceBetween,
                       children: [
                         pw.Expanded(
                           child: pw.Text(
                             c.commodity ??
                                 'Gabah Padi',
-                            style: pw.TextStyle(
+                            style:
+                                pw.TextStyle(
                               fontSize: 13,
                               fontWeight:
                                   pw.FontWeight.bold,
@@ -675,7 +643,8 @@ Terima kasih.
                           _formatCurrency(
                             c.totalAmount,
                           ),
-                          style: pw.TextStyle(
+                          style:
+                              pw.TextStyle(
                             fontSize: 13,
                             fontWeight:
                                 pw.FontWeight.bold,
@@ -684,37 +653,40 @@ Terima kasih.
                         ),
                       ],
                     ),
-
                     pw.SizedBox(height: 8),
-
                     pw.Row(
                       children: [
                         pw.Text(
                           'Volume: ',
-                          style: pw.TextStyle(
+                          style:
+                              pw.TextStyle(
                             fontSize: 9,
                             color: muted,
                           ),
                         ),
                         pw.Text(
                           '${_formatNumber(c.quantity)} ${c.unit ?? 'kg'}',
-                          style: pw.TextStyle(
+                          style:
+                              pw.TextStyle(
                             fontSize: 9,
                             fontWeight:
                                 pw.FontWeight.bold,
                             color: dark,
                           ),
                         ),
+                        pw.SizedBox(width: 12),
                         pw.Text(
-                          '    Harga: ',
-                          style: pw.TextStyle(
+                          'Harga: ',
+                          style:
+                              pw.TextStyle(
                             fontSize: 9,
                             color: muted,
                           ),
                         ),
                         pw.Text(
                           '${_formatCurrency(c.agreedPrice)} / ${c.unit ?? 'kg'}',
-                          style: pw.TextStyle(
+                          style:
+                              pw.TextStyle(
                             fontSize: 9,
                             fontWeight:
                                 pw.FontWeight.bold,
@@ -726,13 +698,7 @@ Terima kasih.
                   ],
                 ),
               ),
-
               pw.SizedBox(height: 14),
-
-              // ==================================================
-              // TOTAL
-              // ==================================================
-
               _pdfTotalRow(
                 'Subtotal Komoditas',
                 _formatCurrency(
@@ -742,9 +708,7 @@ Terima kasih.
                 muted: muted,
                 green: green,
               ),
-
               pw.SizedBox(height: 7),
-
               _pdfTotalRow(
                 'Biaya Layanan Bursa P.A.D.I.',
                 'Rp 0 (Subsidi Program)',
@@ -752,9 +716,7 @@ Terima kasih.
                 muted: muted,
                 green: green,
               ),
-
               pw.SizedBox(height: 7),
-
               _pdfTotalRow(
                 'Pajak & Bea Tera Sawah',
                 'Rp 0 (Bebas Potongan)',
@@ -762,20 +724,17 @@ Terima kasih.
                 muted: muted,
                 green: green,
               ),
-
               pw.SizedBox(height: 12),
-
               pw.Divider(
                 color: PdfColor.fromHex(
                   '#E2E8F0',
                 ),
               ),
-
               pw.SizedBox(height: 10),
-
               pw.Row(
                 mainAxisAlignment:
-                    pw.MainAxisAlignment.spaceBetween,
+                    pw.MainAxisAlignment
+                        .spaceBetween,
                 children: [
                   pw.Text(
                     'TOTAL PEMBAYARAN',
@@ -799,17 +758,12 @@ Terima kasih.
                   ),
                 ],
               ),
-
               pw.SizedBox(height: 20),
-
-              // ==================================================
-              // LEGAL
-              // ==================================================
-
               pw.Container(
                 padding:
                     const pw.EdgeInsets.all(14),
-                decoration: pw.BoxDecoration(
+                decoration:
+                    pw.BoxDecoration(
                   color: light,
                   borderRadius:
                       pw.BorderRadius.circular(10),
@@ -826,7 +780,8 @@ Terima kasih.
                       height: 24,
                       alignment:
                           pw.Alignment.center,
-                      decoration: pw.BoxDecoration(
+                      decoration:
+                          pw.BoxDecoration(
                         color: green,
                         borderRadius:
                             pw.BorderRadius.circular(5),
@@ -855,17 +810,13 @@ Terima kasih.
                   ],
                 ),
               ),
-
               pw.Spacer(),
-
               pw.Divider(
                 color: PdfColor.fromHex(
                   '#E2E8F0',
                 ),
               ),
-
               pw.SizedBox(height: 6),
-
               pw.Center(
                 child: pw.Text(
                   'Dokumen elektronik resmi P.A.D.I. Smart Farming',
@@ -900,7 +851,8 @@ Terima kasih.
     return pw.Container(
       padding:
           const pw.EdgeInsets.all(12),
-      decoration: pw.BoxDecoration(
+      decoration:
+          pw.BoxDecoration(
         color: softGrey,
         borderRadius:
             pw.BorderRadius.circular(9),
@@ -918,9 +870,7 @@ Terima kasih.
               color: muted,
             ),
           ),
-
           pw.SizedBox(height: 5),
-
           pw.Text(
             name,
             maxLines: 2,
@@ -931,9 +881,7 @@ Terima kasih.
               color: dark,
             ),
           ),
-
           pw.SizedBox(height: 4),
-
           pw.Text(
             phone,
             style: pw.TextStyle(
@@ -941,9 +889,7 @@ Terima kasih.
               color: muted,
             ),
           ),
-
           pw.SizedBox(height: 4),
-
           pw.Text(
             'Terverifikasi P.A.D.I.',
             style: pw.TextStyle(
@@ -973,15 +919,19 @@ Terima kasih.
       mainAxisAlignment:
           pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(
-          label,
-          style: pw.TextStyle(
-            fontSize: 9,
-            color: muted,
+        pw.Expanded(
+          child: pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: muted,
+            ),
           ),
         ),
+        pw.SizedBox(width: 10),
         pw.Text(
           value,
+          textAlign: pw.TextAlign.right,
           style: pw.TextStyle(
             fontSize: 9,
             fontWeight:
@@ -1011,12 +961,15 @@ Terima kasih.
             message,
             style: const TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.w600,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
           backgroundColor: color,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
+          behavior:
+              SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(
             borderRadius:
                 BorderRadius.circular(10),
           ),
@@ -1034,22 +987,18 @@ Terima kasih.
 
     return Scaffold(
       backgroundColor: background,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: textDark,
         elevation: 0,
         scrolledUnderElevation: 1,
-
         leading: IconButton(
           tooltip: 'Kembali',
-
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18,
             color: textDark,
           ),
-
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -1058,20 +1007,18 @@ Terima kasih.
             }
           },
         ),
-
         title: const Text(
           'Faktur Pembelian Resmi',
           style: TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w900,
+            fontWeight:
+                FontWeight.w900,
             color: textDark,
           ),
         ),
-
         actions: [
           IconButton(
             tooltip: 'Bagikan ke WhatsApp',
-
             icon: _isWhatsAppLoading
                 ? const SizedBox(
                     width: 18,
@@ -1086,7 +1033,6 @@ Terima kasih.
                     Icons.share_outlined,
                     color: primary,
                   ),
-
             onPressed:
                 contract == null ||
                         _isWhatsAppLoading
@@ -1095,10 +1041,7 @@ Terima kasih.
           ),
         ],
       ),
-
-      body: _buildBody(
-        contract,
-      ),
+      body: _buildBody(contract),
     );
   }
 
@@ -1131,9 +1074,7 @@ Terima kasih.
                 size: 48,
                 color: Color(0xFFDC2626),
               ),
-
               const SizedBox(height: 12),
-
               Text(
                 _error!,
                 textAlign: TextAlign.center,
@@ -1141,12 +1082,11 @@ Terima kasih.
                   color: textDark,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               FilledButton(
                 onPressed: _loadContract,
-                style: FilledButton.styleFrom(
+                style:
+                    FilledButton.styleFrom(
                   backgroundColor: primary,
                 ),
                 child:
@@ -1187,22 +1127,15 @@ Terima kasih.
               const BoxConstraints(
             maxWidth: 540,
           ),
-
           child: ListView(
             padding:
                 const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 16,
             ),
-
             physics:
                 const BouncingScrollPhysics(),
-
             children: [
-              // ==================================================
-              // INVOICE CARD
-              // ==================================================
-
               Container(
                 decoration:
                     BoxDecoration(
@@ -1214,47 +1147,40 @@ Terima kasih.
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: primary
-                          .withOpacity(0.06),
+                      color:
+                          primary.withOpacity(
+                        0.06,
+                      ),
                       blurRadius: 16,
                       offset:
                           const Offset(0, 4),
                     ),
                   ],
                 ),
-
                 child: Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
-
                   children: [
-                    // ============================================
-                    // HEADER
-                    // ============================================
-
                     Container(
                       padding:
                           const EdgeInsets.all(18),
-
                       decoration:
                           const BoxDecoration(
                         color: lightGreen,
                         borderRadius:
                             BorderRadius.vertical(
-                          top: Radius.circular(17),
+                          top:
+                              Radius.circular(17),
                         ),
                       ),
-
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment.start,
-
                         children: [
                           Row(
                             mainAxisAlignment:
                                 MainAxisAlignment
                                     .spaceBetween,
-
                             children: [
                               Row(
                                 children: [
@@ -1263,7 +1189,6 @@ Terima kasih.
                                         const EdgeInsets.all(
                                       6,
                                     ),
-
                                     decoration:
                                         BoxDecoration(
                                       color: primary,
@@ -1273,7 +1198,6 @@ Terima kasih.
                                         8,
                                       ),
                                     ),
-
                                     child:
                                         const Icon(
                                       Icons
@@ -1283,11 +1207,9 @@ Terima kasih.
                                       size: 16,
                                     ),
                                   ),
-
                                   const SizedBox(
                                     width: 8,
                                   ),
-
                                   const Text(
                                     'P.A.D.I. SMART FARMING',
                                     style:
@@ -1303,7 +1225,6 @@ Terima kasih.
                                   ),
                                 ],
                               ),
-
                               Container(
                                 padding:
                                     const EdgeInsets
@@ -1311,7 +1232,6 @@ Terima kasih.
                                   horizontal: 8,
                                   vertical: 3,
                                 ),
-
                                 decoration:
                                     BoxDecoration(
                                   color:
@@ -1327,7 +1247,6 @@ Terima kasih.
                                         borderGreen,
                                   ),
                                 ),
-
                                 child: Text(
                                   c.status
                                       .toUpperCase(),
@@ -1343,11 +1262,7 @@ Terima kasih.
                               ),
                             ],
                           ),
-
-                          const SizedBox(
-                            height: 12,
-                          ),
-
+                          const SizedBox(height: 12),
                           Text(
                             invoiceNo,
                             style:
@@ -1360,11 +1275,7 @@ Terima kasih.
                                   -0.3,
                             ),
                           ),
-
-                          const SizedBox(
-                            height: 2,
-                          ),
-
+                          const SizedBox(height: 2),
                           Text(
                             'Waktu Kontrak: ${_formatDate(c.contractedAt)} WIB',
                             style:
@@ -1376,45 +1287,31 @@ Terima kasih.
                         ],
                       ),
                     ),
-
                     const Divider(
                       height: 1,
                       color:
                           Color(0xFFE2E8F0),
                     ),
-
-                    // ============================================
-                    // PIHAK TRANSAKSI
-                    // ============================================
-
                     Padding(
                       padding:
                           const EdgeInsets.all(
                         18,
                       ),
-
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment
                                 .start,
-
                         children: [
                           Row(
                             crossAxisAlignment:
                                 CrossAxisAlignment
                                     .start,
-
                             children: [
-                              // ----------------------------------
-                              // PETANI
-                              // ----------------------------------
-
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment
                                           .start,
-
                                   children: [
                                     const Text(
                                       'PIHAK PENJUAL',
@@ -1429,11 +1326,9 @@ Terima kasih.
                                             0.4,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       height: 4,
                                     ),
-
                                     Text(
                                       c.farmerName ??
                                           'Petani Mitra P.A.D.I.',
@@ -1446,11 +1341,9 @@ Terima kasih.
                                             textDark,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       height: 2,
                                     ),
-
                                     Text(
                                       c.farmerPhone ??
                                           '-',
@@ -1464,7 +1357,6 @@ Terima kasih.
                                   ],
                                 ),
                               ),
-
                               Container(
                                 height: 40,
                                 width: 1,
@@ -1473,21 +1365,14 @@ Terima kasih.
                                   0xFFE2E8F0,
                                 ),
                               ),
-
                               const SizedBox(
                                 width: 14,
                               ),
-
-                              // ----------------------------------
-                              // PEMBELI
-                              // ----------------------------------
-
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment
                                           .start,
-
                                   children: [
                                     const Text(
                                       'PIHAK PEMBELI',
@@ -1502,11 +1387,9 @@ Terima kasih.
                                             0.4,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       height: 4,
                                     ),
-
                                     Text(
                                       c.partnerName ??
                                           'Mitra Pembeli P.A.D.I.',
@@ -1519,11 +1402,9 @@ Terima kasih.
                                             textDark,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       height: 2,
                                     ),
-
                                     const Text(
                                       'Akun Terverifikasi B2B',
                                       style:
@@ -1540,25 +1421,17 @@ Terima kasih.
                               ),
                             ],
                           ),
-
                           const SizedBox(
                             height: 18,
                           ),
-
                           const Divider(
                             height: 1,
                             color:
                                 Color(0xFFF1F5F9),
                           ),
-
                           const SizedBox(
                             height: 14,
                           ),
-
-                          // ========================================
-                          // KOMODITAS
-                          // ========================================
-
                           const Text(
                             'RINCIAN TRANSAKSI KOMODITAS',
                             style:
@@ -1572,17 +1445,14 @@ Terima kasih.
                                   0.4,
                             ),
                           ),
-
                           const SizedBox(
                             height: 10,
                           ),
-
                           Container(
                             padding:
                                 const EdgeInsets.all(
                               12,
                             ),
-
                             decoration:
                                 BoxDecoration(
                               color:
@@ -1602,14 +1472,12 @@ Terima kasih.
                                 ),
                               ),
                             ),
-
                             child: Column(
                               children: [
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment
                                           .spaceBetween,
-
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -1625,7 +1493,6 @@ Terima kasih.
                                         ),
                                       ),
                                     ),
-
                                     Text(
                                       _formatCurrency(
                                         c.totalAmount,
@@ -1641,11 +1508,9 @@ Terima kasih.
                                     ),
                                   ],
                                 ),
-
                                 const SizedBox(
                                   height: 6,
                                 ),
-
                                 Row(
                                   children: [
                                     Text(
@@ -1657,11 +1522,9 @@ Terima kasih.
                                             textMuted,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       width: 5,
                                     ),
-
                                     const Text(
                                       '•',
                                       style:
@@ -1670,11 +1533,9 @@ Terima kasih.
                                             textMuted,
                                       ),
                                     ),
-
                                     const SizedBox(
                                       width: 5,
                                     ),
-
                                     Expanded(
                                       child: Text(
                                         'Harga: ${_formatCurrency(c.agreedPrice)} / ${c.unit ?? 'kg'}',
@@ -1691,57 +1552,46 @@ Terima kasih.
                               ],
                             ),
                           ),
-
                           const SizedBox(
                             height: 14,
                           ),
-
                           _buildCostRow(
                             'Subtotal Komoditas',
                             _formatCurrency(
                               c.totalAmount,
                             ),
                           ),
-
                           const SizedBox(
                             height: 7,
                           ),
-
                           _buildCostRow(
                             'Biaya Layanan Bursa P.A.D.I.',
                             'Rp 0 (Subsidi Program)',
                             isGreen: true,
                           ),
-
                           const SizedBox(
                             height: 7,
                           ),
-
                           _buildCostRow(
                             'Pajak & Bea Tera Sawah',
                             'Rp 0 (Bebas Potongan)',
                             isGreen: true,
                           ),
-
                           const SizedBox(
                             height: 12,
                           ),
-
                           const Divider(
                             height: 1,
                             color:
                                 Color(0xFFE2E8F0),
                           ),
-
                           const SizedBox(
                             height: 14,
                           ),
-
                           Row(
                             mainAxisAlignment:
                                 MainAxisAlignment
                                     .spaceBetween,
-
                             children: [
                               const Text(
                                 'TOTAL PEMBAYARAN',
@@ -1754,7 +1604,6 @@ Terima kasih.
                                       textDark,
                                 ),
                               ),
-
                               Text(
                                 _formatCurrency(
                                   c.totalAmount,
@@ -1773,17 +1622,11 @@ Terima kasih.
                         ],
                       ),
                     ),
-
-                    // ============================================
-                    // LEGAL
-                    // ============================================
-
                     Container(
                       padding:
                           const EdgeInsets.all(
                         14,
                       ),
-
                       decoration:
                           const BoxDecoration(
                         color: lightGreen,
@@ -1795,23 +1638,19 @@ Terima kasih.
                           ),
                         ),
                       ),
-
                       child: const Row(
                         crossAxisAlignment:
                             CrossAxisAlignment
                                 .start,
-
                         children: [
                           Icon(
                             Icons.gavel_rounded,
                             color: primary,
                             size: 20,
                           ),
-
                           SizedBox(
                             width: 10,
                           ),
-
                           Expanded(
                             child: Text(
                               'Transaksi ini sah mengikat dan dilindungi UU Metrologi Legal No. 2/1981 dengan verifikasi tera timbangan dan standar kadar air SNI.',
@@ -1830,15 +1669,9 @@ Terima kasih.
                   ],
                 ),
               ),
-
               const SizedBox(
                 height: 20,
               ),
-
-              // ==================================================
-              // ACTION BUTTON
-              // ==================================================
-
               Row(
                 children: [
                   Expanded(
@@ -1848,7 +1681,6 @@ Terima kasih.
                           _isPrinting
                               ? null
                               : _showPrintDialog,
-
                       style:
                           OutlinedButton.styleFrom(
                         foregroundColor:
@@ -1872,7 +1704,6 @@ Terima kasih.
                           ),
                         ),
                       ),
-
                       icon: _isPrinting
                           ? const SizedBox(
                               width: 18,
@@ -1890,7 +1721,6 @@ Terima kasih.
                                   .print_outlined,
                               size: 18,
                             ),
-
                       label: Text(
                         _isPrinting
                             ? 'Membuat PDF...'
@@ -1904,11 +1734,9 @@ Terima kasih.
                       ),
                     ),
                   ),
-
                   const SizedBox(
                     width: 12,
                   ),
-
                   Expanded(
                     child:
                         FilledButton.icon(
@@ -1916,7 +1744,6 @@ Terima kasih.
                           _isWhatsAppLoading
                               ? null
                               : _shareToWhatsApp,
-
                       style:
                           FilledButton.styleFrom(
                         backgroundColor:
@@ -1937,7 +1764,6 @@ Terima kasih.
                           ),
                         ),
                       ),
-
                       icon:
                           _isWhatsAppLoading
                               ? const SizedBox(
@@ -1956,7 +1782,6 @@ Terima kasih.
                                       .chat_rounded,
                                   size: 18,
                                 ),
-
                       label: Text(
                         _isWhatsAppLoading
                             ? 'Membuka...'
@@ -1972,7 +1797,6 @@ Terima kasih.
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 20,
               ),
@@ -1995,7 +1819,6 @@ Terima kasih.
     return Row(
       mainAxisAlignment:
           MainAxisAlignment.spaceBetween,
-
       children: [
         Expanded(
           child: Text(
@@ -2007,11 +1830,9 @@ Terima kasih.
             ),
           ),
         ),
-
         const SizedBox(
           width: 10,
         ),
-
         Text(
           value,
           textAlign: TextAlign.right,
