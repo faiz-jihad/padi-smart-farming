@@ -16,69 +16,123 @@ class AdminAgricultureService
      * @return array<string, mixed>
      */
     public function indexData(Request $request): array
-    {
-        $search = trim((string) $request->query('search', ''));
-        $irrigation = trim((string) $request->query('irrigation', ''));
+{
+    $search = trim((string) $request->query('search', ''));
+    $irrigation = trim((string) $request->query('irrigation', ''));
 
-        $farmsQuery = Farm::query()
-            ->with([
-                'farmer',
-                'province',
-                'regency',
-                'district',
-                'village',
-                'cropSeasons.variety',
-            ])
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $query->where(function (Builder $sub) use ($search): void {
-                    $sub->where('name', 'like', "%{$search}%")
-                        ->orWhere('irrigation_notes', 'like', "%{$search}%")
-                        ->orWhereHas('farmer', function (Builder $fq) use ($search): void {
-                            $fq->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%")
-                                ->orWhere('phone', 'like', "%{$search}%");
-                        });
-                });
-            })
-            ->when($irrigation !== '', function (Builder $query) use ($irrigation): void {
-                $query->where('irrigation_type', $irrigation);
+    // Filter wilayah dari Map
+    $provinceId = $request->integer('province_id') ?: null;
+    $regencyId = $request->integer('regency_id') ?: null;
+    $districtId = $request->integer('district_id') ?: null;
+    $villageId = $request->integer('village_id') ?: null;
+
+    $provinceName = trim((string) $request->query('province_name', ''));
+    $regencyName = trim((string) $request->query('regency_name', ''));
+    $districtName = trim((string) $request->query('district_name', ''));
+    $villageName = trim((string) $request->query('village_name', ''));
+
+    $focus = trim((string) $request->query('focus', ''));
+
+    $farmsQuery = Farm::query()
+        ->with([
+            'farmer',
+            'province',
+            'regency',
+            'district',
+            'village',
+            'cropSeasons.variety',
+        ])
+        ->when($provinceId, function (Builder $query) use ($provinceId): void {
+            $query->where('province_id', $provinceId);
+        })
+        ->when($regencyId, function (Builder $query) use ($regencyId): void {
+            $query->where('regency_id', $regencyId);
+        })
+        ->when($districtId, function (Builder $query) use ($districtId): void {
+            $query->where('district_id', $districtId);
+        })
+        ->when($villageId, function (Builder $query) use ($villageId): void {
+            $query->where('village_id', $villageId);
+        })
+        ->when($search !== '', function (Builder $query) use ($search): void {
+            $query->where(function (Builder $sub) use ($search): void {
+                $sub->where('name', 'like', "%{$search}%")
+                    ->orWhere('irrigation_notes', 'like', "%{$search}%")
+                    ->orWhereHas('farmer', function (Builder $fq) use ($search): void {
+                        $fq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
+        })
+        ->when($irrigation !== '', function (Builder $query) use ($irrigation): void {
+            $query->where('irrigation_type', $irrigation);
+        });
 
-        $cropSeasonService = app(\App\Services\Agriculture\CropSeasonService::class);
-        if (CropSeason::query()->count() === 0) {
-            $cropSeasonService->autoGenerateAllFarmsCropSeasons();
-        }
+    $cropSeasonService = app(\App\Services\Agriculture\CropSeasonService::class);
 
-        $allCropSeasons = CropSeason::query()
-            ->with(['farm.farmer', 'variety'])
-            ->latest('id')
-            ->get();
-
-        $concreteSchedules = $this->buildConcretePlantingSchedules($allCropSeasons);
-        $irrigationAlerts = $this->buildIrrigationAlerts(Farm::with('farmer', 'cropSeasons.variety')->get());
-
-        return [
-            'title' => 'Pertanian',
-            'farms' => $farmsQuery->latest('id')->paginate(12),
-            'cropSeasons' => $allCropSeasons->take(10),
-            'concreteSchedules' => $concreteSchedules,
-            'irrigationAlerts' => $irrigationAlerts,
-            'farmers' => User::query()
-                ->where('role', 'farmer')
-                ->orderBy('name')
-                ->get(['id', 'name', 'email', 'role']),
-            'filters' => [
-                'search' => $search,
-                'irrigation' => $irrigation,
-            ],
-            'stats' => [
-                'farms' => Farm::query()->count(),
-                'area' => (float) Farm::query()->sum('area_ha'),
-                'active_seasons' => CropSeason::query()->where('status', 'active')->count(),
-                'harvests' => Harvest::query()->count(),
-            ],
-        ];
+    if (CropSeason::query()->count() === 0) {
+        $cropSeasonService->autoGenerateAllFarmsCropSeasons();
     }
+
+    $allCropSeasons = CropSeason::query()
+        ->with(['farm.farmer', 'variety'])
+        ->latest('id')
+        ->get();
+
+    $concreteSchedules = $this->buildConcretePlantingSchedules($allCropSeasons);
+
+    $irrigationAlerts = $this->buildIrrigationAlerts(
+        Farm::with('farmer', 'cropSeasons.variety')->get()
+    );
+
+    return [
+        'title' => 'Pertanian',
+
+        'farms' => $farmsQuery
+            ->latest('id')
+            ->paginate(12),
+
+        'cropSeasons' => $allCropSeasons->take(10),
+
+        'concreteSchedules' => $concreteSchedules,
+
+        'irrigationAlerts' => $irrigationAlerts,
+
+        'farmers' => User::query()
+            ->where('role', 'farmer')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'role']),
+
+        'filters' => [
+            'search' => $search,
+            'irrigation' => $irrigation,
+
+            // Wilayah
+            'province_id' => $provinceId,
+            'regency_id' => $regencyId,
+            'district_id' => $districtId,
+            'village_id' => $villageId,
+
+            'province_name' => $provinceName,
+            'regency_name' => $regencyName,
+            'district_name' => $districtName,
+            'village_name' => $villageName,
+
+            // Fokus klik dari map
+            'focus' => $focus,
+        ],
+
+        'stats' => [
+            'farms' => Farm::query()->count(),
+            'area' => (float) Farm::query()->sum('area_ha'),
+            'active_seasons' => CropSeason::query()
+                ->where('status', 'active')
+                ->count(),
+            'harvests' => Harvest::query()->count(),
+        ],
+    ];
+}
 
     /**
      * Build concrete planting timeline & progress for active crop seasons

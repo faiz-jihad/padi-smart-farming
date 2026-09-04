@@ -69,7 +69,7 @@ class AdminSoilService
 
         return [
             'detections' => $detections,
-            'farms' => Farm::orderBy('name')->get(),
+            'farms' => Farm::with('farmer')->orderBy('name')->get(),
             'stats' => $stats,
             'filters' => [
                 'search' => $search,

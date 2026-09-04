@@ -1250,20 +1250,30 @@
                 </div>
 
                 <div class="geo-metric-grid">
-                    <div class="geo-metric-card">
+                    <button
+                        type="button"
+                        class="geo-metric-card geo-metric-card--clickable"
+                        data-agriculture-action="farmer"
+                        title="Lihat data petani di wilayah ini"
+                    >
                         <div class="geo-metric-card__icon geo-metric-card__icon--wind">${SVG_ICONS.farmer}</div>
                         <div>
                             <div class="geo-metric-card__val">${s.farmers ?? 0}</div>
                             <div class="geo-metric-card__lbl">Petani Mitra</div>
                         </div>
-                    </div>
-                    <div class="geo-metric-card">
+                    </button>
+                    <button
+                        type="button"
+                        class="geo-metric-card geo-metric-card--clickable"
+                        data-agriculture-action="farm"
+                        title="Lihat data lahan di wilayah ini"
+                    >
                         <div class="geo-metric-card__icon geo-metric-card__icon--soil-moist">${SVG_ICONS.sprout}</div>
                         <div>
                             <div class="geo-metric-card__val">${s.farms ?? 0}</div>
                             <div class="geo-metric-card__lbl">Petak Lahan</div>
                         </div>
-                    </div>
+                    </button>
                     <div class="geo-metric-card">
                         <div class="geo-metric-card__icon geo-metric-card__icon--rain">${SVG_ICONS.farmArea}</div>
                         <div>
@@ -1298,6 +1308,56 @@
                 </div>
             `;
         }
+
+        // ──────────────────────────────────────────────────────
+        // AGRICULTURE CARD NAVIGATION
+        // ──────────────────────────────────────────────────────
+        function goToAgriculture(action) {
+            const params = new URLSearchParams();
+
+            if (action === 'farmer') {
+                params.set('focus', 'farmer');
+            }
+
+            if (action === 'farm') {
+                params.set('focus', 'farm');
+            }
+
+            // Saat panel sedang berada di level Kecamatan
+            if (state.level === 'district' && state.districtId) {
+                params.set('district_id', state.districtId);
+                params.set('district_name', state.districtName || '');
+            }
+
+            // Saat panel sedang berada di level Desa
+            if (
+                (state.level === 'village' || state.level === 'farm') &&
+                state.villageId
+            ) {
+                params.set('village_id', state.villageId);
+                params.set('village_name', state.villageName || '');
+
+                if (state.districtId) {
+                    params.set('district_id', state.districtId);
+                }
+
+                if (state.districtName) {
+                    params.set('district_name', state.districtName);
+                }
+            }
+
+            window.location.href = `/admin/agriculture?${params.toString()}`;
+        }
+
+        document.addEventListener('click', function (event) {
+            const card = event.target.closest('[data-agriculture-action]');
+
+            if (!card) {
+                return;
+            }
+
+            goToAgriculture(card.dataset.agricultureAction);
+        });
 
         // ──────────────────────────────────────────────────────
         // PANEL HELPERS

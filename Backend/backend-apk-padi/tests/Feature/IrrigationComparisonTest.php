@@ -23,6 +23,7 @@ class IrrigationComparisonTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        \Illuminate\Support\Facades\Cache::flush();
 
         $this->seed(RoleSeeder::class);
 
@@ -43,6 +44,45 @@ class IrrigationComparisonTest extends TestCase
             'regency' => 'Kabupaten Indramayu',
             'district' => 'Sindang',
             'village' => 'Dersan',
+        ]);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://sigi.pu.go.id/geoapi/api/v1/daerah_irigasi_permukaan/data*' => \Illuminate\Support\Facades\Http::response([
+                'type' => 'FeatureCollection',
+                'features' => [
+                    [
+                        'type' => 'Feature',
+                        'geometry' => [
+                            'type' => 'Polygon',
+                            'coordinates' => [
+                                [
+                                    [108.0, -6.5],
+                                    [108.5, -6.5],
+                                    [108.5, -6.0],
+                                    [108.0, -6.0],
+                                    [108.0, -6.5],
+                                ]
+                            ]
+                        ],
+                        'properties' => [
+                            'nm_balai' => 'Balai Besar Wilayah Sungai Cimanuk Cisanggarung',
+                            'nm_inf' => 'Daerah Irigasi Rentang',
+                            'kewenangan' => 'Pemerintah Pusat',
+                            'luas_ha' => 87840.0,
+                            'jenis_di' => 'Irigasi Teknis Gravitasi',
+                            'kondisi' => 'Baik',
+                            'nm_ws' => 'Cimanuk Cisanggarung',
+                            'smbr_air' => 'Bendung Rentang',
+                            'kd_inf' => 'DI-3212001',
+                        ]
+                    ]
+                ]
+            ], 200),
+            'https://sigi.pu.go.id/geoapi/api/v1/bendung/data*' => \Illuminate\Support\Facades\Http::response([], 200),
+            'https://sigi.pu.go.id/geoapi/api/v1/ketersediaan_air/data*' => \Illuminate\Support\Facades\Http::response([], 200),
+            'https://sigi.pu.go.id/geoapi/api/v1/kebutuhan_air/data*' => \Illuminate\Support\Facades\Http::response([], 200),
+            'https://sigi.pu.go.id/geoapi/api/v1/neraca_air/data*' => \Illuminate\Support\Facades\Http::response([], 200),
+            '*' => \Illuminate\Support\Facades\Http::response([], 200),
         ]);
     }
 
@@ -230,18 +270,18 @@ class IrrigationComparisonTest extends TestCase
     }
 
     /**
-     * 10. Test BMKG Potensi Hujan Tinggi (WEATHER WARNING)
+     * 10. Test Resolusi Data Resmi GEOAPI untuk Indramayu (DI Rentang & BBWS Cimanuk Cisanggarung)
      */
     public function test_wrdc_context_resolves_indramayu_as_di_rentang_and_bbws_cimanuk(): void
     {
         $wrdcService = app(WrdcWaterResourceService::class);
         $context = $wrdcService->getOfficialContextForFarm($this->farm);
 
-        $this->assertFalse($context['is_live_api']);
+        $this->assertTrue($context['is_live_api']);
         $this->assertStringContainsString('Rentang', $context['daerah_irigasi']);
         $this->assertStringContainsString('Cimanuk', $context['bbws_bws']);
-        $this->assertStringContainsString('Kementerian PU', $context['authority']);
-        $this->assertEquals('authoritative_wrdc_adapter', $context['integration_status']);
+        $this->assertStringContainsString('Pusat', $context['authority']);
+        $this->assertEquals('pu_geoapi', $context['integration_status']);
     }
 
     /**

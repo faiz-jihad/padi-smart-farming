@@ -189,6 +189,59 @@
                 </form>
             </div>
 
+            @php
+    $hasLocationFilter =
+        !empty($filters['province_id']) ||
+        !empty($filters['regency_id']) ||
+        !empty($filters['district_id']) ||
+        !empty($filters['village_id']);
+@endphp
+
+@if($hasLocationFilter)
+    <div class="agriculture-location-filter">
+        <div>
+            <strong>
+                Data Pertanian Wilayah
+            </strong>
+
+            <div class="agriculture-location-filter__path">
+                @if(!empty($filters['province_name']))
+                    <span>{{ $filters['province_name'] }}</span>
+                @endif
+
+                @if(!empty($filters['regency_name']))
+                    <span>› {{ $filters['regency_name'] }}</span>
+                @endif
+
+                @if(!empty($filters['district_name']))
+                    <span>› {{ $filters['district_name'] }}</span>
+                @endif
+
+                @if(!empty($filters['village_name']))
+                    <span>› {{ $filters['village_name'] }}</span>
+                @endif
+            </div>
+
+            @if(($filters['focus'] ?? '') === 'farmer')
+                <small>
+                    Menampilkan petani dan lahan pada wilayah yang dipilih.
+                </small>
+            @elseif(($filters['focus'] ?? '') === 'farm')
+                <small>
+                    Menampilkan lahan pertanian pada wilayah yang dipilih.
+                </small>
+            @endif
+        </div>
+
+        <a
+            href="{{ route('admin.agriculture.index') }}"
+            class="btn-filter-reset"
+        >
+            Tampilkan Semua
+        </a>
+    </div>
+@endif
+
             {{-- Tabel Data Lahan --}}
             <div class="table-wrapper">
                 <table>

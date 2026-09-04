@@ -53,4 +53,12 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
     ],
 
+    'pu_geoapi' => [
+        'base_url' => env('PU_GEOAPI_BASE_URL', 'https://sigi.pu.go.id/geoapi/api/v1'),
+        'email' => env('PU_GEOAPI_EMAIL'),
+        'token' => env('PU_GEOAPI_TOKEN'),
+        'timeout' => (int) env('PU_GEOAPI_TIMEOUT', 10),
+        'cache_ttl' => (int) env('PU_GEOAPI_CACHE_TTL', 86400),
+    ],
+
 ];

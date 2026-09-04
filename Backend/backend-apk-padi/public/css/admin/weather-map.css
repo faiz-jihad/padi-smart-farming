@@ -4,6 +4,12 @@
    ========================================================== */
 
 /* ── Page Layout & Header ────────────────────────────────── */
+.geo-map-wrapper {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
 .admin-page {
     display: flex;
     flex-direction: column;
