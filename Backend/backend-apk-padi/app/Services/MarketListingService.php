@@ -13,20 +13,21 @@ use Illuminate\Http\UploadedFile;
 class MarketListingService
 {
     public function getListings(User $user): Collection
-{
-    return MarketListing::query()
-        ->where('status', 'published')
-        ->with([
-            'farmer:id,name,phone,email',
-            'farm:id,name,area_ha,latitude,longitude',
-            'cropSeason:id,variety_id,status',
-            'harvest:id,moisture_percent,quality_grade,quantity',
-            'images:id,listing_id,image_url,sort_order',
-            'offers:id,listing_id,partner_id,offered_price,quantity,status',
-        ])
-        ->latest('published_at')
-        ->get();
-}
+    {
+        return MarketListing::query()
+            ->where('status', 'published')
+            ->with([
+                'farmer:id,name,phone,email',
+                'farm:id,name,area_ha,latitude,longitude',
+                'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
+                'cropSeason.variety:id,name',
+                'harvest:id,moisture_percent,quality_grade,quantity',
+                'images:id,listing_id,image_url,sort_order',
+                'offers:id,listing_id,partner_id,offered_price,quantity,status',
+            ])
+            ->latest('published_at')
+            ->get();
+    }
 
     public function createListing(
         User $user,

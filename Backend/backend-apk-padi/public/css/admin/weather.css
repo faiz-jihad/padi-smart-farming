@@ -588,3 +588,20 @@ tr:hover td {
     padding: 16px 24px;
     border-top: 1px solid #f1f5f9;
 }
+
+
+/* ============================================================
+   LEAFLET MAP - PREVENT OVERLAP WITH ADMIN NAVBAR / SIDEBAR
+   ============================================================ */
+
+.weather-map-section {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+}
+
+.weather-map-container {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+}

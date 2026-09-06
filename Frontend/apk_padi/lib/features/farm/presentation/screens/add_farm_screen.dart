@@ -547,10 +547,30 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
               ),
               hint: const Text('Opsional'),
               items: const [
-                DropdownMenuItem(value: 'Alluvial', child: Text('Aluvial')),
-                DropdownMenuItem(value: 'Latosol', child: Text('Latosol')),
-                DropdownMenuItem(value: 'Grumusol', child: Text('Grumusol')),
-                DropdownMenuItem(value: 'Regosol', child: Text('Regosol')),
+                DropdownMenuItem(
+                  value: 'loam',
+                  child: Text('Lempung Berpasir / Loam'),
+                ),
+                DropdownMenuItem(
+                  value: 'alluvial',
+                  child: Text('Aluvial'),
+                ),
+                DropdownMenuItem(
+                  value: 'clay',
+                  child: Text('Liat / Clay'),
+                ),
+                DropdownMenuItem(
+                  value: 'sandy_loam',
+                  child: Text('Pasir Berlempung / Sandy Loam'),
+                ),
+                DropdownMenuItem(
+                  value: 'latosol',
+                  child: Text('Latosol / Merah Kuning'),
+                ),
+                DropdownMenuItem(
+                  value: 'peat',
+                  child: Text('Gambut / Peat'),
+                ),
               ],
               onChanged: _isSubmitting
                   ? null
@@ -703,6 +723,25 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
         return 'Tadah Hujan';
       case 'tidal':
         return 'Pasang Surut';
+      default:
+        return type;
+    }
+  }
+
+  String _formatSoilType(String type) {
+    switch (type) {
+      case 'loam':
+        return 'Lempung Berpasir / Loam';
+      case 'alluvial':
+        return 'Aluvial';
+      case 'clay':
+        return 'Liat / Clay';
+      case 'sandy_loam':
+        return 'Pasir Berlempung / Sandy Loam';
+      case 'latosol':
+        return 'Latosol / Merah Kuning';
+      case 'peat':
+        return 'Gambut / Peat';
       default:
         return type;
     }
