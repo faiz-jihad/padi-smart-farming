@@ -31,6 +31,11 @@ class AgricultureEvent extends Model
         'contact_person',
         'status',
         'created_by',
+        'source',
+        'approval_status',
+        'rejection_reason',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -38,6 +43,7 @@ class AgricultureEvent extends Model
         'is_online' => 'boolean',
         'quota' => 'integer',
         'registered_count' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     public function creator(): BelongsTo
@@ -45,9 +51,29 @@ class AgricultureEvent extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     public function registrations(): HasMany
     {
         return $this->hasMany(EventRegistration::class, 'event_id');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    public function scopeFarmerSubmissions($query)
+    {
+        return $query->where('source', 'farmer_submission');
     }
 
     public function isRegisteredBy(?User $user): bool
@@ -68,4 +94,5 @@ class AgricultureEvent extends Model
         return $this->registrations()->where('user_id', $user->id)->first();
     }
 }
+
 

@@ -170,6 +170,8 @@ Route::middleware(['auth', 'admin.web'])
             Route::get('/events/{event}/edit', [AdminEventController::class, 'edit'])->name('events.edit');
             Route::patch('/events/{event}', [AdminEventController::class, 'update'])->name('events.update');
             Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
+            Route::post('/events/{event}/approve', [AdminEventController::class, 'approve'])->name('events.approve');
+            Route::post('/events/{event}/reject', [AdminEventController::class, 'reject'])->name('events.reject');
 
             // Broadcast Management
             Route::patch('/broadcast/{broadcast}', [BroadcastController::class, 'update'])

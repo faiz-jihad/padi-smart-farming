@@ -20,12 +20,23 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
 
   final List<Map<String, String>> _filterCategories = [
     {'value': 'all', 'label': 'Semua Acara'},
+    {'value': 'my_submissions', 'label': 'Pengajuan Saya'},
     {'value': 'my_tickets', 'label': 'Tiket Saya'},
     {'value': 'workshop', 'label': 'Workshop'},
     {'value': 'field_day', 'label': 'Sekolah Lapang'},
     {'value': 'bazaar', 'label': 'Bazar Tani'},
+    {'value': 'webinar', 'label': 'Webinar Tani'},
     {'value': 'irrigation', 'label': 'Gilir Air'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(eventsProvider.notifier).loadEventsFromApi();
+      ref.read(mySubmissionsProvider.notifier).loadSubmissions();
+    });
+  }
 
   @override
   void dispose() {
@@ -37,11 +48,13 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
   @override
   Widget build(BuildContext context) {
     final allEvents = ref.watch(eventsProvider);
+    final mySubmissions = ref.watch(mySubmissionsProvider);
     final myTicketsCount = allEvents.where((e) => e.isRegistered).length;
     final keyword = _searchController.text.trim().toLowerCase();
 
     var filteredEvents = switch (_selectedCategory) {
       'all' => allEvents,
+      'my_submissions' => mySubmissions,
       'my_tickets' => allEvents.where((e) => e.isRegistered).toList(),
       _ => allEvents.where((e) => e.category == _selectedCategory).toList(),
     };
@@ -203,67 +216,103 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
 
             // Events List
             Expanded(
-              child: filteredEvents.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: RefreshIndicator(
+                color: HomeColors.primaryGreen,
+                onRefresh: () async {
+                  await ref.read(eventsProvider.notifier).loadEventsFromApi();
+                  await ref.read(mySubmissionsProvider.notifier).loadSubmissions();
+                },
+                child: filteredEvents.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
-                          Icon(
-                            _selectedCategory == 'my_tickets'
-                                ? Icons.confirmation_number_outlined
-                                : Icons.event_busy_rounded,
-                            size: 56,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _selectedCategory == 'my_tickets'
-                                ? 'Belum Ada Tiket Acara Terdaftar'
-                                : 'Tidak ada acara dalam kategori ini.',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: HomeColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _selectedCategory == 'my_tickets'
-                                ? 'Daftar pada pelatihan atau bazar pertanian untuk mendapatkan tiket digital Anda.'
-                                : 'Silakan pilih kategori acara lain.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: HomeColors.textSecondary,
-                            ),
-                          ),
-                          if (_selectedCategory == 'my_tickets') ...[
-                            const SizedBox(height: 16),
-                            FilledButton.tonal(
-                              onPressed: () => setState(() => _selectedCategory = 'all'),
-                              style: FilledButton.styleFrom(
-                                foregroundColor: HomeColors.primaryGreen,
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.45,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _selectedCategory == 'my_tickets'
+                                        ? Icons.confirmation_number_outlined
+                                        : (_selectedCategory == 'my_submissions'
+                                            ? Icons.assignment_outlined
+                                            : Icons.event_busy_rounded),
+                                    size: 56,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _selectedCategory == 'my_tickets'
+                                        ? 'Belum Ada Tiket Acara Terdaftar'
+                                        : (_selectedCategory == 'my_submissions'
+                                            ? 'Belum Ada Pengajuan Acara'
+                                            : 'Tidak ada acara dalam kategori ini.'),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: HomeColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                                    child: Text(
+                                      _selectedCategory == 'my_tickets'
+                                          ? 'Daftar pada pelatihan atau bazar pertanian untuk mendapatkan tiket digital Anda.'
+                                          : (_selectedCategory == 'my_submissions'
+                                              ? 'Ajukan agenda pelatihan atau pertemuan kelompok tani untuk ditinjau oleh dinas/admin.'
+                                              : 'Silakan pilih kategori acara lain.'),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: HomeColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (_selectedCategory == 'my_tickets') ...[
+                                    const SizedBox(height: 16),
+                                    FilledButton.tonal(
+                                      onPressed: () => setState(() => _selectedCategory = 'all'),
+                                      style: FilledButton.styleFrom(
+                                        foregroundColor: HomeColors.primaryGreen,
+                                      ),
+                                      child: const Text('Jelajahi Semua Acara'),
+                                    ),
+                                  ] else if (_selectedCategory == 'my_submissions') ...[
+                                    const SizedBox(height: 16),
+                                    FilledButton.icon(
+                                      onPressed: () => context.push('/events/create'),
+                                      icon: const Icon(Icons.add_rounded, size: 18),
+                                      label: const Text('Ajukan Acara Baru'),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: HomeColors.primaryGreen,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                              child: const Text('Jelajahi Semua Acara'),
                             ),
-                          ],
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                      itemCount: filteredEvents.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        final event = filteredEvents[index];
-                        return Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 680),
-                            child: _buildEventItem(event),
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                        itemCount: filteredEvents.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          final event = filteredEvents[index];
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 680),
+                              child: _buildEventItem(event),
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ],
         ),
@@ -311,7 +360,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.75),
+                              Colors.black.withValues(alpha: 0.75),
                             ],
                           ),
                         ),
@@ -322,7 +371,7 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(HomeRadius.pill),
                           ),
                           child: Text(
@@ -331,7 +380,73 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                           ),
                         ),
                       ),
-                      if (event.isRegistered)
+                      if (event.isPending)
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD97706),
+                              borderRadius: BorderRadius.circular(HomeRadius.pill),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.hourglass_top_rounded, color: Colors.white, size: 12),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Menunggu Persetujuan',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (event.isRejected)
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDC2626),
+                              borderRadius: BorderRadius.circular(HomeRadius.pill),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.cancel_rounded, color: Colors.white, size: 12),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Ditolak',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (event.isRegistered)
                         Positioned(
                           top: 10,
                           right: 10,

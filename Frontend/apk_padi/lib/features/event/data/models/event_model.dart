@@ -19,8 +19,15 @@ class EventModel {
     this.assetImage = 'assets/images/onboarding_1.jpeg',
     this.contactPerson,
     this.status = 'upcoming',
+    this.source = 'official',
+    this.approvalStatus = 'approved',
+    this.rejectionReason,
+    this.approvedAt,
+    this.createdBy,
     this.speaker,
     this.isRegistered = false,
+    this.isEventCreator = false,
+    this.canRegister = true,
     this.ticketCode,
     this.ticketStatus,
     this.registeredAt,
@@ -44,12 +51,24 @@ class EventModel {
   final String? imageUrl;
   final String assetImage;
   final String? contactPerson;
-  final String status;
+  final String status; // 'upcoming', 'ongoing', 'completed', 'cancelled'
+  final String source; // 'official', 'farmer_submission'
+  final String approvalStatus; // 'pending', 'approved', 'rejected'
+  final String? rejectionReason;
+  final DateTime? approvedAt;
+  final int? createdBy;
   final String? speaker;
   final bool isRegistered;
+  final bool isEventCreator;
+  final bool canRegister;
   final String? ticketCode;
   final String? ticketStatus;
   final DateTime? registeredAt;
+
+  bool get isPending => approvalStatus == 'pending';
+  bool get isApproved => approvalStatus == 'approved';
+  bool get isRejected => approvalStatus == 'rejected';
+  bool get isFarmerSubmission => source == 'farmer_submission';
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     DateTime parsedDate;
@@ -63,6 +82,13 @@ class EventModel {
     if (json['registered_at'] != null) {
       try {
         parsedRegisteredAt = DateTime.parse(json['registered_at'].toString());
+      } catch (_) {}
+    }
+
+    DateTime? parsedApprovedAt;
+    if (json['approved_at'] != null) {
+      try {
+        parsedApprovedAt = DateTime.parse(json['approved_at'].toString());
       } catch (_) {}
     }
 
@@ -103,8 +129,15 @@ class EventModel {
           : defaultAsset,
       contactPerson: json['contact_person']?.toString(),
       status: json['status']?.toString() ?? 'upcoming',
+      source: json['source']?.toString() ?? 'official',
+      approvalStatus: json['approval_status']?.toString() ?? 'approved',
+      rejectionReason: json['rejection_reason']?.toString(),
+      approvedAt: parsedApprovedAt,
+      createdBy: json['created_by'] != null ? _toInt(json['created_by']) : null,
       speaker: json['speaker']?.toString(),
       isRegistered: isReg,
+      isEventCreator: json['is_event_creator'] == true,
+      canRegister: json['can_register'] != false && json['can_register'] != 0,
       ticketCode: derivedTicketCode,
       ticketStatus: json['ticket_status']?.toString() ?? (isReg ? 'active' : null),
       registeredAt: parsedRegisteredAt ?? (isReg ? DateTime.now() : null),
@@ -186,8 +219,15 @@ class EventModel {
     String? assetImage,
     String? contactPerson,
     String? status,
+    String? source,
+    String? approvalStatus,
+    String? rejectionReason,
+    DateTime? approvedAt,
+    int? createdBy,
     String? speaker,
     bool? isRegistered,
+    bool? isEventCreator,
+    bool? canRegister,
     String? ticketCode,
     String? ticketStatus,
     DateTime? registeredAt,
@@ -212,8 +252,15 @@ class EventModel {
       assetImage: assetImage ?? this.assetImage,
       contactPerson: contactPerson ?? this.contactPerson,
       status: status ?? this.status,
+      source: source ?? this.source,
+      approvalStatus: approvalStatus ?? this.approvalStatus,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      approvedAt: approvedAt ?? this.approvedAt,
+      createdBy: createdBy ?? this.createdBy,
       speaker: speaker ?? this.speaker,
       isRegistered: isRegistered ?? this.isRegistered,
+      isEventCreator: isEventCreator ?? this.isEventCreator,
+      canRegister: canRegister ?? this.canRegister,
       ticketCode: ticketCode ?? this.ticketCode,
       ticketStatus: ticketStatus ?? this.ticketStatus,
       registeredAt: registeredAt ?? this.registeredAt,

@@ -65,14 +65,27 @@
 
         <div class="events-stat-card">
             <div>
+                <p class="events-stat-label">Pengajuan Petani</p>
+                <h3 class="events-stat-number" style="{{ $stats['pending_proposals'] > 0 ? 'color:#d97706;' : '' }}">{{ number_format($stats['pending_proposals'], 0, ',', '.') }}</h3>
+                <p class="events-stat-desc">{{ $stats['pending_proposals'] > 0 ? 'Menunggu persetujuan admin' : 'Semua pengajuan ditinjau' }}</p>
+            </div>
+            <div class="events-stat-icon" style="{{ $stats['pending_proposals'] > 0 ? 'background:#fef3c7; color:#d97706;' : '' }}">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="events-stat-card">
+            <div>
                 <p class="events-stat-label">Acara Mendatang</p>
                 <h3 class="events-stat-number">{{ number_format($stats['upcoming'], 0, ',', '.') }}</h3>
                 <p class="events-stat-desc">Siap dihadiri petani</p>
             </div>
             <div class="events-stat-icon">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
+                    <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
             </div>
         </div>
@@ -92,31 +105,26 @@
                 </svg>
             </div>
         </div>
-
-        <div class="events-stat-card">
-            <div>
-                <p class="events-stat-label">Pelatihan &amp; Workshop</p>
-                <h3 class="events-stat-number">{{ number_format($stats['workshops'], 0, ',', '.') }}</h3>
-                <p class="events-stat-desc">Program edukasi agronomi</p>
-            </div>
-            <div class="events-stat-icon">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-            </div>
-        </div>
     </div>
 
     {{-- Main Panel --}}
     <div class="events-panel">
         {{-- Search & Filter Toolbar --}}
         <form method="GET" action="{{ route('admin.events.index') }}" class="events-filter-bar">
-            <div style="flex: 1; min-width: 240px; position: relative;">
+            <div style="flex: 1; min-width: 200px; position: relative;">
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama acara, lokasi, penyelenggara..." class="events-input" style="width: 100%;">
             </div>
 
-            <div style="min-width: 170px;">
+            <div style="min-width: 160px;">
+                <select name="approval_status" class="events-input" style="width: 100%;">
+                    <option value="all">Semua Status Persetujuan</option>
+                    <option value="approved" {{ request('approval_status') == 'approved' ? 'selected' : '' }}>Disetujui (Publik)</option>
+                    <option value="pending" {{ request('approval_status') == 'pending' ? 'selected' : '' }}>Pending Review Petani</option>
+                    <option value="rejected" {{ request('approval_status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                </select>
+            </div>
+
+            <div style="min-width: 150px;">
                 <select name="category" class="events-input" style="width: 100%;">
                     <option value="all">Semua Kategori</option>
                     <option value="workshop" {{ request('category') == 'workshop' ? 'selected' : '' }}>Pelatihan &amp; Workshop</option>
@@ -127,9 +135,9 @@
                 </select>
             </div>
 
-            <div style="min-width: 150px;">
+            <div style="min-width: 140px;">
                 <select name="status" class="events-input" style="width: 100%;">
-                    <option value="all">Semua Status</option>
+                    <option value="all">Semua Siklus</option>
                     <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Mendatang</option>
                     <option value="ongoing" {{ request('status') == 'ongoing' ? 'selected' : '' }}>Berlangsung</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
@@ -178,17 +186,43 @@
                         <tr>
                             <td>
                                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                         <span class="badge-cat">
                                             {{ $categoryLabel }}
                                         </span>
                                         <span class="badge-st {{ $event->status == 'upcoming' ? 'upcoming' : '' }}">
                                             {{ ucfirst($event->status) }}
                                         </span>
+                                        @if($event->approval_status == 'pending')
+                                            <span style="background: #fef3c7; color: #b45309; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #fde68a;">
+                                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <polyline points="12 6 12 12 16 14"/>
+                                                </svg>
+                                                Pending Review
+                                            </span>
+                                        @elseif($event->approval_status == 'rejected')
+                                            <span style="background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; border: 1px solid #fca5a5;">
+                                                Ditolak
+                                            </span>
+                                        @elseif($event->source == 'farmer_submission')
+                                            <span style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; border: 1px solid #86efac;">
+                                                Pengajuan Petani (ACC)
+                                            </span>
+                                        @endif
                                     </div>
                                     <a href="{{ route('admin.events.show', $event) }}" style="font-weight: 700; color: #0f172a; text-decoration: none; font-size: 14px; line-height: 1.35;">
                                         {{ $event->title }}
                                     </a>
+                                    @if($event->source == 'farmer_submission' && $event->creator)
+                                        <div style="font-size: 11.5px; color: #0369a1; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                            <span>Diajukan oleh: <strong>{{ $event->creator->name }}</strong></span>
+                                        </div>
+                                    @endif
                                     @if($event->speaker)
                                         <div style="font-size: 12px; color: #15803d; font-weight: 600; display: flex; align-items: center; gap: 4px;">
                                             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -252,8 +286,26 @@
                                 </div>
                             </td>
                             <td style="text-align: right;">
-                                <div style="display: flex; justify-content: flex-end; gap: 5px;">
-                                    <a href="{{ route('admin.events.show', $event) }}" class="btn-event" style="padding: 6px 10px; font-size: 12px;" title="Lihat Detail Peserta">
+                                <div style="display: flex; justify-content: flex-end; gap: 5px; align-items: center;">
+                                    @if($event->approval_status == 'pending')
+                                        <form method="POST" action="{{ route('admin.events.approve', $event) }}" onsubmit="return confirm('Setujui dan publikasikan agenda pengajuan petani ini?')" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn-event" style="padding: 6px 10px; font-size: 12px; background: #15803d; color: white; border-color: #15803d; font-weight: 700;" title="Setujui &amp; ACC Acara">
+                                                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="14" height="14">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                </svg>
+                                                <span>ACC</span>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn-event btn-event-danger" style="padding: 6px 10px; font-size: 12px;" onclick="openRejectModal('{{ $event->id }}', '{{ addslashes($event->title) }}')" title="Tolak Pengajuan">
+                                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            <span>Tolak</span>
+                                        </button>
+                                    @endif
+
+                                    <a href="{{ route('admin.events.show', $event) }}" class="btn-event" style="padding: 6px 10px; font-size: 12px;" title="Lihat Detail Acara">
                                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                             <circle cx="12" cy="12" r="3" />
@@ -307,4 +359,66 @@
         @endif
     </div>
 </div>
+
+{{-- Reject Event Modal --}}
+<div id="reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 480px; padding: 24px; margin: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="background: #fee2e2; border-radius: 50%; padding: 6px; color: #dc2626; display: flex;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Tolak Pengajuan Agenda</h3>
+            </div>
+            <button type="button" onclick="closeRejectModal()" style="background: transparent; border: none; cursor: pointer; color: #64748b;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="reject-form" method="POST" action="">
+            @csrf
+            <p style="font-size: 13.5px; color: #475569; margin: 0 0 12px 0;">
+                Anda akan menolak pengajuan agenda: <strong id="reject-event-title" style="color: #0f172a;"></strong>.
+            </p>
+
+            <div style="margin-bottom: 16px;">
+                <label for="rejection_reason" style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                    Alasan Penolakan <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea name="rejection_reason" id="rejection_reason" rows="3" required placeholder="Jelaskan alasan penolakan agar petani dapat memperbaiki pengajuannya..." style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; font-family: inherit; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" onclick="closeRejectModal()" class="btn-event" style="padding: 8px 16px;">
+                    Batal
+                </button>
+                <button type="submit" class="btn-event btn-event-danger" style="padding: 8px 18px; font-weight: 700;">
+                    Tolak Pengajuan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRejectModal(eventId, eventTitle) {
+    const modal = document.getElementById('reject-modal');
+    const form = document.getElementById('reject-form');
+    const titleElem = document.getElementById('reject-event-title');
+    
+    form.action = "{{ url('admin/events') }}/" + eventId + "/reject";
+    titleElem.textContent = eventTitle;
+    document.getElementById('rejection_reason').value = '';
+    
+    modal.style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').style.display = 'none';
+}
+</script>
 @endsection

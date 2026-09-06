@@ -50,6 +50,57 @@
         </div>
     </div>
 
+    {{-- Review Alert for Pending Proposal --}}
+    @if($event->approval_status == 'pending')
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:18px 20px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="background:#fef3c7; border-radius:50%; padding:10px; color:#d97706; display:flex;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size:15px; font-weight:800; color:#92400e;">Pengajuan Agenda Petani Menunggu Persetujuan Admin</h3>
+                    <p style="margin:4px 0 0 0; font-size:13px; color:#b45309;">
+                        Diajukan oleh: <strong>{{ $event->creator?->name ?? 'Petani' }}</strong> ({{ $event->creator?->phone ?? '-' }}). Acara ini belum dipublikasikan ke aplikasi petani hingga disetujui.
+                    </p>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-shrink:0;">
+                <form method="POST" action="{{ route('admin.events.approve', $event) }}" onsubmit="return confirm('Setujui dan publikasikan agenda ini ke aplikasi petani?')">
+                    @csrf
+                    <button type="submit" class="btn-event" style="background:#15803d; color:white; border-color:#15803d; padding:9px 18px; font-weight:700;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                        </svg>
+                        <span>Setujui &amp; Publikasikan (ACC)</span>
+                    </button>
+                </form>
+                <button type="button" class="btn-event btn-event-danger" style="padding:9px 18px; font-weight:700;" onclick="openRejectModal('{{ $event->id }}', '{{ addslashes($event->title) }}')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <span>Tolak Pengajuan</span>
+                </button>
+            </div>
+        </div>
+    @elseif($event->approval_status == 'rejected')
+        <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:16px 20px; margin-bottom:24px; display:flex; align-items:flex-start; gap:12px;">
+            <div style="background:#fee2e2; border-radius:50%; padding:8px; color:#dc2626; display:flex;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </div>
+            <div>
+                <h3 style="margin:0; font-size:14px; font-weight:800; color:#991b1b;">Pengajuan Acara Ditolak</h3>
+                <p style="margin:4px 0 0 0; font-size:13px; color:#b91c1c;">
+                    <strong>Alasan:</strong> {{ $event->rejection_reason ?: 'Tidak memenuhi syarat.' }}
+                </p>
+            </div>
+        </div>
+    @endif
+
     {{-- Event Detail Overview Grid --}}
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
         {{-- Left: Event Details --}}
@@ -260,4 +311,66 @@
         </div>
     </div>
 </div>
+
+{{-- Reject Event Modal --}}
+<div id="reject-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 480px; padding: 24px; margin: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="background: #fee2e2; border-radius: 50%; padding: 6px; color: #dc2626; display: flex;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Tolak Pengajuan Agenda</h3>
+            </div>
+            <button type="button" onclick="closeRejectModal()" style="background: transparent; border: none; cursor: pointer; color: #64748b;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="reject-form" method="POST" action="">
+            @csrf
+            <p style="font-size: 13.5px; color: #475569; margin: 0 0 12px 0;">
+                Anda akan menolak pengajuan agenda: <strong id="reject-event-title" style="color: #0f172a;"></strong>.
+            </p>
+
+            <div style="margin-bottom: 16px;">
+                <label for="rejection_reason" style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                    Alasan Penolakan <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea name="rejection_reason" id="rejection_reason" rows="3" required placeholder="Jelaskan alasan penolakan agar petani dapat memperbaiki pengajuannya..." style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px 12px; font-size: 13px; font-family: inherit; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" onclick="closeRejectModal()" class="btn-event" style="padding: 8px 16px;">
+                    Batal
+                </button>
+                <button type="submit" class="btn-event btn-event-danger" style="padding: 8px 18px; font-weight: 700;">
+                    Tolak Pengajuan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRejectModal(eventId, eventTitle) {
+    const modal = document.getElementById('reject-modal');
+    const form = document.getElementById('reject-form');
+    const titleElem = document.getElementById('reject-event-title');
+    
+    form.action = "{{ url('admin/events') }}/" + eventId + "/reject";
+    titleElem.textContent = eventTitle;
+    document.getElementById('rejection_reason').value = '';
+    
+    modal.style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').style.display = 'none';
+}
+</script>
 @endsection
