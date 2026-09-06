@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Models\AgricultureEvent;
 use App\Models\EventRegistration;
+use App\Services\Admin\AdminNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,13 +14,14 @@ use Illuminate\Support\Facades\DB;
 class EventController extends Controller
 {
     /**
-     * Display a listing of upcoming & active agriculture events.
+     * Display a listing of approved upcoming & active agriculture events.
      */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $events = AgricultureEvent::query()
+            ->where('approval_status', 'approved')
             ->when($user, function ($query) use ($user): void {
                 $query->withExists(['registrations as is_user_registered' => function ($q) use ($user): void {
                     $q->where('user_id', $user->id);
@@ -39,14 +41,38 @@ class EventController extends Controller
     }
 
     /**
-     * Store a newly created event (Admin / Officer).
+     * Display a listing of the authenticated farmer's own submissions (pending/approved/rejected).
      */
-    public function store(Request $request): JsonResponse
+    public function mySubmissions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $events = AgricultureEvent::query()
+            ->where('created_by', $user->id)
+            ->when($user, function ($query) use ($user): void {
+                $query->withExists(['registrations as is_user_registered' => function ($q) use ($user): void {
+                    $q->where('user_id', $user->id);
+                }]);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar pengajuan agenda Anda berhasil diambil.',
+            'data' => EventResource::collection($events),
+        ]);
+    }
+
+    /**
+     * Store a newly created event proposal or official event.
+     */
+    public function store(Request $request, AdminNotificationService $notificationService): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category' => 'required|string|in:workshop,field_day,bazaar,irrigation',
+            'category' => 'required|string|in:workshop,field_day,bazaar,irrigation,webinar',
             'event_date' => 'required|date',
             'event_time' => 'nullable|string|max:50',
             'location_name' => 'required|string|max:255',
@@ -60,24 +86,86 @@ class EventController extends Controller
             'contact_person' => 'nullable|string|max:255',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
+        $user = $request->user();
+        $validated['created_by'] = $user->id;
         $validated['status'] = 'upcoming';
 
-        $event = AgricultureEvent::create($validated);
+        $isOfficialCreator = $user->role === 'admin'
+            || $user->role === 'extension_officer'
+            || $user->role === 'ppl'
+            || (method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['admin', 'extension_officer']));
+
+        if ($isOfficialCreator) {
+            $validated['source'] = 'official';
+            $validated['approval_status'] = 'approved';
+            $validated['approved_by'] = null;
+            $validated['approved_at'] = null;
+            $validated['rejection_reason'] = null;
+
+            $event = AgricultureEvent::create($validated);
+
+            $notificationService->notifyAdmins(
+                'Acara Pertanian Baru',
+                "Kegiatan \"{$event->title}\" ({$event->category}) pada {$event->event_date} telah ditambahkan ke agenda.",
+                'system'
+            );
+            $notificationService->notifyFarmers(
+                'Undangan Kegiatan & Pelatihan Pertanian',
+                "Tersedia kegiatan baru: \"{$event->title}\" pada tanggal {$event->event_date} di {$event->location_name}.",
+                'crop_alert'
+            );
+            $notificationService->notifyExtensionOfficers(
+                'Agenda Penyuluhan Pertanian Baru',
+                "Kegiatan \"{$event->title}\" dijadwalkan pada {$event->event_date}.",
+                'ppl_validation'
+            );
+
+            $message = 'Acara berhasil dibuat.';
+        } else {
+            $validated['source'] = 'farmer_submission';
+            $validated['approval_status'] = 'pending';
+            $validated['approved_by'] = null;
+            $validated['approved_at'] = null;
+            $validated['rejection_reason'] = null;
+
+            $event = AgricultureEvent::create($validated);
+
+            $notificationService->notifyAdmins(
+                'Pengajuan Agenda Baru dari Petani',
+                "Petani {$user->name} mengajukan agenda \"{$event->title}\" untuk direview.",
+                'system',
+                ['event_id' => $event->id, 'action' => 'event_submission_review']
+            );
+
+            $message = 'Pengajuan agenda berhasil dikirim dan menunggu persetujuan admin.';
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Acara berhasil dibuat.',
+            'message' => $message,
             'data' => new EventResource($event),
         ], 201);
     }
 
     /**
-     * Display the specified event.
+     * Display the specified event with visibility authorization.
      */
     public function show(Request $request, AgricultureEvent $event): JsonResponse
     {
         $user = $request->user();
+
+        // Check visibility: approved events are public; pending/rejected submissions only visible to creator and admins
+        if ($event->approval_status !== 'approved') {
+            $canView = $user && (
+                $user->id === $event->created_by ||
+                $user->role === 'admin' ||
+                (method_exists($user, 'hasRole') && $user->hasRole('admin'))
+            );
+
+            if (! $canView) {
+                abort(404, 'Agenda acara tidak ditemukan.');
+            }
+        }
 
         // Load the registration status for the authenticated user
         if ($user) {
@@ -99,6 +187,22 @@ class EventController extends Controller
     public function register(Request $request, AgricultureEvent $event): JsonResponse
     {
         $user = $request->user();
+
+        // Enforce registration only for approved events
+        if ($event->approval_status !== 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pendaftaran hanya dapat dilakukan untuk acara yang telah disetujui.',
+            ], 422);
+        }
+
+        // Event creator cannot register to their own submitted event
+        if ($event->created_by && (int) $event->created_by === (int) $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat mendaftar sebagai peserta pada acara yang Anda ajukan sendiri.',
+            ], 422);
+        }
 
         // Check if already registered
         $existing = EventRegistration::where('event_id', $event->id)

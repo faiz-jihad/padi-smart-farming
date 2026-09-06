@@ -44,12 +44,17 @@ class EventController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        if ($request->filled('approval_status') && $request->input('approval_status') !== 'all') {
+            $query->where('approval_status', $request->input('approval_status'));
+        }
+
         $events = $query->orderBy('event_date', 'desc')->paginate(12)->withQueryString();
 
         $stats = [
             'total' => AgricultureEvent::count(),
             'upcoming' => AgricultureEvent::where('event_date', '>=', now()->toDateString())->count(),
             'total_registrations' => AgricultureEvent::sum('registered_count'),
+            'pending_proposals' => AgricultureEvent::where('approval_status', 'pending')->count(),
             'workshops' => AgricultureEvent::where('category', 'workshop')->count(),
         ];
 
@@ -201,5 +206,77 @@ class EventController extends Controller
 
         return redirect()->route('admin.events.index')
             ->with('status', 'Acara berhasil dihapus dari jadwal.');
+    }
+
+    /**
+     * Approve a pending farmer submission from admin panel.
+     */
+    public function approve(Request $request, AgricultureEvent $event): RedirectResponse
+    {
+        if ($event->approval_status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Hanya pengajuan berstatus pending yang dapat disetujui.');
+        }
+
+        $oldValues = $event->toArray();
+
+        $event->update([
+            'approval_status' => 'approved',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        $this->auditLogger->write('admin_event_approved', $event, $oldValues, $event->toArray(), $request);
+
+        if ($event->created_by) {
+            $this->notificationService->notifyUser(
+                $event->created_by,
+                'Pengajuan Agenda Disetujui',
+                "Selamat! Pengajuan agenda \"{$event->title}\" Anda telah disetujui oleh admin dan sekarang telah dipublikasikan.",
+                'system',
+                ['event_id' => $event->id, 'action' => 'event_approved']
+            );
+        }
+
+        return redirect()->back()
+            ->with('status', "Pengajuan agenda \"{$event->title}\" berhasil disetujui dan telah dipublikasikan ke Agenda Tani.");
+    }
+
+    /**
+     * Reject a pending farmer submission from admin panel.
+     */
+    public function reject(Request $request, AgricultureEvent $event): RedirectResponse
+    {
+        if ($event->approval_status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Hanya pengajuan berstatus pending yang dapat ditolak.');
+        }
+
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:1000',
+        ]);
+
+        $oldValues = $event->toArray();
+
+        $event->update([
+            'approval_status' => 'rejected',
+            'rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        $this->auditLogger->write('admin_event_rejected', $event, $oldValues, $event->toArray(), $request);
+
+        if ($event->created_by) {
+            $this->notificationService->notifyUser(
+                $event->created_by,
+                'Pengajuan Agenda Belum Disetujui',
+                "Mohon maaf, pengajuan agenda \"{$event->title}\" belum disetujui. Alasan: {$validated['rejection_reason']}",
+                'system',
+                ['event_id' => $event->id, 'action' => 'event_rejected', 'reason' => $validated['rejection_reason']]
+            );
+        }
+
+        return redirect()->back()
+            ->with('status', "Pengajuan agenda \"{$event->title}\" telah ditolak.");
     }
 }

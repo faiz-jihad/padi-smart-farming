@@ -28,6 +28,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   String _category = 'workshop';
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 5));
   String _selectedAssetImage = 'assets/images/onboarding_1.jpeg';
+  bool _isLoading = false;
 
   final List<Map<String, String>> _categories = [
     {'value': 'workshop', 'label': 'Pelatihan & Workshop'},
@@ -82,11 +83,13 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     }
   }
 
-  void _saveEvent() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveEvent() async {
+    if (!_formKey.currentState!.validate() || _isLoading) return;
+
+    setState(() => _isLoading = true);
 
     final newEvent = EventModel(
-      id: DateTime.now().millisecondsSinceEpoch,
+      id: 0,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       category: _category,
@@ -104,27 +107,53 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       status: 'upcoming',
     );
 
-    ref.read(eventsProvider.notifier).addEvent(newEvent);
+    final result = await ref.read(eventsProvider.notifier).submitEvent(newEvent);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle_rounded, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Acara berhasil dipublikasikan ke Beranda!'),
-          ],
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  result.message.isNotEmpty
+                      ? result.message
+                      : 'Pengajuan agenda berhasil dikirim dan menunggu persetujuan admin.',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: HomeColors.deepGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        backgroundColor: HomeColors.deepGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+      );
 
-    if (context.canPop()) {
-      context.pop(true);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go('/home');
+      }
     } else {
-      context.go('/home');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(result.message)),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
@@ -208,7 +237,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                                     Image.asset(asset, fit: BoxFit.cover),
                                     if (isSelected)
                                       Container(
-                                        color: HomeColors.primaryGreen.withOpacity(0.3),
+                                        color: HomeColors.primaryGreen.withValues(alpha: 0.3),
                                         child: const Center(
                                           child: Icon(Icons.check_circle_rounded, color: Colors.white, size: 28),
                                         ),
@@ -441,21 +470,37 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     const SizedBox(height: HomeSpacing.xl),
 
                     // Submit Button
-                    FilledButton.icon(
-                      onPressed: _saveEvent,
-                      icon: const Icon(Icons.publish_rounded, size: 20),
-                      label: const Text(
-                        'Publikasikan Acara Sekarang',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-                      ),
+                    FilledButton(
+                      onPressed: _isLoading ? null : _saveEvent,
                       style: FilledButton.styleFrom(
                         backgroundColor: HomeColors.primaryGreen,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: HomeColors.primaryGreen.withValues(alpha: 0.6),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(HomeRadius.md),
                         ),
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.send_rounded, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Kirim Pengajuan Agenda',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                                ),
+                              ],
+                            ),
                     ),
                   ],
                 ),

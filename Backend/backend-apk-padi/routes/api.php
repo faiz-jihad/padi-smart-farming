@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlertSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
+use App\Http\Controllers\Api\V1\Admin\EventApprovalController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\FarmActivityController as ApiV1FarmActivityController;
@@ -246,10 +247,16 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
         Route::get('events', [EventController::class, 'index']);
+        Route::get('events/my-submissions', [EventController::class, 'mySubmissions']);
         Route::post('events', [EventController::class, 'store'])
-            ->middleware('role:extension_officer|admin');
+            ->middleware('role:farmer|extension_officer|admin');
         Route::get('events/{event}', [EventController::class, 'show']);
         Route::post('events/{event}/register', [EventController::class, 'register']);
+
+        Route::prefix('admin/events')->middleware('role:admin')->group(function (): void {
+            Route::post('{event}/approve', [EventApprovalController::class, 'approve']);
+            Route::post('{event}/reject', [EventApprovalController::class, 'reject']);
+        });
 
         Route::middleware('role:admin')->group(function (): void {
             Route::match(['get', 'post', 'patch', 'delete'], 'admin/{resource?}/{id?}', AdminOverviewController::class);

@@ -13,6 +13,17 @@ class EventResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
+        $canViewRejection = $user && (
+            $user->id === $this->created_by ||
+            $user->role === 'admin' ||
+            (method_exists($user, 'hasRole') && $user->hasRole('admin'))
+        );
+
+        $isRegistered = $user ? (isset($this->is_user_registered) ? (bool) $this->is_user_registered : $this->isRegisteredBy($user)) : false;
+        $isCreator = $user ? ((int) $user->id === (int) $this->created_by) : false;
+        $isApproved = ($this->approval_status ?? 'approved') === 'approved';
+        $isFull = $this->quota > 0 && $this->registered_count >= $this->quota;
+        $canRegister = $user && $isApproved && !$isCreator && !$isRegistered && !$isFull;
 
         return [
             'id' => $this->id,
@@ -32,7 +43,14 @@ class EventResource extends JsonResource
             'asset_image' => $this->asset_image ?? 'assets/images/onboarding_1.jpeg',
             'contact_person' => $this->contact_person,
             'status' => $this->status,
-            'is_registered' => $user ? (isset($this->is_user_registered) ? (bool) $this->is_user_registered : $this->isRegisteredBy($user)) : false,
+            'source' => $this->source ?? 'official',
+            'approval_status' => $this->approval_status ?? 'approved',
+            'rejection_reason' => $canViewRejection ? $this->rejection_reason : null,
+            'approved_at' => $this->approved_at?->toIso8601String(),
+            'created_by' => $this->created_by,
+            'is_event_creator' => $isCreator,
+            'can_register' => $canRegister,
+            'is_registered' => $isRegistered,
             'ticket_code' => $user ? $this->getRegistrationForUser($user)?->ticket_code : null,
             'ticket_status' => $user ? $this->getRegistrationForUser($user)?->ticket_status : null,
             'registered_at' => $user ? $this->getRegistrationForUser($user)?->registered_at?->toIso8601String() : null,
@@ -40,3 +58,5 @@ class EventResource extends JsonResource
         ];
     }
 }
+
+

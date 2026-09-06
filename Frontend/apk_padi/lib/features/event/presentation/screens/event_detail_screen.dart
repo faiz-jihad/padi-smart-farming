@@ -24,13 +24,47 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       return;
     }
 
+    if (currentEvent.isEventCreator) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda tidak dapat mendaftar sebagai peserta pada acara yang Anda ajukan sendiri.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isRegistering = true);
 
     try {
-      final updated = await ref.read(eventsProvider.notifier).registerForEvent(currentEvent.id);
-      final activeEvent = updated ?? currentEvent.copyWith(isRegistered: true);
+      final result = await ref.read(eventsProvider.notifier).registerForEvent(currentEvent.id);
 
       if (!mounted) return;
+
+      if (!result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(result.message)),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        return;
+      }
+
+      final activeEvent = result.event ?? currentEvent.copyWith(isRegistered: true);
+
+      if (result.alreadyRegistered) {
+        _showTicketDialog(activeEvent);
+        return;
+      }
 
       showDialog<void>(
         context: context,
@@ -140,12 +174,19 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   Widget build(BuildContext context) {
     // Watch eventsProvider reaktif agar jika event diupdate di state, detail langsung sinkron
     final allEvents = ref.watch(eventsProvider);
+    final mySubmissions = ref.watch(mySubmissionsProvider);
     final event = allEvents.firstWhere(
       (e) => e.id == widget.event.id,
-      orElse: () => widget.event,
+      orElse: () => mySubmissions.firstWhere(
+        (e) => e.id == widget.event.id,
+        orElse: () => widget.event,
+      ),
     );
 
     final isRegistered = event.isRegistered;
+    final isCreator = event.isEventCreator;
+    final isPending = event.isPending;
+    final isRejected = event.isRejected;
     final registeredCount = event.registeredCount;
     final safeQuota = event.quota > 0 ? event.quota : 50;
     final progress = (registeredCount / safeQuota).clamp(0.0, 1.0).toDouble();
@@ -198,6 +239,128 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               ),
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
+                if (isCreator) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(HomeRadius.md),
+                      border: Border.all(color: const Color(0xFF93C5FD)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB), size: 22),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Anda adalah pengaju acara ini.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1E40AF),
+                                ),
+                              ),
+                              Text(
+                                'Sebagai pengaju acara, Anda tidak perlu mendaftar sebagai peserta.',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF3B82F6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (isPending) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(HomeRadius.md),
+                      border: Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 22),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pengajuan Menunggu Persetujuan Admin',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF92400E),
+                                ),
+                              ),
+                              Text(
+                                'Acara ini belum tampil di Agenda publik hingga diverifikasi dan disetujui admin.',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFFB45309),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (isRejected) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(HomeRadius.md),
+                      border: Border.all(color: const Color(0xFFFCA5A5)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Pengajuan Ditolak oleh Admin',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF991B1B),
+                                ),
+                              ),
+                              if (event.rejectionReason != null && event.rejectionReason!.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Alasan: ${event.rejectionReason}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFFB91C1C),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (isRegistered) ...[
                   Container(
                     margin: const EdgeInsets.only(bottom: 14),
@@ -278,40 +441,91 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             child: SizedBox(
               width: double.infinity,
               height: 52,
-              child: FilledButton.icon(
-                onPressed: _isRegistering
-                    ? null
-                    : (isRegistered
-                        ? () => _showTicketDialog(event)
-                        : (isFull ? null : () => _handleRegistration(event))),
-                icon: Icon(
-                  isRegistered
-                      ? Icons.qr_code_scanner_rounded
-                      : (isFull ? Icons.block_rounded : Icons.how_to_reg_rounded),
-                  size: 20,
-                ),
-                label: Text(
-                  _isRegistering
-                      ? 'Memproses Pendaftaran...'
-                      : (isRegistered
-                          ? 'Lihat E-Tiket Saya'
-                          : (isFull ? 'Kuota Penuh' : 'Daftar Acara (Gratis)')),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: isRegistered
-                      ? const Color(0xFF15803D)
-                      : (isFull ? Colors.grey.shade400 : HomeColors.primaryGreen),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(HomeRadius.md),
-                  ),
-                ),
-              ),
+              child: isCreator
+                  ? FilledButton.icon(
+                      onPressed: null,
+                      icon: const Icon(Icons.verified_user_rounded, size: 20),
+                      label: const Text(
+                        'Anda adalah Pengaju Acara Ini',
+                        style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                      ),
+                      style: FilledButton.styleFrom(
+                        disabledBackgroundColor: const Color(0xFFE2E8F0),
+                        disabledForegroundColor: const Color(0xFF64748B),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(HomeRadius.md),
+                        ),
+                      ),
+                    )
+                  : isPending
+                      ? FilledButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.hourglass_top_rounded, size: 20),
+                          label: const Text(
+                            'Menunggu Persetujuan Admin',
+                            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                          ),
+                          style: FilledButton.styleFrom(
+                            disabledBackgroundColor: const Color(0xFFFEF3C7),
+                            disabledForegroundColor: const Color(0xFFB45309),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(HomeRadius.md),
+                            ),
+                          ),
+                        )
+                      : isRejected
+                          ? FilledButton.icon(
+                              onPressed: null,
+                              icon: const Icon(Icons.block_rounded, size: 20),
+                              label: const Text(
+                                'Pengajuan Ditolak',
+                                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                              ),
+                              style: FilledButton.styleFrom(
+                                disabledBackgroundColor: const Color(0xFFFEE2E2),
+                                disabledForegroundColor: const Color(0xFFB91C1C),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(HomeRadius.md),
+                                ),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              onPressed: _isRegistering
+                                  ? null
+                                  : (isRegistered
+                                      ? () => _showTicketDialog(event)
+                                      : (isFull ? null : () => _handleRegistration(event))),
+                              icon: Icon(
+                                isRegistered
+                                    ? Icons.qr_code_scanner_rounded
+                                    : (isFull ? Icons.block_rounded : Icons.how_to_reg_rounded),
+                                size: 20,
+                              ),
+                              label: Text(
+                                _isRegistering
+                                    ? 'Memproses Pendaftaran...'
+                                    : (isRegistered
+                                        ? 'Lihat E-Tiket Saya'
+                                        : (isFull ? 'Kuota Penuh' : 'Daftar Acara (Gratis)')),
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: isRegistered
+                                    ? const Color(0xFF15803D)
+                                    : (isFull ? Colors.grey.shade400 : HomeColors.primaryGreen),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(HomeRadius.md),
+                                ),
+                              ),
+                            ),
             ),
           ),
         ),
@@ -338,8 +552,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.22),
-                    Colors.black.withOpacity(0.82),
+                    Colors.black.withValues(alpha: 0.22),
+                    Colors.black.withValues(alpha: 0.82),
                   ],
                   stops: const [0, 0.45, 1],
                 ),
@@ -363,7 +577,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     ),
                     _buildHeroBadge(
                       event.categoryLabel.toUpperCase(),
-                      backgroundColor: Colors.white.withOpacity(0.24),
+                      backgroundColor: Colors.white.withValues(alpha: 0.24),
                     ),
                   ],
                 ),
