@@ -4,14 +4,21 @@ namespace App\Services\Admin;
 
 use App\Models\AuditLog;
 use App\Models\Farm;
+use App\Models\IrrigationSchedule;
 use App\Models\SoilDetection;
+use App\Services\Admin\AdminAuditLogger;
+use App\Services\Admin\AdminNotificationService;
 use App\Services\Soil\SoilDetectionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminSoilService
 {
     public function __construct(
-        private SoilDetectionService $soilDetectionService
+        private SoilDetectionService $soilDetectionService,
+        private AdminAuditLogger $auditLogger,
+        private AdminNotificationService $notificationService
     ) {}
 
     /**
@@ -99,13 +106,47 @@ class AdminSoilService
     }
 
     /**
-     * Delete soil detection with audit log
+     * Create and evaluate soil detection, then dispatch notifications and audit log
      */
-    public function deleteSoilDetection(SoilDetection $soilDetection, ?int $actorId = null): bool
+    public function createSoilDetection(array $data, ?int $actorId = null, ?Request $request = null): SoilDetection
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($soilDetection, $actorId) {
+        $soil = $this->soilDetectionService->analyzeAndCreate($data, $actorId);
+        $soil->load('farm.farmer');
+
+        // Audit Log
+        $this->auditLogger->write('admin_soil_created', $soil, null, $soil->toArray(), $request);
+
+        // System Notification to Admins
+        $this->notificationService->notifyAdmins(
+            'Analisis Tanah Selesai',
+            "Sampel {$soil->sample_code} pada lahan {$soil->farm->name} selesai diuji. Skor: {$soil->soil_health_score}/100 ({$soil->soil_status}).",
+            'soil',
+            ['id' => $soil->id, 'sample_code' => $soil->sample_code]
+        );
+
+        // Notification to the farm owner (Farmer)
+        if ($soil->farm?->farmer_user_id) {
+            $this->notificationService->notifyUser(
+                $soil->farm->farmer_user_id,
+                'Hasil Uji Tanah Lahan Anda Telah Terbit',
+                "Hasil pengujian tanah {$soil->sample_code} di {$soil->farm->name} telah keluar dengan Skor Kesehatan {$soil->soil_health_score}/100. Rekomendasi pemupukan & irigasi telah tersedia.",
+                'crop_alert',
+                ['soil_id' => $soil->id, 'url' => '/farms']
+            );
+        }
+
+        return $soil;
+    }
+
+    /**
+     * Delete soil detection with audit log and admin notification
+     */
+    public function deleteSoilDetection(SoilDetection $soilDetection, ?int $actorId = null, ?Request $request = null): bool
+    {
+        return DB::transaction(function () use ($soilDetection, $actorId, $request) {
             $sampleCode = $soilDetection->sample_code;
             $detectionId = $soilDetection->id;
+            $oldValues = $soilDetection->toArray();
 
             $soilDetection->delete();
 
@@ -121,10 +162,42 @@ class AdminSoilService
                 ]);
             }
 
+            $this->auditLogger->write('admin_soil_deleted', SoilDetection::class, $oldValues, null, $request, $detectionId);
+            $this->notificationService->notifyAdmins(
+                'Data Tanah Dihapus',
+                "Sampel tanah {$sampleCode} telah dihapus dari sistem.",
+                'soil'
+            );
+
             return true;
         });
     }
 
+    /**
+     * Generate PDF report for soil detection
+     */
+    public function generateReportPdf(SoilDetection $soil)
+    {
+        $soil->load([
+            'farm.farmer',
+            'creator',
+        ]);
+
+        $data = $this->showData($soil);
+
+        $irrigation = $this->soilDetectionService->calculateIrrigationSchedule(
+            (float) $soil->moisture_percentage,
+            $soil->soil_temp_celsius ? (float) $soil->soil_temp_celsius : null
+        );
+
+        $data['irrigation'] = $irrigation;
+
+        $pdf = Pdf::loadView('admin.soil.report-pdf', $data);
+
+        return $pdf->download(
+            'Laporan-Tanah-' . $soil->sample_code . '.pdf'
+        );
+    }
 
     /**
      * Export soil detections to CSV or JSON
@@ -172,5 +245,99 @@ class AdminSoilService
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="soil-detections.csv"',
         ]);
+    }
+
+    /**
+     * Store manual/field irrigation schedule, with audit log and notifications
+     */
+    public function storeIrrigationSchedule(array $validated, ?Request $request = null): IrrigationSchedule
+    {
+        $schedule = IrrigationSchedule::create([
+            'farm_id' => $validated['farm_id'],
+            'schedule_date' => $validated['schedule_date'],
+            'start_time' => $validated['start_time'] ?? null,
+            'end_time' => $validated['end_time'] ?? null,
+            'status' => 'scheduled',
+            'source' => $validated['source'],
+            'officer_name' => $validated['officer_name'] ?? null,
+            'irrigation_block' => $validated['irrigation_block'] ?? null,
+            'water_source' => $validated['water_source'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        $schedule->load('farm.farmer');
+
+        // Audit & Notifications
+        $this->auditLogger->write('admin_irrigation_created', $schedule, null, $schedule->toArray(), $request);
+        $this->notificationService->notifyAdmins(
+            'Jadwal Irigasi Dibuat',
+            "Jadwal irigasi baru tanggal {$schedule->schedule_date} di lahan {$schedule->farm->name} telah dijadwalkan.",
+            'system'
+        );
+
+        if ($schedule->farm?->farmer_user_id) {
+            $this->notificationService->notifyUser(
+                $schedule->farm->farmer_user_id,
+                'Jadwal Irigasi Lahan Ditetapkan',
+                "Penyuluh telah menjadwalkan irigasi untuk {$schedule->farm->name} pada {$schedule->schedule_date} ({$schedule->start_time} - {$schedule->end_time}).",
+                'crop_alert',
+                ['url' => '/farms']
+            );
+        }
+
+        return $schedule;
+    }
+
+    /**
+     * Update irrigation schedule, with audit log and admin notification
+     */
+    public function updateIrrigationSchedule(IrrigationSchedule $schedule, array $validated, ?Request $request = null): IrrigationSchedule
+    {
+        $oldValues = $schedule->toArray();
+        $schedule->update($validated);
+        $schedule->load('farm.farmer');
+
+        // Audit & Notification
+        $this->auditLogger->write('admin_irrigation_updated', $schedule, $oldValues, $schedule->toArray(), $request);
+        $this->notificationService->notifyAdmins(
+            'Jadwal Irigasi Diperbarui',
+            "Jadwal irigasi {$schedule->farm->name} diubah menjadi status: {$schedule->status}.",
+            'system'
+        );
+
+        return $schedule;
+    }
+
+    /**
+     * Delete irrigation schedule with audit log and admin notification
+     */
+    public function deleteIrrigationSchedule(IrrigationSchedule $schedule, ?Request $request = null): bool
+    {
+        $oldValues = $schedule->toArray();
+        $scheduleId = $schedule->id;
+        $schedule->delete();
+
+        $this->auditLogger->write('admin_irrigation_deleted', IrrigationSchedule::class, $oldValues, null, $request, $scheduleId);
+        $this->notificationService->notifyAdmins('Jadwal Irigasi Dihapus', 'Jadwal irigasi telah dihapus dari sistem.', 'system');
+
+        return true;
+    }
+
+    /**
+     * Resolve SoilDetection model by sample_code or numeric ID
+     */
+    public function resolveSoilDetection(mixed $identifier): ?SoilDetection
+    {
+        if (empty($identifier)) {
+            return null;
+        }
+
+        if ($identifier instanceof SoilDetection) {
+            return $identifier;
+        }
+
+        return SoilDetection::where('sample_code', $identifier)
+            ->orWhere('id', is_numeric($identifier) ? (int) $identifier : 0)
+            ->first();
     }
 }

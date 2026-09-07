@@ -6,20 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Farm\StoreFarmRequest;
 use App\Http\Requests\Api\V1\Farm\UpdateFarmRequest;
 use App\Http\Resources\FarmResource;
-use App\Models\AlertSubscription;
-use App\Models\CropSeason;
-use App\Models\DiseaseScan;
 use App\Models\Farm;
-use App\Models\MarketListing;
-use App\Services\Geography\LocationService;
+use App\Services\FarmService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class FarmController extends Controller
 {
     public function __construct(
-        private LocationService $locationService
+        private FarmService $farmService
     ) {}
 
     /**
@@ -27,15 +22,7 @@ class FarmController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        $farms = Farm::query()
-            ->when(! $user->hasRole('admin'), function ($query) use ($user): void {
-                $query->where('farmer_user_id', $user->id);
-            })
-            ->with(['province', 'regency', 'district', 'village'])
-            ->latest('id')
-            ->get();
+        $farms = $this->farmService->getFarms($request->user());
 
         return response()->json([
             'success' => true,
@@ -49,28 +36,7 @@ class FarmController extends Controller
      */
     public function store(StoreFarmRequest $request): JsonResponse
     {
-        $user = $request->user();
-        $data = $request->validated();
-
-        $data['farmer_user_id'] = $user->id;
-
-        // Auto-resolve region if not explicitly provided
-        if (empty($data['district_id']) && empty($data['village_id'])) {
-            $resolved = $this->locationService->resolveCoordinates(
-                (float) $data['latitude'],
-                (float) $data['longitude']
-            );
-
-            if ($resolved) {
-                $data['province_id'] = $resolved['province']['id'] ?? $data['province_id'] ?? null;
-                $data['regency_id']  = $resolved['regency']['id'] ?? $data['regency_id'] ?? null;
-                $data['district_id'] = $resolved['district']['id'] ?? null;
-                $data['village_id']  = $resolved['village']['id'] ?? null;
-            }
-        }
-
-        $farm = Farm::create($data);
-        $farm->load(['province', 'regency', 'district', 'village']);
+        $farm = $this->farmService->createFarm($request->user(), $request->validated());
 
         return response()->json([
             'success' => true,
@@ -102,24 +68,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        $data = $request->validated();
-
-        // If coordinates changed and region not explicitly set, auto-resolve again
-        if ((isset($data['latitude']) || isset($data['longitude'])) && empty($data['district_id'])) {
-            $lat = $data['latitude'] ?? $farm->latitude;
-            $lng = $data['longitude'] ?? $farm->longitude;
-
-            $resolved = $this->locationService->resolveCoordinates((float) $lat, (float) $lng);
-            if ($resolved) {
-                $data['province_id'] = $resolved['province']['id'] ?? $farm->province_id;
-                $data['regency_id']  = $resolved['regency']['id'] ?? $farm->regency_id;
-                $data['district_id'] = $resolved['district']['id'] ?? null;
-                $data['village_id']  = $resolved['village']['id'] ?? null;
-            }
-        }
-
-        $farm->update($data);
-        $farm->load(['province', 'regency', 'district', 'village']);
+        $farm = $this->farmService->updateFarm($farm, $request->validated());
 
         return response()->json([
             'success' => true,
@@ -135,18 +84,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        DB::transaction(function () use ($farm) {
-            // Bersihkan atau lepaskan relasi terkait agar tidak melanggar foreign key constraint
-            $farm->irrigationSchedules()->delete();
-            $farm->soilDetections()->delete();
-            $farm->weatherSnapshots()->delete();
-            AlertSubscription::where('farm_id', $farm->id)->delete();
-            $farm->cropSeasons()->delete();
-            DiseaseScan::where('farm_id', $farm->id)->update(['farm_id' => null]);
-            MarketListing::where('farm_id', $farm->id)->update(['farm_id' => null]);
-
-            $farm->delete();
-        });
+        $this->farmService->deleteFarm($farm);
 
         return response()->json([
             'success' => true,

@@ -62,4 +62,9 @@ echo 3. Backend API      : http://0.0.0.0:8000 (LAN: 192.168.100.10:8000)
 echo 4. Frontend App     : Flutter Mobile (Android/Emulator)
 echo 5. Web Welcome Page : http://localhost:5173 (Scrollytelling & Download APK)
 echo ======================================================================
+echo.
+echo Untuk testing publik via Cloudflare Tunnel:
+echo - Jalankan: run_cloudflare_tunnels.bat
+echo - Flutter:  flutter run --dart-define=API_BASE_URL=https://URL-BACKEND.trycloudflare.com/api/v1
+echo.
 pause

@@ -368,4 +368,72 @@ class SoilDetectionService
             'schedule_end_time' => $schedule?->end_time,
         ];
     }
+
+    /**
+     * Find SoilDetection by sample code or numeric ID
+     */
+    public function findDetection(string|int $identifier): SoilDetection
+    {
+        return SoilDetection::where('sample_code', $identifier)
+            ->orWhere('id', is_numeric($identifier) ? (int) $identifier : 0)
+            ->firstOrFail();
+    }
+
+    /**
+     * Get calculated irrigation schedule alongside comparison analysis
+     *
+     * @return array<string, mixed>
+     */
+    public function getIrrigationWithComparison(SoilDetection $model): array
+    {
+        $schedule = $this->calculateIrrigationSchedule(
+            (float) $model->moisture_percentage,
+            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null,
+            $model->farm_id
+        );
+
+        $comparisonResult = null;
+        if ($model->farm) {
+            $comparisonService = app(\App\Services\Irrigation\IrrigationComparisonService::class);
+            $comparisonResult = $comparisonService->compareForFarm($model->farm, $model);
+        }
+
+        return [
+            'irrigation_schedule' => $schedule,
+            'field_schedule' => $comparisonResult['field_schedule'] ?? null,
+            'official_context' => $comparisonResult['official_context'] ?? null,
+            'comparison' => $comparisonResult['comparison'] ?? null,
+        ];
+    }
+
+    /**
+     * Fetch live AgroMonitoring soil & climate data for a farm
+     *
+     * @return array<string, mixed>
+     */
+    public function fetchAgroMonitoringSoilData(Farm $farm): array
+    {
+        $agroSoil = $this->weatherService->getSoilData($farm->latitude ?? -7.25, $farm->longitude ?? 112.75);
+
+        $moisture = $agroSoil['data']['moisture_percentage'] ?? 52.0;
+        $soilTemp = $agroSoil['data']['soil_temp_celsius'] ?? 26.5;
+
+        $irrigationSchedule = $this->calculateIrrigationSchedule($moisture, $soilTemp);
+
+        return [
+            'data' => [
+                'farm_id' => $farm->id,
+                'farm_name' => $farm->name,
+                'ph_level' => 6.5,
+                'nitrogen_ppm' => 120,
+                'phosphorus_ppm' => 25,
+                'potassium_ppm' => 150,
+                'moisture_percentage' => $moisture,
+                'organic_matter_percentage' => 2.5,
+                'soil_temp_celsius' => $soilTemp,
+                'soil_type' => 'loam',
+            ],
+            'irrigation_schedule' => $irrigationSchedule,
+        ];
+    }
 }

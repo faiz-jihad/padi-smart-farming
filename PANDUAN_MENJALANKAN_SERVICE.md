@@ -20,7 +20,8 @@ Dokumen ini berisi panduan langkah demi langkah untuk mengonfigurasi dan menjala
 7. [Integritas Data: Anti-N+1 Query & DB Transactions](#7-integritas-data-anti-n1-query--db-transactions)
 8. [Konfigurasi Jaringan & IP Host Flutter](#8-konfigurasi-jaringan--ip-host-flutter)
 9. [Verifikasi & Health Check Endpoints](#9-verifikasi--health-check-endpoints)
-10. [Troubleshooting & Solusi Masalah Umum](#10-troubleshooting--solusi-masalah-umum)
+10. [Testing Publik Dengan Cloudflare Tunnel](#10-testing-publik-dengan-cloudflare-tunnel)
+11. [Troubleshooting & Solusi Masalah Umum](#11-troubleshooting--solusi-masalah-umum)
 
 ---
 
@@ -292,7 +293,38 @@ Untuk memastikan semua service terhubung dengan baik, cek endpoint berikut:
 
 ---
 
-## 10. Troubleshooting & Solusi Masalah Umum
+## 10. Testing Publik Dengan Cloudflare Tunnel
+
+Jika butuh testing dari HP tanpa USB, demo ke anggota tim, atau akses API dari jaringan luar, jalankan Cloudflare quick tunnel:
+
+```powershell
+.\run_cloudflare_tunnels.bat
+```
+
+Default-nya helper akan membuka tunnel untuk:
+- Backend API lokal `http://localhost:8000`
+- Web landing lokal `http://localhost:5173`
+
+Copy URL `https://*.trycloudflare.com` dari window tunnel Backend API, lalu jalankan Flutter:
+
+```powershell
+cd "D:\Hackathon KMIPN\Frontend\apk_padi"
+flutter run --dart-define=API_BASE_URL=https://nama-random.trycloudflare.com/api/v1
+```
+
+Opsi tambahan:
+```powershell
+.\run_cloudflare_tunnels.bat -BackendOnly
+.\run_cloudflare_tunnels.bat -IncludeAi
+.\run_cloudflare_tunnels.bat -IncludeReverb
+.\run_cloudflare_tunnels.bat -SkipWeb
+```
+
+Panduan lengkap ada di `docs/CLOUDFLARE_TUNNEL.md`.
+
+---
+
+## 11. Troubleshooting & Solusi Masalah Umum
 
 ### 1. WebSocket Reverb tidak terkoneksi
 - **Penyebab**: Service Reverb belum dijalankan.
