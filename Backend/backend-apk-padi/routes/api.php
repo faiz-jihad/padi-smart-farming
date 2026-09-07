@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\SoilDetectionController;
 use App\Http\Controllers\Api\V1\WeatherController;
+use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\CropSeasonController;
@@ -184,6 +185,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware('throttle:marketplace-write');
         Route::delete('market-listings/{marketListing}', [MarketListingController::class, 'destroy'])
             ->middleware('throttle:marketplace-write');
+        Route::get('categories', [CategoryController::class, 'index']);
 
         Route::get('listing-images', [ListingImageController::class, 'index']);
 

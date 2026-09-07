@@ -9,6 +9,7 @@ import 'package:padi/core/network/api_client.dart';
 import 'package:padi/core/storage/token_storage.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/marketplace/data/services/marketplace_api_service.dart';
+import 'package:padi/features/marketplace/data/models/category_model.dart';
 
 class CreateMarketListingScreen extends StatefulWidget {
   const CreateMarketListingScreen({super.key});
@@ -38,6 +39,10 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
   List<Map<String, dynamic>> _farms = [];
   List<Map<String, dynamic>> _allFarms = [];
   List<Map<String, dynamic>> _activeSeasons = [];
+  List<CategoryModel> _categories = [];
+  int? _categoryId;
+  bool _isLoadingCategories = true;
+  String? _categoryError;
 
   int? _farmId;
   String _unit = 'kg';
@@ -46,58 +51,6 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
   bool _isLoadingFarms = true;
   String? _farmError;
   bool _showLivePreview = true;
-
-  // Preset Komoditas Populer
-  static const List<_CommodityPreset> _commodityPresets = [
-    _CommodityPreset(
-      name: 'Gabah Kering Panen (GKP)',
-      shortName: 'GKP',
-      icon: Icons.grass_rounded,
-      defaultPrice: '7200',
-      descriptionSuggestion:
-          'Gabah Kering Panen segar langsung dari sawah, kadar air standar panen, butir berisi.',
-    ),
-    _CommodityPreset(
-      name: 'Gabah Kering Giling (GKG)',
-      shortName: 'GKG',
-      icon: Icons.grain_rounded,
-      defaultPrice: '8500',
-      descriptionSuggestion:
-          'Gabah Kering Giling siap giling, kadar air < 14%, hampa/kotoran minimal.',
-    ),
-    _CommodityPreset(
-      name: 'Beras Premium',
-      shortName: 'Beras Premium',
-      icon: Icons.rice_bowl_rounded,
-      defaultPrice: '14800',
-      descriptionSuggestion:
-          'Beras kualitas premium, derajat sosoh 100%, butir utuh dan putih mengkilap.',
-    ),
-    _CommodityPreset(
-      name: 'Beras Medium',
-      shortName: 'Beras Medium',
-      icon: Icons.soup_kitchen_rounded,
-      defaultPrice: '12800',
-      descriptionSuggestion:
-          'Beras medium bersih, derajat sosoh 95%, pulen dan bebas pengawet.',
-    ),
-    _CommodityPreset(
-      name: 'Benih Padi Bersertifikat',
-      shortName: 'Benih Padi',
-      icon: Icons.spa_rounded,
-      defaultPrice: '18000',
-      descriptionSuggestion:
-          'Benih padi bersertifikat resmi, daya berkecambah tinggi > 85%, siap semai.',
-    ),
-    _CommodityPreset(
-      name: 'Beras Organik / Khusus',
-      shortName: 'Beras Organik',
-      icon: Icons.eco_rounded,
-      defaultPrice: '22000',
-      descriptionSuggestion:
-          'Beras budidaya organik bebas pestisida kimia, varietas wangi dan kaya nutrisi.',
-    ),
-  ];
 
   // Quick Tags untuk deskripsi mutu
   static const List<String> _qualityTags = [
@@ -118,6 +71,7 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
     _service = MarketplaceApiService(_apiClient);
 
     _loadFarms();
+    _loadCategories();
   }
 
   @override
@@ -219,6 +173,35 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
       setState(() {
         _isLoadingFarms = false;
         _farmError = _cleanError(e);
+      });
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+      _categoryError = null;
+    });
+
+    try {
+      final categories = await _service.fetchCategories();
+
+      if (!mounted) return;
+
+      setState(() {
+        _categories = categories;
+        _isLoadingCategories = false;
+
+        if (_categoryId == null && categories.isNotEmpty) {
+          _categoryId = categories.first.id;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingCategories = false;
+        _categoryError = _cleanError(e);
       });
     }
   }
@@ -438,18 +421,6 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
     );
   }
 
-  void _applyCommodityPreset(_CommodityPreset preset) {
-    setState(() {
-      _commodityController.text = preset.name;
-      if (_priceController.text.trim().isEmpty) {
-        _priceController.text = preset.defaultPrice;
-      }
-      if (_descriptionController.text.trim().isEmpty) {
-        _descriptionController.text = preset.descriptionSuggestion;
-      }
-    });
-  }
-
   void _appendQualityTag(String tag) {
     final currentText = _descriptionController.text.trim();
     if (currentText.contains(tag)) return;
@@ -484,6 +455,12 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
       return;
     }
 
+    final categoryId = _categoryId;
+    if (categoryId == null) {
+      _showMessage('Pilih kategori terlebih dahulu.');
+      return;
+    }
+
     final selectedImage = _selectedImage;
     if (selectedImage == null) {
       _showMessage('Pilih foto hasil panen terlebih dahulu.');
@@ -511,6 +488,7 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
       await _service.createListing(
         farmId: farmId,
         cropSeasonId: activeSeasonId,
+        categoryId: categoryId,
         commodity: _commodityController.text.trim(),
         quantity: quantity,
         unit: _unit,
@@ -1311,85 +1289,23 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
     return _buildCardContainer(
       icon: Icons.grass_rounded,
       title: '2. Jenis Komoditas',
-      subtitle: 'Pilih jenis hasil panen atau ketik varietas kustom',
+      subtitle: 'Pilih kategori lalu masukkan nama produk atau komoditas',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Pilihan Cepat Komoditas:',
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: HomeColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _commodityPresets.map((preset) {
-              final isSelected =
-                  _commodityController.text.trim() == preset.name;
-              return InkWell(
-                onTap: () => _applyCommodityPreset(preset),
-                borderRadius: BorderRadius.circular(HomeRadius.pill),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? HomeColors.primaryGreen
-                        : HomeColors.surfaceMuted,
-                    borderRadius: BorderRadius.circular(HomeRadius.pill),
-                    border: Border.all(
-                      color: isSelected
-                          ? HomeColors.primaryGreen
-                          : HomeColors.border,
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        preset.icon,
-                        size: 14,
-                        color: isSelected
-                            ? Colors.white
-                            : HomeColors.primaryGreen,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        preset.shortName,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : HomeColors.textPrimary,
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+          _buildCategorySelector(),
           const SizedBox(height: 16),
           TextFormField(
             controller: _commodityController,
             textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Nama Komoditas & Varietas *',
-              hintText: 'Contoh: Gabah Kering Panen - Ciherang Super',
+              labelText: 'Nama Produk / Komoditas *',
+              hintText: 'Contoh: Gabah Ciherang Super',
               prefixIcon: const Icon(Icons.inventory_2_outlined),
               suffixIcon: _commodityController.text.isNotEmpty
                   ? IconButton(
+                      tooltip: 'Hapus nama produk',
                       icon: const Icon(Icons.clear_rounded, size: 18),
                       onPressed: () {
                         setState(() {
@@ -1401,13 +1317,149 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Nama komoditas wajib diisi';
+                return 'Nama produk / komoditas wajib diisi';
               }
               return null;
             },
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    if (_isLoadingCategories) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: HomeColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(HomeRadius.md),
+          border: Border.all(color: HomeColors.border),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: HomeColors.primaryGreen,
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Memuat kategori dari server...',
+                style: HomeTypography.supporting,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_categoryError != null) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: HomeColors.dangerBg,
+          borderRadius: BorderRadius.circular(HomeRadius.md),
+          border: Border.all(
+            color: HomeColors.danger.withOpacity(0.25),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: HomeColors.danger,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _categoryError!,
+                style: const TextStyle(
+                  color: HomeColors.textSecondary,
+                  fontSize: 12.5,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Muat ulang kategori',
+              onPressed: _isLoading ? null : _loadCategories,
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: HomeColors.danger,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_categories.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: HomeColors.warningBg,
+          borderRadius: BorderRadius.circular(HomeRadius.md),
+          border: Border.all(
+            color: HomeColors.warning.withOpacity(0.3),
+          ),
+        ),
+        child: const Row(
+          children: [
+            Icon(
+              Icons.category_outlined,
+              color: HomeColors.warning,
+              size: 20,
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Belum ada kategori aktif. Silakan coba lagi.',
+                style: TextStyle(
+                  color: HomeColors.textSecondary,
+                  fontSize: 12.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<int>(
+      value: _categoryId,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Kategori *',
+        hintText: 'Pilih kategori marketplace',
+        prefixIcon: Icon(Icons.category_outlined),
+      ),
+      items: _categories.map((category) {
+        return DropdownMenuItem<int>(
+          value: category.id,
+          child: Text(
+            category.name,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList(),
+      onChanged: _isLoading
+          ? null
+          : (value) {
+              setState(() {
+                _categoryId = value;
+              });
+            },
+      validator: (value) {
+        if (value == null) {
+          return 'Kategori wajib dipilih';
+        }
+        return null;
+      },
     );
   }
 
@@ -2339,18 +2391,3 @@ class _CreateMarketListingScreenState extends State<CreateMarketListingScreen> {
   }
 }
 
-class _CommodityPreset {
-  const _CommodityPreset({
-    required this.name,
-    required this.shortName,
-    required this.icon,
-    required this.defaultPrice,
-    required this.descriptionSuggestion,
-  });
-
-  final String name;
-  final String shortName;
-  final IconData icon;
-  final String defaultPrice;
-  final String descriptionSuggestion;
-}

@@ -13,6 +13,7 @@ class MarketListing extends Model
         'farm_id',
         'crop_season_id',
         'harvest_id',
+        'category_id',
         'commodity',
         'quantity',
         'unit',
@@ -58,6 +59,14 @@ class MarketListing extends Model
     {
         return $this->belongsTo(
             Harvest::class
+        );
+    }
+    
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(
+            Category::class,
+            'category_id'
         );
     }
 

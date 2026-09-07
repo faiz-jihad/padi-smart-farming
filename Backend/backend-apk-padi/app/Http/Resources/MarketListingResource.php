@@ -26,6 +26,7 @@ class MarketListingResource extends JsonResource
             'farm_id' => $this->farm_id,
             'crop_season_id' => $this->crop_season_id,
             'harvest_id' => $this->harvest_id,
+            'category_id' => $this->category_id,
             'commodity' => $this->commodity ?? 'Gabah Kering Panen (GKP)',
             'quantity' => (float) ($this->quantity ?? 0),
             'unit' => $this->unit ?? 'kg',
@@ -60,6 +61,12 @@ class MarketListingResource extends JsonResource
                 'area_ha' => $this->farm->area_ha,
                 'latitude' => $this->farm->latitude,
                 'longitude' => $this->farm->longitude,
+            ] : null,
+            'category' => $this->category ? [
+                'id' => $this->category->id,
+                'name' => $this->category->name,
+                'slug' => $this->category->slug,
+                'icon' => $this->category->icon,
             ] : null,
 
             'is_owner' => $request->user()

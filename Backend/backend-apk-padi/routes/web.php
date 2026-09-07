@@ -160,6 +160,8 @@ Route::middleware(['auth', 'admin.web'])
             Route::patch('/marketplace/listings/{listing}', [MarketplaceController::class, 'updateListing'])->name('marketplace.listings.update');
             Route::delete('/marketplace/listings/{listing}', [MarketplaceController::class, 'destroy'])->name('marketplace.listings.destroy');
             Route::patch('/marketplace/offers/{offer}', [MarketplaceController::class, 'updateOffer'])->name('marketplace.offers.update');
+            Route::post('/marketplace/categories', [MarketplaceController::class, 'storeCategory'])->name('marketplace.categories.store');
+
 
 
             // Agriculture Events Management (Admin)
