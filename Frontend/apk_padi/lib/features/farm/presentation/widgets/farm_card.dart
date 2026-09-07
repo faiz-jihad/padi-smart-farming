@@ -119,7 +119,7 @@ class _FarmCardState extends State<FarmCard> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '(≈ $areaM2 m²)',
+                                '(~ $areaM2 m2)',
                                 style: const TextStyle(
                                   color: HomeColors.textSecondary,
                                   fontSize: 11,
@@ -174,7 +174,8 @@ class _FarmCardState extends State<FarmCard> {
                     if (farm.boundaryCoordinates.length >= 3)
                       _buildChip(
                         icon: Icons.polyline_rounded,
-                        label: '${farm.boundaryCoordinates.length} Titik Poligon',
+                        label:
+                            '${farm.boundaryCoordinates.length} Titik Poligon',
                         highlight: true,
                       ),
                   ],
@@ -276,8 +277,8 @@ class _FarmCardState extends State<FarmCard> {
 
   Widget _buildStatusBadge(bool isActive, String rawStatus) {
     final label = _statusLabel(rawStatus);
-    final color = isActive ? HomeColors.primaryGreen : HomeColors.harvestGold;
-    final bg = isActive ? HomeColors.lightGreen : HomeColors.harvestGoldBg;
+    final color = HomeColors.primaryGreen;
+    final bg = isActive ? HomeColors.lightGreen : HomeColors.surface;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
@@ -307,7 +308,7 @@ class _FarmCardState extends State<FarmCard> {
         color: highlight ? HomeColors.lightGreen : HomeColors.surfaceMuted,
         borderRadius: BorderRadius.circular(HomeRadius.sm),
         border: Border.all(
-          color: highlight ? const Color(0xFFBBF7D0) : HomeColors.borderSubtle,
+          color: highlight ? HomeColors.primaryGreen : HomeColors.borderSubtle,
         ),
       ),
       child: Row(
@@ -316,13 +317,17 @@ class _FarmCardState extends State<FarmCard> {
           Icon(
             icon,
             size: 13,
-            color: highlight ? HomeColors.primaryGreen : HomeColors.textSecondary,
+            color: highlight
+                ? HomeColors.primaryGreen
+                : HomeColors.textSecondary,
           ),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: highlight ? HomeColors.primaryGreen : HomeColors.textPrimary,
+              color: highlight
+                  ? HomeColors.primaryGreen
+                  : HomeColors.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -391,8 +396,12 @@ class FarmPolygonThumbnailPainter extends CustomPainter {
 
     for (var i = 0; i < points.length; i++) {
       final point = points[i];
-      final x = padding + ((point.lng - minLng) / lngRange) * (size.width - padding * 2);
-      final y = padding + ((maxLat - point.lat) / latRange) * (size.height - padding * 2);
+      final x =
+          padding +
+          ((point.lng - minLng) / lngRange) * (size.width - padding * 2);
+      final y =
+          padding +
+          ((maxLat - point.lat) / latRange) * (size.height - padding * 2);
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -404,7 +413,7 @@ class FarmPolygonThumbnailPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = HomeColors.primaryGreen.withOpacity(0.25)
+        ..color = HomeColors.primaryGreen.withValues(alpha: 0.25)
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(

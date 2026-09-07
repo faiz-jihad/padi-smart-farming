@@ -76,3 +76,18 @@ final isBuyerRoleProvider = Provider<bool>((ref) {
       roleLabel.contains('mitra') ||
       roleLabel.contains('buyer');
 });
+
+final isOfficerRoleProvider = Provider<bool>((ref) {
+  final user = ref.watch(authControllerProvider).state.user;
+  if (user == null) return false;
+  final role = user.role.toLowerCase().trim();
+  final roleLabel = (user.roleLabel ?? '').toLowerCase().trim();
+  return role == 'extension_officer' ||
+      role == 'ppl' ||
+      role == 'penyuluh' ||
+      role == 'admin' ||
+      roleLabel.contains('penyuluh') ||
+      roleLabel.contains('ppl') ||
+      roleLabel.contains('petugas') ||
+      roleLabel.contains('admin');
+});

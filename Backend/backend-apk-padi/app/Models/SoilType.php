@@ -38,6 +38,14 @@ class SoilType extends Model
     }
 
     /**
+     * Farms with this soil type.
+     */
+    public function farms(): HasMany
+    {
+        return $this->hasMany(Farm::class, 'soil_type_id');
+    }
+
+    /**
      * Soil detections with this soil type.
      */
     public function soilDetections(): HasMany

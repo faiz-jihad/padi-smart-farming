@@ -88,11 +88,11 @@ class _FarmMapViewState extends State<FarmMapView> {
           return Polygon(
             points: points,
             color: isSelected
-                ? HomeColors.primaryGreen.withOpacity(0.35)
-                : HomeColors.harvestGold.withOpacity(0.25),
+                ? HomeColors.primaryGreen.withValues(alpha: 0.35)
+                : HomeColors.primaryGreen.withValues(alpha: 0.20),
             borderColor: isSelected
                 ? HomeColors.primaryGreen
-                : HomeColors.harvestGold,
+                : HomeColors.emerald,
             borderStrokeWidth: isSelected ? 3 : 2,
           );
         })
@@ -123,9 +123,9 @@ class _FarmMapViewState extends State<FarmMapView> {
                 decoration: BoxDecoration(
                   color: isSelected ? HomeColors.primaryGreen : Colors.white,
                   borderRadius: BorderRadius.circular(HomeRadius.pill),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: HomeColors.deepGreen.withValues(alpha: 0.18),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
@@ -153,9 +153,9 @@ class _FarmMapViewState extends State<FarmMapView> {
                     color: isSelected ? Colors.white : HomeColors.primaryGreen,
                     width: 2,
                   ),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: HomeColors.deepGreen.withValues(alpha: 0.18),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
@@ -261,9 +261,9 @@ class _FarmMapViewState extends State<FarmMapView> {
                 decoration: BoxDecoration(
                   color: HomeColors.surface,
                   borderRadius: BorderRadius.circular(HomeRadius.xl),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black26,
+                      color: HomeColors.deepGreen.withValues(alpha: 0.18),
                       blurRadius: 18,
                       offset: Offset(0, 6),
                     ),

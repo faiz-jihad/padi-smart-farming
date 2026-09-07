@@ -45,14 +45,72 @@ class LeafSegmenter:
         r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
         exg = 2.0 * g - r - b
 
-        # 1. Segmentasi Daun Padi
-        leaf_condition = (g > 35.0) & (exg > -25.0) & (g > b * 0.88)
-        leaf_mask = leaf_condition.astype(np.uint8) * 255
+        # Konversi ke HSV untuk analisis spektral tanaman & klorofil
+        rgb_u8 = np.clip(rgb, 0, 255).astype(np.uint8)
+        hsv = cv2.cvtColor(rgb_u8, cv2.COLOR_RGB2HSV)
+        hue = hsv[:, :, 0]
+        sat = hsv[:, :, 1]
+        val = hsv[:, :, 2]
+
+        # 1. Segmentasi Daun Padi & Jaringan Tanaman Nyata
+        # A. Daun Hijau / Sehat (Green Foliage - Botanical Chlorophyll):
+        # - Hue 28-88 (kuning kehijauan hingga hijau pekat)
+        # - Saturation >= 35 (pigmen tanaman organik alami, menolak warna pudar/netral/sintetis)
+        # - Value 30-245 (menolak bayangan pekat dan pantulan silau)
+        # - ExG >= 8.0 (Excess Green index positif dan signifikan)
+        # - G > B * 1.05 dan G > R * 0.95
+        green_leaf = (
+            (hue >= 28) & (hue <= 88) &
+            (sat >= 35) &
+            (val >= 30) & (val <= 245) &
+            (exg >= 8.0) &
+            (g > b * 1.05) & (g > r * 0.95)
+        )
+
+        # B. Daun Menguning / Klorotik / Bergejala (Tungro, Hawar Daun Bakteri, Bercak Cokelat):
+        # - Hue 12-28 (jingga keemasan hingga kuning jerami)
+        # - Saturation >= 40 (pigmen tanaman organik klorotik)
+        # - Value 40-240
+        # - R > B * 1.15 dan G > B * 1.05
+        chlorotic_leaf = (
+            (hue >= 12) & (hue < 28) &
+            (sat >= 40) &
+            (val >= 40) & (val <= 240) &
+            (r > b * 1.15) & (g > b * 1.05)
+        )
+
+        green_pixel_count = int(np.count_nonzero(green_leaf))
+        green_pct = round((green_pixel_count / max(total_pixels, 1)) * 100.0, 2)
+
+        chlorotic_pixel_count = int(np.count_nonzero(chlorotic_leaf))
+        chlorotic_pct = round((chlorotic_pixel_count / max(total_pixels, 1)) * 100.0, 2)
+
+        # Gabungkan masker jaringan daun padi
+        raw_leaf_mask = (green_leaf | chlorotic_leaf).astype(np.uint8) * 255
+        leaf_mask = cv2.morphologyEx(raw_leaf_mask, cv2.MORPH_OPEN, self._kernel_spot)
         leaf_mask = cv2.morphologyEx(leaf_mask, cv2.MORPH_CLOSE, self._kernel_ellipse)
 
         leaf_pixel_count = int(np.count_nonzero(leaf_mask))
         leaf_coverage_pct = round((leaf_pixel_count / max(total_pixels, 1)) * 100.0, 2)
-        leaf_detected = leaf_coverage_pct >= 5.0
+
+        # Cek proporsi piksel akromatik (putih/abu-abu/hitam tanpa saturasi seperti bodi mobil, aspal, kertas)
+        achromatic_pixels = int(np.count_nonzero(sat < 18))
+        achromatic_ratio = achromatic_pixels / max(total_pixels, 1)
+
+        # Rasio vegetasi hijau terhadap total tanaman kandidat
+        plant_sum = green_pct + chlorotic_pct
+        green_ratio = (green_pct / plant_sum) if plant_sum > 0.0 else 0.0
+
+        # Kriteria Keabsahan Daun Padi:
+        # 1. Daun padi hidup selalu memiliki basis vegetasi hijau sejati (green_pct >= 12% atau green_pct >= 6% & green_ratio >= 0.25)
+        # 2. Total cakupan tanaman daun harus signifikan (leaf_coverage_pct >= 15%)
+        # 3. Menolak gambar yang didominasi warna netral/kertas/layar/poster (achromatic_ratio > 0.75)
+        has_sufficient_green = (green_pct >= 12.0) or (green_pct >= 6.0 and green_ratio >= 0.25)
+        leaf_detected = (
+            has_sufficient_green
+            and (leaf_coverage_pct >= 15.0)
+            and not (achromatic_ratio > 0.75 and leaf_coverage_pct < 30.0)
+        )
 
         if not leaf_detected:
             elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
@@ -73,6 +131,20 @@ class LeafSegmenter:
 
         lesion_pixel_count = int(np.count_nonzero(lesion_mask))
         lesion_area_pct = round((lesion_pixel_count / max(leaf_pixel_count, 1)) * 100.0, 2)
+
+        # Guard integritas: Jika lesi mencakup > 92% dari seluruh "daun" dan vegetasi hijau < 15%,
+        # maka objek ini bukan daun berbercak nyata, melainkan objek solid buatan.
+        if lesion_area_pct > 92.0 and green_pct < 15.0:
+            elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+            return SegmentationResult(
+                leaf_detected=False,
+                leaf_coverage_pct=leaf_coverage_pct,
+                lesion_area_pct=lesion_area_pct,
+                spot_count=0,
+                dominant_bbox=None,
+                severity_level="none",
+                processing_ms=elapsed_ms,
+            )
 
         # 3. Kontur Bercak & Bounding Box
         contours, _ = cv2.findContours(lesion_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

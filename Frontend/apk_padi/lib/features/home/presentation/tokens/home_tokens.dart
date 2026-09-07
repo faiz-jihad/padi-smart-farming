@@ -25,16 +25,16 @@ abstract final class HomeColors {
   static const Color textOnDarkMuted = Color(0xFFD1E7DD);
 
   // State & Accent Colors
-  static const Color warning = Color(0xFFF4A825);
-  static const Color warningBg = Color(0xFFFEF7E6);
-  static const Color danger = Color(0xFFD94B45);
-  static const Color dangerBg = Color(0xFFFDEEEC);
-  static const Color skyBlue = Color(0xFF0284C7);
-  static const Color skyBlueBg = Color(0xFFE0F2FE);
-  static const Color purple = Color(0xFF7C3AED);
-  static const Color purpleBg = Color(0xFFF3E8FF);
-  static const Color harvestGold = Color(0xFFD97706);
-  static const Color harvestGoldBg = Color(0xFFFEF3C7);
+  static const Color warning = Color(0xFF0E7C53);
+  static const Color warningBg = Color(0xFFEAF5EF);
+  static const Color danger = Color(0xFF075E3B);
+  static const Color dangerBg = Color(0xFFE6F3EC);
+  static const Color skyBlue = Color(0xFF146B45);
+  static const Color skyBlueBg = Color(0xFFEAF5EF);
+  static const Color purple = Color(0xFF0E7C53);
+  static const Color purpleBg = Color(0xFFEAF5EF);
+  static const Color harvestGold = Color(0xFF146B45);
+  static const Color harvestGoldBg = Color(0xFFEAF5EF);
 }
 
 abstract final class HomeSpacing {
@@ -63,28 +63,28 @@ abstract final class HomeRadius {
 
 abstract final class HomeShadows {
   static List<BoxShadow> get subtle => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.03),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.03),
+      blurRadius: 10,
+      offset: const Offset(0, 3),
+    ),
+  ];
 
   static List<BoxShadow> get hero => [
-        BoxShadow(
-          color: HomeColors.deepGreen.withOpacity(0.22),
-          blurRadius: 24,
-          offset: const Offset(0, 10),
-        ),
-      ];
+    BoxShadow(
+      color: HomeColors.deepGreen.withValues(alpha: 0.22),
+      blurRadius: 24,
+      offset: const Offset(0, 10),
+    ),
+  ];
 
   static List<BoxShadow> get nav => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.06),
-          blurRadius: 16,
-          offset: const Offset(0, -4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 16,
+      offset: const Offset(0, -4),
+    ),
+  ];
 }
 
 abstract final class HomeTypography {

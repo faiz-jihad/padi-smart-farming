@@ -58,7 +58,7 @@ echo ======================================================================
 echo Semua 5 service telah dijalankan:
 echo 1. AI Service       : http://127.0.0.1:8003 (Swagger: /docs)
 echo 2. WebSocket Reverb : ws://0.0.0.0:8080
-echo 3. Backend API      : http://0.0.0.0:8000 (LAN: 192.168.100.10:8000)
+echo 3. Backend API      : http://0.0.0.0:8000 (LAN: 192.168.1.7:8000)
 echo 4. Frontend App     : Flutter Mobile (Android/Emulator)
 echo 5. Web Welcome Page : http://localhost:5173 (Scrollytelling & Download APK)
 echo ======================================================================

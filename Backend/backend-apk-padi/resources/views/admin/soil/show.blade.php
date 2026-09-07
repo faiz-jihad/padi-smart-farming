@@ -72,7 +72,7 @@
                     @endif
                 </h2>
                 <p style="margin: 0; color: #e2e8f0; font-size: 13px;">
-                    Jenis Tanah: <strong style="color: #ffffff;">{{ $soilDetection->soilType?->name ?? ucfirst(str_replace('_', ' ', $soilDetection->soil_type)) }}</strong> | 
+                    Jenis Tanah: <strong style="color: #ffffff;">{{ $soilDetection->soilType?->name ?? ($soilDetection->soil_type ? ucfirst(str_replace('_', ' ', $soilDetection->soil_type)) : 'Belum ditentukan') }}</strong> | 
                     Suhu Tanah: <strong style="color: #ffffff;">{{ $soilDetection->soil_temp_celsius ? number_format($soilDetection->soil_temp_celsius, 1) . ' °C' : 'Data AgroMonitoring' }}</strong> | 
                     Dianalisis Oleh: <strong style="color: #ffffff;">{{ $soilDetection->creator?->name ?? 'Sistem AI P.A.D.I' }}</strong>
                 </p>

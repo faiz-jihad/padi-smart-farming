@@ -8,7 +8,7 @@ class SmartInsightCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     required this.onActionTap,
-    this.badgeText = 'Dokter Tanaman AI',
+    this.badgeText = 'Pemeriksaan Tanaman',
   });
 
   final String title;
@@ -43,10 +43,13 @@ class SmartInsightCard extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(HomeRadius.md),
-                    border: Border.all(color: HomeColors.primaryGreen, width: 2),
+                    border: Border.all(
+                      color: HomeColors.primaryGreen,
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: HomeColors.primaryGreen.withOpacity(0.18),
+                        color: HomeColors.primaryGreen.withValues(alpha: 0.18),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -58,7 +61,7 @@ class SmartInsightCard extends StatelessWidget {
                   ),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: HomeColors.deepGreen.withOpacity(0.25),
+                      color: HomeColors.deepGreen.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(HomeRadius.md - 2),
                     ),
                     child: const Center(
@@ -81,10 +84,15 @@ class SmartInsightCard extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: HomeColors.lightGreen,
-                              borderRadius: BorderRadius.circular(HomeRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                HomeRadius.pill,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,

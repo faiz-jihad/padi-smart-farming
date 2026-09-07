@@ -12,7 +12,6 @@ use App\Services\Admin\AdminSoilService;
 use App\Models\SoilType;
 use App\Services\Admin\AdminAuditLogger;
 use App\Services\Admin\AdminNotificationService;
-use App\Services\Admin\AdminSoilService;
 use App\Services\Soil\SoilDetectionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +40,7 @@ class SoilController extends Controller
     public function create(): View
     {
         return view('admin.soil.create', [
-            'farms' => Farm::with('farmer')->orderBy('name')->get(),
+            'farms' => Farm::with(['farmer', 'soilType'])->orderBy('name')->get(),
             'soilTypes' => SoilType::active()->orderBy('name')->get(),
         ]);
     }

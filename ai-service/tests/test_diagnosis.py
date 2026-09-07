@@ -404,3 +404,43 @@ def test_backend_diseases_learn_endpoint(client):
     assert res["data"]["learned"] is True
     assert res["data"]["sample_id"] == "test-sample-123"
 
+
+def test_non_leaf_image_rejected_backend_endpoint(client):
+    """Gambar non-daun (seperti mobil/objek putih tanpa klorofil) harus ditolak dengan 422 INVALID_IMAGE."""
+    arr = np.full((480, 640, 3), 240, dtype=np.uint8)
+    arr[200:300, 150:450] = 30  # ban / jendela gelap
+    img = Image.fromarray(arr, mode="RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=90)
+    car_bytes = buf.getvalue()
+
+    response = client.post(
+        "/api/v1/diseases/detect",
+        files={"image": ("car.jpg", car_bytes, "image/jpeg")},
+    )
+    assert response.status_code == 422
+    res = response.json()
+    assert "error" in res
+    assert res["error"]["code"] == "INVALID_IMAGE"
+    assert "bukan daun" in res["error"]["message"].lower()
+
+
+def test_non_leaf_image_rejected_diagnose_endpoint(client):
+    """Endpoint /api/v1/ai/padi/diagnose juga harus menolak gambar non-daun."""
+    arr = np.full((480, 640, 3), 240, dtype=np.uint8)
+    arr[200:300, 150:450] = 30
+    img = Image.fromarray(arr, mode="RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=90)
+    car_bytes = buf.getvalue()
+
+    response = client.post(
+        "/api/v1/ai/padi/diagnose",
+        files={"image": ("car.jpg", car_bytes, "image/jpeg")},
+    )
+    assert response.status_code == 422
+    res = response.json()
+    assert "error" in res
+    assert res["error"]["code"] == "INVALID_IMAGE"
+    assert "bukan daun" in res["error"]["message"].lower()
+

@@ -237,6 +237,12 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-rice-varieties">
                                 <a href="#endpoints-GETapi-v1-rice-varieties">GET api/v1/rice-varieties</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-soil-types">
+                                <a href="#endpoints-GETapi-v1-soil-types">Get list of active soil types</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-irrigation-types">
+                                <a href="#endpoints-GETapi-v1-irrigation-types">Get list of active irrigation types</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-weather-snapshots">
                                 <a href="#endpoints-GETapi-v1-weather-snapshots">GET api/v1/weather-snapshots</a>
                             </li>
@@ -309,6 +315,9 @@
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-v1-market-listings--marketListing_id-">
                                 <a href="#endpoints-DELETEapi-v1-market-listings--marketListing_id-">DELETE api/v1/market-listings/{marketListing_id}</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-categories">
+                                <a href="#endpoints-GETapi-v1-categories">GET api/v1/categories</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-listing-images">
                                 <a href="#endpoints-GETapi-v1-listing-images">GET api/v1/listing-images</a>
@@ -404,16 +413,25 @@
                                 <a href="#endpoints-DELETEapi-v1-device-tokens">Remove a device token when user logs out or revokes permission.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-events">
-                                <a href="#endpoints-GETapi-v1-events">Display a listing of upcoming & active agriculture events.</a>
+                                <a href="#endpoints-GETapi-v1-events">Display a listing of approved upcoming & active agriculture events.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-events-my-submissions">
+                                <a href="#endpoints-GETapi-v1-events-my-submissions">Display a listing of the authenticated farmer's own submissions (pending/approved/rejected).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-events">
-                                <a href="#endpoints-POSTapi-v1-events">Store a newly created event (Admin / Officer).</a>
+                                <a href="#endpoints-POSTapi-v1-events">Store a newly created event proposal or official event.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-events--event_id-">
-                                <a href="#endpoints-GETapi-v1-events--event_id-">Display the specified event.</a>
+                                <a href="#endpoints-GETapi-v1-events--event_id-">Display the specified event with visibility authorization.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-events--event_id--register">
                                 <a href="#endpoints-POSTapi-v1-events--event_id--register">Register the authenticated user for an event.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-admin-events--event_id--approve">
+                                <a href="#endpoints-POSTapi-v1-admin-events--event_id--approve">Approve a pending farmer submission event.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-v1-admin-events--event_id--reject">
+                                <a href="#endpoints-POSTapi-v1-admin-events--event_id--reject">Reject a pending farmer submission event with a reason.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-v1-admin--resource----id--">
                                 <a href="#endpoints-GETapi-v1-admin--resource----id--">GET api/v1/admin/{resource?}/{id?}</a>
@@ -429,7 +447,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: September 3, 2026</li>
+        <li>Last updated: September 9, 2026</li>
     </ul>
 </div>
 
@@ -641,7 +659,7 @@ access-control-allow-origin: *
     &quot;gateway&quot;: &quot;frontend-laravel-ai-service&quot;,
     &quot;system&quot;: &quot;P.A.D.I. Smart Farming API&quot;,
     &quot;version&quot;: &quot;1.0.0&quot;,
-    &quot;timestamp&quot;: &quot;2026-09-03T07:58:03+00:00&quot;
+    &quot;timestamp&quot;: &quot;2026-09-09T02:31:15+00:00&quot;
 }</code>
  </pre>
     </span>
@@ -6289,17 +6307,19 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"latitude\": -90,
     \"longitude\": -180,
     \"irrigation_type\": \"y\",
-    \"irrigation_notes\": \"v\",
+    \"irrigation_type_id\": 16,
+    \"irrigation_notes\": \"n\",
     \"province_id\": 16,
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"active\",
+    \"soil_type_id\": 16,
+    \"status\": \"fallow\",
     \"boundary_coordinates\": [
         {
-            \"lat\": -90,
-            \"lng\": -179
+            \"lat\": -89,
+            \"lng\": -180
         }
     ]
 }"
@@ -6322,17 +6342,19 @@ let body = {
     "latitude": -90,
     "longitude": -180,
     "irrigation_type": "y",
-    "irrigation_notes": "v",
+    "irrigation_type_id": 16,
+    "irrigation_notes": "n",
     "province_id": 16,
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "active",
+    "soil_type_id": 16,
+    "status": "fallow",
     "boundary_coordinates": [
         {
-            "lat": -90,
-            "lng": -179
+            "lat": -89,
+            "lng": -180
         }
     ]
 };
@@ -6484,10 +6506,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="boundary_coordinates.0.lat"                data-endpoint="POSTapi-v1-farms"
-               value="-90"
+               value="-89"
                data-component="body">
     <br>
-<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-90</code></p>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-89</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>lng</code></b>&nbsp;&nbsp;
@@ -6496,24 +6518,36 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="boundary_coordinates.0.lng"                data-endpoint="POSTapi-v1-farms"
-               value="-179"
+               value="-180"
                data-component="body">
     <br>
-<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-179</code></p>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-180</code></p>
                     </div>
                                     </details>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>irrigation_type</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="irrigation_type"                data-endpoint="POSTapi-v1-farms"
                value="y"
                data-component="body">
     <br>
-<p>Must not be greater than 50 characters. Example: <code>y</code></p>
+<p>This field is required when <code>irrigation_type_id</code> is not present. Must not be greater than 50 characters. Example: <code>y</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>irrigation_type_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="irrigation_type_id"                data-endpoint="POSTapi-v1-farms"
+               value="16"
+               data-component="body">
+    <br>
+<p>This field is required when <code>irrigation_type</code> is not present. Must match an existing stored value. Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>irrigation_notes</code></b>&nbsp;&nbsp;
@@ -6522,10 +6556,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="irrigation_notes"                data-endpoint="POSTapi-v1-farms"
-               value="v"
+               value="n"
                data-component="body">
     <br>
-<p>Must not be greater than 500 characters. Example: <code>v</code></p>
+<p>Must not be greater than 500 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>province_id</code></b>&nbsp;&nbsp;
@@ -6588,16 +6622,28 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must not be greater than 50 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>soil_type_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="soil_type_id"                data-endpoint="POSTapi-v1-farms"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-farms"
-               value="active"
+               value="fallow"
                data-component="body">
     <br>
-<p>Example: <code>active</code></p>
+<p>Example: <code>fallow</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -6766,17 +6812,19 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"latitude\": -90,
     \"longitude\": -180,
     \"irrigation_type\": \"y\",
-    \"irrigation_notes\": \"v\",
+    \"irrigation_type_id\": 16,
+    \"irrigation_notes\": \"n\",
     \"province_id\": 16,
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
     \"soil_type\": \"n\",
-    \"status\": \"active\",
+    \"soil_type_id\": 16,
+    \"status\": \"fallow\",
     \"boundary_coordinates\": [
         {
-            \"lat\": -90,
-            \"lng\": -179
+            \"lat\": -89,
+            \"lng\": -180
         }
     ]
 }"
@@ -6799,17 +6847,19 @@ let body = {
     "latitude": -90,
     "longitude": -180,
     "irrigation_type": "y",
-    "irrigation_notes": "v",
+    "irrigation_type_id": 16,
+    "irrigation_notes": "n",
     "province_id": 16,
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
     "soil_type": "n",
-    "status": "active",
+    "soil_type_id": 16,
+    "status": "fallow",
     "boundary_coordinates": [
         {
-            "lat": -90,
-            "lng": -179
+            "lat": -89,
+            "lng": -180
         }
     ]
 };
@@ -6974,10 +7024,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="boundary_coordinates.0.lat"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="-90"
+               value="-89"
                data-component="body">
     <br>
-<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-90</code></p>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -90 and 90. Example: <code>-89</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>lng</code></b>&nbsp;&nbsp;
@@ -6986,10 +7036,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="boundary_coordinates.0.lng"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="-179"
+               value="-180"
                data-component="body">
     <br>
-<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-179</code></p>
+<p>This field is required when <code>boundary_coordinates</code> is present. Must be between -180 and 180. Example: <code>-180</code></p>
                     </div>
                                     </details>
         </div>
@@ -7006,16 +7056,28 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must not be greater than 50 characters. Example: <code>y</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>irrigation_type_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="irrigation_type_id"                data-endpoint="PUTapi-v1-farms--farm_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>irrigation_notes</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="irrigation_notes"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="v"
+               value="n"
                data-component="body">
     <br>
-<p>Must not be greater than 500 characters. Example: <code>v</code></p>
+<p>Must not be greater than 500 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>province_id</code></b>&nbsp;&nbsp;
@@ -7078,16 +7140,28 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must not be greater than 50 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>soil_type_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="soil_type_id"                data-endpoint="PUTapi-v1-farms--farm_id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="PUTapi-v1-farms--farm_id-"
-               value="active"
+               value="fallow"
                data-component="body">
     <br>
-<p>Example: <code>active</code></p>
+<p>Example: <code>fallow</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>active</code></li> <li><code>inactive</code></li> <li><code>fallow</code></li></ul>
         </div>
@@ -7812,9 +7886,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
-    \"season\": \"transition\",
+    \"season\": \"dry\",
     \"year\": 22,
-    \"status\": \"active\"
+    \"status\": \"draft\"
 }"
 </code></pre></div>
 
@@ -7834,9 +7908,9 @@ let body = {
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
-    "season": "transition",
+    "season": "dry",
     "year": 22,
-    "status": "active"
+    "status": "draft"
 };
 
 fetch(url, {
@@ -7993,10 +8067,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="season"                data-endpoint="GETapi-v1-planting-calendars"
-               value="transition"
+               value="dry"
                data-component="body">
     <br>
-<p>Example: <code>transition</code></p>
+<p>Example: <code>dry</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
         </div>
@@ -8019,10 +8093,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="GETapi-v1-planting-calendars"
-               value="active"
+               value="draft"
                data-component="body">
     <br>
-<p>Example: <code>active</code></p>
+<p>Example: <code>draft</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>active</code></li> <li><code>inactive</code></li></ul>
         </div>
@@ -8328,7 +8402,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"planned_date\": \"2026-09-03T07:58:15\",
+    \"planned_date\": \"2026-09-09T02:31:28\",
     \"variety_id\": 16
 }"
 </code></pre></div>
@@ -8346,7 +8420,7 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "planned_date": "2026-09-03T07:58:15",
+    "planned_date": "2026-09-09T02:31:28",
     "variety_id": 16
 };
 
@@ -8451,10 +8525,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_date"                data-endpoint="POSTapi-v1-planting-calendar-recommend-planting-window"
-               value="2026-09-03T07:58:15"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:15</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>variety_id</code></b>&nbsp;&nbsp;
@@ -8493,8 +8567,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"village_id\": 16,
     \"season\": \"rainy\",
     \"year\": 22,
-    \"planting_start\": \"2026-09-03T07:58:15\",
-    \"planting_end\": \"2052-09-26\",
+    \"planting_start\": \"2026-09-09T02:31:28\",
+    \"planting_end\": \"2052-10-02\",
     \"planting_pattern\": \"n\",
     \"rice_variety\": \"g\",
     \"recommended_area\": 12,
@@ -8522,8 +8596,8 @@ let body = {
     "village_id": 16,
     "season": "rainy",
     "year": 22,
-    "planting_start": "2026-09-03T07:58:15",
-    "planting_end": "2052-09-26",
+    "planting_start": "2026-09-09T02:31:28",
+    "planting_end": "2052-10-02",
     "planting_pattern": "n",
     "rice_variety": "g",
     "recommended_area": 12,
@@ -8695,10 +8769,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_start"                data-endpoint="POSTapi-v1-planting-calendars"
-               value="2026-09-03T07:58:15"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:15</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
@@ -8707,10 +8781,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_end"                data-endpoint="POSTapi-v1-planting-calendars"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-10-02</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
@@ -8809,10 +8883,10 @@ Must be one of:
     \"regency_id\": 16,
     \"district_id\": 16,
     \"village_id\": 16,
-    \"season\": \"dry\",
+    \"season\": \"rainy\",
     \"year\": 22,
-    \"planting_start\": \"2026-09-03T07:58:15\",
-    \"planting_end\": \"2052-09-26\",
+    \"planting_start\": \"2026-09-09T02:31:28\",
+    \"planting_end\": \"2052-10-02\",
     \"planting_pattern\": \"n\",
     \"rice_variety\": \"g\",
     \"recommended_area\": 12,
@@ -8838,10 +8912,10 @@ let body = {
     "regency_id": 16,
     "district_id": 16,
     "village_id": 16,
-    "season": "dry",
+    "season": "rainy",
     "year": 22,
-    "planting_start": "2026-09-03T07:58:15",
-    "planting_end": "2052-09-26",
+    "planting_start": "2026-09-09T02:31:28",
+    "planting_end": "2052-10-02",
     "planting_pattern": "n",
     "rice_variety": "g",
     "recommended_area": 12,
@@ -9000,10 +9074,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="season"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
-               value="dry"
+               value="rainy"
                data-component="body">
     <br>
-<p>Example: <code>dry</code></p>
+<p>Example: <code>rainy</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>rainy</code></li> <li><code>dry</code></li> <li><code>transition</code></li></ul>
         </div>
@@ -9026,10 +9100,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_start"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
-               value="2026-09-03T07:58:15"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:15</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
@@ -9038,10 +9112,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_end"                data-endpoint="PATCHapi-v1-planting-calendars--plantingCalendar_id-"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-10-02</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
@@ -9142,8 +9216,8 @@ Must be one of:
     \"village_id\": 16,
     \"season\": \"rainy\",
     \"year\": 22,
-    \"planting_start\": \"2026-09-03T07:58:15\",
-    \"planting_end\": \"2052-09-26\",
+    \"planting_start\": \"2026-09-09T02:31:28\",
+    \"planting_end\": \"2052-10-02\",
     \"planting_pattern\": \"n\",
     \"rice_variety\": \"g\",
     \"recommended_area\": 12,
@@ -9171,8 +9245,8 @@ let body = {
     "village_id": 16,
     "season": "rainy",
     "year": 22,
-    "planting_start": "2026-09-03T07:58:15",
-    "planting_end": "2052-09-26",
+    "planting_start": "2026-09-09T02:31:28",
+    "planting_end": "2052-10-02",
     "planting_pattern": "n",
     "rice_variety": "g",
     "recommended_area": 12,
@@ -9357,10 +9431,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_start"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
-               value="2026-09-03T07:58:15"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:15</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_end</code></b>&nbsp;&nbsp;
@@ -9369,10 +9443,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_end"                data-endpoint="PUTapi-v1-planting-calendars--plantingCalendar_id-"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_start</code>. Example: <code>2052-10-02</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_pattern</code></b>&nbsp;&nbsp;
@@ -10117,8 +10191,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
-    \"type\": \"planting\",
-    \"occurred_at\": \"2026-09-03T07:58:15\",
+    \"type\": \"land_preparation\",
+    \"occurred_at\": \"2026-09-09T02:31:28\",
     \"notes\": \"architecto\",
     \"cost\": 39
 }"
@@ -10137,8 +10211,8 @@ const headers = {
 
 let body = {
     "crop_season_id": 16,
-    "type": "planting",
-    "occurred_at": "2026-09-03T07:58:15",
+    "type": "land_preparation",
+    "occurred_at": "2026-09-09T02:31:28",
     "notes": "architecto",
     "cost": 39
 };
@@ -10244,10 +10318,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="type"                data-endpoint="POSTapi-v1-farm-activities"
-               value="planting"
+               value="land_preparation"
                data-component="body">
     <br>
-<p>Example: <code>planting</code></p>
+<p>Example: <code>land_preparation</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>land_preparation</code></li> <li><code>planting</code></li> <li><code>fertilizing</code></li> <li><code>spraying</code></li> <li><code>irrigation</code></li> <li><code>other</code></li></ul>
         </div>
@@ -10258,10 +10332,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="occurred_at"                data-endpoint="POSTapi-v1-farm-activities"
-               value="2026-09-03T07:58:15"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:15</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -10448,8 +10522,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
-    \"type\": \"land_preparation\",
-    \"occurred_at\": \"2026-09-03T07:58:16\",
+    \"type\": \"irrigation\",
+    \"occurred_at\": \"2026-09-09T02:31:28\",
     \"notes\": \"architecto\",
     \"cost\": 39
 }"
@@ -10468,8 +10542,8 @@ const headers = {
 
 let body = {
     "crop_season_id": 16,
-    "type": "land_preparation",
-    "occurred_at": "2026-09-03T07:58:16",
+    "type": "irrigation",
+    "occurred_at": "2026-09-09T02:31:28",
     "notes": "architecto",
     "cost": 39
 };
@@ -10588,10 +10662,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="type"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
-               value="land_preparation"
+               value="irrigation"
                data-component="body">
     <br>
-<p>Example: <code>land_preparation</code></p>
+<p>Example: <code>irrigation</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>land_preparation</code></li> <li><code>planting</code></li> <li><code>fertilizing</code></li> <li><code>spraying</code></li> <li><code>irrigation</code></li> <li><code>other</code></li></ul>
         </div>
@@ -10602,10 +10676,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="occurred_at"                data-endpoint="PATCHapi-v1-farm-activities--farmActivity_id-"
-               value="2026-09-03T07:58:16"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:16</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -10903,7 +10977,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
-    \"harvest_date\": \"2026-09-03T07:58:16\",
+    \"harvest_date\": \"2026-09-09T02:31:28\",
     \"quantity\": 4326.41688,
     \"unit\": \"miyvdljnikhwaykc\",
     \"quality_grade\": \"m\",
@@ -10924,7 +10998,7 @@ const headers = {
 
 let body = {
     "crop_season_id": 16,
-    "harvest_date": "2026-09-03T07:58:16",
+    "harvest_date": "2026-09-09T02:31:28",
     "quantity": 4326.41688,
     "unit": "miyvdljnikhwaykc",
     "quality_grade": "m",
@@ -11032,10 +11106,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="harvest_date"                data-endpoint="POSTapi-v1-harvests"
-               value="2026-09-03T07:58:16"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:16</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
@@ -11246,7 +11320,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"crop_season_id\": 16,
-    \"harvest_date\": \"2026-09-03T07:58:16\",
+    \"harvest_date\": \"2026-09-09T02:31:28\",
     \"quantity\": 4326.41688,
     \"unit\": \"miyvdljnikhwaykc\",
     \"quality_grade\": \"m\",
@@ -11267,7 +11341,7 @@ const headers = {
 
 let body = {
     "crop_season_id": 16,
-    "harvest_date": "2026-09-03T07:58:16",
+    "harvest_date": "2026-09-09T02:31:28",
     "quantity": 4326.41688,
     "unit": "miyvdljnikhwaykc",
     "quality_grade": "m",
@@ -11388,10 +11462,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="harvest_date"                data-endpoint="PATCHapi-v1-harvests--harvest_id-"
-               value="2026-09-03T07:58:16"
+               value="2026-09-09T02:31:28"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:16</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:28</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>quantity</code></b>&nbsp;&nbsp;
@@ -11688,6 +11762,262 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Accept"                data-endpoint="GETapi-v1-rice-varieties"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-v1-soil-types">Get list of active soil types</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-soil-types">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/soil-types" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/soil-types"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-soil-types">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-soil-types" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-soil-types"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-soil-types"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-soil-types" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-soil-types">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-soil-types" data-method="GET"
+      data-path="api/v1/soil-types"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-soil-types', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-soil-types"
+                    onclick="tryItOut('GETapi-v1-soil-types');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-soil-types"
+                    onclick="cancelTryOut('GETapi-v1-soil-types');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-soil-types"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/soil-types</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-soil-types"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-soil-types"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-v1-irrigation-types">Get list of active irrigation types</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-irrigation-types">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/irrigation-types" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/irrigation-types"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-irrigation-types">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-irrigation-types" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-irrigation-types"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-irrigation-types"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-irrigation-types" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-irrigation-types">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-irrigation-types" data-method="GET"
+      data-path="api/v1/irrigation-types"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-irrigation-types', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-irrigation-types"
+                    onclick="tryItOut('GETapi-v1-irrigation-types');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-irrigation-types"
+                    onclick="cancelTryOut('GETapi-v1-irrigation-types');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-irrigation-types"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/irrigation-types</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-irrigation-types"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-irrigation-types"
                value="application/json"
                data-component="header">
     <br>
@@ -12155,9 +12485,9 @@ Must be one of:
     --header "Accept: application/json" \
     --data "{
     \"farm_id\": 16,
-    \"units\": \"metric\",
+    \"units\": \"imperial\",
     \"lang\": \"ngzmiy\",
-    \"force_refresh\": false
+    \"force_refresh\": true
 }"
 </code></pre></div>
 
@@ -12174,9 +12504,9 @@ const headers = {
 
 let body = {
     "farm_id": 16,
-    "units": "metric",
+    "units": "imperial",
     "lang": "ngzmiy",
-    "force_refresh": false
+    "force_refresh": true
 };
 
 fetch(url, {
@@ -12280,10 +12610,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="units"                data-endpoint="POSTapi-v1-weather-forecast"
-               value="metric"
+               value="imperial"
                data-component="body">
     <br>
-<p>Example: <code>metric</code></p>
+<p>Example: <code>imperial</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>metric</code></li> <li><code>imperial</code></li></ul>
         </div>
@@ -12319,7 +12649,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
         </form>
 
@@ -13011,10 +13341,11 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"moisture_percentage\": 8,
     \"organic_matter_percentage\": 1,
     \"soil_temp_celsius\": 1,
-    \"soil_type\": \"sandy_loam\",
-    \"tested_at\": \"2026-09-03T07:58:17\",
-    \"notes\": \"l\",
-    \"sync_agromonitoring\": true
+    \"soil_type\": \"l\",
+    \"soil_type_id\": 16,
+    \"tested_at\": \"2026-09-09T02:31:29\",
+    \"notes\": \"n\",
+    \"sync_agromonitoring\": false
 }"
 </code></pre></div>
 
@@ -13039,10 +13370,11 @@ let body = {
     "moisture_percentage": 8,
     "organic_matter_percentage": 1,
     "soil_temp_celsius": 1,
-    "soil_type": "sandy_loam",
-    "tested_at": "2026-09-03T07:58:17",
-    "notes": "l",
-    "sync_agromonitoring": true
+    "soil_type": "l",
+    "soil_type_id": 16,
+    "tested_at": "2026-09-09T02:31:29",
+    "notes": "n",
+    "sync_agromonitoring": false
 };
 
 fetch(url, {
@@ -13238,16 +13570,26 @@ You can check the Dev Tools console for debugging information.</code></pre>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>soil_type</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="soil_type"                data-endpoint="POSTapi-v1-soil-detections"
-               value="sandy_loam"
+               value="l"
                data-component="body">
     <br>
-<p>Example: <code>sandy_loam</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>alluvial</code></li> <li><code>clay</code></li> <li><code>loam</code></li> <li><code>sandy_loam</code></li> <li><code>peat</code></li> <li><code>latosol</code></li></ul>
+<p>Must not be greater than 100 characters. Example: <code>l</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>soil_type_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="soil_type_id"                data-endpoint="POSTapi-v1-soil-detections"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>tested_at</code></b>&nbsp;&nbsp;
@@ -13256,10 +13598,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="tested_at"                data-endpoint="POSTapi-v1-soil-detections"
-               value="2026-09-03T07:58:17"
+               value="2026-09-09T02:31:29"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:17</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:29</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
@@ -13268,10 +13610,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="notes"                data-endpoint="POSTapi-v1-soil-detections"
-               value="l"
+               value="n"
                data-component="body">
     <br>
-<p>Must not be greater than 1000 characters. Example: <code>l</code></p>
+<p>Must not be greater than 1000 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>sync_agromonitoring</code></b>&nbsp;&nbsp;
@@ -13293,7 +13635,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
         </form>
 
@@ -14028,9 +14370,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"schedule_date\": \"2026-09-03T07:58:17\",
-    \"start_time\": \"07:58\",
-    \"end_time\": \"07:58\",
+    \"schedule_date\": \"2026-09-09T02:31:29\",
+    \"start_time\": \"02:31\",
+    \"end_time\": \"02:31\",
     \"source\": \"manual\",
     \"officer_name\": \"b\",
     \"irrigation_block\": \"n\",
@@ -14051,9 +14393,9 @@ const headers = {
 };
 
 let body = {
-    "schedule_date": "2026-09-03T07:58:17",
-    "start_time": "07:58",
-    "end_time": "07:58",
+    "schedule_date": "2026-09-09T02:31:29",
+    "start_time": "02:31",
+    "end_time": "02:31",
     "source": "manual",
     "officer_name": "b",
     "irrigation_block": "n",
@@ -14163,10 +14505,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="schedule_date"                data-endpoint="POSTapi-v1-farms--farm--irrigation-schedules"
-               value="2026-09-03T07:58:17"
+               value="2026-09-09T02:31:29"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:17</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:29</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>start_time</code></b>&nbsp;&nbsp;
@@ -14175,10 +14517,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="start_time"                data-endpoint="POSTapi-v1-farms--farm--irrigation-schedules"
-               value="07:58"
+               value="02:31"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>07:58</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>02:31</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>end_time</code></b>&nbsp;&nbsp;
@@ -14187,10 +14529,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="end_time"                data-endpoint="POSTapi-v1-farms--farm--irrigation-schedules"
-               value="07:58"
+               value="02:31"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>07:58</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>02:31</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
@@ -14273,11 +14615,11 @@ Must be one of:
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"schedule_date\": \"2026-09-03T07:58:17\",
-    \"start_time\": \"07:58\",
-    \"end_time\": \"07:58\",
+    \"schedule_date\": \"2026-09-09T02:31:29\",
+    \"start_time\": \"02:31\",
+    \"end_time\": \"02:31\",
     \"status\": \"scheduled\",
-    \"source\": \"system\",
+    \"source\": \"raksa_bumi\",
     \"officer_name\": \"b\",
     \"irrigation_block\": \"n\",
     \"water_source\": \"g\",
@@ -14297,11 +14639,11 @@ const headers = {
 };
 
 let body = {
-    "schedule_date": "2026-09-03T07:58:17",
-    "start_time": "07:58",
-    "end_time": "07:58",
+    "schedule_date": "2026-09-09T02:31:29",
+    "start_time": "02:31",
+    "end_time": "02:31",
     "status": "scheduled",
-    "source": "system",
+    "source": "raksa_bumi",
     "officer_name": "b",
     "irrigation_block": "n",
     "water_source": "g",
@@ -14410,10 +14752,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="schedule_date"                data-endpoint="PUTapi-v1-irrigation-schedules--id-"
-               value="2026-09-03T07:58:17"
+               value="2026-09-09T02:31:29"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:17</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:29</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>start_time</code></b>&nbsp;&nbsp;
@@ -14422,10 +14764,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="start_time"                data-endpoint="PUTapi-v1-irrigation-schedules--id-"
-               value="07:58"
+               value="02:31"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>07:58</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>02:31</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>end_time</code></b>&nbsp;&nbsp;
@@ -14434,10 +14776,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="end_time"                data-endpoint="PUTapi-v1-irrigation-schedules--id-"
-               value="07:58"
+               value="02:31"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>07:58</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>02:31</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -14460,10 +14802,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="source"                data-endpoint="PUTapi-v1-irrigation-schedules--id-"
-               value="system"
+               value="raksa_bumi"
                data-component="body">
     <br>
-<p>Example: <code>system</code></p>
+<p>Example: <code>raksa_bumi</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>manual</code></li> <li><code>raksa_bumi</code></li> <li><code>officer</code></li> <li><code>system</code></li></ul>
         </div>
@@ -14788,10 +15130,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"farm_id\": 16,
     \"variety_id\": 16,
-    \"planned_planting_date\": \"2026-09-03T07:58:17\",
-    \"planting_date\": \"2052-09-26\",
-    \"estimated_harvest_date\": \"2052-09-26\",
-    \"status\": \"completed\"
+    \"planned_planting_date\": \"2026-09-09T02:31:30\",
+    \"planting_date\": \"2052-10-02\",
+    \"estimated_harvest_date\": \"2052-10-02\",
+    \"status\": \"cancelled\"
 }"
 </code></pre></div>
 
@@ -14809,10 +15151,10 @@ const headers = {
 let body = {
     "farm_id": 16,
     "variety_id": 16,
-    "planned_planting_date": "2026-09-03T07:58:17",
-    "planting_date": "2052-09-26",
-    "estimated_harvest_date": "2052-09-26",
-    "status": "completed"
+    "planned_planting_date": "2026-09-09T02:31:30",
+    "planting_date": "2052-10-02",
+    "estimated_harvest_date": "2052-10-02",
+    "status": "cancelled"
 };
 
 fetch(url, {
@@ -14928,10 +15270,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planned_planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2026-09-03T07:58:17"
+               value="2026-09-09T02:31:30"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:17</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:30</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>planting_date</code></b>&nbsp;&nbsp;
@@ -14940,10 +15282,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="planting_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>planned_planting_date</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planned_planting_date</code>. Example: <code>2052-10-02</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>estimated_harvest_date</code></b>&nbsp;&nbsp;
@@ -14952,10 +15294,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="estimated_harvest_date"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>planting_date</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>planting_date</code>. Example: <code>2052-10-02</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -14964,10 +15306,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-crop-seasons"
-               value="completed"
+               value="cancelled"
                data-component="body">
     <br>
-<p>Example: <code>completed</code></p>
+<p>Example: <code>cancelled</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>planned</code></li> <li><code>active</code></li> <li><code>completed</code></li> <li><code>cancelled</code></li></ul>
         </div>
@@ -15118,6 +15460,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "farm_id=16"\
+    --form "category_id=16"\
     --form "crop_season_id=16"\
     --form "harvest_id=16"\
     --form "commodity=n"\
@@ -15127,8 +15470,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "description=Eius et animi quos velit et."\
     --form "sales_link=v"\
     --form "image_url=http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html"\
-    --form "expires_at=2052-09-26"\
-    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\phpBC9F.tmp" </code></pre></div>
+    --form "expires_at=2052-10-02"\
+    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\php21E0.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -15143,6 +15486,7 @@ const headers = {
 
 const body = new FormData();
 body.append('farm_id', '16');
+body.append('category_id', '16');
 body.append('crop_season_id', '16');
 body.append('harvest_id', '16');
 body.append('commodity', 'n');
@@ -15152,7 +15496,7 @@ body.append('price_per_unit', '4326.41688');
 body.append('description', 'Eius et animi quos velit et.');
 body.append('sales_link', 'v');
 body.append('image_url', 'http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html');
-body.append('expires_at', '2052-09-26');
+body.append('expires_at', '2052-10-02');
 body.append('image', document.querySelector('input[name="image"]').files[0]);
 
 fetch(url, {
@@ -15244,6 +15588,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="farm_id"                data-endpoint="POSTapi-v1-market-listings"
+               value="16"
+               data-component="body">
+    <br>
+<p>Must match an existing stored value. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>category_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="category_id"                data-endpoint="POSTapi-v1-market-listings"
                value="16"
                data-component="body">
     <br>
@@ -15367,7 +15723,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\phpBC9F.tmp</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\php21E0.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>expires_at</code></b>&nbsp;&nbsp;
@@ -15376,10 +15732,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="expires_at"                data-endpoint="POSTapi-v1-market-listings"
-               value="2052-09-26"
+               value="2052-10-02"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after <code>today</code>. Example: <code>2052-09-26</code></p>
+<p>Must be a valid date. Must be a date after <code>today</code>. Example: <code>2052-10-02</code></p>
         </div>
         </form>
 
@@ -15547,7 +15903,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "description=Eius et animi quos velit et."\
     --form "sales_link=v"\
     --form "image_url=http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html"\
-    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\phpBD6B.tmp" </code></pre></div>
+    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\php231A.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -15759,7 +16115,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\phpBD6B.tmp</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\php231A.tmp</code></p>
         </div>
         </form>
 
@@ -15886,6 +16242,134 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>The ID of the marketListing. Example: <code>1</code></p>
             </div>
                     </form>
+
+                    <h2 id="endpoints-GETapi-v1-categories">GET api/v1/categories</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-categories">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/categories" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/categories"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-categories">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-categories" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-categories"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-categories"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-categories" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-categories">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-categories" data-method="GET"
+      data-path="api/v1/categories"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-categories', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-categories"
+                    onclick="tryItOut('GETapi-v1-categories');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-categories"
+                    onclick="cancelTryOut('GETapi-v1-categories');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-categories"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/categories</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-categories"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-categories"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
 
                     <h2 id="endpoints-GETapi-v1-listing-images">GET api/v1/listing-images</h2>
 
@@ -16475,7 +16959,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"status\": \"accepted\",
+    \"status\": \"countered\",
     \"counter_price\": 27,
     \"counter_quantity\": 39,
     \"counter_notes\": \"g\"
@@ -16494,7 +16978,7 @@ const headers = {
 };
 
 let body = {
-    "status": "accepted",
+    "status": "countered",
     "counter_price": 27,
     "counter_quantity": 39,
     "counter_notes": "g"
@@ -16602,10 +17086,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="PUTapi-v1-market-offers--marketOffer_id-"
-               value="accepted"
+               value="countered"
                data-component="body">
     <br>
-<p>Example: <code>accepted</code></p>
+<p>Example: <code>countered</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>accepted</code></li> <li><code>rejected</code></li> <li><code>countered</code></li></ul>
         </div>
@@ -17761,7 +18245,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"user_id\": 16,
-    \"target_role\": \"buyer\",
+    \"target_role\": \"extension_officer\",
     \"title\": \"n\",
     \"body\": \"g\",
     \"type\": \"z\",
@@ -17783,7 +18267,7 @@ const headers = {
 
 let body = {
     "user_id": 16,
-    "target_role": "buyer",
+    "target_role": "extension_officer",
     "title": "n",
     "body": "g",
     "type": "z",
@@ -17892,10 +18376,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="target_role"                data-endpoint="POSTapi-v1-notifications-send-push"
-               value="buyer"
+               value="extension_officer"
                data-component="body">
     <br>
-<p>Example: <code>buyer</code></p>
+<p>Example: <code>extension_officer</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>farmer</code></li> <li><code>extension_officer</code></li> <li><code>buyer</code></li> <li><code>admin</code></li> <li><code>all</code></li></ul>
         </div>
@@ -18642,14 +19126,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/ppl-validations/16" \
+    --get "http://localhost/api/v1/ppl-validations/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/ppl-validations/16"
+    "http://localhost/api/v1/ppl-validations/1"
 );
 
 const headers = {
@@ -18763,10 +19247,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="pplValidation_id"                data-endpoint="GETapi-v1-ppl-validations--pplValidation_id-"
-               value="16"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the pplValidation. Example: <code>16</code></p>
+<p>The ID of the pplValidation. Example: <code>1</code></p>
             </div>
                     </form>
 
@@ -18784,7 +19268,7 @@ Body: { status, notes }</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost/api/v1/ppl-validations/16" \
+    "http://localhost/api/v1/ppl-validations/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -18796,7 +19280,7 @@ Body: { status, notes }</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/ppl-validations/16"
+    "http://localhost/api/v1/ppl-validations/1"
 );
 
 const headers = {
@@ -18898,10 +19382,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="pplValidation_id"                data-endpoint="PATCHapi-v1-ppl-validations--pplValidation_id-"
-               value="16"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the pplValidation. Example: <code>16</code></p>
+<p>The ID of the pplValidation. Example: <code>1</code></p>
             </div>
                             <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
@@ -19080,7 +19564,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "plant_age_days=22"\
     --form "latitude=-90"\
     --form "longitude=-179"\
-    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\phpC145.tmp" </code></pre></div>
+    --form "image=@C:\Users\LENOVO\AppData\Local\Temp\php2A4E.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -19204,7 +19688,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be a file. Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\phpC145.tmp</code></p>
+<p>Must be a file. Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\LENOVO\AppData\Local\Temp\php2A4E.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>plant_age_days</code></b>&nbsp;&nbsp;
@@ -19402,7 +19886,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"status\": \"confirmed\",
+    \"status\": \"corrected\",
     \"corrected_class\": \"b\",
     \"notes\": \"n\"
 }"
@@ -19420,7 +19904,7 @@ const headers = {
 };
 
 let body = {
-    "status": "confirmed",
+    "status": "corrected",
     "corrected_class": "b",
     "notes": "n"
 };
@@ -19527,10 +20011,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="POSTapi-v1-disease-scans--diseaseScan_id--feedback"
-               value="confirmed"
+               value="corrected"
                data-component="body">
     <br>
-<p>Example: <code>confirmed</code></p>
+<p>Example: <code>corrected</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>confirmed</code></li> <li><code>corrected</code></li></ul>
         </div>
@@ -19709,7 +20193,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"latitude\": -89,
     \"longitude\": -180,
     \"radius_km\": 16,
-    \"consent_given\": false
+    \"consent_given\": true
 }"
 </code></pre></div>
 
@@ -19729,7 +20213,7 @@ let body = {
     "latitude": -89,
     "longitude": -180,
     "radius_km": 16,
-    "consent_given": false
+    "consent_given": true
 };
 
 fetch(url, {
@@ -19882,7 +20366,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Must be accepted. Example: <code>false</code></p>
+<p>Must be accepted. Example: <code>true</code></p>
         </div>
         </form>
 
@@ -20422,7 +20906,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-v1-events">Display a listing of upcoming &amp; active agriculture events.</h2>
+                    <h2 id="endpoints-GETapi-v1-events">Display a listing of approved upcoming &amp; active agriculture events.</h2>
 
 <p>
 </p>
@@ -20550,7 +21034,135 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-POSTapi-v1-events">Store a newly created event (Admin / Officer).</h2>
+                    <h2 id="endpoints-GETapi-v1-events-my-submissions">Display a listing of the authenticated farmer&#039;s own submissions (pending/approved/rejected).</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-events-my-submissions">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/events/my-submissions" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/events/my-submissions"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-events-my-submissions">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;message&quot;: &quot;Token tidak valid atau sesi telah berakhir.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-events-my-submissions" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-events-my-submissions"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-events-my-submissions"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-events-my-submissions" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-events-my-submissions">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-events-my-submissions" data-method="GET"
+      data-path="api/v1/events/my-submissions"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-events-my-submissions', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-events-my-submissions"
+                    onclick="tryItOut('GETapi-v1-events-my-submissions');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-events-my-submissions"
+                    onclick="cancelTryOut('GETapi-v1-events-my-submissions');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-events-my-submissions"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/events/my-submissions</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-events-my-submissions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-events-my-submissions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-POSTapi-v1-events">Store a newly created event proposal or official event.</h2>
 
 <p>
 </p>
@@ -20569,8 +21181,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"title\": \"b\",
     \"description\": \"Eius et animi quos velit et.\",
-    \"category\": \"field_day\",
-    \"event_date\": \"2026-09-03T07:58:19\",
+    \"category\": \"workshop\",
+    \"event_date\": \"2026-09-09T02:31:33\",
     \"event_time\": \"v\",
     \"location_name\": \"d\",
     \"location_address\": \"l\",
@@ -20598,8 +21210,8 @@ const headers = {
 let body = {
     "title": "b",
     "description": "Eius et animi quos velit et.",
-    "category": "field_day",
-    "event_date": "2026-09-03T07:58:19",
+    "category": "workshop",
+    "event_date": "2026-09-09T02:31:33",
     "event_time": "v",
     "location_name": "d",
     "location_address": "l",
@@ -20725,12 +21337,12 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="category"                data-endpoint="POSTapi-v1-events"
-               value="field_day"
+               value="workshop"
                data-component="body">
     <br>
-<p>Example: <code>field_day</code></p>
+<p>Example: <code>workshop</code></p>
 Must be one of:
-<ul style="list-style-type: square;"><li><code>workshop</code></li> <li><code>field_day</code></li> <li><code>bazaar</code></li> <li><code>irrigation</code></li></ul>
+<ul style="list-style-type: square;"><li><code>workshop</code></li> <li><code>field_day</code></li> <li><code>bazaar</code></li> <li><code>irrigation</code></li> <li><code>webinar</code></li></ul>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>event_date</code></b>&nbsp;&nbsp;
@@ -20739,10 +21351,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="event_date"                data-endpoint="POSTapi-v1-events"
-               value="2026-09-03T07:58:19"
+               value="2026-09-09T02:31:33"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-09-03T07:58:19</code></p>
+<p>Must be a valid date. Example: <code>2026-09-09T02:31:33</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>event_time</code></b>&nbsp;&nbsp;
@@ -20878,7 +21490,7 @@ Must be one of:
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-v1-events--event_id-">Display the specified event.</h2>
+                    <h2 id="endpoints-GETapi-v1-events--event_id-">Display the specified event with visibility authorization.</h2>
 
 <p>
 </p>
@@ -21142,6 +21754,275 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>The ID of the event. Example: <code>1</code></p>
             </div>
                     </form>
+
+                    <h2 id="endpoints-POSTapi-v1-admin-events--event_id--approve">Approve a pending farmer submission event.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-admin-events--event_id--approve">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/admin/events/1/approve" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/admin/events/1/approve"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-admin-events--event_id--approve">
+</span>
+<span id="execution-results-POSTapi-v1-admin-events--event_id--approve" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-admin-events--event_id--approve"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-admin-events--event_id--approve"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-admin-events--event_id--approve" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-admin-events--event_id--approve">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-admin-events--event_id--approve" data-method="POST"
+      data-path="api/v1/admin/events/{event_id}/approve"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-admin-events--event_id--approve', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-admin-events--event_id--approve"
+                    onclick="tryItOut('POSTapi-v1-admin-events--event_id--approve');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-admin-events--event_id--approve"
+                    onclick="cancelTryOut('POSTapi-v1-admin-events--event_id--approve');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-admin-events--event_id--approve"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/admin/events/{event_id}/approve</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-admin-events--event_id--approve"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-admin-events--event_id--approve"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="event_id"                data-endpoint="POSTapi-v1-admin-events--event_id--approve"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the event. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="endpoints-POSTapi-v1-admin-events--event_id--reject">Reject a pending farmer submission event with a reason.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-admin-events--event_id--reject">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/admin/events/1/reject" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"rejection_reason\": \"b\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/admin/events/1/reject"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "rejection_reason": "b"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-admin-events--event_id--reject">
+</span>
+<span id="execution-results-POSTapi-v1-admin-events--event_id--reject" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-admin-events--event_id--reject"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-admin-events--event_id--reject"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-admin-events--event_id--reject" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-admin-events--event_id--reject">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-admin-events--event_id--reject" data-method="POST"
+      data-path="api/v1/admin/events/{event_id}/reject"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-admin-events--event_id--reject', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-admin-events--event_id--reject"
+                    onclick="tryItOut('POSTapi-v1-admin-events--event_id--reject');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-admin-events--event_id--reject"
+                    onclick="cancelTryOut('POSTapi-v1-admin-events--event_id--reject');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-admin-events--event_id--reject"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/admin/events/{event_id}/reject</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-admin-events--event_id--reject"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-admin-events--event_id--reject"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="event_id"                data-endpoint="POSTapi-v1-admin-events--event_id--reject"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the event. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>rejection_reason</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="rejection_reason"                data-endpoint="POSTapi-v1-admin-events--event_id--reject"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 1000 characters. Example: <code>b</code></p>
+        </div>
+        </form>
 
                     <h2 id="endpoints-GETapi-v1-admin--resource----id--">GET api/v1/admin/{resource?}/{id?}</h2>
 

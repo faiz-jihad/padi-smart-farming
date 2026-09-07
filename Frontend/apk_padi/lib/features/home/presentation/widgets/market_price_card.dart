@@ -7,13 +7,13 @@ class MarketPriceCard extends ConsumerWidget {
   const MarketPriceCard({
     super.key,
     required this.onTapMarket,
-    this.gkpPrice = 'Rp 6.800',
-    this.gkgPrice = 'Rp 7.400',
+    this.gkpPrice,
+    this.gkgPrice,
   });
 
   final VoidCallback onTapMarket;
-  final String gkpPrice;
-  final String gkgPrice;
+  final String? gkpPrice;
+  final String? gkgPrice;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,6 +36,12 @@ class MarketPriceCard extends ConsumerWidget {
       AppLanguage.id => 'Buka Pasar & Transaksi Langsung',
       AppLanguage.jv => 'Bukak Pasar & Adol Langsung',
       AppLanguage.en => 'Open Market & Trade Directly',
+    };
+    final hasPrices = gkpPrice != null || gkgPrice != null;
+    final statusLabel = switch (lang) {
+      AppLanguage.id => hasPrices ? 'Data pasar' : 'Belum ada listing',
+      AppLanguage.jv => hasPrices ? 'Data pasar' : 'Durung ana listing',
+      AppLanguage.en => hasPrices ? 'Market data' : 'No listings yet',
     };
 
     return Container(
@@ -82,20 +88,27 @@ class MarketPriceCard extends ConsumerWidget {
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
+                        color: HomeColors.lightGreen,
                         borderRadius: BorderRadius.circular(HomeRadius.pill),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.arrow_upward_rounded, color: Color(0xFF16A34A), size: 11),
-                          SizedBox(width: 2),
+                          const Icon(
+                            Icons.storefront_rounded,
+                            color: HomeColors.primaryGreen,
+                            size: 11,
+                          ),
+                          const SizedBox(width: 3),
                           Text(
-                            '+2.4%',
-                            style: TextStyle(
-                              color: Color(0xFF16A34A),
+                            statusLabel,
+                            style: const TextStyle(
+                              color: HomeColors.primaryGreen,
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                             ),
@@ -134,7 +147,7 @@ class MarketPriceCard extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '$gkpPrice/kg',
+                              gkpPrice != null ? '$gkpPrice/kg' : '-',
                               style: const TextStyle(
                                 color: HomeColors.textPrimary,
                                 fontSize: 16,
@@ -169,7 +182,7 @@ class MarketPriceCard extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '$gkgPrice/kg',
+                              gkgPrice != null ? '$gkgPrice/kg' : '-',
                               style: const TextStyle(
                                 color: HomeColors.textPrimary,
                                 fontSize: 16,

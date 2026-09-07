@@ -6,7 +6,7 @@ class RoleRightsCard extends StatefulWidget {
     super.key,
     required this.isBuyer,
     required this.userName,
-    this.unreadCount = 2,
+    this.unreadCount = 0,
   });
 
   final bool isBuyer;
@@ -23,16 +23,22 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
   @override
   Widget build(BuildContext context) {
     final isBuyer = widget.isBuyer;
-    final primaryColor = isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669);
-    final lightColor = isBuyer ? const Color(0xFFD1FAE5) : const Color(0xFFDCFCE7);
-    final borderColor = isBuyer ? const Color(0xFF6EE7B7) : const Color(0xFFA7F3D0);
+    final primaryColor = isBuyer
+        ? const Color(0xFF0F5132)
+        : const Color(0xFF059669);
+    final lightColor = isBuyer
+        ? const Color(0xFFD1FAE5)
+        : const Color(0xFFDCFCE7);
+    final borderColor = isBuyer
+        ? const Color(0xFF6EE7B7)
+        : const Color(0xFFA7F3D0);
 
     final title = isBuyer
         ? 'Hak & Jaminan Resmi Pembeli B2B'
         : 'Hak & Fasilitas Resmi Petani P.A.D.I.';
     final subtitle = isBuyer
         ? 'Akun Terverifikasi • Jaminan Tera & Transaksi Legal'
-        : 'Akun Terverifikasi • Akses Penuh AI & Bursa Panen';
+        : 'Akun terverifikasi - lahan dan panen tercatat';
 
     final rights = isBuyer
         ? const [
@@ -60,7 +66,7 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
         : const [
             (
               Icons.biotech_rounded,
-              'Diagnostik Kamera AI Bebas Biaya',
+              'Pemeriksaan Kamera Tanaman',
               'Hak memindai penyakit daun & hama tanaman padi tanpa batasan kuota berkala.',
             ),
             (
@@ -87,7 +93,7 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
         border: Border.all(color: borderColor, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.06),
+            color: primaryColor.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 3),
           ),
@@ -141,7 +147,10 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
                             ),
                             const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: lightColor,
                                 borderRadius: BorderRadius.circular(4),
@@ -242,8 +251,12 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-              border: Border(top: BorderSide(color: borderColor.withOpacity(0.5))),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(16),
+              ),
+              border: Border(
+                top: BorderSide(color: borderColor.withValues(alpha: 0.5)),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -279,7 +292,11 @@ class _RoleRightsCardState extends State<RoleRightsCard> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: primaryColor),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: primaryColor,
+                      ),
                     ],
                   ),
                 ),

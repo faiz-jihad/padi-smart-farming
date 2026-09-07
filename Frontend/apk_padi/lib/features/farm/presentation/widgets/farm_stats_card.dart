@@ -3,11 +3,7 @@ import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 
 class FarmStatsCard extends StatelessWidget {
-  const FarmStatsCard({
-    super.key,
-    required this.farms,
-    required this.onTapMap,
-  });
+  const FarmStatsCard({super.key, required this.farms, required this.onTapMap});
 
   final List<FarmModel> farms;
   final VoidCallback onTapMap;
@@ -16,7 +12,9 @@ class FarmStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalAreaHa = farms.fold<double>(0, (sum, f) => sum + f.areaHa);
     final totalAreaM2 = (totalAreaHa * 10000).toInt();
-    final activeCount = farms.where((f) => f.status.toLowerCase() == 'active').length;
+    final activeCount = farms
+        .where((f) => f.status.toLowerCase() == 'active')
+        .length;
 
     return Container(
       width: double.infinity,
@@ -59,7 +57,10 @@ class FarmStatsCard extends StatelessWidget {
                   onTap: onTapMap,
                   borderRadius: BorderRadius.circular(HomeRadius.pill),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: HomeColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(HomeRadius.pill),
@@ -106,11 +107,13 @@ class FarmStatsCard extends StatelessWidget {
                 Expanded(
                   child: _buildStatItem(
                     label: 'Total Luas',
-                    value: totalAreaHa.toStringAsFixed(totalAreaHa == totalAreaHa.roundToDouble() ? 0 : 1),
+                    value: totalAreaHa.toStringAsFixed(
+                      totalAreaHa == totalAreaHa.roundToDouble() ? 0 : 1,
+                    ),
                     unit: 'Ha',
-                    subUnit: '≈ $totalAreaM2 m²',
+                    subUnit: '~ $totalAreaM2 m2',
                     icon: Icons.aspect_ratio_rounded,
-                    color: HomeColors.harvestGold,
+                    color: HomeColors.primaryGreen,
                   ),
                 ),
                 Container(width: 1, height: 38, color: HomeColors.borderSubtle),
@@ -141,6 +144,8 @@ class FarmStatsCard extends StatelessWidget {
   }) {
     return Column(
       children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(height: 4),
         Text(
           label,
           style: const TextStyle(

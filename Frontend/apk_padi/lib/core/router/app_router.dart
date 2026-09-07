@@ -308,7 +308,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ppl-cases/detail',
         builder: (context, state) {
-          final caseData = state.extra as Map<String, dynamic>? ?? {};
+          final rawExtra = state.extra;
+          final Map<String, dynamic> caseData = rawExtra is Map
+              ? Map<String, dynamic>.from(rawExtra)
+              : <String, dynamic>{
+                  if (state.uri.queryParameters['id'] != null)
+                    'id': state.uri.queryParameters['id'],
+                  if (state.uri.queryParameters['validation_id'] != null)
+                    'id': state.uri.queryParameters['validation_id'],
+                };
+          return PplCaseDetailScreen(caseData: caseData);
+        },
+      ),
+      GoRoute(
+        path: '/ppl-cases/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'];
+          final rawExtra = state.extra;
+          final Map<String, dynamic> caseData = rawExtra is Map
+              ? Map<String, dynamic>.from(rawExtra)
+              : <String, dynamic>{'id': id};
           return PplCaseDetailScreen(caseData: caseData);
         },
       ),
