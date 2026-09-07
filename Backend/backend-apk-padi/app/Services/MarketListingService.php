@@ -22,6 +22,7 @@ class MarketListingService
                 'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
                 'cropSeason.variety:id,name',
                 'harvest:id,moisture_percent,quality_grade,quantity',
+                'category:id,name,slug,icon',
                 'images:id,listing_id,image_url,sort_order',
                 'offers:id,listing_id,partner_id,offered_price,quantity,status',
             ])
@@ -71,8 +72,10 @@ class MarketListingService
         return $listing->load([
             'farmer:id,name,phone,email',
             'farm:id,name,area_ha,latitude,longitude',
-            'cropSeason:id,variety_id,status',
+            'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
+            'cropSeason.variety:id,name',
             'harvest:id,moisture_percent,quality_grade,quantity',
+            'category:id,name,slug,icon',
             'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
@@ -87,8 +90,10 @@ class MarketListingService
         return $listing->load([
             'farmer:id,name,phone,email',
             'farm:id,name,area_ha,latitude,longitude',
-            'cropSeason:id,variety_id,status',
+            'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
+            'cropSeason.variety:id,name',
             'harvest:id,moisture_percent,quality_grade,quantity',
+            'category:id,name,slug,icon',
             'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
@@ -129,8 +134,10 @@ class MarketListingService
         return $listing->load([
             'farmer:id,name,phone,email',
             'farm:id,name,area_ha,latitude,longitude',
-            'cropSeason:id,variety_id,status',
+            'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
+            'cropSeason.variety:id,name',
             'harvest:id,moisture_percent,quality_grade,quantity',
+            'category:id,name,slug,icon',
             'images:id,listing_id,image_url,sort_order',
             'offers:id,listing_id,partner_id,offered_price,quantity,status',
         ]);
@@ -156,8 +163,10 @@ class MarketListingService
         return $listing->load([
             'farmer:id,name,phone,email',
             'farm:id,name,area_ha,latitude,longitude',
-            'cropSeason:id,variety_id,status',
+            'cropSeason:id,farm_id,variety_id,planned_planting_date,planting_date,estimated_harvest_date,status',
+            'cropSeason.variety:id,name',
             'harvest:id,moisture_percent,quality_grade,quantity',
+            'category:id,name,slug,icon',
         ]);
     }
 

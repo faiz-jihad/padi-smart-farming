@@ -21,6 +21,8 @@ class MarketListingController extends Controller
                     'farm:id,name,area_ha,latitude,longitude',
                     'cropSeason.variety:id,name',
                     'harvest:id,moisture_percent,quality_grade',
+                    'category:id,name,slug,icon',
+
                 ])
                 ->where('status', 'published')
                 ->latest('published_at')
@@ -39,6 +41,7 @@ class MarketListingController extends Controller
     {
         $validated = $request->validate([
             'farm_id' => ['required', 'integer', 'exists:farms,id'],
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
             'commodity' => ['required', 'string', 'max:100'],
             'quantity' => ['required', 'numeric', 'gt:0'],
             'unit' => ['required', 'string', 'max:20'],
@@ -77,6 +80,7 @@ class MarketListingController extends Controller
             'farm_id' => $validated['farm_id'],
             'crop_season_id' => $cropSeason->id,
             'harvest_id' => null,
+            'category_id' => $validated['category_id'],
             'commodity' => $validated['commodity'],
             'quantity' => $validated['quantity'],
             'unit' => $validated['unit'],

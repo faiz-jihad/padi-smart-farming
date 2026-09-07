@@ -67,10 +67,10 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
   /// - query parameter dari GoRouter
   ///
   /// Contoh:
-  /// /marketplace?category=gkp
-  /// /marketplace?category=gkg
-  /// /marketplace?category=beras
-  /// /marketplace?category=benih
+  /// /marketplace?category=gkp-panen
+  /// /marketplace?category=gkg-giling
+  /// /marketplace?category=beras-premium
+  /// /marketplace?category=benih-bersertifikat
   final String initialCategory;
 
   @override
@@ -218,12 +218,11 @@ class _MarketplaceScreenState
   String _normalizeCategory(
     String category,
   ) {
-    final value =
-        category.trim().toLowerCase();
+    final value = category.trim().toLowerCase();
 
     switch (value) {
       // ======================================================
-      // GKP
+      // GKP PANEN
       // ======================================================
 
       case 'gkp':
@@ -232,10 +231,10 @@ class _MarketplaceScreenState
       case 'gabah_kering_panen':
       case 'gabah-kering-panen':
       case 'gabah kering panen':
-        return 'gkp';
+        return 'gkp-panen';
 
       // ======================================================
-      // GKG
+      // GKG GILING
       // ======================================================
 
       case 'gkg':
@@ -244,10 +243,10 @@ class _MarketplaceScreenState
       case 'gabah_kering_giling':
       case 'gabah-kering-giling':
       case 'gabah kering giling':
-        return 'gkg';
+        return 'gkg-giling';
 
       // ======================================================
-      // BERAS
+      // BERAS PREMIUM
       // ======================================================
 
       case 'beras':
@@ -255,10 +254,10 @@ class _MarketplaceScreenState
       case 'beras-premium':
       case 'beras super':
       case 'beras_super':
-        return 'beras';
+        return 'beras-premium';
 
       // ======================================================
-      // BENIH
+      // BENIH BERSERTIFIKAT
       // ======================================================
 
       case 'benih':
@@ -266,10 +265,10 @@ class _MarketplaceScreenState
       case 'benih-bersertifikat':
       case 'benih bersertifikat':
       case 'bibit':
-        return 'benih';
+        return 'benih-bersertifikat';
 
       // ======================================================
-      // ALL
+      // SEMUA
       // ======================================================
 
       case 'all':
@@ -364,65 +363,13 @@ class _MarketplaceScreenState
 
     if (_selectedCategory != 'all') {
       result = result.where((listing) {
-        final commodity =
-            listing.commodity
-                .trim()
+        final categorySlug =
+            listing.categorySlug
+                ?.trim()
                 .toLowerCase();
 
-        switch (_selectedCategory) {
-          // ==================================================
-          // GKP
-          // ==================================================
-
-          case 'gkp':
-            return commodity.contains('gkp') ||
-                commodity.contains(
-                  'gabah kering panen',
-                ) ||
-                commodity.contains(
-                  'gabah kering panen',
-                ) ||
-                commodity.contains(
-                  'gkp panen',
-                );
-
-          // ==================================================
-          // GKG
-          // ==================================================
-
-          case 'gkg':
-            return commodity.contains('gkg') ||
-                commodity.contains(
-                  'gabah kering giling',
-                ) ||
-                commodity.contains(
-                  'gkg giling',
-                );
-
-          // ==================================================
-          // BERAS
-          // ==================================================
-
-          case 'beras':
-            return commodity.contains(
-              'beras',
-            );
-
-          // ==================================================
-          // BENIH
-          // ==================================================
-
-          case 'benih':
-            return commodity.contains(
-                  'benih',
-                ) ||
-                commodity.contains(
-                  'bibit',
-                );
-
-          default:
-            return true;
-        }
+        return categorySlug ==
+            _selectedCategory;
       }).toList();
     }
 

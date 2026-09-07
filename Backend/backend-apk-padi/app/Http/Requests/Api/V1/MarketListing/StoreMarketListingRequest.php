@@ -19,6 +19,11 @@ class StoreMarketListingRequest extends FormRequest
                 'integer',
                 'exists:farms,id',
             ],
+            'category_id' => [
+                'required',
+                'integer',
+                'exists:categories,id',
+            ],
             'crop_season_id' => [
                 'required',
                 'integer',

@@ -10,6 +10,10 @@ class MarketListingModel {
     required this.unit,
     required this.pricePerUnit,
     required this.status,
+    this.categoryId,
+    this.categoryName,
+    this.categorySlug,
+    this.categoryIcon,
     this.description,
     this.salesLink,
     this.imageUrl,
@@ -30,15 +34,26 @@ class MarketListingModel {
   factory MarketListingModel.fromJson(
     Map<String, dynamic> json,
   ) {
-    final farmerMap = json['farmer'] is Map ? json['farmer'] as Map : null;
-    final farmMap = json['farm'] is Map ? json['farm'] as Map : null;
+    final farmerMap = json['farmer'] is Map
+        ? json['farmer'] as Map
+        : null;
+
+    final farmMap = json['farm'] is Map
+        ? json['farm'] as Map
+        : null;
+
+    final categoryMap = json['category'] is Map
+        ? json['category'] as Map
+        : null;
 
     final imagesData = json['images'];
 
     final parsedImages = imagesData is List
         ? imagesData
             .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
+            .map(
+              (item) => Map<String, dynamic>.from(item),
+            )
             .toList()
         : <Map<String, dynamic>>[];
 
@@ -48,7 +63,8 @@ class MarketListingModel {
         parsedImages.isNotEmpty) {
       final firstImage = parsedImages.first['image_url'];
 
-      if (firstImage != null && firstImage.toString().isNotEmpty) {
+      if (firstImage != null &&
+          firstImage.toString().isNotEmpty) {
         resolvedImageUrl = firstImage.toString();
       }
     }
@@ -59,6 +75,18 @@ class MarketListingModel {
       farmId: _toInt(json['farm_id']),
       cropSeasonId: _toInt(json['crop_season_id']),
       harvestId: _toInt(json['harvest_id']),
+
+      // CATEGORY
+      categoryId: _toNullableInt(
+        json['category_id'] ?? categoryMap?['id'],
+      ),
+      categoryName: json['category_name']?.toString() ??
+          categoryMap?['name']?.toString(),
+      categorySlug: json['category_slug']?.toString() ??
+          categoryMap?['slug']?.toString(),
+      categoryIcon: json['category_icon']?.toString() ??
+          categoryMap?['icon']?.toString(),
+
       commodity: json['commodity']?.toString() ?? '',
       quantity: _toDouble(json['quantity']),
       unit: json['unit']?.toString() ?? 'kg',
@@ -71,18 +99,23 @@ class MarketListingModel {
       publishedAt: json['published_at']?.toString(),
       expiresAt: json['expires_at']?.toString(),
       isOwner: json['is_owner'] == true,
+
       farmerName: json['farmer_name']?.toString() ??
           farmerMap?['name']?.toString() ??
           'Petani P.A.D.I.',
+
       farmerPhone: json['farmer_phone']?.toString() ??
           farmerMap?['phone']?.toString() ??
           '+6281234567890',
+
       farmName: json['farm_name']?.toString() ??
           farmMap?['name']?.toString() ??
           'Lahan Pertanian',
+
       farmAreaHa: _toDouble(
         json['farm_area_ha'] ?? farmMap?['area_ha'],
       ),
+
       varietyName: json['variety_name']?.toString(),
       plantingDate: json['planting_date']?.toString(),
       moisturePercent: _toDouble(json['moisture_percent']),
@@ -95,7 +128,24 @@ class MarketListingModel {
       return value.toInt();
     }
 
-    return int.tryParse(value?.toString() ?? '') ?? 0;
+    return int.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
+  }
+
+  static int? _toNullableInt(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    final parsed = int.tryParse(value.toString());
+
+    return parsed;
   }
 
   static double _toDouble(dynamic value) {
@@ -103,7 +153,10 @@ class MarketListingModel {
       return value.toDouble();
     }
 
-    return double.tryParse(value?.toString() ?? '') ?? 0;
+    return double.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
   }
 
   final int id;
@@ -111,11 +164,19 @@ class MarketListingModel {
   final int farmId;
   final int cropSeasonId;
   final int harvestId;
+
+  // CATEGORY
+  final int? categoryId;
+  final String? categoryName;
+  final String? categorySlug;
+  final String? categoryIcon;
+
   final String commodity;
   final double quantity;
   final String unit;
   final double pricePerUnit;
   final String status;
+
   final String? description;
   final String? salesLink;
   final String? imageUrl;
@@ -123,6 +184,7 @@ class MarketListingModel {
   final String? publishedAt;
   final String? expiresAt;
   final bool isOwner;
+
   final String? farmerName;
   final String? farmerPhone;
   final String? farmName;
