@@ -23,6 +23,7 @@ class Farm extends Model
         'longitude',
         'boundary_coordinates',
         'irrigation_type',
+        'irrigation_type_id',
         'irrigation_notes',
         'soil_type',
         'status',
@@ -35,6 +36,11 @@ class Farm extends Model
     public function farmer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'farmer_user_id');
+    }
+
+    public function irrigationType(): BelongsTo
+    {
+        return $this->belongsTo(IrrigationType::class, 'irrigation_type_id');
     }
 
     public function irrigationSchedules(): HasMany

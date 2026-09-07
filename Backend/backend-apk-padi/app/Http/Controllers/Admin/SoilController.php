@@ -4,12 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSoilRequest;
+use App\Http\Requests\Admin\StoreSoilTypeRequest;
 use App\Models\Farm;
 use App\Models\IrrigationSchedule;
 use App\Models\SoilDetection;
 use App\Services\Admin\AdminSoilService;
+use App\Models\SoilType;
+use App\Services\Admin\AdminAuditLogger;
+use App\Services\Admin\AdminNotificationService;
+use App\Services\Admin\AdminSoilService;
+use App\Services\Soil\SoilDetectionService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SoilController extends Controller
@@ -33,7 +42,59 @@ class SoilController extends Controller
     {
         return view('admin.soil.create', [
             'farms' => Farm::with('farmer')->orderBy('name')->get(),
+            'soilTypes' => SoilType::active()->orderBy('name')->get(),
         ]);
+    }
+
+    /**
+     * Get list of active soil types as JSON
+     */
+    public function getSoilTypes(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => SoilType::active()->orderBy('name')->get(),
+        ]);
+    }
+
+    /**
+     * Store a new master soil type via AJAX
+     */
+    public function storeSoilType(StoreSoilTypeRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+
+            $name = trim($validated['name']);
+            $code = ! empty($validated['code'])
+                ? Str::slug($validated['code'], '_')
+                : Str::slug($name, '_');
+
+            if (SoilType::where('code', $code)->exists() && empty($validated['code'])) {
+                $code .= '_' . Str::lower(Str::random(4));
+            }
+
+            $soilType = SoilType::create([
+                'name' => $name,
+                'code' => $code,
+                'description' => $validated['description'] ?? null,
+                'is_active' => $validated['is_active'] ?? true,
+                'created_by' => auth()->id(),
+            ]);
+
+            $this->auditLogger->write('admin_soil_type_created', $soilType, null, $soilType->toArray(), $request);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Jenis tanah '{$soilType->name}' berhasil ditambahkan ke master data.",
+                'data' => $soilType,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan jenis tanah: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

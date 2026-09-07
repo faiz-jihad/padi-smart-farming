@@ -51,6 +51,27 @@ class SoilDetectionService
 
         $sampleCode = $data['sample_code'] ?? 'SOIL-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
+        $soilTypeId = $data['soil_type_id'] ?? null;
+        $soilTypeString = $data['soil_type'] ?? null;
+
+        if ($soilTypeId && ! $soilTypeString) {
+            $st = \App\Models\SoilType::find($soilTypeId);
+            if ($st) {
+                $soilTypeString = $st->code ?: $st->name;
+            }
+        } elseif ($soilTypeString && ! $soilTypeId) {
+            $st = \App\Models\SoilType::where('code', $soilTypeString)
+                ->orWhere('name', $soilTypeString)
+                ->orWhere('id', is_numeric($soilTypeString) ? (int) $soilTypeString : 0)
+                ->first();
+            if ($st) {
+                $soilTypeId = $st->id;
+                $soilTypeString = $st->code ?: $st->name;
+            }
+        }
+
+        $soilTypeString = $soilTypeString ?? 'loam';
+
         return SoilDetection::create([
             'farm_id' => $farm->id,
             'sample_code' => $sampleCode,
@@ -61,7 +82,8 @@ class SoilDetectionService
             'moisture_percentage' => $moisture,
             'organic_matter_percentage' => $organic,
             'soil_temp_celsius' => $data['soil_temp_celsius'] ?? null,
-            'soil_type' => $data['soil_type'] ?? 'loam',
+            'soil_type_id' => $soilTypeId,
+            'soil_type' => $soilTypeString,
             'soil_health_score' => $evaluation['score'],
             'soil_status' => $evaluation['status'],
             'recommendations_json' => $evaluation['recommendations'],

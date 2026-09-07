@@ -21,6 +21,8 @@ class FarmResource extends JsonResource
             'longitude'        => (float) $this->longitude,
             'boundary_coordinates' => $this->boundary_coordinates,
             'irrigation_type'  => $this->irrigation_type,
+            'irrigation_type_id' => $this->irrigation_type_id,
+            'irrigation_type_name' => $this->irrigationType?->name ?? $this->irrigation_type,
             'irrigation_notes' => $this->irrigation_notes,
             'soil_type'        => $this->soil_type,
             'status'           => $this->status ?? 'active',

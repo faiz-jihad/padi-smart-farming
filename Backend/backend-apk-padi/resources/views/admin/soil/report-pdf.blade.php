@@ -287,7 +287,7 @@
 
         <tr>
             <td class="info-label">Jenis Tanah</td>
-            <td>{{ ucfirst($soilDetection->soil_type) }}</td>
+            <td>{{ $soilDetection->soilType?->name ?? ucfirst(str_replace('_', ' ', $soilDetection->soil_type)) }}</td>
         </tr>
 
         <tr>

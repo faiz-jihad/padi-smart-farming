@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
+use App\Http\Controllers\Admin\IrrigationTypeAdminController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
 use App\Http\Controllers\Admin\MarketplaceController;
@@ -80,6 +81,10 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/agriculture', [AgricultureController::class, 'index'])->name('agriculture.index');
         Route::post('/agriculture', [AgricultureController::class, 'store'])->name('agriculture.store');
         Route::patch('/agriculture/{farm}', [AgricultureController::class, 'update'])->name('agriculture.update');
+        Route::get('/agriculture/irrigation-types', [IrrigationTypeAdminController::class, 'index'])->name('agriculture.irrigation-types.index');
+        Route::post('/agriculture/irrigation-types', [IrrigationTypeAdminController::class, 'store'])->name('agriculture.irrigation-types.store');
+        Route::patch('/agriculture/irrigation-types/{irrigationType}', [IrrigationTypeAdminController::class, 'update'])->name('agriculture.irrigation-types.update');
+        Route::post('/agriculture/irrigation-types/{irrigationType}/toggle-status', [IrrigationTypeAdminController::class, 'toggleStatus'])->name('agriculture.irrigation-types.toggle-status');
 
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
@@ -108,10 +113,12 @@ Route::middleware(['auth', 'admin.web'])
             Route::get('/regencies', [AdminMapController::class, 'regencies'])->name('regencies');
         });
 
-        // Soil Detection Routes
+        // Soil Detection & Master Soil Types Routes
         Route::get('/soil', [SoilController::class, 'index'])->name('soil.index');
         Route::get('/soil/create', [SoilController::class, 'create'])->name('soil.create');
         Route::post('/soil', [SoilController::class, 'store'])->name('soil.store');
+        Route::get('/soil/types', [SoilController::class, 'getSoilTypes'])->name('soil.types.index');
+        Route::post('/soil/types', [SoilController::class, 'storeSoilType'])->name('soil.types.store');
         Route::post('/soil/export', [SoilController::class, 'export'])->name('soil.export');
         Route::get('/soil/{soil}', [SoilController::class, 'show'])->name('soil.show');
         Route::get('/soil/{soil}/report/pdf', [SoilController::class, 'downloadReport'])

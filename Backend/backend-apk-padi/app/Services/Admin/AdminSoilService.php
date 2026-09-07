@@ -32,12 +32,16 @@ class AdminSoilService
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $query = SoilDetection::with(['farm.farmer', 'creator']);
+        $query = SoilDetection::with(['farm.farmer', 'creator', 'soilType']);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search): void {
                 $q->where('sample_code', 'like', "%{$search}%")
                     ->orWhere('soil_type', 'like', "%{$search}%")
+                    ->orWhereHas('soilType', function ($st) use ($search): void {
+                        $st->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('farm', function ($fq) use ($search): void {
                         $fq->where('name', 'like', "%{$search}%")
                             ->orWhereHas('farmer', function ($u) use ($search): void {
@@ -95,7 +99,7 @@ class AdminSoilService
     {
         $soilDetection->load(['farm.farmer', 'farm.weatherSnapshots' => function ($q) {
             $q->latest('observed_at')->limit(1);
-        }, 'creator']);
+        }, 'creator', 'soilType']);
 
         $latestWeather = $soilDetection->farm->weatherSnapshots->first();
 

@@ -1,10 +1,30 @@
 import 'package:padi/core/network/api_client.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
+import 'package:padi/features/farm/data/models/irrigation_type_model.dart';
+import 'package:padi/features/farm/data/models/soil_type_model.dart';
 
 class FarmApiService {
   const FarmApiService(this._apiClient);
 
   final ApiClient _apiClient;
+
+  Future<List<SoilTypeModel>> fetchSoilTypes() async {
+    final res = await _apiClient.dio.get('/soil-types');
+    final data = res.data['data'] as List<dynamic>? ?? [];
+    return data
+        .map((e) => SoilTypeModel.fromJson(e as Map<String, dynamic>))
+        .where((e) => e.isActive)
+        .toList();
+  }
+
+  Future<List<IrrigationTypeModel>> fetchIrrigationTypes() async {
+    final res = await _apiClient.dio.get('/irrigation-types');
+    final data = res.data['data'] as List<dynamic>? ?? [];
+    return data
+        .map((e) => IrrigationTypeModel.fromJson(e as Map<String, dynamic>))
+        .where((e) => e.isActive)
+        .toList();
+  }
 
   Future<List<FarmModel>> fetchFarms() async {
     final res = await _apiClient.dio.get('/farms');

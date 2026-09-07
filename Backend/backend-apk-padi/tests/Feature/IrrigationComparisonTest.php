@@ -33,6 +33,11 @@ class IrrigationComparisonTest extends TestCase
         $this->farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $this->farmer->assignRole('farmer');
 
+        $prov = \App\Models\Province::firstOrCreate(['name' => 'Jawa Barat'], ['code' => '32']);
+        $reg = \App\Models\Regency::firstOrCreate(['name' => 'Kabupaten Indramayu'], ['province_id' => $prov->id, 'code' => '3212']);
+        $dist = \App\Models\District::firstOrCreate(['name' => 'Sindang'], ['regency_id' => $reg->id, 'code' => '3212010']);
+        $vill = \App\Models\Village::firstOrCreate(['name' => 'Dersan'], ['district_id' => $dist->id, 'code' => '3212010001']);
+
         $this->farm = Farm::create([
             'farmer_user_id' => $this->farmer->id,
             'name' => 'Sawah Sindang Indramayu',
@@ -40,10 +45,10 @@ class IrrigationComparisonTest extends TestCase
             'longitude' => 108.3200,
             'area_ha' => 1.75,
             'irrigation_type' => 'technical',
-            'province' => 'Jawa Barat',
-            'regency' => 'Kabupaten Indramayu',
-            'district' => 'Sindang',
-            'village' => 'Dersan',
+            'province_id' => $prov->id,
+            'regency_id' => $reg->id,
+            'district_id' => $dist->id,
+            'village_id' => $vill->id,
         ]);
 
         \Illuminate\Support\Facades\Http::fake([
@@ -291,7 +296,7 @@ class IrrigationComparisonTest extends TestCase
     {
         $soil = SoilDetection::create([
             'farm_id' => $this->farm->id,
-            'tested_by_user_id' => $this->admin->id,
+            'created_by' => $this->admin->id,
             'sample_code' => 'SOIL-TEST-001',
             'ph_level' => 6.5,
             'nitrogen_ppm' => 100,
@@ -335,7 +340,7 @@ class IrrigationComparisonTest extends TestCase
     {
         $soil = SoilDetection::create([
             'farm_id' => $this->farm->id,
-            'tested_by_user_id' => $this->admin->id,
+            'created_by' => $this->admin->id,
             'sample_code' => 'SOIL-TEST-002',
             'ph_level' => 6.5,
             'nitrogen_ppm' => 100,
@@ -380,7 +385,7 @@ class IrrigationComparisonTest extends TestCase
     {
         $soil = SoilDetection::create([
             'farm_id' => $this->farm->id,
-            'tested_by_user_id' => $this->admin->id,
+            'created_by' => $this->admin->id,
             'sample_code' => 'SOIL-TEST-003',
             'ph_level' => 6.5,
             'nitrogen_ppm' => 100,
@@ -415,7 +420,7 @@ class IrrigationComparisonTest extends TestCase
     {
         $soil = SoilDetection::create([
             'farm_id' => $this->farm->id,
-            'tested_by_user_id' => $this->farmer->id,
+            'created_by' => $this->farmer->id,
             'sample_code' => 'SOIL-CMP-002',
             'ph_level' => 6.2,
             'nitrogen_ppm' => 110,

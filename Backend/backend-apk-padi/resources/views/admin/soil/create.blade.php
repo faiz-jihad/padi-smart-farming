@@ -116,16 +116,26 @@
                     </div>
 
                     <div class="soil-form-group">
-                        <label class="soil-form-label" for="soil_type">
-                            <span>Jenis / Tekstur Tanah <span class="req">*</span></span>
-                        </label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <label class="soil-form-label" for="soil_type" style="margin-bottom: 0;">
+                                <span>Jenis / Tekstur Tanah <span class="req">*</span></span>
+                            </label>
+                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
+                                <button type="button" class="btn-micro-add" onclick="openSoilTypeModal()" title="Tambah jenis atau tekstur tanah baru ke master database">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>Tambah Jenis Tanah</span>
+                                </button>
+                            @endif
+                        </div>
                         <select name="soil_type" id="soil_type" class="soil-select" required>
-                            <option value="loam" @selected(old('soil_type') === 'loam')>Lempung Berpasir / Loam (Ideal Padi Sawah)</option>
-                            <option value="alluvial" @selected(old('soil_type') === 'alluvial')>Aluvial (Endapan Sungai / Dataran Rendah)</option>
-                            <option value="clay" @selected(old('soil_type') === 'clay')>Liat / Clay (Kapasitas Retensi Air Tinggi)</option>
-                            <option value="sandy_loam" @selected(old('soil_type') === 'sandy_loam')>Pasir Berlempung / Sandy Loam</option>
-                            <option value="latosol" @selected(old('soil_type') === 'latosol')>Latosol / Merah Kuning</option>
-                            <option value="peat" @selected(old('soil_type') === 'peat')>Gambut / Peat (Lahan Rawa)</option>
+                            <option value="">-- Pilih Jenis / Tekstur Tanah --</option>
+                            @foreach ($soilTypes as $st)
+                                <option value="{{ $st->code }}" @selected(old('soil_type', 'loam') === $st->code || old('soil_type') === $st->name)>
+                                    {{ $st->name }} @if($st->description) ({{ Str::limit($st->description, 35) }}) @endif
+                                </option>
+                            @endforeach
                         </select>
                         <span class="soil-field-hint">Tekstur tanah memengaruhi permeabilitas &amp; retensi hara</span>
                     </div>
@@ -449,9 +459,227 @@
         }
     }
 
-    // Initialize on load
+    // Modal & AJAX Soil Type Creation
+    function openSoilTypeModal() {
+        const modal = document.getElementById('modal-create-soil-type');
+        if (modal) {
+            document.getElementById('soil-modal-alert-box').style.display = 'none';
+            document.getElementById('form-create-soil-type').reset();
+            modal.classList.add('is-active');
+            setTimeout(() => {
+                const nameInput = document.getElementById('modal_soil_name');
+                if (nameInput) nameInput.focus();
+            }, 100);
+        }
+    }
+
+    function closeSoilTypeModal() {
+        const modal = document.getElementById('modal-create-soil-type');
+        if (modal) {
+            modal.classList.remove('is-active');
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('soil-toast-notification');
+        const toastMsg = document.getElementById('soil-toast-message');
+        if (toast && toastMsg) {
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+    }
+
+    function handleStoreSoilType(event) {
+        event.preventDefault();
+
+        const nameInput = document.getElementById('modal_soil_name');
+        const codeInput = document.getElementById('modal_soil_code');
+        const descInput = document.getElementById('modal_soil_desc');
+        const alertBox = document.getElementById('soil-modal-alert-box');
+        const alertText = document.getElementById('soil-modal-alert-text');
+        const btnSubmit = document.getElementById('btn-submit-soil-type');
+        const btnText = document.getElementById('btn-submit-soil-type-text');
+
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+        const description = descInput.value.trim();
+
+        if (!name) {
+            alertText.innerText = 'Nama jenis/tekstur tanah wajib diisi.';
+            alertBox.style.display = 'flex';
+            nameInput.focus();
+            return;
+        }
+
+        alertBox.style.display = 'none';
+        btnSubmit.disabled = true;
+        btnText.innerText = 'Menyimpan...';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || document.querySelector('input[name="_token"]')?.value;
+
+        fetch('{{ route('admin.soil.types.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                name: name,
+                code: code || null,
+                description: description || null,
+            })
+        })
+        .then(async (response) => {
+            const data = await response.json();
+            btnSubmit.disabled = false;
+            btnText.innerText = 'Simpan Jenis Tanah';
+
+            if (!response.ok) {
+                let errorMsg = data.message || 'Terjadi kesalahan saat menyimpan jenis tanah.';
+                if (data.errors) {
+                    const errorKeys = Object.keys(data.errors);
+                    if (errorKeys.length > 0) {
+                        const firstError = data.errors[errorKeys[0]];
+                        errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                    }
+                }
+                alertText.innerText = errorMsg;
+                alertBox.style.display = 'flex';
+                return;
+            }
+
+            if (data.success && data.data) {
+                const newSoil = data.data;
+                const soilSelect = document.getElementById('soil_type');
+
+                // Check if option already exists or add new option
+                let existingOpt = Array.from(soilSelect.options).find(o => o.value === newSoil.code);
+                if (!existingOpt) {
+                    const option = document.createElement('option');
+                    option.value = newSoil.code;
+                    option.text = newSoil.name + (newSoil.description ? ` (${newSoil.description.substring(0, 35)}...)` : '');
+                    soilSelect.add(option);
+                }
+
+                // Automatically select new soil type
+                soilSelect.value = newSoil.code;
+
+                // Close modal and reset form
+                closeSoilTypeModal();
+                document.getElementById('form-create-soil-type').reset();
+
+                // Show toast notification
+                showToast(data.message || `Jenis tanah '${newSoil.name}' berhasil ditambahkan ke pilihan.`);
+            }
+        })
+        .catch(error => {
+            btnSubmit.disabled = false;
+            btnText.innerText = 'Simpan Jenis Tanah';
+            alertText.innerText = 'Gagal menghubungi server. Silakan coba beberapa saat lagi.';
+            alertBox.style.display = 'flex';
+        });
+    }
+
+    // Initialize on load & modal backdrop listeners
     document.addEventListener('DOMContentLoaded', () => {
         updateLiveIrrigationPreview();
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSoilTypeModal();
+            }
+        });
+
+        // Close on Backdrop click
+        const modalBackdrop = document.getElementById('modal-create-soil-type');
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSoilTypeModal();
+                }
+            });
+        }
     });
 </script>
+
+{{-- MODAL TAMBAH MASTER JENIS TANAH --}}
+<div class="soil-modal-backdrop" id="modal-create-soil-type" role="dialog" aria-modal="true" aria-labelledby="soil-modal-title">
+    <div class="soil-modal-card">
+        <div class="soil-modal-header">
+            <div style="display: flex; align-items: center;">
+                <div class="soil-modal-header-icon">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="soil-modal-title" id="soil-modal-title">Tambah Jenis / Tekstur Tanah</h3>
+                    <p class="soil-modal-subtitle">Tambah klasifikasi tanah baru ke master database P.A.D.I.</p>
+                </div>
+            </div>
+            <button type="button" class="soil-modal-close" onclick="closeSoilTypeModal()" aria-label="Tutup Modal">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="form-create-soil-type" onsubmit="handleStoreSoilType(event)">
+            <div class="soil-modal-body">
+                <div id="soil-modal-alert-box" class="soil-modal-alert" style="display: none;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4m0 4h.01" stroke-linecap="round"/>
+                    </svg>
+                    <span id="soil-modal-alert-text"></span>
+                </div>
+
+                <div class="soil-form-group">
+                    <label class="soil-form-label" for="modal_soil_name">
+                        <span>Nama Jenis / Tekstur Tanah <span class="req">*</span></span>
+                    </label>
+                    <input type="text" id="modal_soil_name" class="soil-input" placeholder="Contoh: Lempung Berdebu / Silt Loam" required maxlength="100">
+                    <span class="soil-field-hint">Nama deskriptif jenis tanah yang tampil di pilihan formulir</span>
+                </div>
+
+                <div class="soil-form-group">
+                    <label class="soil-form-label" for="modal_soil_code">
+                        <span>Kode / Slug Unik <span class="opt-hint">(Opsional)</span></span>
+                    </label>
+                    <input type="text" id="modal_soil_code" class="soil-input" placeholder="Contoh: silt_loam (Otomatis dibuat jika kosong)" maxlength="50">
+                    <span class="soil-field-hint">Digunakan sebagai identifier sistem; gunakan huruf kecil dan garis bawah</span>
+                </div>
+
+                <div class="soil-form-group">
+                    <label class="soil-form-label" for="modal_soil_desc">
+                        <span>Deskripsi Singkat / Karakteristik <span class="opt-hint">(Opsional)</span></span>
+                    </label>
+                    <textarea id="modal_soil_desc" class="soil-textarea" rows="2" placeholder="Contoh: Tekstur halus, kemampuan retensi air tinggi, kandungan debu dominan." maxlength="500"></textarea>
+                    <span class="soil-field-hint">Catatan karakteristik agronomi untuk panduan lapangan</span>
+                </div>
+            </div>
+
+            <div class="soil-modal-footer">
+                <button type="button" class="btn-soil-action" onclick="closeSoilTypeModal()">Batal</button>
+                <button type="submit" id="btn-submit-soil-type" class="btn-soil-action btn-soil-primary">
+                    <span id="btn-submit-soil-type-text">Simpan Jenis Tanah</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Floating Success Toast --}}
+<div id="soil-toast-notification" class="soil-toast" role="alert">
+    <svg class="soil-toast-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span id="soil-toast-message">Jenis tanah berhasil ditambahkan!</span>
+</div>
 @endsection

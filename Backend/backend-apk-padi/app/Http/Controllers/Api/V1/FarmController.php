@@ -23,6 +23,15 @@ class FarmController extends Controller
     public function index(Request $request): JsonResponse
     {
         $farms = $this->farmService->getFarms($request->user());
+        $user = $request->user();
+
+        $farms = Farm::query()
+            ->when(! $user->hasRole('admin'), function ($query) use ($user): void {
+                $query->where('farmer_user_id', $user->id);
+            })
+            ->with(['irrigationType', 'province', 'regency', 'district', 'village'])
+            ->latest('id')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -35,15 +44,48 @@ class FarmController extends Controller
      * Store a new farm with auto-resolving region from GPS if not provided
      */
     public function store(StoreFarmRequest $request): JsonResponse
-    {
-        $farm = $this->farmService->createFarm($request->user(), $request->validated());
+{
+    $data = $request->validated();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Lahan berhasil didaftarkan',
-            'data'    => new FarmResource($farm),
-        ], 201);
+    /*
+     * Backward compatibility:
+     * Accept irrigation type by ID, code, or name.
+     * The database relation uses irrigation_type_id.
+     */
+    if (!empty($data['irrigation_type'])) {
+        $irrigationType = \App\Models\IrrigationType::query()
+            ->where('code', $data['irrigation_type'])
+            ->orWhere('name', $data['irrigation_type'])
+            ->orWhere('id', $data['irrigation_type'])
+            ->first();
+
+        if ($irrigationType) {
+            $data['irrigation_type_id'] = $irrigationType->id;
+            $data['irrigation_type'] = $irrigationType->code;
+        }
+    } elseif (!empty($data['irrigation_type_id'])) {
+        $irrigationType = \App\Models\IrrigationType::find(
+            $data['irrigation_type_id']
+        );
+
+        if ($irrigationType) {
+            $data['irrigation_type'] = $irrigationType->code;
+        }
     }
+
+    $farm = $this->farmService->createFarm(
+        $request->user(),
+        $data
+    );
+
+    $farm->load('irrigationType');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lahan berhasil ditambahkan.',
+        'data' => new FarmResource($farm),
+    ], 201);
+}
 
     /**
      * Show farm detail
@@ -52,7 +94,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        $farm->load(['province', 'regency', 'district', 'village']);
+        $farm->load(['irrigationType', 'province', 'regency', 'district', 'village']);
 
         return response()->json([
             'success' => true,
@@ -64,16 +106,47 @@ class FarmController extends Controller
     /**
      * Update farm
      */
-    public function update(UpdateFarmRequest $request, Farm $farm): JsonResponse
-    {
+    public function update(
+        UpdateFarmRequest $request,
+        Farm $farm
+    ): JsonResponse {
         $this->authorizeFarm($request->user(), $farm);
 
-        $farm = $this->farmService->updateFarm($farm, $request->validated());
+        $data = $request->validated();
+
+        /*
+        * Backward compatibility:
+        * Accept irrigation type by ID, code, or name.
+        */
+        if (!empty($data['irrigation_type'])) {
+            $irrigationType = \App\Models\IrrigationType::query()
+                ->where('code', $data['irrigation_type'])
+                ->orWhere('name', $data['irrigation_type'])
+                ->orWhere('id', $data['irrigation_type'])
+                ->first();
+
+            if ($irrigationType) {
+                $data['irrigation_type_id'] = $irrigationType->id;
+                $data['irrigation_type'] = $irrigationType->code;
+            }
+        } elseif (!empty($data['irrigation_type_id'])) {
+            $irrigationType = \App\Models\IrrigationType::find(
+                $data['irrigation_type_id']
+            );
+
+            if ($irrigationType) {
+                $data['irrigation_type'] = $irrigationType->code;
+            }
+        }
+
+        $farm = $this->farmService->updateFarm($farm, $data);
+
+        $farm->load('irrigationType');
 
         return response()->json([
             'success' => true,
-            'message' => 'Data lahan berhasil diperbarui',
-            'data'    => new FarmResource($farm),
+            'message' => 'Lahan berhasil diperbarui.',
+            'data' => new FarmResource($farm),
         ]);
     }
 

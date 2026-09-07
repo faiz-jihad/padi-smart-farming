@@ -8,9 +8,21 @@ import 'package:latlong2/latlong.dart' as latlng;
 import 'package:padi/core/location/location_service.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
+import 'package:padi/features/farm/data/models/irrigation_type_model.dart';
+import 'package:padi/features/farm/data/models/soil_type_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
 import 'package:padi/features/region/data/models/region_models.dart';
 import 'package:padi/features/region/data/services/region_api_service.dart';
+
+final soilTypesProvider = FutureProvider.autoDispose<List<SoilTypeModel>>((ref) async {
+  final service = FarmApiService(ref.read(apiClientProvider));
+  return service.fetchSoilTypes();
+});
+
+final irrigationTypesProvider = FutureProvider.autoDispose<List<IrrigationTypeModel>>((ref) async {
+  final service = FarmApiService(ref.read(apiClientProvider));
+  return service.fetchIrrigationTypes();
+});
 
 class AddFarmScreen extends ConsumerStatefulWidget {
   const AddFarmScreen({super.key, this.setupFlow = false});
@@ -29,7 +41,7 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
 
   final List<_FarmPoint> _polygonPoints = [];
 
-  String _irrigationType = 'irrigated';
+  String? _irrigationType;
   String? _soilType;
   int _stepIndex = 0;
   bool _isLocating = false;
@@ -116,7 +128,7 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
               },
             )
             .toList(),
-        irrigationType: _irrigationType,
+        irrigationType: _irrigationType ?? 'teknis',
         irrigationNotes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
@@ -510,71 +522,176 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
         subtitle: 'Lengkapi kondisi sawah sebelum disimpan.',
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
-              initialValue: _irrigationType,
-              decoration: const InputDecoration(
-                labelText: 'Sistem irigasi',
-                prefixIcon: Icon(Icons.water_drop_outlined),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'irrigated',
-                  child: Text('Irigasi teknis'),
-                ),
-                DropdownMenuItem(
-                  value: 'semi_irrigated',
-                  child: Text('Irigasi setengah teknis'),
-                ),
-                DropdownMenuItem(value: 'rainfed', child: Text('Tadah hujan')),
-                DropdownMenuItem(value: 'tidal', child: Text('Pasang surut')),
-              ],
-              onChanged: _isSubmitting
-                  ? null
-                  : (value) {
-                      if (value == null) {
-                        return;
-                      }
+            ref.watch(irrigationTypesProvider).when(
+              data: (irrigationTypes) {
+                if (irrigationTypes.isEmpty) {
+                  return DropdownButtonFormField<String>(
+                    items: const [],
+                    onChanged: null,
+                    decoration: const InputDecoration(
+                      labelText: 'Sistem irigasi',
+                      prefixIcon: Icon(Icons.water_drop_outlined),
+                    ),
+                    hint: const Text('Belum ada sistem irigasi tersedia'),
+                  );
+                }
 
-                      setState(() => _irrigationType = value);
-                    },
+                final isValueValid = _irrigationType != null &&
+                    irrigationTypes.any((i) => i.code == _irrigationType || i.name == _irrigationType);
+                final effectiveValue = isValueValid
+                    ? _irrigationType
+                    : (irrigationTypes.isNotEmpty
+                        ? (irrigationTypes.first.code.isNotEmpty ? irrigationTypes.first.code : irrigationTypes.first.name)
+                        : null);
+
+                return DropdownButtonFormField<String>(
+                  initialValue: effectiveValue,
+                  decoration: const InputDecoration(
+                    labelText: 'Sistem irigasi',
+                    prefixIcon: Icon(Icons.water_drop_outlined),
+                  ),
+                  hint: const Text('Pilih sistem irigasi'),
+                  items: irrigationTypes.map((type) {
+                    final valueKey = type.code.isNotEmpty ? type.code : type.name;
+                    return DropdownMenuItem<String>(
+                      value: valueKey,
+                      child: Text(
+                        type.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setState(() => _irrigationType = value);
+                          }
+                        },
+                );
+              },
+              loading: () => DropdownButtonFormField<String>(
+                items: const [],
+                onChanged: null,
+                decoration: const InputDecoration(
+                  labelText: 'Sistem irigasi',
+                  prefixIcon: Icon(Icons.water_drop_outlined),
+                ),
+                hint: const Row(
+                  children: [
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: padiGreen,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Memuat sistem irigasi...',
+                      style: TextStyle(fontSize: 13, color: padiMuted),
+                    ),
+                  ],
+                ),
+              ),
+              error: (err, _) => DropdownButtonFormField<String>(
+                items: const [],
+                onChanged: null,
+                decoration: InputDecoration(
+                  labelText: 'Sistem irigasi',
+                  prefixIcon: const Icon(Icons.water_drop_outlined),
+                  errorText: 'Gagal memuat daftar sistem irigasi',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.refresh, size: 20, color: padiGreen),
+                    tooltip: 'Muat ulang sistem irigasi',
+                    onPressed: () => ref.refresh(irrigationTypesProvider),
+                  ),
+                ),
+                hint: const Text('Gagal memuat sistem irigasi'),
+              ),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _soilType,
-              decoration: const InputDecoration(
-                labelText: 'Tipe tanah',
-                prefixIcon: Icon(Icons.terrain_outlined),
+            ref.watch(soilTypesProvider).when(
+              data: (soilTypes) {
+                if (soilTypes.isEmpty) {
+                  return DropdownButtonFormField<String>(
+                    items: const [],
+                    onChanged: null,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipe tanah',
+                      prefixIcon: Icon(Icons.terrain_outlined),
+                    ),
+                    hint: const Text('Belum ada jenis tanah tersedia'),
+                  );
+                }
+
+                final isValueValid = _soilType != null &&
+                    soilTypes.any((s) => s.code == _soilType || s.name == _soilType);
+                final effectiveValue = isValueValid ? _soilType : null;
+
+                return DropdownButtonFormField<String>(
+                  initialValue: effectiveValue,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipe tanah',
+                    prefixIcon: Icon(Icons.terrain_outlined),
+                  ),
+                  hint: const Text('Pilih jenis / tekstur tanah (Opsional)'),
+                  items: soilTypes.map((soil) {
+                    final valueKey = soil.code.isNotEmpty ? soil.code : soil.name;
+                    return DropdownMenuItem<String>(
+                      value: valueKey,
+                      child: Text(
+                        soil.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (value) => setState(() => _soilType = value),
+                );
+              },
+              loading: () => DropdownButtonFormField<String>(
+                items: const [],
+                onChanged: null,
+                decoration: const InputDecoration(
+                  labelText: 'Tipe tanah',
+                  prefixIcon: Icon(Icons.terrain_outlined),
+                ),
+                hint: const Row(
+                  children: [
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: padiGreen,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Memuat jenis tanah...',
+                      style: TextStyle(fontSize: 13, color: padiMuted),
+                    ),
+                  ],
+                ),
               ),
-              hint: const Text('Opsional'),
-              items: const [
-                DropdownMenuItem(
-                  value: 'loam',
-                  child: Text('Lempung Berpasir / Loam'),
+              error: (err, _) => DropdownButtonFormField<String>(
+                items: const [],
+                onChanged: null,
+                decoration: InputDecoration(
+                  labelText: 'Tipe tanah',
+                  prefixIcon: const Icon(Icons.terrain_outlined),
+                  errorText: 'Gagal memuat daftar jenis tanah',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.refresh, size: 20, color: padiGreen),
+                    tooltip: 'Muat ulang jenis tanah',
+                    onPressed: () => ref.refresh(soilTypesProvider),
+                  ),
                 ),
-                DropdownMenuItem(
-                  value: 'alluvial',
-                  child: Text('Aluvial'),
-                ),
-                DropdownMenuItem(
-                  value: 'clay',
-                  child: Text('Liat / Clay'),
-                ),
-                DropdownMenuItem(
-                  value: 'sandy_loam',
-                  child: Text('Pasir Berlempung / Sandy Loam'),
-                ),
-                DropdownMenuItem(
-                  value: 'latosol',
-                  child: Text('Latosol / Merah Kuning'),
-                ),
-                DropdownMenuItem(
-                  value: 'peat',
-                  child: Text('Gambut / Peat'),
-                ),
-              ],
-              onChanged: _isSubmitting
-                  ? null
-                  : (value) => setState(() => _soilType = value),
+                hint: const Text('Gagal memuat jenis tanah'),
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -640,14 +757,14 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
                 _buildSummaryRow(
                   icon: Icons.water_drop_outlined,
                   label: 'Sistem Irigasi',
-                  value: _formatIrrigation(_irrigationType),
+                  value: _getIrrigationTypeName(ref.watch(irrigationTypesProvider).asData?.value),
                 ),
-                if (_soilType != null) ...[
+                if (_soilType != null && _soilType!.isNotEmpty) ...[
                   const Divider(color: Color(0xFFE5ECE3), height: 16),
                   _buildSummaryRow(
                     icon: Icons.terrain_outlined,
                     label: 'Tipe Tanah',
-                    value: _soilType!,
+                    value: _getSoilTypeName(ref.watch(soilTypesProvider).asData?.value),
                   ),
                 ],
               ],
@@ -713,38 +830,28 @@ class _AddFarmScreenState extends ConsumerState<AddFarmScreen> {
     );
   }
 
-  String _formatIrrigation(String type) {
-    switch (type) {
-      case 'irrigated':
-        return 'Irigasi Teknis';
-      case 'semi_irrigated':
-        return 'Setengah Teknis';
-      case 'rainfed':
-        return 'Tadah Hujan';
-      case 'tidal':
-        return 'Pasang Surut';
-      default:
-        return type;
+  String _getIrrigationTypeName(List<IrrigationTypeModel>? list) {
+    if (_irrigationType == null || _irrigationType!.isEmpty) return '-';
+    if (list != null && list.isNotEmpty) {
+      final match = list.firstWhere(
+        (i) => i.code == _irrigationType || i.name == _irrigationType,
+        orElse: () => IrrigationTypeModel(id: 0, name: _irrigationType!, code: _irrigationType!),
+      );
+      return match.name;
     }
+    return _irrigationType!;
   }
 
-  String _formatSoilType(String type) {
-    switch (type) {
-      case 'loam':
-        return 'Lempung Berpasir / Loam';
-      case 'alluvial':
-        return 'Aluvial';
-      case 'clay':
-        return 'Liat / Clay';
-      case 'sandy_loam':
-        return 'Pasir Berlempung / Sandy Loam';
-      case 'latosol':
-        return 'Latosol / Merah Kuning';
-      case 'peat':
-        return 'Gambut / Peat';
-      default:
-        return type;
+  String _getSoilTypeName(List<SoilTypeModel>? list) {
+    if (_soilType == null || _soilType!.isEmpty) return '-';
+    if (list != null && list.isNotEmpty) {
+      final match = list.firstWhere(
+        (s) => s.code == _soilType || s.name == _soilType,
+        orElse: () => SoilTypeModel(id: 0, name: _soilType!, code: _soilType!),
+      );
+      return match.name;
     }
+    return _soilType!;
   }
 
   @override
