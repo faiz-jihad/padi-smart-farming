@@ -38,6 +38,8 @@ class AgricultureController extends Controller
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'boundary_coordinates' => ['nullable', 'json'],
+            'soil_type' => ['nullable', 'string', 'max:100'],
+            'soil_type_id' => ['nullable', 'integer', 'exists:soil_types,id'],
             'irrigation_type' => ['required', 'string'],
             'irrigation_notes' => ['nullable', 'string', 'max:500'],
         ]);
@@ -70,6 +72,8 @@ class AgricultureController extends Controller
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'boundary_coordinates' => ['nullable', 'json'],
+            'soil_type' => ['nullable', 'string', 'max:100'],
+            'soil_type_id' => ['nullable', 'integer', 'exists:soil_types,id'],
             'irrigation_type' => ['required', 'string'],
             'irrigation_notes' => ['nullable', 'string', 'max:500'],
         ]);

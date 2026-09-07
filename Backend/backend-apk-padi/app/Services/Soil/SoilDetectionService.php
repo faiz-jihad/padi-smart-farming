@@ -51,14 +51,13 @@ class SoilDetectionService
 
         $sampleCode = $data['sample_code'] ?? 'SOIL-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
-        $soilTypeId = $data['soil_type_id'] ?? null;
-        $soilTypeString = $data['soil_type'] ?? null;
+        // Inherit soil type strictly from the Farm model (Single Source of Truth)
+        $farm->loadMissing('soilType');
+        $soilTypeId = $farm->soil_type_id;
+        $soilTypeString = $farm->soil_type;
 
         if ($soilTypeId && ! $soilTypeString) {
-            $st = \App\Models\SoilType::find($soilTypeId);
-            if ($st) {
-                $soilTypeString = $st->code ?: $st->name;
-            }
+            $soilTypeString = $farm->soilType?->code ?: $farm->soilType?->name;
         } elseif ($soilTypeString && ! $soilTypeId) {
             $st = \App\Models\SoilType::where('code', $soilTypeString)
                 ->orWhere('name', $soilTypeString)
@@ -70,7 +69,7 @@ class SoilDetectionService
             }
         }
 
-        $soilTypeString = $soilTypeString ?? 'loam';
+        $soilTypeString = $soilTypeString ?: ($farm->soilType?->code ?? 'loam');
 
         return SoilDetection::create([
             'farm_id' => $farm->id,

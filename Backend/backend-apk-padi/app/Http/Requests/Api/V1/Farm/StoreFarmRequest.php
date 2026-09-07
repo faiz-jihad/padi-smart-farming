@@ -32,6 +32,7 @@ class StoreFarmRequest extends FormRequest
             'district_id'      => ['nullable', 'integer', 'exists:districts,id'],
             'village_id'       => ['nullable', 'integer', 'exists:villages,id'],
             'soil_type'        => ['nullable', 'string', 'max:50'],
+            'soil_type_id'     => ['nullable', 'integer', 'exists:soil_types,id'],
             'status'           => ['nullable', 'in:active,inactive,fallow'],
         ];
     }

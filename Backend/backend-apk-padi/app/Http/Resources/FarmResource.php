@@ -25,6 +25,8 @@ class FarmResource extends JsonResource
             'irrigation_type_name' => $this->irrigationType?->name ?? $this->irrigation_type,
             'irrigation_notes' => $this->irrigation_notes,
             'soil_type'        => $this->soil_type,
+            'soil_type_id'     => $this->soil_type_id,
+            'soil_type_name'   => $this->soilType?->name ?? ($this->soil_type ? ucfirst(str_replace('_', ' ', $this->soil_type)) : null),
             'status'           => $this->status ?? 'active',
             'province_id'      => $this->province_id,
             'regency_id'       => $this->regency_id,

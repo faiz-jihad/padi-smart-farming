@@ -104,10 +104,23 @@
                         <label class="soil-form-label" for="farm_id">
                             <span>Lahan Pertanian <span class="req">*</span></span>
                         </label>
-                        <select name="farm_id" id="farm_id" class="soil-select" onchange="autoFetchIfApiMode()" required>
+                        <select name="farm_id" id="farm_id" class="soil-select" onchange="handleFarmChange()" required>
                             <option value="">-- Pilih Lahan Pertanian --</option>
                             @foreach ($farms as $farm)
-                                <option value="{{ $farm->id }}" data-lat="{{ $farm->latitude }}" data-lng="{{ $farm->longitude }}" @selected(old('farm_id', request('farm_id')) == $farm->id)>
+                                @php
+                                    $soilName = $farm->soilType?->name ?? ($farm->soil_type ? ucfirst(str_replace('_', ' ', $farm->soil_type)) : '');
+                                    $soilCode = $farm->soilType?->code ?? $farm->soil_type ?? '';
+                                    $soilId = $farm->soil_type_id ?? '';
+                                    $hasSoil = ($soilId || $soilCode) ? '1' : '0';
+                                @endphp
+                                <option value="{{ $farm->id }}"
+                                    data-lat="{{ $farm->latitude }}"
+                                    data-lng="{{ $farm->longitude }}"
+                                    data-soil-name="{{ $soilName }}"
+                                    data-soil-code="{{ $soilCode }}"
+                                    data-soil-id="{{ $soilId }}"
+                                    data-has-soil="{{ $hasSoil }}"
+                                    @selected(old('farm_id', request('farm_id')) == $farm->id)>
                                     {{ $farm->name }} &mdash; Petani: {{ $farm->farmer?->name ?? 'Tanpa Petani' }} ({{ $farm->area_ha ?? 0 }} Ha)
                                 </option>
                             @endforeach
@@ -117,27 +130,33 @@
 
                     <div class="soil-form-group">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <label class="soil-form-label" for="soil_type" style="margin-bottom: 0;">
+                            <label class="soil-form-label" for="soil_type_display" style="margin-bottom: 0;">
                                 <span>Jenis / Tekstur Tanah <span class="req">*</span></span>
                             </label>
-                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
-                                <button type="button" class="btn-micro-add" onclick="openSoilTypeModal()" title="Tambah jenis atau tekstur tanah baru ke master database">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <span>Tambah Jenis Tanah</span>
-                                </button>
-                            @endif
+                            <span style="font-size: 11.5px; color: #166534; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Otomatis dari Data Lahan
+                            </span>
                         </div>
-                        <select name="soil_type" id="soil_type" class="soil-select" required>
-                            <option value="">-- Pilih Jenis / Tekstur Tanah --</option>
-                            @foreach ($soilTypes as $st)
-                                <option value="{{ $st->code }}" @selected(old('soil_type', 'loam') === $st->code || old('soil_type') === $st->name)>
-                                    {{ $st->name }} @if($st->description) ({{ Str::limit($st->description, 35) }}) @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        <span class="soil-field-hint">Tekstur tanah memengaruhi permeabilitas &amp; retensi hara</span>
+
+                        {{-- Readonly Display Input --}}
+                        <input type="text" id="soil_type_display" class="soil-input" style="background: #f8fafc; color: #0f172a; font-weight: 600; cursor: not-allowed;" placeholder="Pilih Lahan Pertanian terlebih dahulu..." readonly>
+
+                        {{-- Hidden inputs for backend submission --}}
+                        <input type="hidden" name="soil_type" id="soil_type" value="{{ old('soil_type') }}">
+                        <input type="hidden" name="soil_type_id" id="soil_type_id" value="{{ old('soil_type_id') }}">
+
+                        {{-- Alert when farm does not have soil type set --}}
+                        <div id="soil-type-warning-alert" style="display: none; margin-top: 6px; padding: 8px 12px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; font-size: 12px; color: #b45309; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v4m0 4h.01" stroke-linecap="round"/>
+                            </svg>
+                            <span>Jenis tanah lahan belum ditentukan. Silakan tentukan melalui <strong><a href="{{ route('admin.agriculture.index') }}" target="_blank" style="color:#b45309; text-decoration:underline;">Pertanian &rarr; Edit Lahan</a></strong>.</span>
+                        </div>
+                        <span class="soil-field-hint">Jenis tanah terikat dengan profil lahan dan diatur melalui menu Pertanian</span>
                     </div>
                 </div>
 
@@ -341,6 +360,45 @@
 
 <script>
     let currentMode = 'manual';
+
+    function handleFarmChange() {
+        syncFarmSoilType();
+        autoFetchIfApiMode();
+    }
+
+    function syncFarmSoilType() {
+        const farmSelect = document.getElementById('farm_id');
+        const displayInput = document.getElementById('soil_type_display');
+        const hiddenSoilType = document.getElementById('soil_type');
+        const hiddenSoilTypeId = document.getElementById('soil_type_id');
+        const warningAlert = document.getElementById('soil-type-warning-alert');
+
+        if (!farmSelect || !farmSelect.value) {
+            if (displayInput) displayInput.value = '';
+            if (hiddenSoilType) hiddenSoilType.value = '';
+            if (hiddenSoilTypeId) hiddenSoilTypeId.value = '';
+            if (warningAlert) warningAlert.style.display = 'none';
+            return;
+        }
+
+        const selectedOption = farmSelect.options[farmSelect.selectedIndex];
+        const soilName = selectedOption.getAttribute('data-soil-name');
+        const soilCode = selectedOption.getAttribute('data-soil-code');
+        const soilId = selectedOption.getAttribute('data-soil-id');
+        const hasSoil = selectedOption.getAttribute('data-has-soil') === '1';
+
+        if (hasSoil && soilName) {
+            displayInput.value = soilName;
+            hiddenSoilType.value = soilCode || soilName;
+            hiddenSoilTypeId.value = soilId || '';
+            warningAlert.style.display = 'none';
+        } else {
+            displayInput.value = 'Belum ditentukan pada profil lahan';
+            hiddenSoilType.value = '';
+            hiddenSoilTypeId.value = '';
+            warningAlert.style.display = 'flex';
+        }
+    }
 
     function setFormMode(mode) {
         currentMode = mode;
@@ -587,6 +645,7 @@
 
     // Initialize on load & modal backdrop listeners
     document.addEventListener('DOMContentLoaded', () => {
+        syncFarmSoilType();
         updateLiveIrrigationPreview();
 
         // Close on Escape

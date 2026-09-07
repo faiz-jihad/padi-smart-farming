@@ -26,6 +26,7 @@ class Farm extends Model
         'irrigation_type_id',
         'irrigation_notes',
         'soil_type',
+        'soil_type_id',
         'status',
     ];
 
@@ -36,6 +37,11 @@ class Farm extends Model
     public function farmer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'farmer_user_id');
+    }
+
+    public function soilType(): BelongsTo
+    {
+        return $this->belongsTo(SoilType::class, 'soil_type_id');
     }
 
     public function irrigationType(): BelongsTo

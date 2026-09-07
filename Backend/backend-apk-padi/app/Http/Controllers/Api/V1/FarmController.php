@@ -29,7 +29,7 @@ class FarmController extends Controller
             ->when(! $user->hasRole('admin'), function ($query) use ($user): void {
                 $query->where('farmer_user_id', $user->id);
             })
-            ->with(['irrigationType', 'province', 'regency', 'district', 'village'])
+            ->with(['soilType', 'irrigationType', 'province', 'regency', 'district', 'village'])
             ->latest('id')
             ->get();
 
@@ -46,6 +46,28 @@ class FarmController extends Controller
     public function store(StoreFarmRequest $request): JsonResponse
 {
     $data = $request->validated();
+
+    /*
+     * Backward compatibility:
+     * Accept soil type by ID, code, or name.
+     */
+    if (!empty($data['soil_type'])) {
+        $soilType = \App\Models\SoilType::query()
+            ->where('code', $data['soil_type'])
+            ->orWhere('name', $data['soil_type'])
+            ->orWhere('id', $data['soil_type'])
+            ->first();
+
+        if ($soilType) {
+            $data['soil_type_id'] = $soilType->id;
+            $data['soil_type'] = $soilType->code;
+        }
+    } elseif (!empty($data['soil_type_id'])) {
+        $soilType = \App\Models\SoilType::find($data['soil_type_id']);
+        if ($soilType) {
+            $data['soil_type'] = $soilType->code;
+        }
+    }
 
     /*
      * Backward compatibility:
@@ -78,7 +100,7 @@ class FarmController extends Controller
         $data
     );
 
-    $farm->load('irrigationType');
+    $farm->load(['soilType', 'irrigationType']);
 
     return response()->json([
         'success' => true,
@@ -94,7 +116,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        $farm->load(['irrigationType', 'province', 'regency', 'district', 'village']);
+        $farm->load(['soilType', 'irrigationType', 'province', 'regency', 'district', 'village']);
 
         return response()->json([
             'success' => true,
@@ -113,6 +135,33 @@ class FarmController extends Controller
         $this->authorizeFarm($request->user(), $farm);
 
         $data = $request->validated();
+
+        /*
+        * Backward compatibility:
+        * Accept soil type by ID, code, or name.
+        */
+        if (array_key_exists('soil_type', $data) || array_key_exists('soil_type_id', $data)) {
+            if (!empty($data['soil_type'])) {
+                $soilType = \App\Models\SoilType::query()
+                    ->where('code', $data['soil_type'])
+                    ->orWhere('name', $data['soil_type'])
+                    ->orWhere('id', $data['soil_type'])
+                    ->first();
+
+                if ($soilType) {
+                    $data['soil_type_id'] = $soilType->id;
+                    $data['soil_type'] = $soilType->code;
+                }
+            } elseif (!empty($data['soil_type_id'])) {
+                $soilType = \App\Models\SoilType::find($data['soil_type_id']);
+                if ($soilType) {
+                    $data['soil_type'] = $soilType->code;
+                }
+            } else {
+                $data['soil_type_id'] = null;
+                $data['soil_type'] = null;
+            }
+        }
 
         /*
         * Backward compatibility:
@@ -141,7 +190,7 @@ class FarmController extends Controller
 
         $farm = $this->farmService->updateFarm($farm, $data);
 
-        $farm->load('irrigationType');
+        $farm->load(['soilType', 'irrigationType']);
 
         return response()->json([
             'success' => true,
