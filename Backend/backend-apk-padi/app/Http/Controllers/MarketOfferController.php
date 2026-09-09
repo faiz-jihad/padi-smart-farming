@@ -58,10 +58,10 @@ class MarketOfferController extends Controller
             ], 401);
         }
 
-        if ($user->role !== 'partner') {
+        if ($user->role !== 'buyer') {
             return response()->json([
                 'success' => false,
-                'message' => 'Hanya mitra pembeli yang dapat mengajukan penawaran.',
+                'message' => 'Hanya buyer yang dapat mengajukan penawaran.',
             ], 403);
         }
 
