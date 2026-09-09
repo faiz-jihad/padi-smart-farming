@@ -11,11 +11,17 @@ class FarmActivityResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'activity_id' => $this->id,
             'crop_season_id' => $this->crop_season_id,
             'type' => $this->type,
             'occurred_at' => $this->occurred_at,
             'notes' => $this->notes,
             'cost' => $this->cost,
+            'source' => $this->source ?? 'MANUAL',
+            'status' => $this->status ?? 'COMPLETED',
+            'sync_status' => $this->sync_status ?? 'pending',
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -29,6 +29,11 @@ return new class extends Migration
             $table->text('notes')->nullable();
 
             $table->unsignedBigInteger('cost')->default(0);
+            $table->string('source', 32)->default('MANUAL');
+            $table->string('status', 32)->default('COMPLETED');
+            $table->string('sync_status', 32)->default('pending');
+
+            $table->timestamps();
         });
     }
 

@@ -15,7 +15,10 @@ class CropSeasonResource extends JsonResource
         return [
             'id' => $this->id,
             'farm_id' => $this->farm_id,
+            'farm_name' => $this->farm?->name ?? 'Lahan Sawah',
+            'name' => $this->farm?->name ?? 'Lahan Sawah',
             'variety_id' => $this->variety_id,
+            'variety_name' => $this->variety?->name ?? 'Padi',
             'planned_planting_date' => $this->planned_planting_date,
             'planting_date' => $this->planting_date,
             'estimated_harvest_date' => $this->estimated_harvest_date,

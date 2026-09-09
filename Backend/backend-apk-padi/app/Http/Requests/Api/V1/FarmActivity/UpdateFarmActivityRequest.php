@@ -22,6 +22,9 @@ class UpdateFarmActivityRequest extends FormRequest
             'occurred_at'    => ['sometimes', 'required', 'date'],
             'notes'          => ['nullable', 'string'],
             'cost'           => ['nullable', 'integer', 'min:0'],
+            'source'         => ['sometimes', 'nullable', 'string', 'in:VOICE,MANUAL,AI_RECOMMENDATION'],
+            'status'         => ['sometimes', 'nullable', 'string', 'in:COMPLETED,PENDING,CANCELLED'],
+            'sync_status'    => ['sometimes', 'nullable', 'string', 'in:pending,synced,failed'],
         ];
     }
 }

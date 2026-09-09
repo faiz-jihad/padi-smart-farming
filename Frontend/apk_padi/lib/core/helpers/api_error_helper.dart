@@ -77,7 +77,7 @@ String _fallbackMessage(DioException error) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.sendTimeout ||
     DioExceptionType.receiveTimeout =>
-      'Koneksi terlalu lama. Pastikan Laravel berjalan di port 8000.',
+      'Koneksi terlalu lama ke backend Laravel. Pastikan PHP artisan serve --host=0.0.0.0 --port=8000 berjalan, lalu cek IP perangkat yang dipakai.',
     DioExceptionType.connectionError => 'Tidak dapat terhubung ke server.',
     _ => 'Server belum dapat memproses permintaan.',
   };

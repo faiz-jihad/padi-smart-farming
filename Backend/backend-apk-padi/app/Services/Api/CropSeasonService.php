@@ -11,6 +11,7 @@ class CropSeasonService
     public function listForUser(User $user): Collection
     {
         return CropSeason::query()
+            ->with(['farm', 'variety'])
             ->whereHas('farm', function ($query) use ($user): void {
                 if (! $user->hasRole('admin')) {
                     $query->where('farmer_user_id', $user->id);

@@ -38,7 +38,11 @@ class FarmActivityService
             (int) $data['crop_season_id']
         );
 
-        $activity = FarmActivity::query()->create($data);
+        $activity = FarmActivity::query()->create(array_merge([
+            'source' => 'MANUAL',
+            'status' => 'COMPLETED',
+            'sync_status' => 'pending',
+        ], $data));
 
         return $activity->load(['cropSeason.farm']);
     }
