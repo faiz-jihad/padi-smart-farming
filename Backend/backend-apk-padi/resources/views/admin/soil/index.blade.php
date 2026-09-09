@@ -204,7 +204,7 @@
                         <tr>
                             <td class="sample-cell" style="padding-left: 24px;">
                                 <p>{{ $soil->sample_code }}</p>
-                                <span>Jenis: {{ ucfirst($soil->soil_type) }}</span>
+                                <span>Jenis: {{ $soil->soilType?->name ?? ucfirst(str_replace('_', ' ', $soil->soil_type)) }}</span>
                             </td>
                             <td>
                                 <strong style="font-weight:700; color:#0f172a;">{{ $soil->farm?->name ?? '-' }}</strong><br>

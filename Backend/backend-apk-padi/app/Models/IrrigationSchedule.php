@@ -9,6 +9,7 @@ class IrrigationSchedule extends Model
 {
     protected $fillable = [
         'farm_id',
+        'soil_detection_id',
         'schedule_date',
         'start_time',
         'end_time',

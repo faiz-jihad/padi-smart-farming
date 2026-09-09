@@ -17,12 +17,14 @@ class SoilDetection extends Model
         'moisture_percentage',
         'organic_matter_percentage',
         'soil_temp_celsius',
+        'soil_type_id',
         'soil_type',
         'soil_health_score',
         'soil_status',
         'recommendations_json',
         'tested_at',
         'notes',
+        'tested_by_user_id',
         'created_by',
     ];
 
@@ -42,6 +44,11 @@ class SoilDetection extends Model
     public function farm(): BelongsTo
     {
         return $this->belongsTo(Farm::class);
+    }
+
+    public function soilType(): BelongsTo
+    {
+        return $this->belongsTo(SoilType::class, 'soil_type_id');
     }
 
     public function creator(): BelongsTo

@@ -173,13 +173,11 @@
                         <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama lahan, pemilik, atau catatan...">
                     </div>
 
-                    <select name="irrigation" class="filter-select" onchange="this.form.submit()">
+                    <select name="irrigation" id="filter-irrigation-select" class="filter-select" onchange="this.form.submit()">
                         <option value="">Semua Tipe Irigasi</option>
-                        <option value="teknis" @selected(($filters['irrigation'] ?? '') === 'teknis')>Irigasi Teknis</option>
-                        <option value="setengah_teknis" @selected(($filters['irrigation'] ?? '') === 'setengah_teknis')>Setengah Teknis</option>
-                        <option value="hujan" @selected(($filters['irrigation'] ?? '') === 'hujan')>Tadah Hujan</option>
-                        <option value="swamp" @selected(($filters['irrigation'] ?? '') === 'swamp')>Rawa / Pasang Surut</option>
-                        <option value="lainnya" @selected(($filters['irrigation'] ?? '') === 'lainnya')>Lainnya</option>
+                        @foreach($irrigationTypes as $it)
+                            <option value="{{ $it->code }}" @selected(($filters['irrigation'] ?? '') === $it->code || ($filters['irrigation'] ?? '') == $it->id)>{{ $it->name }}</option>
+                        @endforeach
                     </select>
 
                     <button type="submit" class="btn-filter-submit">Terapkan</button>
@@ -251,6 +249,7 @@
                             <th>Pemilik (Petani)</th>
                             <th>Wilayah</th>
                             <th>Luas Wilayah</th>
+                            <th>Jenis Tanah</th>
                             <th>Sistem Pengairan</th>
                             <th>Koordinat GPS</th>
                             <th>Batas Polygon</th>
@@ -267,17 +266,12 @@
                                     'hujan' => 'irrigation-hujan',
                                     'tadah_hujan' => 'irrigation-hujan',
                                     'swamp' => 'irrigation-rawa',
+                                    'pompa' => 'irrigation-teknis',
                                     'lainnya' => 'irrigation-lainnya',
                                 ];
-                                $irrigationLabels = [
-                                    'teknis' => 'Irigasi Teknis',
-                                    'setengah_teknis' => 'Setengah Teknis',
-                                    'hujan' => 'Tadah Hujan',
-                                    'tadah_hujan' => 'Tadah Hujan',
-                                    'swamp' => 'Rawa Pasang Surut',
-                                    'lainnya' => 'Lainnya',
-                                ];
                                 $pointsCount = is_array($farm->boundary_coordinates) ? count($farm->boundary_coordinates) : 0;
+                                $irrigationName = $farm->irrigationType?->name ?? ucfirst(str_replace('_', ' ', $farm->irrigation_type ?: 'Lainnya'));
+                                $soilName = $farm->soilType?->name ?? ($farm->soil_type ? ucfirst(str_replace('_', ' ', $farm->soil_type)) : null);
                             @endphp
                             <tr>
                                 <td class="farm-name-cell">
@@ -317,8 +311,17 @@
                                     </span>
                                 </td>
                                 <td>
+                                    @if($soilName)
+                                        <span class="irrigation-badge irrigation-teknis" style="background: #f0fdf4; color: #166534; border-color: #bbf7d0;">
+                                            {{ $soilName }}
+                                        </span>
+                                    @else
+                                        <span style="color: #94a3b8; font-size: 12.5px; font-style: italic;">Belum ditentukan</span>
+                                    @endif
+                                </td>
+                                <td>
                                     <span class="irrigation-badge {{ $irrigationThemes[$farm->irrigation_type] ?? 'irrigation-lainnya' }}">
-                                        {{ $irrigationLabels[$farm->irrigation_type] ?? ucfirst($farm->irrigation_type) }}
+                                        {{ $irrigationName }}
                                     </span>
                                 </td>
                                 <td>
@@ -356,16 +359,21 @@
                                         type="button"
                                         class="btn-edit-land"
                                         onclick="openEditFarmModal({{ json_encode([
-                                            'id' => $farm->id,
-                                            'farmer_user_id' => $farm->farmer_user_id,
-                                            'name' => $farm->name,
-                                            'area_ha' => $farm->area_ha,
-                                            'latitude' => $farm->latitude,
-                                            'longitude' => $farm->longitude,
-                                            'boundary_coordinates' => $farm->boundary_coordinates,
-                                            'irrigation_type' => $farm->irrigation_type,
-                                            'irrigation_notes' => $farm->irrigation_notes,
-                                            'update_url' => route('admin.agriculture.update', $farm),
+                                             'id' => $farm->id,
+                                             'farmer_user_id' => $farm->farmer_user_id,
+                                             'name' => $farm->name,
+                                             'area_ha' => $farm->area_ha,
+                                             'latitude' => $farm->latitude,
+                                             'longitude' => $farm->longitude,
+                                             'boundary_coordinates' => $farm->boundary_coordinates,
+                                             'soil_type_id' => $farm->soil_type_id,
+                                             'soil_type' => $farm->soil_type,
+                                             'soil_type_name' => $farm->soilType?->name ?? ($farm->soil_type ? ucfirst(str_replace('_', ' ', $farm->soil_type)) : null),
+                                             'irrigation_type' => $farm->irrigation_type,
+                                             'irrigation_type_id' => $farm->irrigation_type_id,
+                                             'irrigation_type_name' => $farm->irrigationType?->name ?? null,
+                                             'irrigation_notes' => $farm->irrigation_notes,
+                                             'update_url' => route('admin.agriculture.update', $farm),
                                         ]) }})"
                                     >
                                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -394,13 +402,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="pertanian-empty">
+                                <td colspan="10" class="pertanian-empty">
                                     Belum ada data lahan pertanian yang sesuai dengan filter pencarian.
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table>table>
             </div>
 
             @if($farms->hasPages())
@@ -660,13 +668,46 @@
                     </div>
 
                     <div class="pertanian-modal-grid--full">
-                        <label class="pertanian-field-label" for="create-irrigation">Tipe Irigasi / Pengairan</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="pertanian-field-label" for="create-soil-type" style="margin:0;">Jenis / Tipe Tanah</label>
+                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
+                                <button type="button" onclick="openSoilTypeModal()" style="background:none; border:none; color:#15803d; font-size:12px; font-weight:700; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>Tambah Jenis Tanah</span>
+                                </button>
+                            @endif
+                        </div>
+                        <select id="create-soil-type" name="soil_type_id" class="pertanian-select">
+                            <option value="">-- Pilih Jenis Tanah --</option>
+                            @foreach($soilTypes->where('is_active', true) as $st)
+                                <option value="{{ $st->id }}" @selected(old('soil_type_id') == $st->id)>
+                                    {{ $st->name }} @if($st->description) ({{ Str::limit($st->description, 40) }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="pertanian-modal-grid--full">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="pertanian-field-label" for="create-irrigation" style="margin:0;">Tipe Irigasi / Pengairan</label>
+                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
+                                <button type="button" onclick="openIrrigationTypeModal()" style="background:none; border:none; color:#15803d; font-size:12px; font-weight:700; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>Tambah Tipe Irigasi</span>
+                                </button>
+                            @endif
+                        </div>
                         <select id="create-irrigation" name="irrigation_type" class="pertanian-select" required>
-                            <option value="teknis" @selected(old('irrigation_type') === 'teknis')>Irigasi Teknis (Saluran Teratur)</option>
-                            <option value="setengah_teknis" @selected(old('irrigation_type') === 'setengah_teknis')>Setengah Teknis</option>
-                            <option value="hujan" @selected(old('irrigation_type') === 'hujan')>Sawah Tadah Hujan</option>
-                            <option value="swamp" @selected(old('irrigation_type') === 'swamp')>Rawa / Pasang Surut</option>
-                            <option value="lainnya" @selected(old('irrigation_type') === 'lainnya')>Lainnya</option>
+                            <option value="">-- Pilih Tipe Irigasi --</option>
+                            @foreach($irrigationTypes->where('is_active', true) as $it)
+                                <option value="{{ $it->code }}" @selected(old('irrigation_type', 'teknis') === $it->code)>
+                                    {{ $it->name }} @if($it->description) ({{ Str::limit($it->description, 40) }}) @endif
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -756,13 +797,42 @@
                     </div>
 
                     <div class="pertanian-modal-grid--full">
-                        <label class="pertanian-field-label" for="edit-irrigation">Tipe Irigasi / Pengairan</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="pertanian-field-label" for="edit-soil-type" style="margin:0;">Jenis / Tipe Tanah</label>
+                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
+                                <button type="button" onclick="openSoilTypeModal()" style="background:none; border:none; color:#15803d; font-size:12px; font-weight:700; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>+ Tambah Jenis Tanah</span>
+                                </button>
+                            @endif
+                        </div>
+                        <select id="edit-soil-type" name="soil_type_id" class="pertanian-select">
+                            <option value="">-- Pilih Jenis Tanah --</option>
+                            @foreach($soilTypes as $st)
+                                <option value="{{ $st->id }}">{{ $st->name }}{{ !$st->is_active ? ' (Nonaktif)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="pertanian-modal-grid--full">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="pertanian-field-label" for="edit-irrigation" style="margin:0;">Tipe Irigasi / Pengairan</label>
+                            @if(in_array(auth()->user()?->role, ['admin', 'extension_officer']) || (auth()->user() && method_exists(auth()->user(), 'hasAnyRole') && auth()->user()->hasAnyRole(['admin', 'extension_officer'])))
+                                <button type="button" onclick="openIrrigationTypeModal()" style="background:none; border:none; color:#15803d; font-size:12px; font-weight:700; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>+ Tambah Tipe Irigasi</span>
+                                </button>
+                            @endif
+                        </div>
                         <select id="edit-irrigation" name="irrigation_type" class="pertanian-select" required>
-                            <option value="teknis">Irigasi Teknis (Saluran Teratur)</option>
-                            <option value="setengah_teknis">Setengah Teknis</option>
-                            <option value="hujan">Sawah Tadah Hujan</option>
-                            <option value="swamp">Rawa / Pasang Surut</option>
-                            <option value="lainnya">Lainnya</option>
+                            <option value="">-- Pilih Tipe Irigasi --</option>
+                            @foreach($irrigationTypes as $it)
+                                <option value="{{ $it->code }}">{{ $it->name }}{{ !$it->is_active ? ' (Nonaktif)' : '' }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -1012,6 +1082,33 @@
         document.getElementById('edit-irrigation').value = farmData.irrigation_type || 'teknis';
         document.getElementById('edit-notes').value = farmData.irrigation_notes || '';
 
+        // Pre-select soil type in edit modal
+        const editSoilSelect = document.getElementById('edit-soil-type');
+        if (editSoilSelect) {
+            let soilVal = farmData.soil_type_id || '';
+            if (!soilVal && farmData.soil_type) {
+                let opt = Array.from(editSoilSelect.options).find(o => 
+                    o.text.toLowerCase().includes(farmData.soil_type.toLowerCase()) || 
+                    o.value == farmData.soil_type
+                );
+                if (opt) soilVal = opt.value;
+            }
+            editSoilSelect.value = soilVal;
+        }
+
+        let irrigationVal = farmData.irrigation_type || 'teknis';
+        const editSelect = document.getElementById('edit-irrigation');
+        if (editSelect) {
+            let opt = Array.from(editSelect.options).find(o => o.value === irrigationVal);
+            if (!opt && irrigationVal) {
+                const newOpt = document.createElement('option');
+                newOpt.value = irrigationVal;
+                newOpt.text = farmData.irrigation_type_name || irrigationVal;
+                editSelect.add(newOpt);
+            }
+            editSelect.value = irrigationVal;
+        }
+
         let initialPoints = [];
         if (farmData.boundary_coordinates) {
             if (typeof farmData.boundary_coordinates === 'string') {
@@ -1029,6 +1126,282 @@
             initLeafletMap('edit', lat, lng, initialPoints);
             if (mapState.edit.map) mapState.edit.map.invalidateSize();
         }, 200);
+    }
+
+    // Soil Type Master Modal Management
+    function openSoilTypeModal() {
+        openModal('modal-soil-types');
+        document.getElementById('soil-modal-alert-box').style.display = 'none';
+        setTimeout(() => {
+            const nameInput = document.getElementById('modal_soil_name');
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
+
+    function closeSoilTypeModal() {
+        closeModal('modal-soil-types');
+    }
+
+    function handleStoreSoilType(e) {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('btn-submit-soil-type');
+        const alertBox = document.getElementById('soil-modal-alert-box');
+        const alertText = document.getElementById('soil-modal-alert-text');
+        const nameInput = document.getElementById('modal_soil_name');
+        const codeInput = document.getElementById('modal_soil_code');
+        const descInput = document.getElementById('modal_soil_desc');
+
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+        const description = descInput.value.trim();
+
+        if (!name) {
+            alertText.innerText = 'Nama jenis tanah wajib diisi.';
+            alertBox.style.display = 'flex';
+            return;
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Menyimpan...';
+        alertBox.style.display = 'none';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || document.querySelector('input[name="_token"]')?.value;
+
+        fetch('{{ route('admin.soil.types.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                name: name,
+                code: code || null,
+                description: description || null,
+                is_active: true,
+            })
+        })
+        .then(async (response) => {
+            const data = await response.json();
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Simpan Jenis Tanah';
+
+            if (!response.ok) {
+                let errorMsg = data.message || 'Terjadi kesalahan saat menyimpan jenis tanah.';
+                if (data.errors) {
+                    const errorKeys = Object.keys(data.errors);
+                    if (errorKeys.length > 0) {
+                        const firstError = data.errors[errorKeys[0]];
+                        errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                    }
+                }
+                alertText.innerText = errorMsg;
+                alertBox.style.display = 'flex';
+                return;
+            }
+
+            if (data.success && data.data) {
+                const newType = data.data;
+
+                // Sync Create Modal Dropdown
+                const createSelect = document.getElementById('create-soil-type');
+                if (createSelect) {
+                    let opt = Array.from(createSelect.options).find(o => o.value == newType.id);
+                    if (!opt) {
+                        const option = document.createElement('option');
+                        option.value = newType.id;
+                        option.text = newType.name + (newType.description ? ` (${newType.description.substring(0, 40)}...)` : '');
+                        createSelect.add(option);
+                    }
+                    createSelect.value = newType.id;
+                }
+
+                // Sync Edit Modal Dropdown
+                const editSelect = document.getElementById('edit-soil-type');
+                if (editSelect) {
+                    let opt = Array.from(editSelect.options).find(o => o.value == newType.id);
+                    if (!opt) {
+                        const option = document.createElement('option');
+                        option.value = newType.id;
+                        option.text = newType.name;
+                        editSelect.add(option);
+                    }
+                }
+
+                // Append to interactive list in modal
+                const listContainer = document.getElementById('soil-types-list-container');
+                if (listContainer) {
+                    const rowHtml = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                            <div>
+                                <strong style="font-size:13.5px; color:#0f172a;">${newType.name}</strong>
+                                <span style="font-size:12px; color:#64748b; margin-left:6px;">(${newType.code})</span>
+                                ${newType.description ? `<p style="font-size:12px; color:#475569; margin:2px 0 0 0;">${newType.description}</p>` : ''}
+                            </div>
+                            <span style="font-size:11px; font-weight:700; background:#dcfce7; color:#166534; padding:3px 8px; border-radius:6px;">Aktif</span>
+                        </div>
+                    `;
+                    listContainer.insertAdjacentHTML('afterbegin', rowHtml);
+                }
+
+                // Reset form and close modal
+                document.getElementById('form-create-soil-type').reset();
+                closeSoilTypeModal();
+
+                alert(`Jenis tanah '${newType.name}' berhasil ditambahkan.`);
+            }
+        })
+        .catch(error => {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Simpan Jenis Tanah';
+            alertText.innerText = 'Gagal menghubungi server. Silakan coba beberapa saat lagi.';
+            alertBox.style.display = 'flex';
+        });
+    }
+
+    // Irrigation Type Master Modal Management
+    function openIrrigationTypeModal() {
+        openModal('modal-irrigation-types');
+        document.getElementById('irrigation-modal-alert-box').style.display = 'none';
+        setTimeout(() => {
+            const nameInput = document.getElementById('modal_irrigation_name');
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
+
+    function closeIrrigationTypeModal() {
+        closeModal('modal-irrigation-types');
+    }
+
+    function handleStoreIrrigationType(e) {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('btn-submit-irrigation-type');
+        const alertBox = document.getElementById('irrigation-modal-alert-box');
+        const alertText = document.getElementById('irrigation-modal-alert-text');
+        const nameInput = document.getElementById('modal_irrigation_name');
+        const codeInput = document.getElementById('modal_irrigation_code');
+        const descInput = document.getElementById('modal_irrigation_desc');
+
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+        const description = descInput.value.trim();
+
+        if (!name) {
+            alertText.innerText = 'Nama tipe irigasi wajib diisi.';
+            alertBox.style.display = 'flex';
+            return;
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Menyimpan...';
+        alertBox.style.display = 'none';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || document.querySelector('input[name="_token"]')?.value;
+
+        fetch('{{ route('admin.agriculture.irrigation-types.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                name: name,
+                code: code || null,
+                description: description || null,
+                is_active: true,
+            })
+        })
+        .then(async (response) => {
+            const data = await response.json();
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Simpan Tipe Irigasi';
+
+            if (!response.ok) {
+                let errorMsg = data.message || 'Terjadi kesalahan saat menyimpan tipe irigasi.';
+                if (data.errors) {
+                    const errorKeys = Object.keys(data.errors);
+                    if (errorKeys.length > 0) {
+                        const firstError = data.errors[errorKeys[0]];
+                        errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                    }
+                }
+                alertText.innerText = errorMsg;
+                alertBox.style.display = 'flex';
+                return;
+            }
+
+            if (data.success && data.data) {
+                const newType = data.data;
+
+                // Sync Create Modal Dropdown
+                const createSelect = document.getElementById('create-irrigation');
+                if (createSelect) {
+                    let opt = Array.from(createSelect.options).find(o => o.value === newType.code);
+                    if (!opt) {
+                        const option = document.createElement('option');
+                        option.value = newType.code;
+                        option.text = newType.name + (newType.description ? ` (${newType.description.substring(0, 40)}...)` : '');
+                        createSelect.add(option);
+                    }
+                    createSelect.value = newType.code;
+                }
+
+                // Sync Edit Modal Dropdown
+                const editSelect = document.getElementById('edit-irrigation');
+                if (editSelect) {
+                    let opt = Array.from(editSelect.options).find(o => o.value === newType.code);
+                    if (!opt) {
+                        const option = document.createElement('option');
+                        option.value = newType.code;
+                        option.text = newType.name;
+                        editSelect.add(option);
+                    }
+                }
+
+                // Sync Filter Dropdown
+                const filterSelect = document.getElementById('filter-irrigation-select');
+                if (filterSelect) {
+                    let opt = Array.from(filterSelect.options).find(o => o.value === newType.code);
+                    if (!opt) {
+                        const option = document.createElement('option');
+                        option.value = newType.code;
+                        option.text = newType.name;
+                        filterSelect.add(option);
+                    }
+                }
+
+                // Append to interactive list in modal
+                const listContainer = document.getElementById('irrigation-types-list-container');
+                if (listContainer) {
+                    const rowHtml = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                            <div>
+                                <strong style="font-size:13.5px; color:#0f172a;">${newType.name}</strong>
+                                <span style="font-size:12px; color:#64748b; margin-left:6px;">(${newType.code})</span>
+                                ${newType.description ? `<p style="font-size:12px; color:#475569; margin:2px 0 0 0;">${newType.description}</p>` : ''}
+                            </div>
+                            <span style="font-size:11px; font-weight:700; background:#dcfce7; color:#166534; padding:3px 8px; border-radius:6px;">Aktif</span>
+                        </div>
+                    `;
+                    listContainer.insertAdjacentHTML('afterbegin', rowHtml);
+                }
+
+                // Reset form and close modal
+                document.getElementById('form-create-irrigation-type').reset();
+                closeIrrigationTypeModal();
+
+                alert(`Tipe irigasi '${newType.name}' berhasil ditambahkan.`);
+            }
+        })
+        .catch(error => {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Simpan Tipe Irigasi';
+            alertText.innerText = 'Gagal menghubungi server. Silakan coba beberapa saat lagi.';
+            alertBox.style.display = 'flex';
+        });
     }
 
     // Planting Calculator Handler
@@ -1083,6 +1456,8 @@
         if (event.key === 'Escape') {
             closeModal('create-farm-modal');
             closeModal('edit-farm-modal');
+            closeModal('modal-soil-types');
+            closeModal('modal-irrigation-types');
         }
     });
 
@@ -1095,4 +1470,172 @@
         });
     });
 </script>
+
+{{-- ========================================================================= --}}
+{{-- MODAL MASTER JENIS / TIPE TANAH --}}
+{{-- ========================================================================= --}}
+<div class="pertanian-modal-backdrop" id="modal-soil-types" role="dialog" aria-modal="true">
+    <div class="pertanian-modal-card" style="max-width: 650px;">
+        <div class="pertanian-modal-header">
+            <div>
+                <h3 class="pertanian-modal-title">Kelola Master Jenis Tanah</h3>
+                <p class="pertanian-modal-subtitle">Tambah klasifikasi jenis/tekstur tanah baru ke database P.A.D.I.</p>
+            </div>
+            <button type="button" class="pertanian-modal-close" onclick="closeSoilTypeModal()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="form-create-soil-type" onsubmit="handleStoreSoilType(event)">
+            <div class="pertanian-modal-body">
+                <div id="soil-modal-alert-box" style="display:none; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#b91c1c; font-size:13px; align-items:center; gap:8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4m0 4h.01" stroke-linecap="round"/>
+                    </svg>
+                    <span id="soil-modal-alert-text"></span>
+                </div>
+
+                {{-- Form Tambah Tipe Baru --}}
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:20px;">
+                    <h4 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">+ Tambah Jenis Tanah Baru</h4>
+                    
+                    <div class="pertanian-modal-grid">
+                        <div>
+                            <label class="pertanian-field-label" for="modal_soil_name">Nama Jenis Tanah <span style="color:#dc2626;">*</span></label>
+                            <input type="text" id="modal_soil_name" class="pertanian-input" placeholder="Contoh: Regosol / Litosol" required maxlength="100">
+                        </div>
+
+                        <div>
+                            <label class="pertanian-field-label" for="modal_soil_code">Kode Unik <span style="font-size:11px; color:#64748b; font-weight:normal;">(Opsional, e.g. regosol)</span></label>
+                            <input type="text" id="modal_soil_code" class="pertanian-input" placeholder="regosol" maxlength="50">
+                        </div>
+
+                        <div class="pertanian-modal-grid--full">
+                            <label class="pertanian-field-label" for="modal_soil_desc">Deskripsi Karakteristik Tanah</label>
+                            <input type="text" id="modal_soil_desc" class="pertanian-input" placeholder="Tanah berbutir kasar hasil pelapukan abu vulkanik">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px; text-align:right;">
+                        <button type="submit" id="btn-submit-soil-type" class="btn-submit" style="padding:8px 18px; font-size:13px; height:auto;">
+                            Simpan Jenis Tanah
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Daftar Jenis Tanah Terdaftar di Database --}}
+                <div>
+                    <h4 style="font-size:13.5px; font-weight:700; color:#334155; margin:0 0 10px 0;">Daftar Jenis Tanah Terdaftar</h4>
+                    <div id="soil-types-list-container" style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                        @foreach($soilTypes as $st)
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">{{ $st->name }}</strong>
+                                    <span style="font-size:12px; color:#64748b; margin-left:6px;">({{ $st->code }})</span>
+                                    @if($st->description)
+                                        <p style="font-size:12px; color:#475569; margin:2px 0 0 0;">{{ $st->description }}</p>
+                                    @endif
+                                </div>
+                                <span style="font-size:11px; font-weight:700; background:{{ $st->is_active ? '#dcfce7' : '#fee2e2' }}; color:{{ $st->is_active ? '#166534' : '#991b1b' }}; padding:3px 8px; border-radius:6px;">
+                                    {{ $st->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="pertanian-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeSoilTypeModal()">Tutup</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ========================================================================= --}}
+{{-- MODAL MASTER TIPE IRIGASI / SISTEM PENGAIRAN --}}
+{{-- ========================================================================= --}}
+<div class="pertanian-modal-backdrop" id="modal-irrigation-types" role="dialog" aria-modal="true">
+    <div class="pertanian-modal-card" style="max-width: 650px;">
+        <div class="pertanian-modal-header">
+            <div>
+                <h3 class="pertanian-modal-title">Kelola Master Tipe Irigasi</h3>
+                <p class="pertanian-modal-subtitle">Tambah sistem pengairan baru ke database atau periksa daftar sistem yang aktif.</p>
+            </div>
+            <button type="button" class="pertanian-modal-close" onclick="closeIrrigationTypeModal()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="form-create-irrigation-type" onsubmit="handleStoreIrrigationType(event)">
+            <div class="pertanian-modal-body">
+                <div id="irrigation-modal-alert-box" style="display:none; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#b91c1c; font-size:13px; align-items:center; gap:8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4m0 4h.01" stroke-linecap="round"/>
+                    </svg>
+                    <span id="irrigation-modal-alert-text"></span>
+                </div>
+
+                {{-- Form Tambah Tipe Baru --}}
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:20px;">
+                    <h4 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">+ Tambah Tipe Irigasi Baru</h4>
+                    
+                    <div class="pertanian-modal-grid">
+                        <div>
+                            <label class="pertanian-field-label" for="modal_irrigation_name">Nama Tipe Irigasi <span style="color:#dc2626;">*</span></label>
+                            <input type="text" id="modal_irrigation_name" class="pertanian-input" placeholder="Contoh: Irigasi Pompa Air Tanah" required maxlength="100">
+                        </div>
+
+                        <div>
+                            <label class="pertanian-field-label" for="modal_irrigation_code">Kode Unik <span style="font-size:11px; color:#64748b; font-weight:normal;">(Opsional, e.g. pompa)</span></label>
+                            <input type="text" id="modal_irrigation_code" class="pertanian-input" placeholder="pompa" maxlength="50">
+                        </div>
+
+                        <div class="pertanian-modal-grid--full">
+                            <label class="pertanian-field-label" for="modal_irrigation_desc">Deskripsi Karakteristik Pengairan</label>
+                            <input type="text" id="modal_irrigation_desc" class="pertanian-input" placeholder="Pemanfaatan sumur bor dan mesin pompa bertenaga diesel/listrik">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px; text-align:right;">
+                        <button type="submit" id="btn-submit-irrigation-type" class="btn-submit" style="padding:8px 18px; font-size:13px; height:auto;">
+                            Simpan Tipe Irigasi
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Daftar Tipe Irigasi Terdaftar di Database --}}
+                <div>
+                    <h4 style="font-size:13.5px; font-weight:700; color:#334155; margin:0 0 10px 0;">Daftar Sistem Irigasi Terdaftar</h4>
+                    <div id="irrigation-types-list-container" style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                        @foreach($irrigationTypes as $it)
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                                <div>
+                                    <strong style="font-size:13.5px; color:#0f172a;">{{ $it->name }}</strong>
+                                    <span style="font-size:12px; color:#64748b; margin-left:6px;">({{ $it->code }})</span>
+                                    @if($it->description)
+                                        <p style="font-size:12px; color:#475569; margin:2px 0 0 0;">{{ $it->description }}</p>
+                                    @endif
+                                </div>
+                                <span style="font-size:11px; font-weight:700; background:{{ $it->is_active ? '#dcfce7' : '#fee2e2' }}; color:{{ $it->is_active ? '#166534' : '#991b1b' }}; padding:3px 8px; border-radius:6px;">
+                                    {{ $it->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="pertanian-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeIrrigationTypeModal()">Tutup</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

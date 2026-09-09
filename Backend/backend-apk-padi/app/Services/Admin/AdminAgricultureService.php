@@ -5,6 +5,8 @@ namespace App\Services\Admin;
 use App\Models\CropSeason;
 use App\Models\Farm;
 use App\Models\Harvest;
+use App\Models\IrrigationType;
+use App\Models\SoilType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -36,6 +38,8 @@ class AdminAgricultureService
     $farmsQuery = Farm::query()
         ->with([
             'farmer',
+            'soilType',
+            'irrigationType',
             'province',
             'regency',
             'district',
@@ -66,7 +70,10 @@ class AdminAgricultureService
             });
         })
         ->when($irrigation !== '', function (Builder $query) use ($irrigation): void {
-            $query->where('irrigation_type', $irrigation);
+            $query->where(function (Builder $iq) use ($irrigation): void {
+                $iq->where('irrigation_type', $irrigation)
+                    ->orWhere('irrigation_type_id', $irrigation);
+            });
         });
 
     $cropSeasonService = app(\App\Services\Agriculture\CropSeasonService::class);
@@ -103,6 +110,10 @@ class AdminAgricultureService
             ->where('role', 'farmer')
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'role']),
+
+        'soilTypes' => SoilType::active()->orderBy('name')->get(),
+
+        'irrigationTypes' => IrrigationType::orderBy('name')->get(),
 
         'filters' => [
             'search' => $search,
@@ -310,6 +321,38 @@ class AdminAgricultureService
             }
         }
 
+        if (!empty($data['soil_type'])) {
+            $st = SoilType::where('code', $data['soil_type'])
+                ->orWhere('id', $data['soil_type'])
+                ->orWhere('name', $data['soil_type'])
+                ->first();
+            if ($st) {
+                $data['soil_type_id'] = $st->id;
+                $data['soil_type'] = $st->code;
+            }
+        } elseif (!empty($data['soil_type_id'])) {
+            $st = SoilType::find($data['soil_type_id']);
+            if ($st) {
+                $data['soil_type'] = $st->code;
+            }
+        }
+
+        if (!empty($data['irrigation_type'])) {
+            $it = IrrigationType::where('code', $data['irrigation_type'])
+                ->orWhere('id', $data['irrigation_type'])
+                ->orWhere('name', $data['irrigation_type'])
+                ->first();
+            if ($it) {
+                $data['irrigation_type_id'] = $it->id;
+                $data['irrigation_type'] = $it->code;
+            }
+        } elseif (!empty($data['irrigation_type_id'])) {
+            $it = IrrigationType::find($data['irrigation_type_id']);
+            if ($it) {
+                $data['irrigation_type'] = $it->code;
+            }
+        }
+
         $farm = Farm::query()->create($data);
 
         app(\App\Services\Agriculture\CropSeasonService::class)
@@ -343,6 +386,43 @@ class AdminAgricultureService
     ): bool {
         if (isset($data['boundary_coordinates']) && is_string($data['boundary_coordinates'])) {
             $data['boundary_coordinates'] = json_decode($data['boundary_coordinates'], true);
+        }
+
+        if (array_key_exists('soil_type', $data) || array_key_exists('soil_type_id', $data)) {
+            if (!empty($data['soil_type'])) {
+                $st = SoilType::where('code', $data['soil_type'])
+                    ->orWhere('id', $data['soil_type'])
+                    ->orWhere('name', $data['soil_type'])
+                    ->first();
+                if ($st) {
+                    $data['soil_type_id'] = $st->id;
+                    $data['soil_type'] = $st->code;
+                }
+            } elseif (!empty($data['soil_type_id'])) {
+                $st = SoilType::find($data['soil_type_id']);
+                if ($st) {
+                    $data['soil_type'] = $st->code;
+                }
+            } else {
+                $data['soil_type_id'] = null;
+                $data['soil_type'] = null;
+            }
+        }
+
+        if (!empty($data['irrigation_type'])) {
+            $it = IrrigationType::where('code', $data['irrigation_type'])
+                ->orWhere('id', $data['irrigation_type'])
+                ->orWhere('name', $data['irrigation_type'])
+                ->first();
+            if ($it) {
+                $data['irrigation_type_id'] = $it->id;
+                $data['irrigation_type'] = $it->code;
+            }
+        } elseif (!empty($data['irrigation_type_id'])) {
+            $it = IrrigationType::find($data['irrigation_type_id']);
+            if ($it) {
+                $data['irrigation_type'] = $it->code;
+            }
         }
 
         $oldValues = $farm->toArray();

@@ -31,6 +31,11 @@ class PuGeoApiIntegrationTest extends TestCase
         $this->farmer = User::factory()->create(['role' => 'farmer', 'status' => 'active']);
         $this->farmer->assignRole('farmer');
 
+        $provJabar = \App\Models\Province::firstOrCreate(['name' => 'Jawa Barat'], ['code' => '32']);
+        $regIndramayu = \App\Models\Regency::firstOrCreate(['name' => 'Kabupaten Indramayu'], ['province_id' => $provJabar->id, 'code' => '3212']);
+        $distSindang = \App\Models\District::firstOrCreate(['name' => 'Sindang'], ['regency_id' => $regIndramayu->id, 'code' => '3212010']);
+        $villDersan = \App\Models\Village::firstOrCreate(['name' => 'Dersan'], ['district_id' => $distSindang->id, 'code' => '3212010001']);
+
         // Farm di Indramayu (-6.3266, 108.3200)
         $this->indramayuFarm = Farm::create([
             'farmer_user_id' => $this->farmer->id,
@@ -39,11 +44,16 @@ class PuGeoApiIntegrationTest extends TestCase
             'longitude' => 108.3200,
             'area_ha' => 1.75,
             'irrigation_type' => 'technical',
-            'province' => 'Jawa Barat',
-            'regency' => 'Kabupaten Indramayu',
-            'district' => 'Sindang',
-            'village' => 'Dersan',
+            'province_id' => $provJabar->id,
+            'regency_id' => $regIndramayu->id,
+            'district_id' => $distSindang->id,
+            'village_id' => $villDersan->id,
         ]);
+
+        $provSulsel = \App\Models\Province::firstOrCreate(['name' => 'Sulawesi Selatan'], ['code' => '73']);
+        $regSidrap = \App\Models\Regency::firstOrCreate(['name' => 'Kabupaten Sidenreng Rappang'], ['province_id' => $provSulsel->id, 'code' => '7314']);
+        $distMaritengngae = \App\Models\District::firstOrCreate(['name' => 'Maritengngae'], ['regency_id' => $regSidrap->id, 'code' => '7314010']);
+        $villPangkajene = \App\Models\Village::firstOrCreate(['name' => 'Pangkajene'], ['district_id' => $distMaritengngae->id, 'code' => '7314010001']);
 
         // Farm di Sidrap, Sulawesi Selatan (-3.9268, 119.7972)
         $this->sidrapFarm = Farm::create([
@@ -53,10 +63,10 @@ class PuGeoApiIntegrationTest extends TestCase
             'longitude' => 119.7972,
             'area_ha' => 2.50,
             'irrigation_type' => 'technical',
-            'province' => 'Sulawesi Selatan',
-            'regency' => 'Kabupaten Sidenreng Rappang',
-            'district' => 'Maritengngae',
-            'village' => 'Pangkajene',
+            'province_id' => $provSulsel->id,
+            'regency_id' => $regSidrap->id,
+            'district_id' => $distMaritengngae->id,
+            'village_id' => $villPangkajene->id,
         ]);
 
         Config::set('services.pu_geoapi.base_url', 'https://sigi.pu.go.id/geoapi/api/v1');

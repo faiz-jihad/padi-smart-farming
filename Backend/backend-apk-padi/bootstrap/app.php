@@ -36,11 +36,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
         $exceptions->render(function (ValidationException $exception, Request $request) {
-            if (! $request->is('api/*')) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -52,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (AuthenticationException $exception, Request $request) {
-            if (! $request->is('api/*')) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 

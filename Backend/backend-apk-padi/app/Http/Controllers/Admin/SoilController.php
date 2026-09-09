@@ -4,25 +4,26 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSoilRequest;
+use App\Http\Requests\Admin\StoreSoilTypeRequest;
 use App\Models\Farm;
 use App\Models\IrrigationSchedule;
 use App\Models\SoilDetection;
+use App\Services\Admin\AdminSoilService;
+use App\Models\SoilType;
 use App\Services\Admin\AdminAuditLogger;
 use App\Services\Admin\AdminNotificationService;
-use App\Services\Admin\AdminSoilService;
 use App\Services\Soil\SoilDetectionService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SoilController extends Controller
 {
     public function __construct(
-        private AdminSoilService $adminSoilService,
-        private SoilDetectionService $soilDetectionService,
-        private AdminAuditLogger $auditLogger,
-        private AdminNotificationService $notificationService
+        private AdminSoilService $adminSoilService
     ) {}
 
     /**
@@ -39,8 +40,60 @@ class SoilController extends Controller
     public function create(): View
     {
         return view('admin.soil.create', [
-            'farms' => Farm::with('farmer')->orderBy('name')->get(),
+            'farms' => Farm::with(['farmer', 'soilType'])->orderBy('name')->get(),
+            'soilTypes' => SoilType::active()->orderBy('name')->get(),
         ]);
+    }
+
+    /**
+     * Get list of active soil types as JSON
+     */
+    public function getSoilTypes(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => SoilType::active()->orderBy('name')->get(),
+        ]);
+    }
+
+    /**
+     * Store a new master soil type via AJAX
+     */
+    public function storeSoilType(StoreSoilTypeRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+
+            $name = trim($validated['name']);
+            $code = ! empty($validated['code'])
+                ? Str::slug($validated['code'], '_')
+                : Str::slug($name, '_');
+
+            if (SoilType::where('code', $code)->exists() && empty($validated['code'])) {
+                $code .= '_' . Str::lower(Str::random(4));
+            }
+
+            $soilType = SoilType::create([
+                'name' => $name,
+                'code' => $code,
+                'description' => $validated['description'] ?? null,
+                'is_active' => $validated['is_active'] ?? true,
+                'created_by' => auth()->id(),
+            ]);
+
+            $this->auditLogger->write('admin_soil_type_created', $soilType, null, $soilType->toArray(), $request);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Jenis tanah '{$soilType->name}' berhasil ditambahkan ke master data.",
+                'data' => $soilType,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan jenis tanah: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -49,34 +102,11 @@ class SoilController extends Controller
     public function store(StoreSoilRequest $request): RedirectResponse
     {
         try {
-            $soil = $this->soilDetectionService->analyzeAndCreate(
+            $soil = $this->adminSoilService->createSoilDetection(
                 $request->validated(),
-                auth()->id()
+                auth()->id(),
+                $request
             );
-
-            $soil->load('farm.farmer');
-
-            // Audit Log
-            $this->auditLogger->write('admin_soil_created', $soil, null, $soil->toArray(), $request);
-
-            // System Notification to Admins
-            $this->notificationService->notifyAdmins(
-                'Analisis Tanah Selesai',
-                "Sampel {$soil->sample_code} pada lahan {$soil->farm->name} selesai diuji. Skor: {$soil->soil_health_score}/100 ({$soil->soil_status}).",
-                'soil',
-                ['id' => $soil->id, 'sample_code' => $soil->sample_code]
-            );
-
-            // Notification to the farm owner (Farmer)
-            if ($soil->farm?->farmer_user_id) {
-                $this->notificationService->notifyUser(
-                    $soil->farm->farmer_user_id,
-                    'Hasil Uji Tanah Lahan Anda Telah Terbit',
-                    "Hasil pengujian tanah {$soil->sample_code} di {$soil->farm->name} telah keluar dengan Skor Kesehatan {$soil->soil_health_score}/100. Rekomendasi pemupukan & irigasi telah tersedia.",
-                    'crop_alert',
-                    ['soil_id' => $soil->id, 'url' => '/farms']
-                );
-            }
 
             return redirect()
                 ->route('admin.soil.show', $soil)
@@ -101,27 +131,7 @@ class SoilController extends Controller
      */
     public function downloadReport(SoilDetection $soil)
     {
-        $soil->load([
-            'farm.farmer',
-            'creator',
-        ]);
-
-        $data = $this->adminSoilService->showData($soil);
-
-        $irrigation = $this->soilDetectionService->calculateIrrigationSchedule(
-            (float) $soil->moisture_percentage,
-            $soil->soil_temp_celsius
-                ? (float) $soil->soil_temp_celsius
-                : null
-        );
-
-        $data['irrigation'] = $irrigation;
-
-        $pdf = Pdf::loadView('admin.soil.report-pdf', $data);
-
-        return $pdf->download(
-            'Laporan-Tanah-' . $soil->sample_code . '.pdf'
-        );
+        return $this->adminSoilService->generateReportPdf($soil);
     }
 
     /**
@@ -131,18 +141,7 @@ class SoilController extends Controller
     {
         try {
             $code = $soil->sample_code;
-            $oldValues = $soil->toArray();
-            $detectionId = $soil->id;
-
-            $this->adminSoilService->deleteSoilDetection($soil, auth()->id());
-
-            // Audit Log & Notification
-            $this->auditLogger->write('admin_soil_deleted', SoilDetection::class, $oldValues, null, $request, $detectionId);
-            $this->notificationService->notifyAdmins(
-                'Data Tanah Dihapus',
-                "Sampel tanah {$code} telah dihapus dari sistem.",
-                'soil'
-            );
+            $this->adminSoilService->deleteSoilDetection($soil, auth()->id(), $request);
 
             return redirect()
                 ->route('admin.soil.index')
@@ -185,41 +184,10 @@ class SoilController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $schedule = IrrigationSchedule::create([
-            'farm_id' => $validated['farm_id'],
-            'schedule_date' => $validated['schedule_date'],
-            'start_time' => $validated['start_time'] ?? null,
-            'end_time' => $validated['end_time'] ?? null,
-            'status' => 'scheduled',
-            'source' => $validated['source'],
-            'officer_name' => $validated['officer_name'] ?? null,
-            'irrigation_block' => $validated['irrigation_block'] ?? null,
-            'water_source' => $validated['water_source'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $schedule->load('farm.farmer');
-
-        // Audit & Notifications
-        $this->auditLogger->write('admin_irrigation_created', $schedule, null, $schedule->toArray(), $request);
-        $this->notificationService->notifyAdmins(
-            'Jadwal Irigasi Dibuat',
-            "Jadwal irigasi baru tanggal {$schedule->schedule_date} di lahan {$schedule->farm->name} telah dijadwalkan.",
-            'system'
-        );
-
-        if ($schedule->farm?->farmer_user_id) {
-            $this->notificationService->notifyUser(
-                $schedule->farm->farmer_user_id,
-                'Jadwal Irigasi Lahan Ditetapkan',
-                "Penyuluh telah menjadwalkan irigasi untuk {$schedule->farm->name} pada {$schedule->schedule_date} ({$schedule->start_time} - {$schedule->end_time}).",
-                'crop_alert',
-                ['url' => '/farms']
-            );
-        }
+        $this->adminSoilService->storeIrrigationSchedule($validated, $request);
 
         $soilIdentifier = $request->input('soil_detection_id') ?? $request->input('soil_id');
-        $soil = $this->resolveSoilDetection($soilIdentifier);
+        $soil = $this->adminSoilService->resolveSoilDetection($soilIdentifier);
 
         $redirect = $soil
             ? redirect()->route('admin.soil.show', $soil)
@@ -247,20 +215,10 @@ class SoilController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $oldValues = $schedule->toArray();
-        $schedule->update($validated);
-        $schedule->load('farm.farmer');
-
-        // Audit & Notification
-        $this->auditLogger->write('admin_irrigation_updated', $schedule, $oldValues, $schedule->toArray(), $request);
-        $this->notificationService->notifyAdmins(
-            'Jadwal Irigasi Diperbarui',
-            "Jadwal irigasi {$schedule->farm->name} diubah menjadi status: {$schedule->status}.",
-            'system'
-        );
+        $this->adminSoilService->updateIrrigationSchedule($schedule, $validated, $request);
 
         $soilIdentifier = $request->input('soil_detection_id') ?? $request->input('soil_id');
-        $soil = $this->resolveSoilDetection($soilIdentifier);
+        $soil = $this->adminSoilService->resolveSoilDetection($soilIdentifier);
 
         $redirect = $soil
             ? redirect()->route('admin.soil.show', $soil)
@@ -274,38 +232,15 @@ class SoilController extends Controller
      */
     public function destroyIrrigationSchedule(Request $request, IrrigationSchedule $schedule): RedirectResponse
     {
-        $oldValues = $schedule->toArray();
-        $scheduleId = $schedule->id;
-        $schedule->delete();
-
-        $this->auditLogger->write('admin_irrigation_deleted', IrrigationSchedule::class, $oldValues, null, $request, $scheduleId);
-        $this->notificationService->notifyAdmins('Jadwal Irigasi Dihapus', 'Jadwal irigasi telah dihapus dari sistem.', 'system');
+        $this->adminSoilService->deleteIrrigationSchedule($schedule, $request);
 
         $soilIdentifier = $request->input('soil_detection_id') ?? $request->input('soil_id');
-        $soil = $this->resolveSoilDetection($soilIdentifier);
+        $soil = $this->adminSoilService->resolveSoilDetection($soilIdentifier);
 
         $redirect = $soil
             ? redirect()->route('admin.soil.show', $soil)
             : back();
 
         return $redirect->with('status', 'Jadwal irigasi lapangan berhasil dihapus.');
-    }
-
-    /**
-     * Resolve SoilDetection model by sample_code or numeric ID
-     */
-    protected function resolveSoilDetection(mixed $identifier): ?SoilDetection
-    {
-        if (empty($identifier)) {
-            return null;
-        }
-
-        if ($identifier instanceof SoilDetection) {
-            return $identifier;
-        }
-
-        return SoilDetection::where('sample_code', $identifier)
-            ->orWhere('id', is_numeric($identifier) ? (int) $identifier : 0)
-            ->first();
     }
 }

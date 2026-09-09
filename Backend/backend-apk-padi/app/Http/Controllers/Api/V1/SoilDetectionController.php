@@ -65,32 +65,19 @@ class SoilDetectionController extends Controller
      */
     public function show(Request $request, string $soilDetection): JsonResponse
     {
-        $model = SoilDetection::where('sample_code', $soilDetection)
-            ->orWhere('id', $soilDetection)
-            ->firstOrFail();
-
+        $model = $this->soilDetectionService->findDetection($soilDetection);
         $model->load('farm.farmer');
         $this->authorizeFarm($request->user(), $model->farm);
 
-        $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule(
-            (float) $model->moisture_percentage,
-            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null,
-            $model->farm_id
-        );
-
-        $comparisonResult = null;
-        if ($model->farm) {
-            $comparisonService = app(\App\Services\Irrigation\IrrigationComparisonService::class);
-            $comparisonResult = $comparisonService->compareForFarm($model->farm, $model);
-        }
+        $irrigationData = $this->soilDetectionService->getIrrigationWithComparison($model);
 
         return response()->json([
             'success' => true,
             'data' => $model,
-            'irrigation_schedule' => $irrigationSchedule,
-            'field_schedule' => $comparisonResult['field_schedule'] ?? null,
-            'official_context' => $comparisonResult['official_context'] ?? null,
-            'comparison' => $comparisonResult['comparison'] ?? null,
+            'irrigation_schedule' => $irrigationData['irrigation_schedule'],
+            'field_schedule' => $irrigationData['field_schedule'],
+            'official_context' => $irrigationData['official_context'],
+            'comparison' => $irrigationData['comparison'],
         ]);
     }
 
@@ -106,31 +93,13 @@ class SoilDetectionController extends Controller
         $farm = \App\Models\Farm::findOrFail($validated['farm_id']);
         $this->authorizeFarm($request->user(), $farm);
 
-        $weatherService = app(\App\Services\Weather\WeatherService::class);
-
-        $agroSoil = $weatherService->getSoilData($farm->latitude ?? -7.25, $farm->longitude ?? 112.75);
-
-        $moisture = $agroSoil['data']['moisture_percentage'] ?? 52.0;
-        $soilTemp = $agroSoil['data']['soil_temp_celsius'] ?? 26.5;
-
-        $irrigationSchedule = $this->soilDetectionService->calculateIrrigationSchedule($moisture, $soilTemp);
+        $agroData = $this->soilDetectionService->fetchAgroMonitoringSoilData($farm);
 
         return response()->json([
             'success' => true,
             'source' => 'AgroMonitoring API',
-            'data' => [
-                'farm_id' => $farm->id,
-                'farm_name' => $farm->name,
-                'ph_level' => 6.5,
-                'nitrogen_ppm' => 120,
-                'phosphorus_ppm' => 25,
-                'potassium_ppm' => 150,
-                'moisture_percentage' => $moisture,
-                'organic_matter_percentage' => 2.5,
-                'soil_temp_celsius' => $soilTemp,
-                'soil_type' => 'loam',
-            ],
-            'irrigation_schedule' => $irrigationSchedule,
+            'data' => $agroData['data'],
+            'irrigation_schedule' => $agroData['irrigation_schedule'],
         ]);
     }
 
@@ -139,34 +108,21 @@ class SoilDetectionController extends Controller
      */
     public function irrigationSchedule(Request $request, string $soilDetection): JsonResponse
     {
-        $model = SoilDetection::where('sample_code', $soilDetection)
-            ->orWhere('id', $soilDetection)
-            ->firstOrFail();
-
+        $model = $this->soilDetectionService->findDetection($soilDetection);
         $model->loadMissing('farm');
         $this->authorizeFarm($request->user(), $model->farm);
 
-        $schedule = $this->soilDetectionService->calculateIrrigationSchedule(
-            (float) $model->moisture_percentage,
-            $model->soil_temp_celsius ? (float) $model->soil_temp_celsius : null,
-            $model->farm_id
-        );
-
-        $comparisonResult = null;
-        if ($model->farm) {
-            $comparisonService = app(\App\Services\Irrigation\IrrigationComparisonService::class);
-            $comparisonResult = $comparisonService->compareForFarm($model->farm, $model);
-        }
+        $irrigationData = $this->soilDetectionService->getIrrigationWithComparison($model);
 
         return response()->json([
             'success' => true,
             'message' => 'Jadwal irigasi padi berhasil dihitung',
             'sample_code' => $model->sample_code,
             'farm' => $model->farm?->name,
-            'irrigation_schedule' => $schedule,
-            'field_schedule' => $comparisonResult['field_schedule'] ?? null,
-            'official_context' => $comparisonResult['official_context'] ?? null,
-            'comparison' => $comparisonResult['comparison'] ?? null,
+            'irrigation_schedule' => $irrigationData['irrigation_schedule'],
+            'field_schedule' => $irrigationData['field_schedule'],
+            'official_context' => $irrigationData['official_context'],
+            'comparison' => $irrigationData['comparison'],
         ]);
     }
 

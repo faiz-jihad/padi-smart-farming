@@ -6,20 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Farm\StoreFarmRequest;
 use App\Http\Requests\Api\V1\Farm\UpdateFarmRequest;
 use App\Http\Resources\FarmResource;
-use App\Models\AlertSubscription;
-use App\Models\CropSeason;
-use App\Models\DiseaseScan;
 use App\Models\Farm;
-use App\Models\MarketListing;
-use App\Services\Geography\LocationService;
+use App\Services\FarmService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class FarmController extends Controller
 {
     public function __construct(
-        private LocationService $locationService
+        private FarmService $farmService
     ) {}
 
     /**
@@ -27,13 +22,14 @@ class FarmController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $farms = $this->farmService->getFarms($request->user());
         $user = $request->user();
 
         $farms = Farm::query()
             ->when(! $user->hasRole('admin'), function ($query) use ($user): void {
                 $query->where('farmer_user_id', $user->id);
             })
-            ->with(['province', 'regency', 'district', 'village'])
+            ->with(['soilType', 'irrigationType', 'province', 'regency', 'district', 'village'])
             ->latest('id')
             ->get();
 
@@ -48,36 +44,70 @@ class FarmController extends Controller
      * Store a new farm with auto-resolving region from GPS if not provided
      */
     public function store(StoreFarmRequest $request): JsonResponse
-    {
-        $user = $request->user();
-        $data = $request->validated();
+{
+    $data = $request->validated();
 
-        $data['farmer_user_id'] = $user->id;
+    /*
+     * Backward compatibility:
+     * Accept soil type by ID, code, or name.
+     */
+    if (!empty($data['soil_type'])) {
+        $soilType = \App\Models\SoilType::query()
+            ->where('code', $data['soil_type'])
+            ->orWhere('name', $data['soil_type'])
+            ->orWhere('id', $data['soil_type'])
+            ->first();
 
-        // Auto-resolve region if not explicitly provided
-        if (empty($data['district_id']) && empty($data['village_id'])) {
-            $resolved = $this->locationService->resolveCoordinates(
-                (float) $data['latitude'],
-                (float) $data['longitude']
-            );
-
-            if ($resolved) {
-                $data['province_id'] = $resolved['province']['id'] ?? $data['province_id'] ?? null;
-                $data['regency_id']  = $resolved['regency']['id'] ?? $data['regency_id'] ?? null;
-                $data['district_id'] = $resolved['district']['id'] ?? null;
-                $data['village_id']  = $resolved['village']['id'] ?? null;
-            }
+        if ($soilType) {
+            $data['soil_type_id'] = $soilType->id;
+            $data['soil_type'] = $soilType->code;
         }
-
-        $farm = Farm::create($data);
-        $farm->load(['province', 'regency', 'district', 'village']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Lahan berhasil didaftarkan',
-            'data'    => new FarmResource($farm),
-        ], 201);
+    } elseif (!empty($data['soil_type_id'])) {
+        $soilType = \App\Models\SoilType::find($data['soil_type_id']);
+        if ($soilType) {
+            $data['soil_type'] = $soilType->code;
+        }
     }
+
+    /*
+     * Backward compatibility:
+     * Accept irrigation type by ID, code, or name.
+     * The database relation uses irrigation_type_id.
+     */
+    if (!empty($data['irrigation_type'])) {
+        $irrigationType = \App\Models\IrrigationType::query()
+            ->where('code', $data['irrigation_type'])
+            ->orWhere('name', $data['irrigation_type'])
+            ->orWhere('id', $data['irrigation_type'])
+            ->first();
+
+        if ($irrigationType) {
+            $data['irrigation_type_id'] = $irrigationType->id;
+            $data['irrigation_type'] = $irrigationType->code;
+        }
+    } elseif (!empty($data['irrigation_type_id'])) {
+        $irrigationType = \App\Models\IrrigationType::find(
+            $data['irrigation_type_id']
+        );
+
+        if ($irrigationType) {
+            $data['irrigation_type'] = $irrigationType->code;
+        }
+    }
+
+    $farm = $this->farmService->createFarm(
+        $request->user(),
+        $data
+    );
+
+    $farm->load(['soilType', 'irrigationType']);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lahan berhasil ditambahkan.',
+        'data' => new FarmResource($farm),
+    ], 201);
+}
 
     /**
      * Show farm detail
@@ -86,7 +116,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        $farm->load(['province', 'regency', 'district', 'village']);
+        $farm->load(['soilType', 'irrigationType', 'province', 'regency', 'district', 'village']);
 
         return response()->json([
             'success' => true,
@@ -98,33 +128,74 @@ class FarmController extends Controller
     /**
      * Update farm
      */
-    public function update(UpdateFarmRequest $request, Farm $farm): JsonResponse
-    {
+    public function update(
+        UpdateFarmRequest $request,
+        Farm $farm
+    ): JsonResponse {
         $this->authorizeFarm($request->user(), $farm);
 
         $data = $request->validated();
 
-        // If coordinates changed and region not explicitly set, auto-resolve again
-        if ((isset($data['latitude']) || isset($data['longitude'])) && empty($data['district_id'])) {
-            $lat = $data['latitude'] ?? $farm->latitude;
-            $lng = $data['longitude'] ?? $farm->longitude;
+        /*
+        * Backward compatibility:
+        * Accept soil type by ID, code, or name.
+        */
+        if (array_key_exists('soil_type', $data) || array_key_exists('soil_type_id', $data)) {
+            if (!empty($data['soil_type'])) {
+                $soilType = \App\Models\SoilType::query()
+                    ->where('code', $data['soil_type'])
+                    ->orWhere('name', $data['soil_type'])
+                    ->orWhere('id', $data['soil_type'])
+                    ->first();
 
-            $resolved = $this->locationService->resolveCoordinates((float) $lat, (float) $lng);
-            if ($resolved) {
-                $data['province_id'] = $resolved['province']['id'] ?? $farm->province_id;
-                $data['regency_id']  = $resolved['regency']['id'] ?? $farm->regency_id;
-                $data['district_id'] = $resolved['district']['id'] ?? null;
-                $data['village_id']  = $resolved['village']['id'] ?? null;
+                if ($soilType) {
+                    $data['soil_type_id'] = $soilType->id;
+                    $data['soil_type'] = $soilType->code;
+                }
+            } elseif (!empty($data['soil_type_id'])) {
+                $soilType = \App\Models\SoilType::find($data['soil_type_id']);
+                if ($soilType) {
+                    $data['soil_type'] = $soilType->code;
+                }
+            } else {
+                $data['soil_type_id'] = null;
+                $data['soil_type'] = null;
             }
         }
 
-        $farm->update($data);
-        $farm->load(['province', 'regency', 'district', 'village']);
+        /*
+        * Backward compatibility:
+        * Accept irrigation type by ID, code, or name.
+        */
+        if (!empty($data['irrigation_type'])) {
+            $irrigationType = \App\Models\IrrigationType::query()
+                ->where('code', $data['irrigation_type'])
+                ->orWhere('name', $data['irrigation_type'])
+                ->orWhere('id', $data['irrigation_type'])
+                ->first();
+
+            if ($irrigationType) {
+                $data['irrigation_type_id'] = $irrigationType->id;
+                $data['irrigation_type'] = $irrigationType->code;
+            }
+        } elseif (!empty($data['irrigation_type_id'])) {
+            $irrigationType = \App\Models\IrrigationType::find(
+                $data['irrigation_type_id']
+            );
+
+            if ($irrigationType) {
+                $data['irrigation_type'] = $irrigationType->code;
+            }
+        }
+
+        $farm = $this->farmService->updateFarm($farm, $data);
+
+        $farm->load(['soilType', 'irrigationType']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Data lahan berhasil diperbarui',
-            'data'    => new FarmResource($farm),
+            'message' => 'Lahan berhasil diperbarui.',
+            'data' => new FarmResource($farm),
         ]);
     }
 
@@ -135,18 +206,7 @@ class FarmController extends Controller
     {
         $this->authorizeFarm($request->user(), $farm);
 
-        DB::transaction(function () use ($farm) {
-            // Bersihkan atau lepaskan relasi terkait agar tidak melanggar foreign key constraint
-            $farm->irrigationSchedules()->delete();
-            $farm->soilDetections()->delete();
-            $farm->weatherSnapshots()->delete();
-            AlertSubscription::where('farm_id', $farm->id)->delete();
-            $farm->cropSeasons()->delete();
-            DiseaseScan::where('farm_id', $farm->id)->update(['farm_id' => null]);
-            MarketListing::where('farm_id', $farm->id)->update(['farm_id' => null]);
-
-            $farm->delete();
-        });
+        $this->farmService->deleteFarm($farm);
 
         return response()->json([
             'success' => true,

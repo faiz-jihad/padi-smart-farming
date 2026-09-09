@@ -14,7 +14,9 @@ use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\PlantingCalendarController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\RegionController;
+use App\Http\Controllers\Api\V1\IrrigationTypeController;
 use App\Http\Controllers\Api\V1\SoilDetectionController;
+use App\Http\Controllers\Api\V1\SoilTypeController;
 use App\Http\Controllers\Api\V1\WeatherController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\CommunityReportController;
@@ -130,6 +132,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::delete('harvests/{harvest}', [HarvestController::class, 'destroy']);
 
         Route::get('rice-varieties', [RiceVarietyController::class, 'index']);
+        Route::get('soil-types', [SoilTypeController::class, 'index']);
+        Route::get('irrigation-types', [IrrigationTypeController::class, 'index']);
         Route::get('weather-snapshots', [WeatherSnapshotController::class, 'index']);
         Route::get('fertilizer-rules', [FertilizerRuleController::class, 'index']);
 
