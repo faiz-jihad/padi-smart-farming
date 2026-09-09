@@ -470,7 +470,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
     try {
       try {
-        final position = await const LocationService().getCurrentPosition();
+        final position = await const LocationService()
+            .getCurrentPosition()
+            .timeout(const Duration(seconds: 2), onTimeout: () => null);
         if (position != null) {
           lat = position.latitude;
           lng = position.longitude;
@@ -578,71 +580,77 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   }
 
   bool _looksLikePaddyLeaf(Uint8List bytes) {
-    final decoded = image_lib.decodeImage(bytes);
-    if (decoded == null) return false;
+    try {
+      final decoded = image_lib.decodeImage(bytes);
+      if (decoded == null) return true;
 
-    final width = decoded.width;
-    final height = decoded.height;
-    if (width < 80 || height < 80) return false;
+      final width = decoded.width;
+      final height = decoded.height;
+      if (width < 60 || height < 60) return true;
 
-    final stepX = math.max(1, width ~/ 120);
-    final stepY = math.max(1, height ~/ 120);
-    var total = 0;
-    var greenPixels = 0;
-    var chloroticPixels = 0;
-    var achromaticPixels = 0;
+      final stepX = math.max(1, width ~/ 100);
+      final stepY = math.max(1, height ~/ 100);
+      var total = 0;
+      var greenPixels = 0;
+      var chloroticPixels = 0;
+      var necroticPixels = 0;
+      var achromaticPixels = 0;
 
-    for (var y = 0; y < height; y += stepY) {
-      for (var x = 0; x < width; x += stepX) {
-        final pixel = decoded.getPixel(x, y);
-        final r = pixel.r.toDouble();
-        final g = pixel.g.toDouble();
-        final b = pixel.b.toDouble();
-        final maxChannel = math.max(r, math.max(g, b));
-        final minChannel = math.min(r, math.min(g, b));
-        final chroma = maxChannel - minChannel;
-        final saturation = maxChannel <= 0 ? 0.0 : chroma / maxChannel;
-        final hue = _rgbHueDegrees(r, g, b);
-        final exg = (2 * g) - r - b;
+      for (var y = 0; y < height; y += stepY) {
+        for (var x = 0; x < width; x += stepX) {
+          final pixel = decoded.getPixel(x, y);
+          final r = pixel.r.toDouble();
+          final g = pixel.g.toDouble();
+          final b = pixel.b.toDouble();
+          final maxChannel = math.max(r, math.max(g, b));
+          final minChannel = math.min(r, math.min(g, b));
+          final chroma = maxChannel - minChannel;
+          final saturation = maxChannel <= 0 ? 0.0 : chroma / maxChannel;
+          final hue = _rgbHueDegrees(r, g, b);
+          final exg = (2 * g) - r - b;
 
-        final isGreenLeaf =
-            hue >= 56 &&
-            hue <= 176 &&
-            saturation >= 0.14 &&
-            maxChannel >= 30 &&
-            maxChannel <= 245 &&
-            exg >= 8 &&
-            g > b * 1.05 &&
-            g > r * 0.95;
-        final isChloroticLeaf =
-            hue >= 24 &&
-            hue < 56 &&
-            saturation >= 0.16 &&
-            maxChannel >= 40 &&
-            maxChannel <= 240 &&
-            r > b * 1.15 &&
-            g > b * 1.05;
+          final isGreenLeaf =
+              hue >= 45 &&
+              hue <= 180 &&
+              saturation >= 0.10 &&
+              maxChannel >= 25 &&
+              maxChannel <= 250 &&
+              g > b * 0.95;
+          final isChloroticLeaf =
+              hue >= 18 &&
+              hue < 56 &&
+              saturation >= 0.12 &&
+              maxChannel >= 35 &&
+              maxChannel <= 245 &&
+              r > b * 1.05 &&
+              g > b * 0.95;
+          final isNecroticLesion =
+              hue >= 5 &&
+              hue < 48 &&
+              maxChannel >= 20 &&
+              maxChannel <= 225 &&
+              r > b * 1.05 &&
+              r >= g * 0.70;
 
-        if (isGreenLeaf) greenPixels++;
-        if (isChloroticLeaf) chloroticPixels++;
-        if (saturation < 0.08) achromaticPixels++;
-        total++;
+          if (isGreenLeaf) greenPixels++;
+          if (isChloroticLeaf) chloroticPixels++;
+          if (isNecroticLesion) necroticPixels++;
+          if (saturation < 0.08) achromaticPixels++;
+          total++;
+        }
       }
+
+      if (total == 0) return true;
+
+      final plantPixels = greenPixels + chloroticPixels + necroticPixels;
+      final plantRatio = plantPixels / total;
+      final achromaticRatio = achromaticPixels / total;
+
+      // Recognize healthy leaves, chlorotic leaves, or diseased leaves with lesions
+      return plantRatio >= 0.04 || (achromaticRatio < 0.88 && plantPixels > 0);
+    } catch (_) {
+      return true;
     }
-
-    if (total == 0) return false;
-
-    final greenRatio = greenPixels / total;
-    final plantRatio = (greenPixels + chloroticPixels) / total;
-    final achromaticRatio = achromaticPixels / total;
-    final greenShare = plantRatio > 0 ? greenRatio / plantRatio : 0.0;
-
-    final hasRealGreen =
-        greenRatio >= 0.06 || (greenRatio >= 0.03 && greenShare >= 0.30);
-    final hasEnoughPlantArea = plantRatio >= 0.15;
-    final notNeutralPoster = !(achromaticRatio > 0.70 && plantRatio < 0.32);
-
-    return hasRealGreen && hasEnoughPlantArea && notNeutralPoster;
   }
 
   double _rgbHueDegrees(double r, double g, double b) {

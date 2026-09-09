@@ -60,6 +60,7 @@ import 'package:padi/core/widgets/app_error_screen.dart';
 
 export 'package:padi/core/providers/app_providers.dart';
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class _ClearSnackBarRouteObserver extends NavigatorObserver {
@@ -86,6 +87,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.read(authControllerProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: auth,
     observers: [_ClearSnackBarRouteObserver()],

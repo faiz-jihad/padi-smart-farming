@@ -75,11 +75,17 @@ class FarmController extends Controller
      * The database relation uses irrigation_type_id.
      */
     if (!empty($data['irrigation_type'])) {
+        $cleanCode = strtolower(trim(str_replace(['irigasi_', 'irigasi-'], '', $data['irrigation_type'])));
         $irrigationType = \App\Models\IrrigationType::query()
             ->where('code', $data['irrigation_type'])
+            ->orWhere('code', $cleanCode)
             ->orWhere('name', $data['irrigation_type'])
             ->orWhere('id', $data['irrigation_type'])
             ->first();
+
+        if (!$irrigationType) {
+            $irrigationType = \App\Models\IrrigationType::first();
+        }
 
         if ($irrigationType) {
             $data['irrigation_type_id'] = $irrigationType->id;

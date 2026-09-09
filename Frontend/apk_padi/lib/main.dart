@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/router/app_router.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
+import 'package:padi/features/notifications/presentation/providers/notifications_provider.dart';
 
 void main() {
   runApp(const ProviderScope(child: PadiApp()));
@@ -14,6 +15,9 @@ class PadiApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Eagerly activate notification engine & Reverb WebSocket globally
+    ref.watch(notificationsProvider);
+
     final router = ref.watch(appRouterProvider);
     final currentLang = ref.watch(languageProvider);
 

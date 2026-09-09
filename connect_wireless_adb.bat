@@ -95,8 +95,10 @@ echo ======================================================================
 echo [BERHASIL!] HP Anda sekarang dapat mengakses API melalui 2 jalur:
 echo  1. Jalur Localhost Reverse : http://127.0.0.1:8000 (Backend)
 echo                             : http://127.0.0.1:8003 (AI Service)
+echo                             : ws://127.0.0.1:8080   (Reverb WebSocket)
 echo  2. Jalur IP Wi-Fi Langsung : http://192.168.1.7:8000 (Backend)
 echo                             : http://192.168.1.7:8003 (AI Service)
+echo                             : ws://192.168.1.7:8080   (Reverb WebSocket)
 echo ======================================================================
 echo.
 echo Silakan buka aplikasi P.A.D.I di HP Anda atau tekan tombol 'r' pada
