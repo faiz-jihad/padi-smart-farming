@@ -9,17 +9,6 @@ class MarketListingResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $imageUrl = $this->image_url;
-
-        if (
-            $imageUrl
-            && ! preg_match('/^https?:\/\//i', $imageUrl)
-        ) {
-            $imageUrl = url(
-                'storage/'.ltrim($imageUrl, '/')
-            );
-        }
-
         return [
             'id' => $this->id,
             'farmer_id' => $this->farmer_id,
@@ -33,7 +22,7 @@ class MarketListingResource extends JsonResource
             'price_per_unit' => (float) ($this->price_per_unit ?? 0),
             'description' => $this->description,
             'sales_link' => $this->sales_link,
-            'image_url' => $imageUrl,
+            'image_url' => $this->formatted_image_url,
             'status' => $this->status ?? 'published',
             'published_at' => $this->published_at ? (is_string($this->published_at) ? $this->published_at : $this->published_at->toIso8601String()) : null,
             'expires_at' => $this->expires_at ? (is_string($this->expires_at) ? $this->expires_at : $this->expires_at->toIso8601String()) : null,

@@ -61,7 +61,7 @@ class MarketplaceController extends Controller
             'price_per_unit' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'sales_link' => 'nullable|url|max:1000',
-            'image_url' => 'nullable|url|max:1000',
+            'image_url' => 'nullable|string|max:1000',
             'status' => 'required|string|in:draft,published,closed,rejected,expired',
         ]);
 
@@ -161,7 +161,7 @@ class MarketplaceController extends Controller
             'price_per_unit' => 'sometimes|numeric|min:0',
             'description' => 'nullable|string',
             'sales_link' => 'nullable|url|max:1000',
-            'image_url' => 'nullable|url|max:1000',
+            'image_url' => 'nullable|string|max:1000',
             'status' => 'required|string|in:draft,published,closed,rejected,expired',
         ]);
 
