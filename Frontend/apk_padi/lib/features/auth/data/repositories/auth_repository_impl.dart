@@ -16,6 +16,10 @@ class AuthRepositoryImpl implements AuthRepository {
     required String accountType,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
+    List<double>? faceDescriptor,
+    List<List<double>>? faceDescriptors,
   }) {
     return _authApiService.register(
       name: name,
@@ -24,17 +28,28 @@ class AuthRepositoryImpl implements AuthRepository {
       accountType: accountType,
       password: password,
       passwordConfirmation: passwordConfirmation,
+      pin: pin,
+      pinConfirmation: pinConfirmation,
+      faceDescriptor: faceDescriptor,
+      faceDescriptors: faceDescriptors,
     );
   }
 
   @override
-  Future<AuthResult> login({
-    required String email,
-    required String password,
+  Future<AuthResult> login({required String email, required String password}) {
+    return _authApiService.login(email: email, password: password);
+  }
+
+  @override
+  Future<AuthResult> faceLogin({
+    String? phone,
+    String? pin,
+    required List<double> faceDescriptor,
   }) {
-    return _authApiService.login(
-      email: email,
-      password: password,
+    return _authApiService.faceLogin(
+      phone: phone,
+      pin: pin,
+      faceDescriptor: faceDescriptor,
     );
   }
 
@@ -44,14 +59,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AppUser> updateProfile({
-    required String name,
-    required String phone,
-  }) {
-    return _authApiService.updateProfile(
-      name: name,
-      phone: phone,
-    );
+  Future<AppUser> updateProfile({required String name, required String phone}) {
+    return _authApiService.updateProfile(name: name, phone: phone);
   }
 
   @override
@@ -73,14 +82,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> verifyResetCode({
-    required String email,
-    required String code,
-  }) {
-    return _authApiService.verifyResetCode(
-      email: email,
-      code: code,
-    );
+  Future<bool> verifyResetCode({required String email, required String code}) {
+    return _authApiService.verifyResetCode(email: email, code: code);
   }
 
   @override
@@ -89,12 +92,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String code,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
   }) {
     return _authApiService.resetPassword(
       email: email,
       code: code,
       password: password,
       passwordConfirmation: passwordConfirmation,
+      pin: pin,
+      pinConfirmation: pinConfirmation,
     );
   }
 

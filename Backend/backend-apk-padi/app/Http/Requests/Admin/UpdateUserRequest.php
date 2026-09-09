@@ -27,6 +27,7 @@ class UpdateUserRequest extends FormRequest
             'role' => ['required', Rule::in(['farmer', 'ppl', 'partner', 'admin'])],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'verification_status' => ['required', Rule::in(['pending', 'verified', 'rejected'])],
+            'reset_face_auth' => ['nullable', 'boolean'],
         ];
     }
 }

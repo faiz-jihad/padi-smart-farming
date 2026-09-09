@@ -48,7 +48,7 @@ class AdminUserService
     }
 
     /**
-     * @param  array{name: string, email: string, phone: string, password?: string|null, role: string, status: string, verification_status: string}  $data
+     * @param  array{name: string, email: string, phone: string, password?: string|null, role: string, status: string, verification_status: string, reset_face_auth?: bool}  $data
      */
     public function update(
         User $target,
@@ -68,6 +68,15 @@ class AdminUserService
             if (empty($data['password'])) {
                 unset($data['password']);
             }
+
+            if (($data['reset_face_auth'] ?? false) === true) {
+                $data['face_descriptor'] = null;
+                $data['face_registered_at'] = null;
+                $data['pin_hash'] = null;
+                $target->tokens()->delete();
+            }
+
+            unset($data['reset_face_auth']);
 
             $target->update($data);
             $target->syncRoles([$this->spatieRole($data['role'])]);

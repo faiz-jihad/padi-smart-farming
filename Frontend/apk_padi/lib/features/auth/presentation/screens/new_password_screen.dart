@@ -19,14 +19,20 @@ class NewPasswordScreen extends ConsumerStatefulWidget {
 class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmationController = TextEditingController();
+  final _pinController = TextEditingController();
+  final _pinConfirmationController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
+  bool _obscurePin = true;
+  bool _obscurePinConfirmation = true;
 
   @override
   void dispose() {
     _passwordController.dispose();
     _confirmationController.dispose();
+    _pinController.dispose();
+    _pinConfirmationController.dispose();
     super.dispose();
   }
 
@@ -40,9 +46,9 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AuthHeader(
-            title: 'Ganti password',
+            title: 'Pulihkan akun',
             subtitle:
-                'Buat password baru untuk mengamankan akun P.A.D.I. kamu.',
+                'Buat password baru. Jika lupa PIN wajah, isi PIN baru juga.',
           ),
           const SizedBox(height: 24),
 
@@ -121,6 +127,81 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
             ),
           ),
 
+          const SizedBox(height: 18),
+
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFBBF7D0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'PIN wajah baru',
+                  style: TextStyle(
+                    color: Color(0xFF052E25),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Boleh dikosongkan kalau PIN lama masih ingat.',
+                  style: TextStyle(
+                    color: Color(0xFF3F6F63),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                PadiTextField(
+                  controller: _pinController,
+                  label: 'PIN 4-6 angka',
+                  keyboardType: TextInputType.number,
+                  obscureText: _obscurePin,
+                  errorText: state.fieldErrors['pin']?.first,
+                  prefixIcon: Icons.pin_rounded,
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscurePin = !_obscurePin;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePin
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                PadiTextField(
+                  controller: _pinConfirmationController,
+                  label: 'Ulangi PIN',
+                  keyboardType: TextInputType.number,
+                  obscureText: _obscurePinConfirmation,
+                  errorText: state.fieldErrors['pin_confirmation']?.first,
+                  prefixIcon: Icons.lock_reset_rounded,
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscurePinConfirmation = !_obscurePinConfirmation;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePinConfirmation
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 22),
 
           FilledButton(
@@ -133,7 +214,7 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('Simpan password'),
+                : const Text('Simpan Pemulihan'),
           ),
 
           const SizedBox(height: 14),
@@ -148,6 +229,33 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    final pin = _pinController.text.trim();
+    final pinConfirmation = _pinConfirmationController.text.trim();
+
+    if (pin.isNotEmpty || pinConfirmation.isNotEmpty) {
+      if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PIN harus 4 sampai 6 angka.'),
+            backgroundColor: Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (pin != pinConfirmation) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Konfirmasi PIN tidak cocok.'),
+            backgroundColor: Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+    }
+
     final success = await ref
         .read(authControllerProvider)
         .resetPassword(
@@ -155,6 +263,8 @@ class _NewPasswordScreenState extends ConsumerState<NewPasswordScreen> {
           code: widget.code,
           password: _passwordController.text,
           passwordConfirmation: _confirmationController.text,
+          pin: pin.isEmpty ? null : pin,
+          pinConfirmation: pinConfirmation.isEmpty ? null : pinConfirmation,
         );
 
     if (!mounted || !success) {

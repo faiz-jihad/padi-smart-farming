@@ -806,12 +806,17 @@ class _UserCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final faceStatus = user.faceAuthEnabled
+        ? 'Wajah aktif (${user.facePoseCount} pose)'
+        : 'Wajah belum aktif';
+
     return _InfoCard(
       title: user.name,
       subtitle: '${user.email}${user.phone == null ? '' : ' • ${user.phone}'}',
-      trailing: '${user.roleLabel}\n${user.statusLabel}',
+      trailing: '${user.roleLabel}\n${user.statusLabel}\n$faceStatus',
       icon: Icons.person_rounded,
       actions: [
+        _FaceAuthBadge(user: user),
         _OptionMenu(
           label: 'Role',
           icon: Icons.badge_rounded,
@@ -826,7 +831,69 @@ class _UserCard extends ConsumerWidget {
           onSelected: (status) =>
               _updateUser(context, ref, user, role: user.role, status: status),
         ),
+        if (user.faceAuthEnabled)
+          OutlinedButton.icon(
+            onPressed: () => _resetUserFaceAuth(context, ref, user),
+            icon: const Icon(Icons.no_accounts_rounded, size: 18),
+            label: const Text('Reset Wajah/PIN'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF047857),
+              side: const BorderSide(color: Color(0xFF86EFAC)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _FaceAuthBadge extends StatelessWidget {
+  const _FaceAuthBadge({required this.user});
+
+  final AdminUserPreview user;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = user.faceAuthEnabled;
+    final label = enabled
+        ? 'Wajah aktif - ${user.facePoseCount} pose'
+        : 'Wajah belum didaftarkan';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: enabled ? const Color(0xFFE8F8F0) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: enabled ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            enabled
+                ? Icons.face_retouching_natural_rounded
+                : Icons.face_retouching_off_rounded,
+            size: 18,
+            color: enabled ? const Color(0xFF047857) : padiMuted,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              user.faceRegisteredAt == null ? label : '$label - terdaftar',
+              style: TextStyle(
+                color: enabled ? const Color(0xFF047857) : padiMuted,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1201,6 +1268,46 @@ Future<void> _updateUser(
     () => ref
         .read(adminApiServiceProvider)
         .updateUser(id: user.id, role: role, status: status),
+    onSuccess: () {
+      ref.invalidate(adminUsersProvider);
+      ref.invalidate(adminOverviewProvider);
+      ref.invalidate(adminAuditLogsProvider);
+    },
+  );
+}
+
+Future<void> _resetUserFaceAuth(
+  BuildContext context,
+  WidgetRef ref,
+  AdminUserPreview user,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Reset wajah dan PIN?'),
+      content: Text(
+        '${user.name} harus daftar wajah dan PIN ulang sebelum bisa login wajah lagi. Login password tetap bisa dipakai.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text('Reset'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+
+  await _runAdminAction(
+    context,
+    () => ref.read(adminApiServiceProvider).resetUserFaceAuth(user.id),
     onSuccess: () {
       ref.invalidate(adminUsersProvider);
       ref.invalidate(adminOverviewProvider);

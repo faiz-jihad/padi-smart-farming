@@ -57,6 +57,11 @@ class ReverbWebSocketService {
     if (_isDisposed) return;
     if (_isConnected && _socket != null) return;
 
+    if (kIsWeb) {
+      debugPrint('[Reverb WS] Platform Web terdeteksi. WebSocket dart:io dinonaktifkan di browser untuk mencegah Unsupported operation.');
+      return;
+    }
+
     _reconnectTimer?.cancel();
 
     final host = AppConfig.activeHost;
@@ -88,7 +93,15 @@ class ReverbWebSocketService {
       _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         _sendPing();
       });
+    } on UnsupportedError catch (e) {
+      debugPrint('[Reverb WS] WebSocket tidak didukung di platform ini: $e. Reconnect dibatalkan.');
+      _connectionStateController.add(false);
     } catch (e) {
+      if (e.toString().contains('Unsupported operation') || e.toString().contains('Platform._version')) {
+        debugPrint('[Reverb WS] WebSocket tidak didukung di platform ini: $e. Reconnect dibatalkan.');
+        _connectionStateController.add(false);
+        return;
+      }
       debugPrint('[Reverb WS] Gagal konek ke Reverb: $e');
       _scheduleReconnect();
     }

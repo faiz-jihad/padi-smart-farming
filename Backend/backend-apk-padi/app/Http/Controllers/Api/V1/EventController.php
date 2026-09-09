@@ -18,7 +18,7 @@ class EventController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = auth('sanctum')->user() ?? $request->user();
 
         $events = AgricultureEvent::query()
             ->where('approval_status', 'approved')
@@ -152,7 +152,7 @@ class EventController extends Controller
      */
     public function show(Request $request, AgricultureEvent $event): JsonResponse
     {
-        $user = $request->user();
+        $user = auth('sanctum')->user() ?? $request->user();
 
         // Check visibility: approved events are public; pending/rejected submissions only visible to creator and admins
         if ($event->approval_status !== 'approved') {

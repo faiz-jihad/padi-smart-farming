@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:padi/core/localization/app_language.dart';
+import 'package:padi/core/widgets/voice_mic_button.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
 import 'package:padi/features/notifications/presentation/providers/notifications_provider.dart';
 
@@ -112,6 +113,11 @@ class HomeHeader extends ConsumerWidget {
               ],
             ),
           ),
+
+          const SizedBox(width: HomeSpacing.xs),
+
+          // Voice Command Mic Button
+          const VoiceMicButton(mini: true),
 
           const SizedBox(width: HomeSpacing.xs),
 

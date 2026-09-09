@@ -138,6 +138,7 @@
                         <th>Role</th>
                         <th>Status</th>
                         <th>Verifikasi</th>
+                        <th>Wajah/PIN</th>
                         <th>Login Terakhir</th>
                         <th style="text-align: right;">Aksi</th>
                     </tr>
@@ -163,6 +164,11 @@
                                 'partner' => 'users-avatar-purple',
                                 'admin' => 'users-avatar-slate',
                             ];
+                            $faceDescriptors = is_array($user->face_descriptor) ? $user->face_descriptor : [];
+                            $facePoseCount = count($faceDescriptors) === 128 && ! is_array($faceDescriptors[0] ?? null)
+                                ? 1
+                                : collect($faceDescriptors)->filter(fn ($descriptor) => is_array($descriptor))->count();
+                            $faceAuthEnabled = $facePoseCount > 0 && filled($user->pin_hash);
                             $initials = strtoupper(substr($user->name, 0, 2));
                         @endphp
                         <tr>
@@ -226,6 +232,20 @@
                                 @endif
                             </td>
                             <td>
+                                @if($faceAuthEnabled)
+                                    <span class="users-verify users-verify-verified" title="{{ $user->face_registered_at ? $user->face_registered_at->format('d M Y, H:i') : 'Terdaftar' }}">
+                                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A8.97 8.97 0 0112 15c2.21 0 4.236.8 5.879 2.128M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Aktif · {{ $facePoseCount }} pose
+                                    </span>
+                                @else
+                                    <span class="users-verify users-verify-pending">
+                                        Belum Aktif
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
                                 <span class="users-date">
                                     {{ $user->last_login_at ? $user->last_login_at->format('d M Y, H:i') : 'Belum Pernah' }}
                                 </span>
@@ -243,6 +263,8 @@
                                             'role' => $user->role,
                                             'status' => $user->status,
                                             'verification_status' => $user->verification_status,
+                                            'face_auth_enabled' => $faceAuthEnabled,
+                                            'face_pose_count' => $facePoseCount,
                                             'update_url' => route('admin.users.update', $user),
                                         ]) }})"
                                     >
@@ -272,7 +294,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="users-empty">
+                            <td colspan="7" class="users-empty">
                                 Tidak ditemukan data pengguna di database.
                             </td>
                         </tr>
@@ -435,6 +457,18 @@
                             <option value="rejected">Rejected (Ditolak)</option>
                         </select>
                     </div>
+
+                    <div class="users-modal-grid--full" id="edit-face-auth-panel" style="padding:14px; border:1px solid #bbf7d0; border-radius:14px; background:#f0fdf4;">
+                        <label class="users-field-label" style="display:flex; align-items:flex-start; gap:10px; margin:0;">
+                            <input type="checkbox" id="edit-reset-face-auth" name="reset_face_auth" value="1" style="margin-top:3px;">
+                            <span>
+                                Reset wajah dan PIN
+                                <small id="edit-face-auth-help" style="display:block; margin-top:4px; color:#047857; font-weight:600;">
+                                    User harus daftar wajah dan PIN ulang dari HP-nya.
+                                </small>
+                            </span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -474,6 +508,14 @@
         document.getElementById('edit-role').value = userData.role;
         document.getElementById('edit-status').value = userData.status;
         document.getElementById('edit-verification').value = userData.verification_status;
+        document.getElementById('edit-reset-face-auth').checked = false;
+
+        const faceHelp = document.getElementById('edit-face-auth-help');
+        if (userData.face_auth_enabled) {
+            faceHelp.textContent = 'Aktif: ' + userData.face_pose_count + ' pose. Centang jika wajah/PIN perlu didaftarkan ulang.';
+        } else {
+            faceHelp.textContent = 'Belum aktif. User bisa daftar wajah dari halaman register/login aplikasi.';
+        }
 
         openModal('edit-user-modal');
     }

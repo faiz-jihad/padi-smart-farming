@@ -46,6 +46,7 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       _reverbSub?.cancel();
     });
 
+    final auth = ref.watch(authControllerProvider);
     final service = ref.watch(deviceNotificationServiceProvider);
     final isBuyer = ref.watch(isBuyerRoleProvider);
     final reverb = ref.watch(reverbWebSocketServiceProvider);
@@ -56,11 +57,13 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       _onRealtimeNotificationReceived(incoming);
     });
 
-    // Start background sync polling fallback every 60s
+    // Start background sync polling fallback every 60s only when user is logged in
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      _fetchNotifications(service, isBuyer);
-    });
+    if (auth.isAuthenticated) {
+      _pollTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+        _fetchNotifications(service, isBuyer);
+      });
+    }
 
     // Request device permission on Android/iOS & fetch immediately on build
     Future.microtask(() async {

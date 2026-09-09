@@ -7,22 +7,21 @@ import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/cultivation/data/models/crop_season_model.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/home/presentation/screens/buyer_home_screen.dart';
-import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
-import 'package:padi/features/home/presentation/widgets/community_alert_card.dart';
-import 'package:padi/features/home/presentation/widgets/crop_journey_card.dart';
-import 'package:padi/features/home/presentation/widgets/daily_priority_section.dart';
-import 'package:padi/features/home/presentation/widgets/farm_hero_card.dart';
-import 'package:padi/features/home/presentation/widgets/harvest_marketplace_cta.dart';
-import 'package:padi/features/home/presentation/widgets/home_header.dart';
+import 'package:padi/features/home/presentation/tokens/senior_tokens.dart';
+import 'package:padi/features/home/presentation/widgets/community_alert_card.dart'
+    show AlertSeverity;
+import 'package:padi/features/home/presentation/widgets/daily_priority_section.dart'
+    show DailyPriorityItem;
 import 'package:padi/features/home/presentation/widgets/home_skeleton.dart';
-import 'package:padi/features/home/presentation/widgets/market_price_card.dart';
-import 'package:padi/features/home/presentation/widgets/quick_action_grid.dart';
-import 'package:padi/features/home/presentation/widgets/smart_insight_card.dart';
-import 'package:padi/features/home/presentation/widgets/today_activity_section.dart';
-import 'package:padi/features/home/presentation/widgets/upcoming_events_banner.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_daily_priority_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_farm_hero_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_harvest_cta_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_home_header.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_quick_actions.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_recent_activities_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_warning_banner.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_weather_card.dart';
 import 'dart:math' as math;
-import 'package:padi/features/home/presentation/widgets/nearby_disease_warning_banner.dart';
-import 'package:padi/features/home/presentation/widgets/weather_card.dart';
 
 // --- Daily Priority Family Provider ---
 final _dailyPriorityFamilyProvider =
@@ -427,51 +426,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : s.defaultUserName;
 
     return Scaffold(
-      backgroundColor: HomeColors.background,
+      backgroundColor: SeniorColors.background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
-          color: HomeColors.primaryGreen,
-          backgroundColor: HomeColors.surface,
+          color: SeniorColors.primaryGreen,
+          backgroundColor: SeniorColors.surface,
           onRefresh: _handleRefresh,
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 580),
+              constraints: const BoxConstraints(maxWidth: 540),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: HomeSpacing.screenHorizontal,
-                  vertical: HomeSpacing.xs,
+                  horizontal: SeniorSpacing.screenHorizontal,
+                  vertical: SeniorSpacing.xs,
                 ),
                 children: [
-                  // A. Top App Bar Header
-                  HomeHeader(
+                  // A. Top App Bar Header Ramah Lansia
+                  SeniorHomeHeader(
                     name: userName,
                     onNotificationTap: () => context.push('/notifications'),
                   ),
 
-                  const SizedBox(height: HomeSpacing.md),
+                  const SizedBox(height: SeniorSpacing.sectionGap),
 
                   // PPL Verification Desk Banner (for Extension Officers)
                   if (user?.role == 'extension_officer') ...[
                     InkWell(
                       onTap: () => context.push('/ppl-cases'),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(
+                        SeniorDimensions.buttonRadius,
+                      ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                          horizontal: 18,
+                          vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0284C7),
-                          borderRadius: BorderRadius.circular(16),
+                          color: SeniorColors.primaryGreen,
+                          borderRadius: BorderRadius.circular(
+                            SeniorDimensions.buttonRadius,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF0284C7,
-                              ).withValues(alpha: 0.25),
+                              color: SeniorColors.primaryGreen.withValues(
+                                alpha: 0.18,
+                              ),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -480,18 +483,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.assignment_turned_in_rounded,
-                                color: Color(0xFF0284C7),
-                                size: 20,
+                                color: SeniorColors.primaryGreen,
+                                size: 24,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,17 +502,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   Text(
                                     'Meja Validasi Kasus PPL',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,
                                     ),
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    'Buka antrean diagnosa daun petani untuk validasi lapangan',
+                                    'Buka antrean diagnosa daun petani untuk validasi',
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      color: Color(0xFFE0F2FE),
+                                      fontSize: 15,
+                                      color: SeniorColors.textOnDarkMuted,
                                     ),
                                   ),
                                 ],
@@ -518,13 +521,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             const Icon(
                               Icons.chevron_right_rounded,
                               color: Colors.white,
-                              size: 22,
+                              size: 26,
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: HomeSpacing.md),
+                    const SizedBox(height: SeniorSpacing.sectionGap),
                   ],
 
                   // Dashboard Content with State Management
@@ -534,7 +537,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     error: (error, stack) => _buildErrorFallback(s),
                   ),
 
-                  const SizedBox(height: HomeSpacing.xxxl),
+                  const SizedBox(height: SeniorSpacing.xxl),
                 ],
               ),
             ),
@@ -563,60 +566,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               : districtName)
         : (selectedFarm?.name.isNotEmpty == true ? selectedFarm!.name : '');
 
-    final farmName = selectedFarm?.name ?? 'Lahan';
-    final insightTitle = hasFarms
-        ? switch (s.lang) {
-            AppLanguage.id => 'Pemeriksaan Daun $farmName',
-            AppLanguage.jv => 'Priksa Godhong $farmName',
-            AppLanguage.en => 'Leaf Scan $farmName',
-          }
-        : switch (s.lang) {
-            AppLanguage.id => 'Mulai Pantau Kesehatan Tanaman',
-            AppLanguage.jv => 'Mulai Pantau Kasarasan Tanduran',
-            AppLanguage.en => 'Start Monitoring Crop Health',
-          };
-
-    final hst = _seasonHst(activeSeason);
-    final hasNearbyReport = data.nearbyDiseaseName != null;
-    final insightDesc = hasNearbyReport
-        ? switch (s.lang) {
-            AppLanguage.id =>
-              'Ada laporan ${data.nearbyDiseaseName} di sekitar lahan. Periksa daun $farmName sebelum menentukan tindakan.',
-            AppLanguage.jv =>
-              'Ana lapuran ${data.nearbyDiseaseName} ing sekitar sawah. Priksa godhong $farmName dhisik.',
-            AppLanguage.en =>
-              'A nearby ${data.nearbyDiseaseName} report exists. Check $farmName leaves before acting.',
-          }
-        : hasFarms
-        ? switch (s.lang) {
-            AppLanguage.id =>
-              hst != null
-                  ? '$farmName berada pada HST $hst. Foto daun bila ada gejala baru di petak sawah.'
-                  : 'Belum ada musim tanam aktif untuk $farmName. Foto daun bila muncul gejala di lapangan.',
-            AppLanguage.jv =>
-              hst != null
-                  ? '$farmName mlebu HST $hst. Foto godhong yen ana gejala anyar.'
-                  : 'Durung ana musim tanam aktif kanggo $farmName. Foto godhong yen ana gejala.',
-            AppLanguage.en =>
-              hst != null
-                  ? '$farmName is at HST $hst. Scan leaves when new symptoms appear.'
-                  : 'No active season is recorded for $farmName. Scan leaves when symptoms appear.',
-          }
-        : switch (s.lang) {
-            AppLanguage.id =>
-              'Tambahkan lahan terlebih dahulu agar pemeriksaan daun tersimpan pada sawah yang benar.',
-            AppLanguage.jv =>
-              'Tambah sawah dhisik supaya priksa godhong kesimpen ing sawah sing bener.',
-            AppLanguage.en =>
-              'Add a farm first so leaf checks are linked to the right field.',
-          };
-
-    final insightAction = switch (s.lang) {
-      AppLanguage.id => 'Periksa Tanaman Sekarang',
-      AppLanguage.jv => 'Priksa Tanduran Saiki',
-      AppLanguage.en => 'Check Crops Now',
-    };
-
     final dailyPriorityAsync = ref.watch(
       _dailyPriorityFamilyProvider(selectedFarm?.id),
     );
@@ -624,18 +573,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // 1. Peringatan Penyakit Sekitar (Jika Ada Laporan Terdeteksi)
         if (data.nearbyDiseaseName != null) ...[
-          NearbyDiseaseWarningBanner(
+          SeniorWarningBanner(
             diseaseName: data.nearbyDiseaseName!,
             distanceKm: data.nearbyDiseaseDistanceKm,
             locationName: data.nearbyLocation,
             farmerAdvice: data.nearbyDiseaseAdvice,
+            onScanTap: () => context.push('/plant-check'),
           ),
-          const SizedBox(height: HomeSpacing.md),
+          const SizedBox(height: SeniorSpacing.sectionGap),
         ],
 
-        // B. Smart Farm Hero Overview Card
-        FarmHeroCard(
+        // 2. Kartu Lahan Utama & Tombol Raksasa Periksa Tanaman
+        SeniorFarmHeroCard(
           farms: data.farms,
           seasons: data.seasons,
           selectedIndex: farmIndex,
@@ -644,270 +595,100 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           onFarmTap: (farm) => context.go('/farms'),
           onAddFarmTap: () => context.push('/farms/add'),
+          onScanTap: () => context.push('/plant-check'),
         ),
 
-        const SizedBox(height: HomeSpacing.md),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // C. Daily Farm Action Priorities
-        dailyPriorityAsync.when(
-          data: (pData) => DailyPrioritySection(
-            priorities: pData.priorities,
-            hst: pData.hst,
-            farmName: selectedFarm?.name,
-          ),
-          loading: () =>
-              const DailyPrioritySection(priorities: [], isLoading: true),
-          error: (_, _) => const SizedBox.shrink(),
+        // 3. 4 Menu Aksi Utama Petani (Grid 2x2 Kartu Besar)
+        SeniorQuickActions(
+          onScanTap: () => context.push('/plant-check'),
+          onActivityTap: () => context.push('/land/activity/add'),
+          onMarketTap: () => context.push('/marketplace'),
+          onCalendarTap: () => context.push('/planting-calendar'),
         ),
 
-        const SizedBox(height: HomeSpacing.md),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // D. Smart Contextual Insight (Single Priority Attention)
-        SmartInsightCard(
-          title: insightTitle,
-          description: insightDesc,
-          actionLabel: insightAction,
-          onActionTap: () => context.push('/plant-check'),
-        ),
-
-        const SizedBox(height: HomeSpacing.md),
-
-        // E. Modern Weather & Agroklimat Card
-        WeatherCard(
+        // 4. Kartu Cuaca & Anjuran Kerja Tani (Ikon Besar 48px, Suhu 32px, Audio TTS)
+        SeniorWeatherCard(
           locationName: weatherLocation,
           farmId: selectedFarm?.id,
           onTapCalendar: () => context.push('/planting-calendar'),
         ),
 
-        const SizedBox(height: HomeSpacing.lg),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // E. Curated Super-App Quick Actions Grid (8 Core Tools)
-        QuickActionGrid(
-          onScanTap: () => context.push('/plant-check'),
-          onActivityTap: () => context.push('/land/activity/add'),
-          onFarmTap: () => context.go('/farms'),
-          onMarketTap: () => context.push('/marketplace'),
-          onFertilizerTap: () => context.push('/fertilizer'),
-          onCalendarTap: () => context.push('/planting-calendar'),
-          onAlertTap: () => context.push('/community-alert'),
-          onTimelineTap: () => context.push('/land/timeline'),
+        // 5. Tugas Utama Hari Ini (Maksimal 2 Prioritas Teks Besar)
+        dailyPriorityAsync.when(
+          data: (pData) => SeniorDailyPriorityCard(
+            priorities: pData.priorities,
+            hst: pData.hst,
+            farmName: selectedFarm?.name,
+          ),
+          loading: () =>
+              const SeniorDailyPriorityCard(priorities: [], isLoading: true),
+          error: (_, _) => const SizedBox.shrink(),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // Quick Access Bar: Negosiasi Bursa & Laporan Penjualan Panen
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFA7F3D0)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF059669).withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => context.push('/marketplace/offers'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.handshake_outlined,
-                          color: Color(0xFF059669),
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.negoOffers,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            Text(
-                              s.manageCounterOffers,
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(height: 28, width: 1, color: const Color(0xFFE2E8F0)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: InkWell(
-                  onTap: () => context.push('/sales-report'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.assessment_outlined,
-                          color: Color(0xFF047857),
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.salesReport,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            Text(
-                              s.verifiedRevenue,
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // F. Today's Farm Activity List
-        TodayActivitySection(
+        // 6. Catatan Kegiatan Terakhir (Maksimal 3 + Tombol Tambah 56px)
+        SeniorRecentActivitiesCard(
           activities: data.activities,
           onAddActivity: () => context.push('/land/activity/add'),
-          onViewTimeline: () => context.push('/land/timeline'),
+          onViewAll: () => context.push('/land/timeline'),
         ),
 
-        const SizedBox(height: HomeSpacing.lg),
-
-        // G. Upcoming Agriculture Events Banner Carousel
-        UpcomingEventsBanner(
-          onEventTap: (event) => context.push('/events/detail', extra: event),
-          onCreateEventTap: () => context.push('/events/create'),
-          onViewAllTap: () => context.push('/events'),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // H. Crop Journey Lifecycle
-        if (hasFarms) ...[
-          CropJourneyCard(
-            season: activeSeason,
-            farms: data.farms,
-            selectedFarm: selectedFarm,
-            onSelectFarm: (farm) {
-              final idx = data.farms.indexOf(farm);
-              if (idx != -1) {
-                setState(() => _selectedFarmIndex = idx);
-              }
-            },
-            onTapTimeline: () => context.push('/land/timeline'),
-          ),
-          const SizedBox(height: HomeSpacing.lg),
-        ],
-
-        // I. Harvest & Marketplace CTA (Prioritized if near harvest)
+        // 7. Ajakan Jual Hasil Panen (Hanya jika mendekati panen <= 14 hari atau belum ada lahan)
         if (isNearHarvest || !hasFarms) ...[
-          HarvestMarketplaceCta(
+          const SizedBox(height: SeniorSpacing.sectionGap),
+          SeniorHarvestCtaCard(
             onTapMarketplace: () => context.push('/marketplace'),
-            onTapCreateListing: () => context.push('/marketplace/create'),
+            gkpPrice: data.gkpPrice,
+            gkgPrice: data.gkgPrice,
           ),
-          const SizedBox(height: HomeSpacing.lg),
         ],
-
-        // J. Community Radar & Pests Alert (Dynamic from backend reports)
-        CommunityAlertCard(
-          title: data.alertTitle ?? 'Belum ada laporan sekitar',
-          subtitle:
-              data.alertSubtitle ??
-              'Tidak ada laporan penyakit aktif yang diterima dari area lahan saat ini.',
-          distanceKm: data.nearbyDiseaseDistanceKm,
-          severity: data.alertSeverity,
-          onTapAlerts: () => context.push('/community-alert'),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // K. Compact Commodity Market Price Index (Dynamic from marketplace)
-        MarketPriceCard(
-          onTapMarket: () => context.push('/marketplace'),
-          gkpPrice: data.gkpPrice,
-          gkgPrice: data.gkgPrice,
-        ),
       ],
     );
   }
 
   Widget _buildErrorFallback(AppStrings s) {
     return Container(
-      padding: const EdgeInsets.all(HomeSpacing.cardPadding),
+      padding: const EdgeInsets.all(SeniorSpacing.cardPadding),
       decoration: BoxDecoration(
-        color: HomeColors.surface,
-        borderRadius: BorderRadius.circular(HomeRadius.xl),
-        border: Border.all(color: HomeColors.border),
+        color: SeniorColors.surface,
+        borderRadius: BorderRadius.circular(SeniorDimensions.cardRadius),
+        border: Border.all(color: SeniorColors.border, width: 2),
       ),
       child: Column(
         children: [
           const Icon(
             Icons.cloud_off_rounded,
-            color: HomeColors.textSecondary,
-            size: 36,
+            color: SeniorColors.textSecondary,
+            size: 44,
           ),
-          const SizedBox(height: HomeSpacing.xs),
+          const SizedBox(height: SeniorSpacing.md),
           Text(
             s.friendlyErrorMessage,
-            style: HomeTypography.cardTitle,
+            style: SeniorTypography.subtitle,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: HomeSpacing.md),
-          FilledButton.icon(
-            onPressed: () => ref.refresh(_homeDashboardProvider.future),
-            icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: Text(s.tryAgain),
-            style: FilledButton.styleFrom(
-              backgroundColor: HomeColors.primaryGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(HomeRadius.sm),
+          const SizedBox(height: SeniorSpacing.lg),
+          SizedBox(
+            height: SeniorDimensions.buttonHeight,
+            child: ElevatedButton.icon(
+              onPressed: () => ref.refresh(_homeDashboardProvider.future),
+              icon: const Icon(Icons.refresh_rounded, size: 24),
+              label: Text(s.tryAgain, style: SeniorTypography.button),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SeniorColors.primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    SeniorDimensions.buttonRadius,
+                  ),
+                ),
               ),
             ),
           ),
@@ -940,11 +721,5 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (harvestDate == null) return false;
     final diff = harvestDate.difference(DateTime.now()).inDays;
     return diff <= 14;
-  }
-
-  int? _seasonHst(CropSeasonModel? season) {
-    final start = season?.startDate;
-    if (start == null) return null;
-    return DateTime.now().difference(start).inDays.clamp(0, 9999);
   }
 }

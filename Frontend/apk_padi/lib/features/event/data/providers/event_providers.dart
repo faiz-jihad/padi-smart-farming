@@ -19,7 +19,7 @@ class EventsNotifier extends Notifier<List<EventModel>> {
       _pollingTimer?.cancel();
     });
     unawaited(loadEventsFromApi());
-    _pollingTimer = Timer.periodic(const Duration(seconds: 6), (_) {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       loadEventsFromApi();
     });
     return [];

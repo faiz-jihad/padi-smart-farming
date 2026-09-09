@@ -24,7 +24,9 @@ class AdminOverview {
       broadcasts: readAdminBroadcasts(data['broadcasts']),
       auditLogs: readAdminAuditLogs(data['audit_logs']),
       disasterSummary: data['disaster_summary'] != null
-          ? AdminDisasterSummary.fromJson(data['disaster_summary'] as Map<String, dynamic>?)
+          ? AdminDisasterSummary.fromJson(
+              data['disaster_summary'] as Map<String, dynamic>?,
+            )
           : null,
       disasterThreats: readAdminDisasterThreats(data['disaster_threats']),
     );
@@ -82,7 +84,10 @@ class AdminUserPreview {
     required this.email,
     required this.role,
     required this.status,
+    required this.faceAuthEnabled,
+    required this.facePoseCount,
     this.phone,
+    this.faceRegisteredAt,
   });
 
   final int id;
@@ -91,6 +96,9 @@ class AdminUserPreview {
   final String? phone;
   final String role;
   final String status;
+  final bool faceAuthEnabled;
+  final int facePoseCount;
+  final String? faceRegisteredAt;
 
   factory AdminUserPreview.fromJson(Map<String, dynamic> json) {
     return AdminUserPreview(
@@ -100,6 +108,9 @@ class AdminUserPreview {
       phone: json['phone']?.toString(),
       role: _normaliseRole(json['role']?.toString() ?? '-'),
       status: json['status']?.toString() ?? '-',
+      faceAuthEnabled: json['face_auth_enabled'] == true,
+      facePoseCount: _readInt(json, 'face_pose_count'),
+      faceRegisteredAt: json['face_registered_at']?.toString(),
     );
   }
 
@@ -186,7 +197,8 @@ class AdminDisasterSummary {
       warningCount: _readInt(json, 'warning_count'),
       advisoryCount: _readInt(json, 'advisory_count'),
       systemStatus: json?['system_status']?.toString() ?? 'safe',
-      statusHeadline: json?['status_headline']?.toString() ?? 'Status Agroklimat Normal',
+      statusHeadline:
+          json?['status_headline']?.toString() ?? 'Status Agroklimat Normal',
       statusSubline: json?['status_subline']?.toString() ?? '',
       evaluatedAt: json?['evaluated_at']?.toString() ?? '',
     );

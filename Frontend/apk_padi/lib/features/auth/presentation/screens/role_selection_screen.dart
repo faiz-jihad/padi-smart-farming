@@ -26,9 +26,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final isBuyer = _selectedRole == 'buyer';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: const Color(0xFFF6FFF9),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: const Color(0xFFF6FFF9),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -64,20 +64,19 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
                         // Title & Subtitle (Clean, High Contrast, Human-Crafted)
                         const Text(
-                          'Pilih Peran Anda',
+                          'Mau daftar sebagai apa?',
                           style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
-                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Pilih jenis akun yang sesuai dengan kebutuhan Anda di ekosistem P.A.D.I.',
+                          'Untuk petani, pilih Petani lalu daftar pakai wajah dan PIN.',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF64748B),
+                            fontSize: 17,
+                            color: Color(0xFF3F6F63),
                             height: 1.45,
                           ),
                         ),
@@ -91,8 +90,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           imageAsset: 'assets/images/role_farmer.png',
                           title: 'Petani',
                           subtitle:
-                              'Pantau kondisi sawah, dapatkan rekomendasi pupuk, deteksi penyakit tanaman, dan jual panen langsung.',
-                          tagLabel: 'Untuk Pemilik / Penggarap Lahan',
+                              'Pilih ini untuk mengelola sawah dan cek penyakit padi.',
+                          tagLabel: 'Disarankan untuk petani',
                         ),
 
                         const SizedBox(height: 16),
@@ -103,9 +102,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           onTap: () => setState(() => _selectedRole = 'buyer'),
                           imageAsset: 'assets/images/role_buyer.png',
                           title: 'Pembeli & Industri',
-                          subtitle:
-                              'Beli gabah dan beras langsung dari petani atau kelompok tani dengan harga transparan dan pasokan terjamin.',
-                          tagLabel: 'Untuk Pembeli Grosir & Retail',
+                          subtitle: 'Pilih ini untuk mencari gabah atau beras.',
+                          tagLabel: 'Untuk pembeli',
                         ),
 
                         const SizedBox(height: 24),
@@ -120,10 +118,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               decoration: const BoxDecoration(
-                color: Color(0xFFF9FAFB),
-                border: Border(
-                  top: BorderSide(color: Color(0xFFF1F5F9)),
-                ),
+                color: Color(0xFFF6FFF9),
+                border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
               ),
               child: Center(
                 child: ConstrainedBox(
@@ -133,7 +129,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     children: [
                       SizedBox(
                         width: double.infinity,
-                        height: 52,
+                        height: 60,
                         child: FilledButton(
                           onPressed: _proceedToRegister,
                           style: FilledButton.styleFrom(
@@ -150,9 +146,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                               Text(
                                 'Lanjutkan sebagai ${isFarmer ? 'Petani' : 'Pembeli'}',
                                 style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.2,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -169,7 +164,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                             'Sudah memiliki akun? ',
                             style: TextStyle(
                               color: Color(0xFF64748B),
-                              fontSize: 13,
+                              fontSize: 16,
                             ),
                           ),
                           GestureDetector(
@@ -185,7 +180,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                               style: TextStyle(
                                 color: Color(0xFF059669),
                                 fontWeight: FontWeight.w700,
-                                fontSize: 13,
+                                fontSize: 16,
                               ),
                             ),
                           ),
@@ -259,17 +254,19 @@ class _RoleSelectionCard extends StatelessWidget {
           children: [
             // Left Illustration
             Container(
-              width: 90,
-              height: 90,
+              width: 82,
+              height: 82,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
+                color: isSelected
+                    ? const Color(0xFFF0FDF4)
+                    : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.all(6),
               child: Image.asset(
                 imageAsset,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
+                errorBuilder: (_, _, _) => const Icon(
                   Icons.image_not_supported_outlined,
                   color: Color(0xFF94A3B8),
                   size: 32,
@@ -290,8 +287,8 @@ class _RoleSelectionCard extends StatelessWidget {
                         child: Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             letterSpacing: -0.3,
                           ),
@@ -304,9 +301,13 @@ class _RoleSelectionCard extends StatelessWidget {
                         height: 22,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? selectedBorderColor : Colors.transparent,
+                          color: isSelected
+                              ? selectedBorderColor
+                              : Colors.transparent,
                           border: Border.all(
-                            color: isSelected ? selectedBorderColor : const Color(0xFFCBD5E1),
+                            color: isSelected
+                                ? selectedBorderColor
+                                : const Color(0xFFCBD5E1),
                             width: 2.0,
                           ),
                         ),
@@ -324,24 +325,31 @@ class _RoleSelectionCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 12.5,
-                      color: Color(0xFF64748B),
+                      fontSize: 15,
+                      color: Color(0xFF3F6F63),
                       height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                      color: isSelected
+                          ? const Color(0xFFDCFCE7)
+                          : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       tagLabel,
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? const Color(0xFF166534) : const Color(0xFF475569),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isSelected
+                            ? const Color(0xFF166534)
+                            : const Color(0xFF475569),
                       ),
                     ),
                   ),

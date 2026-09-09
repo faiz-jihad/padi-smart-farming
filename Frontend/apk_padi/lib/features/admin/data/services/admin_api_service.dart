@@ -44,6 +44,18 @@ class AdminApiService {
     }
   }
 
+  Future<AdminUserPreview> resetUserFaceAuth(int id) async {
+    try {
+      final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+        '/admin/users/$id',
+        data: {'reset_face_auth': true},
+      );
+      return readAdminUser(response.data);
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+
   Future<List<AdminBroadcastPreview>> fetchBroadcasts() async {
     try {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(

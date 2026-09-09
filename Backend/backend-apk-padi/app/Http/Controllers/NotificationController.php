@@ -15,38 +15,52 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        $query = Notification::query();
+        $user = auth('sanctum')->user() ?? $request->user();
 
         if ($user) {
-            $query->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhereNull('user_id');
-            });
+            $query = Notification::query()->where('user_id', $user->id);
+
+            // Auto-seed initial notifications if completely empty for good UX
+            if ($query->count() === 0) {
+                $this->seedInitialNotifications($user->id);
+            }
+
+            $notifications = $query->latest('created_at')->paginate(30);
+
+            return NotificationResource::collection($notifications);
         }
 
-        // Auto-seed initial notifications if completely empty for good UX
-        if ($query->count() === 0) {
-            $this->seedInitialNotifications($user?->id);
-        }
+        // Return guest preview notifications without persisting to DB
+        $defaults = $this->getInitialNotificationData();
+        $guestNotifications = collect($defaults)->map(function (array $d, int $index) {
+            $notification = new Notification();
+            $notification->id = $index + 1;
+            $notification->user_id = null;
+            $notification->type = $d['type'];
+            $notification->title = $d['title'];
+            $notification->body = $d['body'];
+            $notification->data = $d['data'];
+            $notification->created_at = $d['created_at'];
+            $notification->read_at = null;
 
-        $notifications = $query->latest('created_at')->paginate(30);
+            return $notification;
+        });
 
-        return NotificationResource::collection($notifications);
+        return NotificationResource::collection($guestNotifications);
     }
 
-    private function seedInitialNotifications(?int $userId): void
+    private function getInitialNotificationData(?int $userId = null): array
     {
         $now = now();
-        $defaults = [
+
+        return [
             [
                 'user_id' => $userId,
                 'type' => 'crop_alert',
                 'title' => 'Pengingat Pemupukan Susulan I (HST 14)',
                 'body' => 'Waktunya pemupukan NPK Phonska dan Urea untuk merangsang anakan produktif padi.',
                 'data' => ['url' => '/farms'],
-                'created_at' => $now->subMinutes(15),
+                'created_at' => $now->copy()->subMinutes(15),
             ],
             [
                 'user_id' => $userId,
@@ -54,7 +68,7 @@ class NotificationController extends Controller
                 'title' => 'Peringatan Hama: Waspada Blas Daun',
                 'body' => 'Kelembaban tinggi terdeteksi di wilayah sekitar. Pantau bercak cokelat belah ketupat pada daun.',
                 'data' => ['url' => '/community-alert'],
-                'created_at' => $now->subHours(2),
+                'created_at' => $now->copy()->subHours(2),
             ],
             [
                 'user_id' => $userId,
@@ -62,7 +76,7 @@ class NotificationController extends Controller
                 'title' => 'Tren Harga Gabah Hari Ini',
                 'body' => 'Harga GKP rata-rata Rp 6.800/kg dan GKG Rp 7.900/kg. Cek penawaran pembeli di Toko PADI.',
                 'data' => ['url' => '/marketplace'],
-                'created_at' => $now->subHours(5),
+                'created_at' => $now->copy()->subHours(5),
             ],
             [
                 'user_id' => $userId,
@@ -70,13 +84,31 @@ class NotificationController extends Controller
                 'title' => 'Diagnosa Gemini AI Siap Digunakan',
                 'body' => 'Gunakan kamera untuk memindai daun padi Anda dan dapatkan resep obat serta racikan nabati otomatis.',
                 'data' => ['url' => '/plant-check'],
-                'created_at' => $now->subDays(1),
+                'created_at' => $now->copy()->subDays(1),
             ],
         ];
+    }
 
-        foreach ($defaults as $d) {
-            Notification::create($d);
+    private function seedInitialNotifications(?int $userId): void
+    {
+        if (! $userId) {
+            return;
         }
+
+        $defaults = $this->getInitialNotificationData($userId);
+
+        Notification::unguarded(function () use ($defaults): void {
+            foreach ($defaults as $d) {
+                $notification = new Notification();
+                $notification->user_id = $d['user_id'];
+                $notification->type = $d['type'];
+                $notification->title = $d['title'];
+                $notification->body = $d['body'];
+                $notification->data = $d['data'];
+                $notification->created_at = $d['created_at'];
+                $notification->save();
+            }
+        });
     }
 
     /**

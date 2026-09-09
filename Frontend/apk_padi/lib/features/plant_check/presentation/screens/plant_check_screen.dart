@@ -17,6 +17,10 @@ import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
+import 'package:padi/core/voice/voice_command_provider.dart';
+import 'package:padi/core/voice/voice_intent.dart';
+import 'package:padi/core/voice/voice_state.dart';
+import 'package:padi/core/widgets/voice_mic_button.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
 import 'package:padi/features/plant_check/data/services/offline_scan_queue_service.dart';
 import 'package:padi/features/plant_check/presentation/screens/ppl_case_list_screen.dart';
@@ -1077,6 +1081,23 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     final lang = ref.watch(languageProvider);
     final s = AppStrings(lang);
 
+    ref.listen(voiceCommandProvider, (prev, next) {
+      if (next.uiState == VoiceUiState.executing && next.voiceResult != null) {
+        final intent = next.voiceResult!.intent;
+        if (intent == VoiceIntent.takePlantPhoto) {
+          if (_image == null) {
+            _takePicture();
+          }
+        } else if (intent == VoiceIntent.retakePhoto) {
+          _retakePicture();
+        } else if (intent == VoiceIntent.analyzePlantImage) {
+          if (_image != null && !_isScanning) {
+            _usePicture();
+          }
+        }
+      }
+    });
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -1630,6 +1651,20 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                 ),
               ),
 
+              VoiceMicButton(
+                mini: true,
+                tooltip: 'Bicara ke P.A.D.I. (Ambil foto)',
+                onIntentExecuted: (intent) {
+                  if (intent == VoiceIntent.takePlantPhoto) {
+                    _takePicture();
+                  } else if (intent == VoiceIntent.retakePhoto) {
+                    _retakePicture();
+                  } else if (intent == VoiceIntent.analyzePlantImage) {
+                    _usePicture();
+                  }
+                },
+              ),
+              const SizedBox(width: 10),
               GestureDetector(
                 onTap: _takePicture,
                 child: Container(
@@ -1909,6 +1944,18 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
           // Action Buttons
           Row(
             children: [
+              VoiceMicButton(
+                tooltip: 'Bicara ke P.A.D.I. (Foto ulang / Analisis)',
+                onIntentExecuted: (intent) {
+                  if (intent == VoiceIntent.retakePhoto ||
+                      intent == VoiceIntent.takePlantPhoto) {
+                    _retakePicture();
+                  } else if (intent == VoiceIntent.analyzePlantImage) {
+                    if (!_isScanning) _usePicture();
+                  }
+                },
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 flex: 1,
                 child: OutlinedButton.icon(
@@ -2565,6 +2612,23 @@ class _GeminiScanResultSheetState
             'Kasus telah dikirim ke Penyuluh (PPL) untuk validasi lapangan.';
       }
     }
+
+    // Auto-trigger TTS summary untuk petani (Section 63)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (mounted && !_isPlayingVoice) {
+          final profile =
+              PadiDiseaseHelper.getProfile(widget.result.predictedClass);
+          final conf = widget.result.confidence ?? 0.0;
+          final confLabel =
+              conf >= 0.8 ? 'keyakinan tinggi' : 'perlu pemeriksaan lanjut';
+          final summary = profile.code == 'normal'
+              ? 'Daun padi terindikasi sehat dan prima.'
+              : 'Daun terindikasi ${profile.indonesianName}, $confLabel.';
+          _flutterTts.speak(summary);
+        }
+      });
+    });
   }
 
   void _openPplReportModal() {
@@ -3257,6 +3321,30 @@ class _GeminiScanResultSheetState
     }
   }
 
+  Future<void> _speakRecommendationVoice() async {
+    setState(() => _selectedTab = 1);
+    final rec = widget.result.recommendation;
+    final profile = PadiDiseaseHelper.getProfile(widget.result.predictedClass);
+    final buffer = StringBuffer();
+    buffer.write('Rekomendasi penanganan: ');
+    if (rec != null && rec.langkahPreventif.isNotEmpty) {
+      buffer.write('${rec.langkahPreventif}. ');
+    } else {
+      buffer.write('${profile.quickWaterAction}. ');
+    }
+    if (rec != null && rec.rekomendasiObat.isNotEmpty) {
+      buffer.write('Obat: ${rec.rekomendasiObat}.');
+    } else {
+      buffer.write('${profile.quickPesticideAction}.');
+    }
+    try {
+      if (mounted) setState(() => _isPlayingVoice = true);
+      await _flutterTts.speak(buffer.toString());
+    } catch (_) {
+      if (mounted) setState(() => _isPlayingVoice = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = widget.result;
@@ -3618,54 +3706,84 @@ class _GeminiScanResultSheetState
                                     ),
                                   ),
 
-                                  // Voice Button (Besar, Jelas, & Kontras)
-                                  InkWell(
-                                    onTap: _toggleVoiceGuidance,
-                                    borderRadius: BorderRadius.circular(18),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 13,
-                                        vertical: 8,
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Voice Command Mic Button
+                                      VoiceMicButton(
+                                        mini: true,
+                                        tooltip:
+                                            'Bicara ke P.A.D.I. (Tanya hasil / PPL)',
+                                        onIntentExecuted: (intent) {
+                                          if (intent ==
+                                              VoiceIntent.readDiagnosis) {
+                                            _toggleVoiceGuidance();
+                                          } else if (intent ==
+                                              VoiceIntent.readRecommendation) {
+                                            _speakRecommendationVoice();
+                                          } else if (intent ==
+                                              VoiceIntent.escalateToPpl) {
+                                            _openPplReportModal();
+                                          } else if (intent ==
+                                              VoiceIntent.retakePhoto) {
+                                            Navigator.of(context).pop();
+                                            widget.onRetake();
+                                          }
+                                        },
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: _isPlayingVoice
-                                            ? const Color(0xFF059669)
-                                            : Colors.white.withValues(
-                                                alpha: 0.2,
-                                              ),
+                                      const SizedBox(width: 8),
+
+                                      // Voice Button (Besar, Jelas, & Kontras)
+                                      InkWell(
+                                        onTap: _toggleVoiceGuidance,
                                         borderRadius: BorderRadius.circular(18),
-                                        border: Border.all(
-                                          color: _isPlayingVoice
-                                              ? const Color(0xFF6EE7B7)
-                                              : Colors.white.withValues(
-                                                  alpha: 0.35,
-                                                ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _isPlayingVoice
-                                                ? Icons.stop_circle_rounded
-                                                : Icons.volume_up_rounded,
-                                            color: Colors.white,
-                                            size: 18,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 13,
+                                            vertical: 8,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            _isPlayingVoice
-                                                ? 'Stop Audio'
-                                                : 'Dengar Suara',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w800,
+                                          decoration: BoxDecoration(
+                                            color: _isPlayingVoice
+                                                ? const Color(0xFF059669)
+                                                : Colors.white.withValues(
+                                                    alpha: 0.2,
+                                                  ),
+                                            borderRadius:
+                                                BorderRadius.circular(18),
+                                            border: Border.all(
+                                              color: _isPlayingVoice
+                                                  ? const Color(0xFF6EE7B7)
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.35,
+                                                    ),
                                             ),
                                           ),
-                                        ],
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                _isPlayingVoice
+                                                    ? Icons.stop_circle_rounded
+                                                    : Icons.volume_up_rounded,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                _isPlayingVoice
+                                                    ? 'Stop Audio'
+                                                    : 'Dengar Suara',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),

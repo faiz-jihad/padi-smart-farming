@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:padi/core/errors/api_exception.dart';
 import 'package:padi/core/storage/token_storage.dart';
 import 'package:padi/features/auth/data/models/auth_result.dart';
+import 'package:padi/features/auth/data/services/local_face_auth_store.dart';
 import 'package:padi/features/auth/domain/entities/app_user.dart';
 import 'package:padi/features/auth/domain/repositories/auth_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -59,10 +60,15 @@ class AuthState {
 }
 
 class AuthController extends ChangeNotifier {
-  AuthController(this._repository, this._tokenStorage);
+  AuthController(
+    this._repository,
+    this._tokenStorage, [
+    LocalFaceAuthStore? localFaceAuthStore,
+  ]) : _localFaceAuthStore = localFaceAuthStore ?? const LocalFaceAuthStore();
 
   final AuthRepository _repository;
   final TokenStorage _tokenStorage;
+  final LocalFaceAuthStore _localFaceAuthStore;
 
   AuthState _state = const AuthState.checking();
 
@@ -80,6 +86,14 @@ class AuthController extends ChangeNotifier {
     if (token == null || token.isEmpty) {
       _setState(const AuthState.unauthenticated());
       return;
+    }
+
+    if (token.startsWith('offline-face:')) {
+      final cachedUser = await _localFaceAuthStore.readCachedUser();
+      if (cachedUser != null) {
+        _setState(AuthState.authenticated(cachedUser));
+        return;
+      }
     }
 
     try {
@@ -113,6 +127,10 @@ class AuthController extends ChangeNotifier {
     required String accountType,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
+    List<double>? faceDescriptor,
+    List<List<double>>? faceDescriptors,
   }) async {
     return _submitAuth(
       () => _repository.register(
@@ -122,8 +140,87 @@ class AuthController extends ChangeNotifier {
         accountType: accountType,
         password: password,
         passwordConfirmation: passwordConfirmation,
+        pin: pin,
+        pinConfirmation: pinConfirmation,
+        faceDescriptor: faceDescriptor,
+        faceDescriptors: faceDescriptors,
       ),
+      onSuccess: (result) async {
+        final descriptors = faceDescriptors;
+        final enteredPin = pin?.trim();
+        if (enteredPin != null &&
+            enteredPin.isNotEmpty &&
+            descriptors != null &&
+            descriptors.isNotEmpty) {
+          await _localFaceAuthStore.saveEnrollment(
+            phone: phone,
+            pin: enteredPin,
+            user: result.user,
+            descriptors: descriptors,
+          );
+        }
+      },
     );
+  }
+
+  Future<bool> faceLogin({
+    String? phone,
+    String? pin,
+    required List<double> faceDescriptor,
+  }) async {
+    if (_state.isSubmitting) {
+      return false;
+    }
+
+    _setState(
+      _state.copyWith(isSubmitting: true, clearMessage: true, fieldErrors: {}),
+    );
+
+    try {
+      final result = await _repository.faceLogin(
+        phone: phone,
+        pin: pin,
+        faceDescriptor: faceDescriptor,
+      );
+
+      if (result.token != null) {
+        await _tokenStorage.saveToken(result.token!);
+      }
+
+      if ((phone ?? '').trim().isNotEmpty && (pin ?? '').trim().isNotEmpty) {
+        await _localFaceAuthStore.saveEnrollment(
+          phone: phone!,
+          pin: pin!,
+          user: result.user,
+          descriptors: [faceDescriptor],
+        );
+      }
+
+      _setState(AuthState.authenticated(result.user));
+      return true;
+    } catch (error) {
+      final cachedUser = await _offlineFaceMatchIfPossible(
+        error: error,
+        phone: phone,
+        pin: pin,
+        faceDescriptor: faceDescriptor,
+      );
+
+      if (cachedUser != null) {
+        await _tokenStorage.saveToken('offline-face:${cachedUser.id}');
+        _setState(
+          AuthState.authenticated(cachedUser).copyWith(
+            message:
+                'Berhasil masuk dari HP ini. Data akan diperbarui saat sinyal bagus.',
+            isError: false,
+          ),
+        );
+        return true;
+      }
+
+      _applyError(error);
+      return false;
+    }
   }
 
   Future<void> updateProfile({
@@ -174,7 +271,7 @@ class AuthController extends ChangeNotifier {
       _setState(
         _state.copyWith(
           isSubmitting: false,
-          message: 'Password berhasil diubah.',
+          message: 'Kata sandi berhasil diubah.',
           isError: false,
         ),
       );
@@ -247,6 +344,8 @@ class AuthController extends ChangeNotifier {
     required String code,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
   }) async {
     if (_state.isSubmitting) {
       return false;
@@ -262,12 +361,14 @@ class AuthController extends ChangeNotifier {
         code: code,
         password: password,
         passwordConfirmation: passwordConfirmation,
+        pin: pin,
+        pinConfirmation: pinConfirmation,
       );
 
       _setState(
         _state.copyWith(
           isSubmitting: false,
-          message: 'Password berhasil direset. Silakan masuk kembali.',
+          message: 'Kata sandi sudah diganti. Silakan masuk lagi.',
           isError: false,
         ),
       );
@@ -297,7 +398,10 @@ class AuthController extends ChangeNotifier {
     _setState(const AuthState.unauthenticated());
   }
 
-  Future<bool> _submitAuth(Future<AuthResult> Function() submit) async {
+  Future<bool> _submitAuth(
+    Future<AuthResult> Function() submit, {
+    Future<void> Function(AuthResult result)? onSuccess,
+  }) async {
     if (_state.isSubmitting) {
       return false;
     }
@@ -312,6 +416,8 @@ class AuthController extends ChangeNotifier {
       if (result.token != null) {
         await _tokenStorage.saveToken(result.token!);
       }
+
+      await onSuccess?.call(result);
 
       _setState(AuthState.authenticated(result.user));
 
@@ -364,6 +470,27 @@ class AuthController extends ChangeNotifier {
   bool _isInvalidSessionError(Object error) {
     return error is ApiException &&
         (error.statusCode == 401 || error.statusCode == 403);
+  }
+
+  Future<AppUser?> _offlineFaceMatchIfPossible({
+    required Object error,
+    String? phone,
+    String? pin,
+    required List<double> faceDescriptor,
+  }) async {
+    final canFallback =
+        error is ApiException && (error.isOffline || error.isTechnicalError);
+    if (!canFallback) return null;
+
+    if ((phone ?? '').trim().isNotEmpty && (pin ?? '').trim().isNotEmpty) {
+      return _localFaceAuthStore.match(
+        phone: phone!,
+        pin: pin!,
+        descriptor: faceDescriptor,
+      );
+    }
+
+    return _localFaceAuthStore.matchFaceOnly(descriptor: faceDescriptor);
   }
 
   void _setState(AuthState state) {

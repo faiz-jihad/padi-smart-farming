@@ -111,6 +111,7 @@ class AdminApiService
         $data = $request->validate([
             'role' => ['sometimes', 'required', Rule::in(['farmer', 'buyer', 'extension_officer', 'admin'])],
             'status' => ['sometimes', 'required', Rule::in(['active', 'inactive', 'suspended'])],
+            'reset_face_auth' => ['sometimes', 'boolean'],
         ]);
 
         if ($data === []) {
@@ -121,7 +122,7 @@ class AdminApiService
             return ApiResponse::error('Admin tidak dapat menonaktifkan akun sendiri.', 422);
         }
 
-        $oldValues = $target->only(['role', 'status']);
+        $oldValues = $target->only(['role', 'status', 'face_registered_at']);
 
         if (array_key_exists('role', $data)) {
             Role::findOrCreate($data['role']);
@@ -133,13 +134,31 @@ class AdminApiService
             $target->status = $data['status'];
         }
 
+        if (($data['reset_face_auth'] ?? false) === true) {
+            $target->face_descriptor = null;
+            $target->face_registered_at = null;
+            $target->pin_hash = null;
+            $target->tokens()->delete();
+        }
+
         $target->save();
         $target->refresh();
-        $this->audit($request, 'admin_user_updated', $target, $oldValues, $target->only(['role', 'status']));
+        $this->audit(
+            $request,
+            ($data['reset_face_auth'] ?? false) === true ? 'admin_user_face_auth_reset' : 'admin_user_updated',
+            $target,
+            $oldValues,
+            $target->only(['role', 'status', 'face_registered_at'])
+        );
 
-        return ApiResponse::success('Pengguna berhasil diperbarui.', [
+        return ApiResponse::success(
+            ($data['reset_face_auth'] ?? false) === true
+                ? 'Login wajah dan PIN pengguna berhasil direset.'
+                : 'Pengguna berhasil diperbarui.',
+            [
             'user' => UserResource::make($target),
-        ]);
+            ]
+        );
     }
 
     private function broadcasts(Request $request, ?string $id): JsonResponse

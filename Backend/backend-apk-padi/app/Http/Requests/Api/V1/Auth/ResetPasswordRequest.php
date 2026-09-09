@@ -32,6 +32,15 @@ class ResetPasswordRequest extends FormRequest
                 'required',
                 'string',
             ],
+            'pin' => [
+                'nullable',
+                'confirmed',
+                'digits_between:4,6',
+            ],
+            'pin_confirmation' => [
+                'nullable',
+                'string',
+            ],
         ];
     }
 
@@ -46,6 +55,8 @@ class ResetPasswordRequest extends FormRequest
             'password.min' => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'password_confirmation.required' => 'Konfirmasi password wajib diisi.',
+            'pin.confirmed' => 'Konfirmasi PIN tidak cocok.',
+            'pin.digits_between' => 'PIN harus terdiri dari 4 sampai 6 angka.',
         ];
     }
 }
