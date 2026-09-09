@@ -7,45 +7,53 @@ import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/cultivation/data/models/crop_season_model.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/home/presentation/screens/buyer_home_screen.dart';
-import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
-import 'package:padi/features/home/presentation/widgets/community_alert_card.dart';
-import 'package:padi/features/home/presentation/widgets/crop_journey_card.dart';
-import 'package:padi/features/home/presentation/widgets/daily_priority_section.dart';
-import 'package:padi/features/home/presentation/widgets/farm_hero_card.dart';
-import 'package:padi/features/home/presentation/widgets/harvest_marketplace_cta.dart';
-import 'package:padi/features/home/presentation/widgets/home_header.dart';
+import 'package:padi/features/home/presentation/tokens/senior_tokens.dart';
+import 'package:padi/features/home/presentation/widgets/community_alert_card.dart'
+    show AlertSeverity;
+import 'package:padi/features/home/presentation/widgets/daily_priority_section.dart'
+    show DailyPriorityItem;
 import 'package:padi/features/home/presentation/widgets/home_skeleton.dart';
-import 'package:padi/features/home/presentation/widgets/market_price_card.dart';
-import 'package:padi/features/home/presentation/widgets/quick_action_grid.dart';
-import 'package:padi/features/home/presentation/widgets/role_rights_card.dart';
-import 'package:padi/features/home/presentation/widgets/smart_insight_card.dart';
-import 'package:padi/features/home/presentation/widgets/today_activity_section.dart';
-import 'package:padi/features/home/presentation/widgets/upcoming_events_banner.dart';
-import 'package:padi/features/home/presentation/widgets/weather_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_daily_priority_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_farm_hero_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_harvest_cta_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_home_header.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_quick_actions.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_recent_activities_card.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_warning_banner.dart';
+import 'package:padi/features/home/presentation/widgets/senior/senior_weather_card.dart';
+import 'dart:math' as math;
 
 // --- Daily Priority Family Provider ---
-final _dailyPriorityFamilyProvider = FutureProvider.family<({int? hst, List<DailyPriorityItem> priorities}), int?>((ref, farmId) async {
-  if (farmId == null || farmId <= 0) {
-    return (hst: null, priorities: <DailyPriorityItem>[]);
-  }
-  final apiClient = ref.read(apiClientProvider);
-  try {
-    final res = await apiClient.dio.get('/farms/$farmId/daily-priority');
-    final data = res.data?['data'] as Map<String, dynamic>? ?? {};
-    final rawList = data['priorities'] as List? ?? [];
-    final hst = (data['hst'] as num?)?.toInt();
-    final list = rawList
-        .whereType<Map>()
-        .map((e) => DailyPriorityItem.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
-    return (hst: hst, priorities: list);
-  } catch (_) {
-    return (hst: null, priorities: <DailyPriorityItem>[]);
-  }
-});
+final _dailyPriorityFamilyProvider =
+    FutureProvider.family<
+      ({int? hst, List<DailyPriorityItem> priorities}),
+      int?
+    >((ref, farmId) async {
+      if (farmId == null || farmId <= 0) {
+        return (hst: null, priorities: <DailyPriorityItem>[]);
+      }
+      final apiClient = ref.read(apiClientProvider);
+      try {
+        final res = await apiClient.dio.get('/farms/$farmId/daily-priority');
+        final data = res.data?['data'] as Map<String, dynamic>? ?? {};
+        final rawList = data['priorities'] as List? ?? [];
+        final hst = (data['hst'] as num?)?.toInt();
+        final list = rawList
+            .whereType<Map>()
+            .map(
+              (e) => DailyPriorityItem.fromJson(Map<String, dynamic>.from(e)),
+            )
+            .toList();
+        return (hst: hst, priorities: list);
+      } catch (_) {
+        return (hst: null, priorities: <DailyPriorityItem>[]);
+      }
+    });
 
 // --- Global Data Provider for Smart Home Dashboard ---
-final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((ref) async {
+final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((
+  ref,
+) async {
   final apiClient = ref.read(apiClientProvider);
 
   dynamic farmsResponse;
@@ -74,6 +82,12 @@ final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((r
     reportsResponse = res.data;
   } catch (_) {}
 
+  dynamic broadcastsResponse;
+  try {
+    final res = await apiClient.dio.get('/admin-broadcasts');
+    broadcastsResponse = res.data;
+  } catch (_) {}
+
   try {
     final res = await apiClient.dio.get('/market-listings');
     listingsResponse = res.data;
@@ -82,16 +96,24 @@ final _homeDashboardProvider = FutureProvider.autoDispose<_HomeDashboardData>((r
   final farms = _parseFarms(farmsResponse);
   final seasons = _parseSeasons(seasonsResponse);
   final activities = _parseActivities(activitiesResponse);
-  final alertData = _parseLatestAlert(reportsResponse);
+  final alertData = _parseLatestAlert(
+    reportsResponse,
+    broadcastsResponse,
+    farms,
+  );
   final marketPrices = _parseMarketPrices(listingsResponse);
 
   return _HomeDashboardData(
     farms: farms,
     seasons: seasons,
     activities: activities,
-    alertTitle: alertData.$1,
-    alertSubtitle: alertData.$2,
-    alertSeverity: alertData.$3,
+    alertTitle: alertData.title,
+    alertSubtitle: alertData.subtitle,
+    alertSeverity: alertData.severity,
+    nearbyDiseaseName: alertData.nearbyDiseaseName,
+    nearbyDiseaseDistanceKm: alertData.nearbyDistanceKm,
+    nearbyLocation: alertData.nearbyLocation,
+    nearbyDiseaseAdvice: alertData.nearbyAdvice,
     gkpPrice: marketPrices.$1,
     gkgPrice: marketPrices.$2,
   );
@@ -121,58 +143,6 @@ List<CropSeasonModel> _parseSeasons(dynamic response) {
       .toList();
 }
 
-CropSeasonModel? _selectCurrentSeason(List<CropSeasonModel> seasons) {
-  if (seasons.isEmpty) return null;
-
-  final today = DateTime.now();
-  final active = seasons.where((season) {
-    final status = season.status?.toLowerCase();
-    if (status == 'completed' || status == 'cancelled') {
-      return false;
-    }
-
-    final start = season.startDate;
-    if (start == null) {
-      return status == 'active';
-    }
-
-    final harvest = _parseDate(season.estimatedHarvestDate) ??
-        start.add(const Duration(days: 109));
-
-    return !today.isBefore(start) &&
-        !today.isAfter(harvest.add(const Duration(days: 7)));
-  }).toList();
-
-  final candidates = active.isNotEmpty ? active : seasons;
-
-  candidates.sort((a, b) {
-    final aStart = a.startDate ?? DateTime(1900);
-    final bStart = b.startDate ?? DateTime(1900);
-    return bStart.compareTo(aStart);
-  });
-
-  return candidates.first;
-}
-
-bool _isNearHarvest(CropSeasonModel? season) {
-  if (season == null) return false;
-
-  final start = season.startDate;
-  if (start == null) return false;
-
-  final harvest = _parseDate(season.estimatedHarvestDate) ??
-      start.add(const Duration(days: 109));
-  final today = DateTime.now();
-  final daysUntilHarvest = harvest.difference(today).inDays;
-
-  return daysUntilHarvest <= 21 && daysUntilHarvest >= -7;
-}
-
-DateTime? _parseDate(String? value) {
-  if (value == null || value.trim().isEmpty) return null;
-  return DateTime.tryParse(value.trim());
-}
-
 List<dynamic> _parseActivities(dynamic response) {
   if (response is! Map) return const [];
   final data = response['data'];
@@ -180,44 +150,161 @@ List<dynamic> _parseActivities(dynamic response) {
   return const [];
 }
 
-(String, String, AlertSeverity) _parseLatestAlert(dynamic response) {
-  if (response is Map &&
-      response['data'] is List &&
-      (response['data'] as List).isNotEmpty) {
-    final first = (response['data'] as List).first;
-    if (first is Map) {
-      final pestName = first['pest_name']?.toString() ??
+class _AlertData {
+  const _AlertData({
+    this.title,
+    this.subtitle,
+    required this.severity,
+    this.nearbyDiseaseName,
+    this.nearbyDistanceKm,
+    this.nearbyLocation,
+    this.nearbyAdvice,
+  });
+
+  final String? title;
+  final String? subtitle;
+  final AlertSeverity severity;
+  final String? nearbyDiseaseName;
+  final double? nearbyDistanceKm;
+  final String? nearbyLocation;
+  final String? nearbyAdvice;
+}
+
+_AlertData _parseLatestAlert(
+  dynamic reportsResponse,
+  dynamic broadcastsResponse,
+  List<FarmModel> farms,
+) {
+  if (reportsResponse is Map &&
+      reportsResponse['data'] is List &&
+      (reportsResponse['data'] as List).isNotEmpty) {
+    final list = (reportsResponse['data'] as List).whereType<Map>().where((
+      item,
+    ) {
+      final status = item['status']?.toString().toLowerCase() ?? '';
+      return status != 'rejected' && status != 'resolved';
+    }).toList();
+    if (list.isNotEmpty) {
+      final first = list.first;
+      final diseaseName =
+          first['disease_name']?.toString() ??
+          first['pest_name']?.toString() ??
           first['title']?.toString() ??
-          'Wereng Batang Cokelat';
-      final location = first['location_name']?.toString() ??
-          first['village_name']?.toString() ??
-          'Kecamatan Tetangga';
-      final severityStr = first['severity']?.toString().toLowerCase() ?? '';
+          'Laporan penyakit tanaman';
 
+      final radius = (first['radius_km'] as num?)?.toDouble();
+      final repLat = (first['latitude'] as num?)?.toDouble();
+      final repLon = (first['longitude'] as num?)?.toDouble();
+
+      double? distance = radius;
+      String? location =
+          first['location_name']?.toString() ??
+          first['village_name']?.toString();
+
+      if (farms.isNotEmpty && repLat != null && repLon != null) {
+        double minDistance = double.infinity;
+        for (final f in farms) {
+          if (f.latitude != 0 && f.longitude != 0) {
+            final d = _calculateDistanceKm(
+              f.latitude,
+              f.longitude,
+              repLat,
+              repLon,
+            );
+            if (d < minDistance) {
+              minDistance = d;
+              location ??= f.name;
+            }
+          }
+        }
+        if (minDistance.isFinite) {
+          distance = minDistance;
+        }
+      }
+
+      location ??= farms.isNotEmpty ? farms.first.name : null;
+      final status = first['status']?.toString().toLowerCase() ?? 'verified';
       final severity =
-          severityStr.contains('high') || severityStr.contains('critical')
-              ? AlertSeverity.high
-              : severityStr.contains('low')
-                  ? AlertSeverity.low
-                  : AlertSeverity.medium;
+          (status == 'verified' || (distance != null && distance <= 3.0))
+          ? AlertSeverity.high
+          : AlertSeverity.medium;
 
-      return (
-        '$pestName Terdeteksi',
-        'Laporan terkonfirmasi di sekitar $location.',
-        severity,
+      return _AlertData(
+        title: '$diseaseName Terdeteksi',
+        subtitle: distance != null
+            ? 'Laporan aktif ${distance.toStringAsFixed(1)} km dari lahan${location != null ? ' di sekitar $location' : ''}.'
+            : 'Laporan aktif dari area sekitar lahan Anda.',
+        severity: severity,
+        nearbyDiseaseName: diseaseName,
+        nearbyDistanceKm: distance,
+        nearbyLocation: location,
+        nearbyAdvice:
+            'Periksa daun pada petak terdekat dan cocokkan gejala sebelum melakukan tindakan pengendalian.',
       );
     }
   }
 
-  return (
-    'Wereng Batang Cokelat Terdeteksi',
-    '3 laporan terkonfirmasi dari kelompok tani tetangga dalam 24 jam.',
-    AlertSeverity.medium,
+  if (broadcastsResponse is Map &&
+      broadcastsResponse['data'] is List &&
+      (broadcastsResponse['data'] as List).isNotEmpty) {
+    final bList = (broadcastsResponse['data'] as List)
+        .whereType<Map>()
+        .toList();
+    if (bList.isNotEmpty) {
+      final active = bList.firstWhere(
+        (b) => b['type'] == 'danger' || b['type'] == 'warning',
+        orElse: () => bList.first,
+      );
+      final title =
+          active['title']?.toString() ?? 'Peringatan Siaga Hama & Penyakit';
+      final message =
+          active['message']?.toString() ??
+          'Waspadai potensi penyebaran serangan hama di hamparan sawah sekitar.';
+      final isDanger = active['type'] == 'danger';
+
+      return _AlertData(
+        title: title,
+        subtitle: message,
+        severity: isDanger ? AlertSeverity.high : AlertSeverity.medium,
+        nearbyAdvice: message,
+      );
+    }
+  }
+
+  return _AlertData(
+    title: farms.isEmpty
+        ? 'Belum ada lahan untuk dipantau'
+        : 'Belum ada laporan penyakit sekitar',
+    subtitle: farms.isEmpty
+        ? 'Tambahkan lahan agar laporan komunitas dapat dihitung berdasarkan lokasi sawah.'
+        : 'Tidak ada laporan aktif dari komunitas di sekitar lahan yang tersimpan.',
+    severity: AlertSeverity.low,
   );
 }
 
-(String, String) _parseMarketPrices(dynamic response) {
-  final currencyFmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+double _calculateDistanceKm(
+  double lat1,
+  double lon1,
+  double lat2,
+  double lon2,
+) {
+  const p = 0.017453292519943295;
+  final a =
+      0.5 -
+      math.cos((lat2 - lat1) * p) / 2 +
+      math.cos(lat1 * p) *
+          math.cos(lat2 * p) *
+          (1 - math.cos((lon2 - lon1) * p)) /
+          2;
+  return 12742 * math.asin(math.sqrt(a));
+}
+
+(String?, String?) _parseMarketPrices(dynamic response) {
+  final currencyFmt = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   if (response is Map) {
     final list = _extractMarketItems(response).whereType<Map>().toList();
@@ -235,12 +322,15 @@ List<dynamic> _parseActivities(dynamic response) {
       if (countGkp > 0) {
         final avgGkp = totalGkp / countGkp;
         final avgGkg = avgGkp * 1.09;
-        return (currencyFmt.format(avgGkp.round()), currencyFmt.format(avgGkg.round()));
+        return (
+          currencyFmt.format(avgGkp.round()),
+          currencyFmt.format(avgGkg.round()),
+        );
       }
     }
   }
 
-  return ('Rp 6.800', 'Rp 7.400');
+  return (null, null);
 }
 
 List<dynamic> _extractMarketItems(Map<dynamic, dynamic> response) {
@@ -277,18 +367,26 @@ class _HomeDashboardData {
     required this.alertTitle,
     required this.alertSubtitle,
     required this.alertSeverity,
-    required this.gkpPrice,
-    required this.gkgPrice,
+    this.nearbyDiseaseName,
+    this.nearbyDiseaseDistanceKm,
+    this.nearbyLocation,
+    this.nearbyDiseaseAdvice,
+    this.gkpPrice,
+    this.gkgPrice,
   });
 
   final List<FarmModel> farms;
   final List<CropSeasonModel> seasons;
   final List<dynamic> activities;
-  final String alertTitle;
-  final String alertSubtitle;
+  final String? alertTitle;
+  final String? alertSubtitle;
   final AlertSeverity alertSeverity;
-  final String gkpPrice;
-  final String gkgPrice;
+  final String? nearbyDiseaseName;
+  final double? nearbyDiseaseDistanceKm;
+  final String? nearbyLocation;
+  final String? nearbyDiseaseAdvice;
+  final String? gkpPrice;
+  final String? gkgPrice;
 }
 
 // --- Main Home Screen ---
@@ -323,49 +421,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return const BuyerHomeScreen();
     }
     final rawName = user?.name.trim();
-    final userName = rawName != null && rawName.isNotEmpty ? rawName : s.defaultUserName;
+    final userName = rawName != null && rawName.isNotEmpty
+        ? rawName
+        : s.defaultUserName;
 
     return Scaffold(
-      backgroundColor: HomeColors.background,
+      backgroundColor: SeniorColors.background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
-          color: HomeColors.primaryGreen,
-          backgroundColor: HomeColors.surface,
+          color: SeniorColors.primaryGreen,
+          backgroundColor: SeniorColors.surface,
           onRefresh: _handleRefresh,
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 580),
+              constraints: const BoxConstraints(maxWidth: 540),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: HomeSpacing.screenHorizontal,
-                  vertical: HomeSpacing.xs,
+                  horizontal: SeniorSpacing.screenHorizontal,
+                  vertical: SeniorSpacing.xs,
                 ),
                 children: [
-                  // A. Top App Bar Header
-                  HomeHeader(
+                  // A. Top App Bar Header Ramah Lansia
+                  SeniorHomeHeader(
                     name: userName,
                     onNotificationTap: () => context.push('/notifications'),
                   ),
 
-                  const SizedBox(height: HomeSpacing.md),
+                  const SizedBox(height: SeniorSpacing.sectionGap),
 
                   // PPL Verification Desk Banner (for Extension Officers)
                   if (user?.role == 'extension_officer') ...[
                     InkWell(
                       onTap: () => context.push('/ppl-cases'),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(
+                        SeniorDimensions.buttonRadius,
+                      ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0284C7),
-                          borderRadius: BorderRadius.circular(16),
+                          color: SeniorColors.primaryGreen,
+                          borderRadius: BorderRadius.circular(
+                            SeniorDimensions.buttonRadius,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0284C7).withValues(alpha: 0.25),
+                              color: SeniorColors.primaryGreen.withValues(
+                                alpha: 0.18,
+                              ),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -374,14 +483,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.assignment_turned_in_rounded, color: Color(0xFF0284C7), size: 20),
+                              child: const Icon(
+                                Icons.assignment_turned_in_rounded,
+                                color: SeniorColors.primaryGreen,
+                                size: 24,
+                              ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,25 +502,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   Text(
                                     'Meja Validasi Kasus PPL',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,
                                     ),
                                   ),
                                   SizedBox(height: 2),
                                   Text(
-                                    'Buka antrean diagnosa daun petani untuk validasi lapangan',
-                                    style: TextStyle(fontSize: 11, color: Color(0xFFE0F2FE)),
+                                    'Buka antrean diagnosa daun petani untuk validasi',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: SeniorColors.textOnDarkMuted,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 22),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: HomeSpacing.md),
+                    const SizedBox(height: SeniorSpacing.sectionGap),
                   ],
 
                   // Dashboard Content with State Management
@@ -417,7 +537,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     error: (error, stack) => _buildErrorFallback(s),
                   ),
 
-                  const SizedBox(height: HomeSpacing.xxxl),
+                  const SizedBox(height: SeniorSpacing.xxl),
                 ],
               ),
             ),
@@ -442,56 +562,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final regencyName = selectedFarm?.regency?.name;
     final weatherLocation = districtName != null && districtName.isNotEmpty
         ? (regencyName != null && regencyName.isNotEmpty
-            ? '$districtName, $regencyName'
-            : districtName)
-        : (selectedFarm?.name.isNotEmpty == true
-            ? selectedFarm!.name
-            : 'Indramayu, Jawa Barat');
+              ? '$districtName, $regencyName'
+              : districtName)
+        : (selectedFarm?.name.isNotEmpty == true ? selectedFarm!.name : '');
 
-    final farmName = selectedFarm?.name ?? 'Lahan';
-    final insightTitle = hasFarms
-        ? switch (s.lang) {
-            AppLanguage.id => 'Pemeriksaan Daun $farmName',
-            AppLanguage.jv => 'Priksa Godhong $farmName',
-            AppLanguage.en => 'Leaf Scan $farmName',
-          }
-        : switch (s.lang) {
-            AppLanguage.id => 'Mulai Pantau Kesehatan Tanaman',
-            AppLanguage.jv => 'Mulai Pantau Kasarasan Tanduran',
-            AppLanguage.en => 'Start Monitoring Crop Health',
-          };
-
-    final insightDesc = hasFarms
-        ? switch (s.lang) {
-            AppLanguage.id =>
-              'Perubahan kelembaban sore berpotensi memicu bercak daun pada $farmName. Lakukan foto sampel daun.',
-            AppLanguage.jv =>
-              'Owahan hawa sore isa marakake penyakit godhong. Foto godhong kanggo priksa.',
-            AppLanguage.en =>
-              'Humidity changes may trigger leaf spots. Take a leaf sample photo.',
-          }
-        : switch (s.lang) {
-            AppLanguage.id =>
-              'Ambil foto daun padi Anda untuk diagnosa instan berbasis kecerdasan buatan.',
-            AppLanguage.jv =>
-              'Jupuk foto godhong pari panjenengan kanggo priksa nganggo AI.',
-            AppLanguage.en =>
-              'Take a photo of your rice leaf for instant AI-powered crop diagnosis.',
-          };
-
-    final insightAction = switch (s.lang) {
-      AppLanguage.id => 'Periksa Tanaman Sekarang',
-      AppLanguage.jv => 'Priksa Tanduran Saiki',
-      AppLanguage.en => 'Check Crops Now',
-    };
-
-    final dailyPriorityAsync = ref.watch(_dailyPriorityFamilyProvider(selectedFarm?.id));
+    final dailyPriorityAsync = ref.watch(
+      _dailyPriorityFamilyProvider(selectedFarm?.id),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // B. Smart Farm Hero Overview Card
-        FarmHeroCard(
+        // 1. Peringatan Penyakit Sekitar (Jika Ada Laporan Terdeteksi)
+        if (data.nearbyDiseaseName != null) ...[
+          SeniorWarningBanner(
+            diseaseName: data.nearbyDiseaseName!,
+            distanceKm: data.nearbyDiseaseDistanceKm,
+            locationName: data.nearbyLocation,
+            farmerAdvice: data.nearbyDiseaseAdvice,
+            onScanTap: () => context.push('/plant-check'),
+          ),
+          const SizedBox(height: SeniorSpacing.sectionGap),
+        ],
+
+        // 2. Kartu Lahan Utama & Tombol Raksasa Periksa Tanaman
+        SeniorFarmHeroCard(
           farms: data.farms,
           seasons: data.seasons,
           selectedIndex: farmIndex,
@@ -500,248 +595,100 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           onFarmTap: (farm) => context.go('/farms'),
           onAddFarmTap: () => context.push('/farms/add'),
+          onScanTap: () => context.push('/plant-check'),
         ),
 
-        const SizedBox(height: HomeSpacing.md),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // C. Daily Farm Action Priorities
-        dailyPriorityAsync.when(
-          data: (pData) => DailyPrioritySection(
-            priorities: pData.priorities,
-            hst: pData.hst,
-            farmName: selectedFarm?.name,
-          ),
-          loading: () => const DailyPrioritySection(
-            priorities: [],
-            isLoading: true,
-          ),
-          error: (_, __) => const SizedBox.shrink(),
+        // 3. 4 Menu Aksi Utama Petani (Grid 2x2 Kartu Besar)
+        SeniorQuickActions(
+          onScanTap: () => context.push('/plant-check'),
+          onActivityTap: () => context.push('/land/activity/add'),
+          onMarketTap: () => context.push('/marketplace'),
+          onCalendarTap: () => context.push('/planting-calendar'),
         ),
 
-        const SizedBox(height: HomeSpacing.md),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // D. Smart Contextual Insight (Single Priority Attention)
-        SmartInsightCard(
-          title: insightTitle,
-          description: insightDesc,
-          actionLabel: insightAction,
-          onActionTap: () => context.push('/plant-check'),
-        ),
-
-        const SizedBox(height: HomeSpacing.md),
-
-        // E. Modern Weather & Agroklimat Card
-        WeatherCard(
+        // 4. Kartu Cuaca & Anjuran Kerja Tani (Ikon Besar 48px, Suhu 32px, Audio TTS)
+        SeniorWeatherCard(
           locationName: weatherLocation,
           farmId: selectedFarm?.id,
           onTapCalendar: () => context.push('/planting-calendar'),
         ),
 
-        const SizedBox(height: HomeSpacing.lg),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // E. Curated Super-App Quick Actions Grid (8 Core Tools)
-        QuickActionGrid(
-          onScanTap: () => context.push('/plant-check'),
-          onActivityTap: () => context.push('/land/activity/add'),
-          onFarmTap: () => context.go('/farms'),
-          onMarketTap: () => context.push('/marketplace'),
-          onFertilizerTap: () => context.push('/fertilizer'),
-          onCalendarTap: () => context.push('/planting-calendar'),
-          onAlertTap: () => context.push('/community-alert'),
-          onTimelineTap: () => context.push('/land/timeline'),
+        // 5. Tugas Utama Hari Ini (Maksimal 2 Prioritas Teks Besar)
+        dailyPriorityAsync.when(
+          data: (pData) => SeniorDailyPriorityCard(
+            priorities: pData.priorities,
+            hst: pData.hst,
+            farmName: selectedFarm?.name,
+          ),
+          loading: () =>
+              const SeniorDailyPriorityCard(priorities: [], isLoading: true),
+          error: (_, _) => const SizedBox.shrink(),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: SeniorSpacing.sectionGap),
 
-        // Quick Access Bar: Negosiasi Bursa & Laporan Penjualan Panen
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFA7F3D0)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF059669).withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => context.push('/marketplace/offers'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.handshake_outlined, color: Color(0xFF059669), size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.negoOffers,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                            ),
-                            Text(
-                              s.manageCounterOffers,
-                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(height: 28, width: 1, color: const Color(0xFFE2E8F0)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: InkWell(
-                  onTap: () => context.push('/sales-report'),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.assessment_outlined, color: Color(0xFF047857), size: 18),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.salesReport,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                            ),
-                            Text(
-                              s.verifiedRevenue,
-                              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // F. Today's Farm Activity List
-        TodayActivitySection(
+        // 6. Catatan Kegiatan Terakhir (Maksimal 3 + Tombol Tambah 56px)
+        SeniorRecentActivitiesCard(
           activities: data.activities,
           onAddActivity: () => context.push('/land/activity/add'),
-          onViewTimeline: () => context.push('/land/timeline'),
+          onViewAll: () => context.push('/land/timeline'),
         ),
 
-        const SizedBox(height: HomeSpacing.lg),
-
-        // G. Upcoming Agriculture Events Banner Carousel
-        UpcomingEventsBanner(
-          onEventTap: (event) => context.push('/events/detail', extra: event),
-          onCreateEventTap: () => context.push('/events/create'),
-          onViewAllTap: () => context.push('/events'),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // H. Crop Journey Lifecycle
-        if (hasFarms) ...[
-          CropJourneyCard(
-            season: activeSeason,
-            farms: data.farms,
-            selectedFarm: selectedFarm,
-            onSelectFarm: (farm) {
-              final idx = data.farms.indexOf(farm);
-              if (idx != -1) {
-                setState(() => _selectedFarmIndex = idx);
-              }
-            },
-            onTapTimeline: () => context.push('/land/timeline'),
-          ),
-          const SizedBox(height: HomeSpacing.lg),
-        ],
-
-        // I. Harvest & Marketplace CTA (Prioritized if near harvest)
+        // 7. Ajakan Jual Hasil Panen (Hanya jika mendekati panen <= 14 hari atau belum ada lahan)
         if (isNearHarvest || !hasFarms) ...[
-          HarvestMarketplaceCta(
+          const SizedBox(height: SeniorSpacing.sectionGap),
+          SeniorHarvestCtaCard(
             onTapMarketplace: () => context.push('/marketplace'),
-            onTapCreateListing: () => context.push('/marketplace/create'),
+            gkpPrice: data.gkpPrice,
+            gkgPrice: data.gkgPrice,
           ),
-          const SizedBox(height: HomeSpacing.lg),
         ],
-
-        // J. Community Radar & Pests Alert (Dynamic from backend reports)
-        CommunityAlertCard(
-          title: data.alertTitle,
-          subtitle: data.alertSubtitle,
-          distanceKm: 3.2,
-          severity: data.alertSeverity,
-          onTapAlerts: () => context.push('/community-alert'),
-        ),
-
-        const SizedBox(height: HomeSpacing.lg),
-
-        // K. Compact Commodity Market Price Index (Dynamic from marketplace)
-        MarketPriceCard(
-          onTapMarket: () => context.push('/marketplace'),
-          gkpPrice: data.gkpPrice,
-          gkgPrice: data.gkgPrice,
-        ),
       ],
     );
   }
 
   Widget _buildErrorFallback(AppStrings s) {
     return Container(
-      padding: const EdgeInsets.all(HomeSpacing.cardPadding),
+      padding: const EdgeInsets.all(SeniorSpacing.cardPadding),
       decoration: BoxDecoration(
-        color: HomeColors.surface,
-        borderRadius: BorderRadius.circular(HomeRadius.xl),
-        border: Border.all(color: HomeColors.border),
+        color: SeniorColors.surface,
+        borderRadius: BorderRadius.circular(SeniorDimensions.cardRadius),
+        border: Border.all(color: SeniorColors.border, width: 2),
       ),
       child: Column(
         children: [
           const Icon(
             Icons.cloud_off_rounded,
-            color: HomeColors.textSecondary,
-            size: 36,
+            color: SeniorColors.textSecondary,
+            size: 44,
           ),
-          const SizedBox(height: HomeSpacing.xs),
+          const SizedBox(height: SeniorSpacing.md),
           Text(
             s.friendlyErrorMessage,
-            style: HomeTypography.cardTitle,
+            style: SeniorTypography.subtitle,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: HomeSpacing.md),
-          FilledButton.icon(
-            onPressed: () => ref.refresh(_homeDashboardProvider.future),
-            icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: Text(s.tryAgain),
-            style: FilledButton.styleFrom(
-              backgroundColor: HomeColors.primaryGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(HomeRadius.sm),
+          const SizedBox(height: SeniorSpacing.lg),
+          SizedBox(
+            height: SeniorDimensions.buttonHeight,
+            child: ElevatedButton.icon(
+              onPressed: () => ref.refresh(_homeDashboardProvider.future),
+              icon: const Icon(Icons.refresh_rounded, size: 24),
+              label: Text(s.tryAgain, style: SeniorTypography.button),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: SeniorColors.primaryGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    SeniorDimensions.buttonRadius,
+                  ),
+                ),
               ),
             ),
           ),

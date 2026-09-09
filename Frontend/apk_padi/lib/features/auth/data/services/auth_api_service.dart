@@ -16,19 +16,32 @@ class AuthApiService {
     required String accountType,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
+    List<double>? faceDescriptor,
+    List<List<double>>? faceDescriptors,
   }) async {
     try {
+      final data = <String, dynamic>{
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'account_type': accountType,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+        'device_name': AppConfig.deviceName,
+      };
+
+      if (pin != null && pin.isNotEmpty) data['pin'] = pin;
+      if (pinConfirmation != null && pinConfirmation.isNotEmpty) {
+        data['pin_confirmation'] = pinConfirmation;
+      }
+      if (faceDescriptor != null) data['face_descriptor'] = faceDescriptor;
+      if (faceDescriptors != null) data['face_descriptors'] = faceDescriptors;
+
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/auth/register',
-        data: {
-          'name': name,
-          'email': email,
-          'phone': phone,
-          'account_type': accountType,
-          'password': password,
-          'password_confirmation': passwordConfirmation,
-          'device_name': AppConfig.deviceName,
-        },
+        data: data,
       );
 
       return _authResultFromResponse(response.data);
@@ -57,6 +70,31 @@ class AuthApiService {
     }
   }
 
+  Future<AuthResult> faceLogin({
+    String? phone,
+    String? pin,
+    required List<double> faceDescriptor,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'face_descriptor': faceDescriptor,
+        'device_name': AppConfig.deviceName,
+      };
+
+      if (phone != null && phone.isNotEmpty) data['phone'] = phone;
+      if (pin != null && pin.isNotEmpty) data['pin'] = pin;
+
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/auth/face-login',
+        data: data,
+      );
+
+      return _authResultFromResponse(response.data);
+    } catch (error) {
+      throw mapDioException(error);
+    }
+  }
+
   Future<AppUserModel> me() async {
     try {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
@@ -76,10 +114,7 @@ class AuthApiService {
     try {
       final response = await _apiClient.dio.patch<Map<String, dynamic>>(
         '/profile',
-        data: {
-          'name': name,
-          'phone': phone,
-        },
+        data: {'name': name, 'phone': phone},
       );
 
       return _userFromResponse(response.data);
@@ -111,9 +146,7 @@ class AuthApiService {
     try {
       await _apiClient.dio.post<Map<String, dynamic>>(
         '/auth/forgot-password',
-        data: {
-          'email': email,
-        },
+        data: {'email': email},
       );
     } catch (error) {
       throw mapDioException(error);
@@ -127,10 +160,7 @@ class AuthApiService {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         '/auth/forgot-password/verify',
-        data: {
-          'email': email,
-          'code': code,
-        },
+        data: {'email': email, 'code': code},
       );
 
       return response.data?['success'] == true;
@@ -144,6 +174,8 @@ class AuthApiService {
     required String code,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
   }) async {
     try {
       await _apiClient.dio.post<Map<String, dynamic>>(
@@ -153,6 +185,9 @@ class AuthApiService {
           'code': code,
           'password': password,
           'password_confirmation': passwordConfirmation,
+          if (pin != null && pin.isNotEmpty) 'pin': pin,
+          if (pinConfirmation != null && pinConfirmation.isNotEmpty)
+            'pin_confirmation': pinConfirmation,
         },
       );
     } catch (error) {
@@ -162,9 +197,7 @@ class AuthApiService {
 
   Future<void> logout() async {
     try {
-      await _apiClient.dio.post<Map<String, dynamic>>(
-        '/auth/logout',
-      );
+      await _apiClient.dio.post<Map<String, dynamic>>('/auth/logout');
     } catch (error) {
       throw mapDioException(error);
     }
@@ -172,9 +205,7 @@ class AuthApiService {
 
   Future<void> logoutAll() async {
     try {
-      await _apiClient.dio.post<Map<String, dynamic>>(
-        '/auth/logout-all',
-      );
+      await _apiClient.dio.post<Map<String, dynamic>>('/auth/logout-all');
     } catch (error) {
       throw mapDioException(error);
     }
@@ -185,9 +216,7 @@ AuthResult _authResultFromResponse(Map<String, dynamic>? json) {
   final data = json?['data'] as Map<String, dynamic>? ?? {};
 
   return AuthResult(
-    user: AppUserModel.fromJson(
-      data['user'] as Map<String, dynamic>,
-    ),
+    user: AppUserModel.fromJson(data['user'] as Map<String, dynamic>),
     token: data['token']?.toString(),
   );
 }
@@ -195,7 +224,5 @@ AuthResult _authResultFromResponse(Map<String, dynamic>? json) {
 AppUserModel _userFromResponse(Map<String, dynamic>? json) {
   final data = json?['data'] as Map<String, dynamic>? ?? {};
 
-  return AppUserModel.fromJson(
-    data['user'] as Map<String, dynamic>,
-  );
+  return AppUserModel.fromJson(data['user'] as Map<String, dynamic>);
 }

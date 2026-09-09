@@ -323,7 +323,7 @@
                     </label>
 
                     <input
-                        type="url"
+                        type="text"
                         name="image_url"
                         id="image_url"
                         placeholder="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500"

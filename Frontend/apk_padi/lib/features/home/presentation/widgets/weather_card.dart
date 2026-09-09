@@ -4,18 +4,41 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
-import 'package:padi/features/home/presentation/widgets/weather_forecast_item.dart';
 
-final weatherAdvisoryFamilyProvider = FutureProvider.family<Map<String, dynamic>?, int?>((ref, farmId) async {
-  if (farmId == null || farmId <= 0) return null;
-  final apiClient = ref.read(apiClientProvider);
-  try {
-    final res = await apiClient.dio.get('/farms/$farmId/weather-advisory');
-    return res.data?['data'] as Map<String, dynamic>?;
-  } catch (_) {
-    return null;
-  }
-});
+final weatherAdvisoryFamilyProvider =
+    FutureProvider.family<Map<String, dynamic>?, int?>((ref, farmId) async {
+      if (farmId == null || farmId <= 0) return null;
+      final apiClient = ref.read(apiClientProvider);
+      try {
+        final res = await apiClient.dio.get('/farms/$farmId/weather-advisory');
+        return res.data?['data'] as Map<String, dynamic>?;
+      } catch (_) {
+        return null;
+      }
+    });
+
+final weatherForecastFamilyProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, int?>((
+      ref,
+      farmId,
+    ) async {
+      if (farmId == null || farmId <= 0) return const [];
+      final apiClient = ref.read(apiClientProvider);
+      try {
+        final res = await apiClient.dio.post(
+          '/weather/forecast',
+          data: {'farm_id': farmId, 'units': 'metric', 'lang': 'id'},
+        );
+        final raw = res.data?['data']?['forecasts'];
+        if (raw is! List) return const [];
+        return raw
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      } catch (_) {
+        return const [];
+      }
+    });
 
 class WeatherCard extends StatefulWidget {
   const WeatherCard({
@@ -23,28 +46,17 @@ class WeatherCard extends StatefulWidget {
     required this.locationName,
     required this.onTapCalendar,
     this.farmId,
-    this.currentTemp = '28°C',
-    this.currentCondition,
-    this.humidity = '78%',
-    this.windSpeed = '12 km/j',
-    this.rainNotice,
   });
 
   final String locationName;
   final VoidCallback onTapCalendar;
   final int? farmId;
-  final String currentTemp;
-  final String? currentCondition;
-  final String humidity;
-  final String windSpeed;
-  final String? rainNotice;
 
   @override
   State<WeatherCard> createState() => _WeatherCardState();
 }
 
 class _WeatherCardState extends State<WeatherCard> {
-  int _selectedForecastIndex = 0;
   final FlutterTts _flutterTts = FlutterTts();
   bool _isPlayingVoice = false;
 
@@ -94,9 +106,14 @@ class _WeatherCardState extends State<WeatherCard> {
     return Consumer(
       builder: (context, ref, _) {
         final lang = ref.watch(languageProvider);
-        final s = AppStrings(lang);
-        final advisoryAsync = ref.watch(weatherAdvisoryFamilyProvider(widget.farmId));
+        final advisoryAsync = ref.watch(
+          weatherAdvisoryFamilyProvider(widget.farmId),
+        );
+        final forecastAsync = ref.watch(
+          weatherForecastFamilyProvider(widget.farmId),
+        );
         final advisoryData = advisoryAsync.value;
+        final forecasts = forecastAsync.value ?? const <Map<String, dynamic>>[];
 
         final title = switch (lang) {
           AppLanguage.id => 'Cuaca & Agroklimat Lahan',
@@ -105,9 +122,9 @@ class _WeatherCardState extends State<WeatherCard> {
         };
 
         final defaultLocation = switch (lang) {
-          AppLanguage.id => 'Wilayah Sawah Anda',
-          AppLanguage.jv => 'Wewengkon Sawah Panjenengan',
-          AppLanguage.en => 'Your Farm Area',
+          AppLanguage.id => 'Pilih atau tambahkan lahan',
+          AppLanguage.jv => 'Pilih utawa tambah sawah',
+          AppLanguage.en => 'Select or add a farm',
         };
 
         final calendarLabel = switch (lang) {
@@ -116,74 +133,58 @@ class _WeatherCardState extends State<WeatherCard> {
           AppLanguage.en => 'Calendar',
         };
 
-        final condition = advisoryData?['weather']?['description']?.toString() ??
-            widget.currentCondition ??
-            switch (lang) {
-              AppLanguage.id => 'Cerah Berawan',
-              AppLanguage.jv => 'Padhang Mendhung',
-              AppLanguage.en => 'Partly Cloudy',
-            };
+        final noFarmText = switch (lang) {
+          AppLanguage.id =>
+            'Data cuaca muncul setelah lahan memiliki lokasi tersimpan.',
+          AppLanguage.jv =>
+            'Data hawa metu yen sawah wis nduwe lokasi kesimpen.',
+          AppLanguage.en =>
+            'Weather data appears after the farm location is saved.',
+        };
 
-        final notice = advisoryData?['advisories'] is List && (advisoryData!['advisories'] as List).isNotEmpty
-            ? advisoryData['advisories'][0]['action']?.toString() ?? 'Kondisi cuaca terkendali.'
-            : widget.rainNotice ??
-                switch (lang) {
-                  AppLanguage.id => 'Peluang hujan rendah. Waktu aman untuk pemupukan pagi.',
-                  AppLanguage.jv => 'Peluang udan sithik. Aman kanggo mupuk esuk.',
-                  AppLanguage.en => 'Low chance of rain. Safe for morning fertilizing.',
-                };
+        final unavailableText = switch (lang) {
+          AppLanguage.id =>
+            'Saran cuaca belum tersedia. Tarik ke bawah untuk memuat ulang.',
+          AppLanguage.jv =>
+            'Saran hawa durung kasedhiya. Seret mudhun kanggo muat maneh.',
+          AppLanguage.en =>
+            'Weather advisory is unavailable. Pull down to refresh.',
+        };
 
+        final weather = advisoryData?['weather'] as Map<String, dynamic>?;
+        final advisories = advisoryData?['advisories'] as List?;
+        Map<dynamic, dynamic>? firstAdvice;
+        if (advisories != null) {
+          for (final item in advisories) {
+            if (item is Map) {
+              firstAdvice = item;
+              break;
+            }
+          }
+        }
+        final notice = firstAdvice?['action']?.toString();
+        final adviceTitle = firstAdvice?['title']?.toString();
+        final recommended = firstAdvice?['recommended']?.toString();
         final voiceText = advisoryData?['voice_text']?.toString() ?? notice;
         final phaseName = advisoryData?['phase_name']?.toString();
-
-        final tempVal = advisoryData?['weather']?['temp'] != null
-            ? '${(advisoryData!['weather']['temp'] as num).round()}°C'
-            : widget.currentTemp;
-        final humVal = advisoryData?['weather']?['humidity'] != null
-            ? '${advisoryData!['weather']['humidity']}%'
-            : widget.humidity;
-        final windVal = advisoryData?['weather']?['wind_speed'] != null
-            ? '${(advisoryData!['weather']['wind_speed'] as num).toStringAsFixed(1)} m/d'
-            : widget.windSpeed;
-
-        final forecastList = [
-          {
-            'time': s.weatherNow,
-            'temp': tempVal,
-            'icon': Icons.wb_cloudy_rounded,
-            'rain': '20%',
-          },
-          {
-            'time': '10:00',
-            'temp': '29°C',
-            'icon': Icons.wb_sunny_rounded,
-            'rain': '15%',
-          },
-          {
-            'time': '12:00',
-            'temp': '31°C',
-            'icon': Icons.wb_sunny_rounded,
-            'rain': '10%',
-          },
-          {
-            'time': '14:00',
-            'temp': '32°C',
-            'icon': Icons.wb_cloudy_rounded,
-            'rain': '35%',
-          },
-          {
-            'time': '16:00',
-            'temp': '29°C',
-            'icon': Icons.grain_rounded,
-            'rain': '45%',
-          },
-          {
-            'time': '18:00',
-            'temp': '27°C',
-            'icon': Icons.nightlight_round,
-            'rain': '25%',
-          },
-        ];
+        final hst = advisoryData?['hst'];
+        final tempVal = weather?['temp'] is num
+            ? '${(weather!['temp'] as num).round()} C'
+            : null;
+        final humVal = weather?['humidity'] != null
+            ? '${weather!['humidity']}%'
+            : null;
+        final windVal = weather?['wind_speed'] is num
+            ? '${(weather!['wind_speed'] as num).toStringAsFixed(1)} m/d'
+            : null;
+        final condition = weather?['description']?.toString();
+        final hasWeather = weather != null && tempVal != null;
+        final isLoading = widget.farmId != null && advisoryAsync.isLoading;
+        final earlyWarning = _WeatherEarlyWarning.from(
+          weather: weather,
+          advisories: advisories,
+          forecasts: forecasts,
+        );
 
         return Container(
           decoration: BoxDecoration(
@@ -197,18 +198,17 @@ class _WeatherCardState extends State<WeatherCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Header Row
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: HomeColors.skyBlue.withValues(alpha: 0.1),
+                        color: HomeColors.lightGreen,
                         borderRadius: BorderRadius.circular(HomeRadius.sm),
                       ),
                       child: const Icon(
-                        Icons.wb_sunny_rounded,
-                        color: Color(0xFFD97706),
+                        Icons.wb_cloudy_outlined,
+                        color: HomeColors.primaryGreen,
                         size: 18,
                       ),
                     ),
@@ -217,10 +217,7 @@ class _WeatherCardState extends State<WeatherCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            title,
-                            style: HomeTypography.cardTitle,
-                          ),
+                          Text(title, style: HomeTypography.cardTitle),
                           Text(
                             widget.locationName.isNotEmpty
                                 ? widget.locationName
@@ -231,17 +228,18 @@ class _WeatherCardState extends State<WeatherCard> {
                         ],
                       ),
                     ),
-                    // TTS Voice Speaker Button
-                    IconButton(
-                      icon: Icon(
-                        _isPlayingVoice ? Icons.volume_up_rounded : Icons.volume_up_outlined,
-                        color: _isPlayingVoice ? const Color(0xFF059669) : const Color(0xFF64748B),
-                        size: 20,
+                    if (voiceText != null && voiceText.isNotEmpty)
+                      IconButton(
+                        icon: Icon(
+                          _isPlayingVoice
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_up_outlined,
+                          color: HomeColors.primaryGreen,
+                          size: 20,
+                        ),
+                        tooltip: 'Dengarkan saran cuaca',
+                        onPressed: () => _toggleVoice(voiceText),
                       ),
-                      tooltip: 'Dengarkan Saran Cuaca',
-                      onPressed: () => _toggleVoice(voiceText),
-                    ),
-                    // Calendar Shortcut
                     TextButton.icon(
                       onPressed: widget.onTapCalendar,
                       icon: const Icon(
@@ -257,152 +255,31 @@ class _WeatherCardState extends State<WeatherCard> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: HomeSpacing.md),
-
-                // Current Weather Hero + Advisory Banner
-                Container(
-                  padding: const EdgeInsets.all(HomeSpacing.md),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFF0FDF4),
-                        Color(0xFFE0F2FE),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(HomeRadius.md),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                if (isLoading)
+                  _buildLoadingState()
+                else if (!hasWeather)
+                  _buildUnavailableState(
+                    widget.farmId == null ? noFarmText : unavailableText,
+                  )
+                else
+                  _buildWeatherState(
+                    tempVal: tempVal,
+                    condition: condition,
+                    phaseName: phaseName,
+                    hst: hst,
+                    adviceTitle: adviceTitle,
+                    notice: notice,
+                    recommended: recommended,
+                    humVal: humVal,
+                    windVal: windVal,
+                    forecasts: forecasts,
+                    isForecastLoading: forecastAsync.isLoading,
+                    earlyWarning: earlyWarning,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            tempVal,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -1,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  condition,
-                                  style: const TextStyle(
-                                    color: Color(0xFF0F172A),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                if (phaseName != null)
-                                  Text(
-                                    phaseName,
-                                    style: const TextStyle(
-                                      color: Color(0xFF059669),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          // Metric Chips
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              _buildMetricChip(
-                                icon: Icons.water_drop_outlined,
-                                label: humVal,
-                                color: HomeColors.skyBlue,
-                              ),
-                              const SizedBox(height: 4),
-                              _buildMetricChip(
-                                icon: Icons.air_rounded,
-                                label: windVal,
-                                color: HomeColors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.psychology_rounded, size: 16, color: Color(0xFF059669)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                notice,
-                                style: const TextStyle(
-                                  color: Color(0xFF334155),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.35,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: HomeSpacing.sm),
-
-                // Horizontal Scrollable Forecast
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: List.generate(
-                      forecastList.length,
-                      (index) {
-                        final item = forecastList[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: index == forecastList.length - 1 ? 0 : 8,
-                          ),
-                          child: WeatherForecastItem(
-                            time: item['time']?.toString() ?? '',
-                            temp: item['temp']?.toString() ?? '',
-                            icon: (item['icon'] as IconData?) ?? Icons.wb_sunny_rounded,
-                            rainProb: item['rain']?.toString(),
-                            isSelected: _selectedForecastIndex == index,
-                            onTap: () => setState(() => _selectedForecastIndex = index),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -411,27 +288,442 @@ class _WeatherCardState extends State<WeatherCard> {
     );
   }
 
-  Widget _buildMetricChip({
-    required IconData icon,
-    required String label,
-    required Color color,
+  Widget _buildUnavailableState(String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(HomeSpacing.md),
+      decoration: BoxDecoration(
+        color: HomeColors.lightGreen,
+        borderRadius: BorderRadius.circular(HomeRadius.md),
+        border: Border.all(color: HomeColors.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: HomeColors.primaryGreen,
+          ),
+          const SizedBox(width: HomeSpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: HomeTypography.supporting.copyWith(
+                color: HomeColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(HomeSpacing.md),
+      decoration: BoxDecoration(
+        color: HomeColors.lightGreen,
+        borderRadius: BorderRadius.circular(HomeRadius.md),
+        border: Border.all(color: HomeColors.border),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: HomeColors.primaryGreen,
+            ),
+          ),
+          const SizedBox(width: HomeSpacing.sm),
+          Expanded(
+            child: Text(
+              'Memuat data cuaca lahan...',
+              style: HomeTypography.supporting.copyWith(
+                color: HomeColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherState({
+    required String tempVal,
+    required String? condition,
+    required String? phaseName,
+    required dynamic hst,
+    required String? adviceTitle,
+    required String? notice,
+    required String? recommended,
+    required String? humVal,
+    required String? windVal,
+    required List<Map<String, dynamic>> forecasts,
+    required bool isForecastLoading,
+    required _WeatherEarlyWarning earlyWarning,
   }) {
+    return Container(
+      padding: const EdgeInsets.all(HomeSpacing.md),
+      decoration: BoxDecoration(
+        color: HomeColors.lightGreen,
+        borderRadius: BorderRadius.circular(HomeRadius.md),
+        border: Border.all(color: HomeColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 82,
+                height: 82,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(HomeRadius.md),
+                  border: Border.all(color: HomeColors.border),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.thermostat_rounded,
+                      color: HomeColors.primaryGreen,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      tempVal,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: HomeColors.deepGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: HomeSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (condition != null && condition.isNotEmpty) ...[
+                      Text(
+                        condition,
+                        style: const TextStyle(
+                          color: HomeColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                    ],
+                    if (phaseName != null && phaseName.isNotEmpty)
+                      Text(
+                        phaseName,
+                        style: const TextStyle(
+                          color: HomeColors.primaryGreen,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    const SizedBox(height: HomeSpacing.xs),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        if (humVal != null)
+                          _buildMetricChip(
+                            icon: Icons.water_drop_outlined,
+                            label: humVal,
+                          ),
+                        if (windVal != null)
+                          _buildMetricChip(
+                            icon: Icons.air_rounded,
+                            label: windVal,
+                          ),
+                        if (hst != null)
+                          _buildMetricChip(
+                            icon: Icons.eco_outlined,
+                            label: 'HST $hst',
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: HomeSpacing.sm),
+          _buildEarlyWarningCard(earlyWarning),
+          if (notice != null && notice.isNotEmpty) ...[
+            const SizedBox(height: HomeSpacing.sm),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(HomeRadius.sm),
+                border: Border.all(color: HomeColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: HomeColors.lightGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.task_alt_rounded,
+                          size: 15,
+                          color: HomeColors.primaryGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          adviceTitle?.isNotEmpty == true
+                              ? adviceTitle!
+                              : 'Saran agroklimat hari ini',
+                          style: const TextStyle(
+                            color: HomeColors.deepGreen,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    notice,
+                    style: const TextStyle(
+                      color: HomeColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                  if (recommended != null && recommended.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      recommended,
+                      style: const TextStyle(
+                        color: HomeColors.primaryGreen,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: HomeSpacing.sm),
+          _buildForecastSection(
+            forecasts: forecasts,
+            isLoading: isForecastLoading,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarlyWarningCard(_WeatherEarlyWarning warning) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: warning.isSafe ? Colors.white : HomeColors.deepGreen,
+        borderRadius: BorderRadius.circular(HomeRadius.sm),
+        border: Border.all(
+          color: warning.isSafe ? HomeColors.border : HomeColors.deepGreen,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: warning.isSafe
+                  ? HomeColors.lightGreen
+                  : Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              warning.icon,
+              color: warning.isSafe ? HomeColors.primaryGreen : Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: warning.isSafe
+                            ? HomeColors.lightGreen
+                            : Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(HomeRadius.pill),
+                      ),
+                      child: Text(
+                        warning.level,
+                        style: TextStyle(
+                          color: warning.isSafe
+                              ? HomeColors.primaryGreen
+                              : Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      warning.title,
+                      style: TextStyle(
+                        color: warning.isSafe
+                            ? HomeColors.deepGreen
+                            : Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  warning.message,
+                  style: TextStyle(
+                    color: warning.isSafe
+                        ? HomeColors.textSecondary
+                        : Colors.white.withValues(alpha: 0.86),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForecastSection({
+    required List<Map<String, dynamic>> forecasts,
+    required bool isLoading,
+  }) {
+    final items = forecasts.take(4).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(HomeRadius.sm),
+        border: Border.all(color: HomeColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_view_day_rounded,
+                color: HomeColors.primaryGreen,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'Prediksi cuaca ke depan',
+                  style: TextStyle(
+                    color: HomeColors.deepGreen,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              if (items.isNotEmpty)
+                Text(
+                  '${items.length} data',
+                  style: const TextStyle(
+                    color: HomeColors.textSecondary,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (isLoading)
+            const LinearProgressIndicator(
+              minHeight: 3,
+              color: HomeColors.primaryGreen,
+              backgroundColor: HomeColors.lightGreen,
+            )
+          else if (items.isEmpty)
+            Text(
+              'Prediksi belum tersedia dari server cuaca.',
+              style: HomeTypography.supporting.copyWith(
+                color: HomeColors.textSecondary,
+              ),
+            )
+          else
+            Row(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  Expanded(child: _ForecastTile(data: items[i])),
+                  if (i != items.length - 1) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricChip({required IconData icon, required String label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(HomeRadius.pill),
-        border: Border.all(color: HomeColors.borderSubtle),
+        border: Border.all(color: HomeColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: HomeColors.primaryGreen),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              color: color,
+            style: const TextStyle(
+              color: HomeColors.primaryGreen,
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
             ),
@@ -439,5 +731,202 @@ class _WeatherCardState extends State<WeatherCard> {
         ],
       ),
     );
+  }
+}
+
+class _ForecastTile extends StatelessWidget {
+  const _ForecastTile({required this.data});
+
+  final Map<String, dynamic> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final temp = _asNum(data['temperature']);
+    final humidity = _asNum(data['humidity']);
+    final rain = _asNum(data['rain']);
+    final desc = data['description']?.toString() ?? data['weather']?.toString();
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: HomeColors.lightGreen,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: HomeColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(_iconFor(desc, rain), color: HomeColors.primaryGreen, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            _timeLabel(data['timestamp']),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: HomeColors.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            temp != null ? '${temp.round()} C' : '-',
+            style: const TextStyle(
+              color: HomeColors.deepGreen,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            rain != null && rain > 0
+                ? 'Hujan ${rain.toStringAsFixed(1)}'
+                : humidity != null
+                ? 'RH ${humidity.round()}%'
+                : desc ?? '-',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: HomeColors.primaryGreen,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static num? _asNum(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString() ?? '');
+  }
+
+  static String _timeLabel(dynamic timestamp) {
+    final seconds = _asNum(timestamp)?.toInt();
+    if (seconds == null || seconds <= 0) return 'Nanti';
+    final dt = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  static IconData _iconFor(String? desc, num? rain) {
+    final lower = desc?.toLowerCase() ?? '';
+    if ((rain ?? 0) > 0 || lower.contains('rain') || lower.contains('hujan')) {
+      return Icons.grain_rounded;
+    }
+    if (lower.contains('cloud') || lower.contains('awan')) {
+      return Icons.cloud_outlined;
+    }
+    return Icons.wb_sunny_outlined;
+  }
+}
+
+class _WeatherEarlyWarning {
+  const _WeatherEarlyWarning({
+    required this.level,
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.isSafe,
+  });
+
+  final String level;
+  final String title;
+  final String message;
+  final IconData icon;
+  final bool isSafe;
+
+  factory _WeatherEarlyWarning.from({
+    required Map<String, dynamic>? weather,
+    required List? advisories,
+    required List<Map<String, dynamic>> forecasts,
+  }) {
+    final currentTemp = _asNum(weather?['temp']);
+    final currentHumidity = _asNum(weather?['humidity']);
+    final currentWind = _asNum(weather?['wind_speed']);
+    final currentDesc = weather?['description']?.toString().toLowerCase() ?? '';
+
+    num maxTemp = currentTemp ?? 0;
+    num maxHumidity = currentHumidity ?? 0;
+    num maxWind = currentWind ?? 0;
+    num maxRain = currentDesc.contains('hujan') || currentDesc.contains('rain')
+        ? 1
+        : 0;
+
+    for (final forecast in forecasts.take(8)) {
+      final temp = _asNum(forecast['temperature']);
+      final humidity = _asNum(forecast['humidity']);
+      final wind = _asNum(forecast['wind_speed']);
+      final rain = _asNum(forecast['rain']);
+      final desc =
+          forecast['description']?.toString().toLowerCase() ??
+          forecast['weather']?.toString().toLowerCase() ??
+          '';
+
+      if (temp != null && temp > maxTemp) maxTemp = temp;
+      if (humidity != null && humidity > maxHumidity) maxHumidity = humidity;
+      if (wind != null && wind > maxWind) maxWind = wind;
+      if (rain != null && rain > maxRain) maxRain = rain;
+      if (desc.contains('hujan') || desc.contains('rain')) {
+        maxRain = maxRain == 0 ? 1 : maxRain;
+      }
+    }
+
+    var hasUrgentAdvice = false;
+    var hasWarningAdvice = false;
+    if (advisories != null) {
+      for (final advice in advisories) {
+        if (advice is! Map) continue;
+        final severity = advice['severity']?.toString().toLowerCase() ?? '';
+        hasUrgentAdvice = hasUrgentAdvice || severity == 'urgent';
+        hasWarningAdvice =
+            hasWarningAdvice || severity == 'warning' || severity == 'urgent';
+      }
+    }
+
+    if (hasUrgentAdvice ||
+        maxRain >= 15 ||
+        maxHumidity >= 90 ||
+        maxWind >= 15) {
+      return const _WeatherEarlyWarning(
+        level: 'SIAGA CUACA',
+        title: 'Risiko lapangan meningkat',
+        message:
+            'Pantau drainase, kelembaban rumpun, dan daun padi lebih sering pada periode prakiraan terdekat.',
+        icon: Icons.warning_amber_rounded,
+        isSafe: false,
+      );
+    }
+
+    if (hasWarningAdvice ||
+        maxRain > 0 ||
+        maxHumidity >= 82 ||
+        maxTemp >= 33 ||
+        maxWind >= 8) {
+      return const _WeatherEarlyWarning(
+        level: 'WASPADA DINI',
+        title: 'Ada faktor cuaca yang perlu dipantau',
+        message:
+            'Sesuaikan pemupukan, pengairan, dan inspeksi daun dengan kondisi prakiraan beberapa jam ke depan.',
+        icon: Icons.notifications_active_outlined,
+        isSafe: false,
+      );
+    }
+
+    return const _WeatherEarlyWarning(
+      level: 'KONDISI TERKENDALI',
+      title: 'Belum ada sinyal cuaca berisiko',
+      message:
+          'Lanjutkan pemantauan rutin dan catat perubahan kondisi lahan bila cuaca berubah.',
+      icon: Icons.check_circle_outline_rounded,
+      isSafe: true,
+    );
+  }
+
+  static num? _asNum(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString() ?? '');
   }
 }

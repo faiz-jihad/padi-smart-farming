@@ -110,10 +110,16 @@ class PasswordResetService
             return false;
         }
 
-        $user->forceFill([
+        $payload = [
             'password' => Hash::make($data['password']),
             'remember_token' => Str::random(60),
-        ])->save();
+        ];
+
+        if (! empty($data['pin'])) {
+            $payload['pin_hash'] = Hash::make($data['pin']);
+        }
+
+        $user->forceFill($payload)->save();
 
         $user->tokens()->delete();
 

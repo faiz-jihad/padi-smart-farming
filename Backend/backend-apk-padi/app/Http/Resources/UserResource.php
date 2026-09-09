@@ -24,6 +24,10 @@ class UserResource extends JsonResource
             'admin' => 'Administrator',
             default => UserRole::tryFrom((string) $role)?->label() ?? (string) $role,
         };
+        $faceDescriptors = is_array($this->face_descriptor) ? $this->face_descriptor : [];
+        $facePoseCount = count($faceDescriptors) === 128 && ! is_array($faceDescriptors[0] ?? null)
+            ? 1
+            : count(array_filter($faceDescriptors, fn ($descriptor) => is_array($descriptor)));
 
         return [
             'id' => $this->id,
@@ -34,6 +38,10 @@ class UserResource extends JsonResource
             'role_label' => (string) $roleLabel,
             'status' => $this->status,
             'status_label' => UserStatus::tryFrom($this->status)?->label() ?? $this->status,
+            'face_auth_enabled' => $facePoseCount > 0 && filled($this->pin_hash),
+            'face_pose_count' => $facePoseCount,
+            'face_registered_at' => $this->face_registered_at ? (is_string($this->face_registered_at) ? $this->face_registered_at : $this->face_registered_at->toIso8601String()) : null,
+            'pin_enabled' => filled($this->pin_hash),
             'last_login_at' => $this->last_login_at ? (is_string($this->last_login_at) ? $this->last_login_at : $this->last_login_at->toIso8601String()) : null,
             'created_at' => $this->created_at ? (is_string($this->created_at) ? $this->created_at : $this->created_at->toIso8601String()) : now()->toIso8601String(),
         ];

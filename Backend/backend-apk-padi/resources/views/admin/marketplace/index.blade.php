@@ -121,7 +121,7 @@
                 <tbody>
                     @forelse($listings as $listing)
                         @php
-                            $thumb = $listing->image_url ?? ($listing->images->first()?->image_path ?? asset('images/padi-logo.jpeg'));
+                            $thumb = $listing->formatted_image_url ?? asset('images/padi-logo.jpeg');
                         @endphp
                         <tr>
                             <td>

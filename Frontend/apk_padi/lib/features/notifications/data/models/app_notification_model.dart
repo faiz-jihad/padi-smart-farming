@@ -64,9 +64,14 @@ class AppNotificationModel {
       case 'market_offer':
       case 'marketplace':
         return 'Pasar & Transaksi';
+      case 'ppl_case':
+      case 'ppl_result':
+      case 'ppl_case_new':
+      case 'ppl_case_update':
+      case 'ppl_assignment':
       case 'ppl_validation':
       case 'field_verification':
-        return 'Validasi Lapangan';
+        return 'Validasi Lapangan PPL';
       case 'system':
       default:
         return 'Informasi Sistem';

@@ -25,11 +25,11 @@ class AppConfig {
   );
   static const _apiLanHost = String.fromEnvironment(
     'API_LAN_HOST',
-    defaultValue: '',
+    defaultValue: '192.168.1.7',
   );
   static const _connectTimeoutSeconds = int.fromEnvironment(
     'API_CONNECT_TIMEOUT_SECONDS',
-    defaultValue: 4,
+    defaultValue: 30,
   );
   static const _receiveTimeoutSeconds = int.fromEnvironment(
     'API_RECEIVE_TIMEOUT_SECONDS',
@@ -99,13 +99,17 @@ class AppConfig {
     };
   }
 
+  static String get baseUrl {
+    return apiBaseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+  }
+
   static String get apiHealthUrl {
-    return '${apiBaseUrl.replaceFirst('/api/v1', '')}/api/v1/health';
+    return '$baseUrl/api/v1/health';
   }
 
   static Duration get apiConnectTimeout {
     return Duration(
-      seconds: _connectTimeoutSeconds < 3 ? 3 : _connectTimeoutSeconds,
+      seconds: _connectTimeoutSeconds < 20 ? 20 : _connectTimeoutSeconds,
     );
   }
 
@@ -145,6 +149,7 @@ class AppConfig {
         '192.168.100.10',
         '192.168.1.10',
         '192.168.0.10',
+        '192.168.1.7',
         '10.0.2.2',
         '127.0.0.1',
         'localhost',

@@ -19,9 +19,27 @@ class AdminNotificationCreated implements ShouldBroadcastNow
         $this->notification->loadMissing('user');
     }
 
-    public function broadcastOn(): Channel
+    /**
+     * @return array<int, Channel>
+     */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('admin.notifications.'.$this->notification->user_id);
+        $channels = [
+            new Channel('notifications.broadcast'),
+        ];
+
+        if ($this->notification->user_id) {
+            $channels[] = new Channel('notifications.user.'.$this->notification->user_id);
+            $channels[] = new PrivateChannel('admin.notifications.'.$this->notification->user_id);
+            $channels[] = new PrivateChannel('notifications.'.$this->notification->user_id);
+        }
+
+        $roleTarget = $this->notification->data['role_target'] ?? null;
+        if ($roleTarget) {
+            $channels[] = new Channel('notifications.role.'.$roleTarget);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string
@@ -36,11 +54,14 @@ class AdminNotificationCreated implements ShouldBroadcastNow
     {
         return [
             'id' => $this->notification->id,
+            'user_id' => $this->notification->user_id,
             'type' => $this->notification->type,
             'title' => $this->notification->title,
             'body' => $this->notification->body,
+            'data' => $this->notification->data ?? [],
             'read_at' => $this->notification->read_at?->toISOString(),
-            'created_at' => $this->notification->created_at?->diffForHumans(),
+            'created_at' => $this->notification->created_at?->toIso8601String(),
+            'created_at_human' => $this->notification->created_at?->diffForHumans(),
         ];
     }
 }

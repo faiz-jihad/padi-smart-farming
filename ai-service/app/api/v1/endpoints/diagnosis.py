@@ -161,6 +161,17 @@ async def diagnose(
         segmenter = LeafSegmenter()
     seg_result = segmenter.segment(pil_image)
 
+    # Validasi Mekanisme: Tolak jika gambar bukan daun atau tanaman padi
+    if not seg_result.leaf_detected:
+        logger.warning(
+            "Non-leaf image rejected in diagnose: leaf_coverage=%.2f%%",
+            seg_result.leaf_coverage_pct,
+        )
+        raise InvalidImageError(
+            f"Objek pada gambar bukan daun padi atau tanaman (cakupan tanaman hanya {seg_result.leaf_coverage_pct}%). "
+            "Silakan ambil foto daun padi dengan jelas dan fokus dari jarak dekat (10-25 cm)."
+        )
+
     # ── TAHAP 3: [Ekstraksi Fitur] ────────────────────────────────────────────
     # Ekstraksi fitur visual: Warna (ExG/HSV), Tekstur (Laplacian), Morfologi lesi
     feature_extractor = getattr(request.app.state, "feature_extractor", None)
@@ -171,6 +182,19 @@ async def diagnose(
     # ── TAHAP 4: [Klasifikasi] ────────────────────────────────────────────────
     # Inferensi Deep Learning Ultralytics model kanonis Colab
     classifier_result = await classifier.classify(pil_image)
+
+    # Guard: Jika confidence sangat rendah (< 0.40), model tidak mengenali pola daun padi
+    if classifier_result.confidence < 0.40:
+        logger.warning(
+            "Classification confidence too low (%.2f) for %s. Image rejected as uncertain/non-padi.",
+            classifier_result.confidence,
+            classifier_result.class_name,
+        )
+        raise InvalidImageError(
+            "AI tidak dapat mengenali pola daun padi pada gambar ini. "
+            "Pastikan objek yang difoto adalah daun tanaman padi dengan jelas."
+        )
+
     decision_result = decision_engine.decide(classifier_result, quality_report)
 
     class_name = classifier_result.class_name
@@ -309,6 +333,17 @@ async def detect_disease_backend(
         segmenter = LeafSegmenter()
     seg_result = segmenter.segment(pil_image)
 
+    # Validasi Mekanisme: Tolak jika gambar bukan daun atau tanaman padi
+    if not seg_result.leaf_detected:
+        logger.warning(
+            "Non-leaf image rejected in backend detect: leaf_coverage=%.2f%%",
+            seg_result.leaf_coverage_pct,
+        )
+        raise InvalidImageError(
+            f"Objek pada gambar bukan daun padi atau tanaman (cakupan tanaman hanya {seg_result.leaf_coverage_pct}%). "
+            "Silakan ambil foto daun padi dengan jelas dan fokus dari jarak dekat (10-25 cm)."
+        )
+
     # ── TAHAP 3: [Ekstraksi Fitur] ────────────────────────────────────────────
     feature_extractor = getattr(request.app.state, "feature_extractor", None)
     if feature_extractor is None:
@@ -317,6 +352,19 @@ async def detect_disease_backend(
 
     # ── TAHAP 4: [Klasifikasi] ────────────────────────────────────────────────
     classifier_result = await classifier.classify(pil_image)
+
+    # Guard: Jika confidence sangat rendah (< 0.40), model tidak mengenali pola daun padi
+    if classifier_result.confidence < 0.40:
+        logger.warning(
+            "Classification confidence too low (%.2f) for %s. Image rejected as uncertain/non-padi.",
+            classifier_result.confidence,
+            classifier_result.class_name,
+        )
+        raise InvalidImageError(
+            "AI tidak dapat mengenali pola daun padi pada gambar ini. "
+            "Pastikan objek yang difoto adalah daun tanaman padi dengan jelas."
+        )
+
     decision_result = decision_engine.decide(classifier_result, quality_report)
 
     # Informasi Katalog Agronomis Kurasi

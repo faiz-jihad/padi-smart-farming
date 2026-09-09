@@ -83,7 +83,7 @@
 
                 <div>
                     <label style="display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:4px;" for="image_url">URL Foto / Gambar Produk</label>
-                    <input type="url" name="image_url" id="image_url" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff; box-sizing:border-box;" placeholder="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500" value="{{ old('image_url', $listing->image_url) }}">
+                    <input type="text" name="image_url" id="image_url" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px; background:#fff; box-sizing:border-box;" placeholder="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500" value="{{ old('image_url', $listing->image_url) }}">
                     <span style="font-size:11px; color:#64748b; display:block; margin-top:4px;">Tautan URL gambar langsung (JPG, PNG, WebP) untuk foto produk.</span>
                 </div>
             </div>

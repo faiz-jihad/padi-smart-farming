@@ -16,6 +16,9 @@ class AuditLog extends Model
         'new_values',
         'ip_address',
         'user_agent',
+        'target_type',
+    'target_id',
+    'payload_json',
     ];
 
     protected $casts = [

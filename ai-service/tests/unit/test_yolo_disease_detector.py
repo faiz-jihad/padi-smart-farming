@@ -15,7 +15,7 @@ class FakeYoloModel:
         }
         self._result = result
 
-    def predict(self, source, verbose=False):
+    def predict(self, source, verbose=False, **kwargs):
         return [self._result]
 
 

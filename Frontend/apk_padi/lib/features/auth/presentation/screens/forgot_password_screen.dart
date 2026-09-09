@@ -7,7 +7,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -27,7 +28,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan masukkan alamat email akun Anda.'),
+          content: Text('Masukkan email akun dulu.'),
           backgroundColor: Color(0xFFDC2626),
           behavior: SnackBarBehavior.floating,
         ),
@@ -35,7 +36,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       return;
     }
 
-    final success = await ref.read(authControllerProvider).forgotPassword(email);
+    final success = await ref
+        .read(authControllerProvider)
+        .forgotPassword(email);
 
     if (!mounted || !success) {
       return;
@@ -102,9 +105,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Title & Subtitle
                   const Text(
-                    'Lupa Kata Sandi?',
+                    'Lupa PIN atau Password?',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -114,7 +116,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Masukkan alamat email yang terdaftar. Kami akan mengirimkan instruksi untuk mengatur ulang kata sandi Anda.',
+                    'Masukkan email akun. Kami kirim kode untuk membuat password atau PIN wajah baru.',
                     style: TextStyle(
                       fontSize: 13.5,
                       color: Color(0xFF64748B),
@@ -127,7 +129,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   // Error Banner
                   if (state.message != null && state.message!.isNotEmpty) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF2F2),
@@ -176,9 +181,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Field Label
                         const Text(
-                          'Alamat Email',
+                          'Email akun',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -201,34 +205,53 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText: 'nama@email.com',
-                            hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
-                            prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF64748B), size: 20),
+                            hintStyle: const TextStyle(
+                              fontSize: 13.5,
+                              color: Color(0xFF94A3B8),
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.mail_outline_rounded,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
                             errorText: state.fieldErrors['email']?.first,
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE2E8F0),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF059669), width: 1.6),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF059669),
+                                width: 1.6,
+                              ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFDC2626)),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFDC2626),
+                              ),
                             ),
                             focusedErrorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.6),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFDC2626),
+                                width: 1.6,
+                              ),
                             ),
                           ),
                         ),
 
                         const SizedBox(height: 24),
 
-                        // Submit Button
                         SizedBox(
                           height: 52,
                           child: FilledButton(
@@ -253,7 +276,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Kirim Instruksi Pemulihan',
+                                        'Kirim Kode Bantuan',
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,

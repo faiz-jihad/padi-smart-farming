@@ -6,8 +6,11 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\DiseaseScan\StoreDiseaseScanRequest;
 use App\Http\Resources\DiseaseScanResource;
+use App\Models\CommunityReport;
 use App\Models\DiseaseScan;
+use App\Services\Admin\AdminNotificationService;
 use App\Services\DiseaseDetectionService;
+use App\Services\PadiCacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -20,7 +23,7 @@ class DiseaseScanController extends Controller
 
         $scans = DiseaseScan::query()
             ->when(! $user->hasRole('admin'), fn ($query) => $query->where('farmer_id', $user->id))
-            ->with(['farm:id,name,area_ha', 'recommendation'])
+            ->with(['farm:id,name,area_ha', 'recommendation', 'pplValidation.ppl:id,name'])
             ->latest('scanned_at')
             ->paginate((int) $request->integer('per_page', 15));
 
@@ -35,7 +38,11 @@ class DiseaseScanController extends Controller
         ]);
     }
 
-    public function store(StoreDiseaseScanRequest $request, DiseaseDetectionService $service): JsonResponse
+    public function store(
+        StoreDiseaseScanRequest $request,
+        DiseaseDetectionService $service,
+        AdminNotificationService $notificationService
+    ): JsonResponse
     {
         try {
             $scan = $service->scan(
@@ -49,6 +56,7 @@ class DiseaseScanController extends Controller
             return ApiResponse::error($error->getMessage(), 503);
         }
 
+        $this->createEarlyWarningCandidate($scan, $notificationService);
 
         return ApiResponse::success('Foto tanaman berhasil diperiksa.', [
             'scan' => DiseaseScanResource::make($scan),
@@ -64,7 +72,7 @@ class DiseaseScanController extends Controller
         }
 
         return ApiResponse::success('Detail scan penyakit berhasil diambil.', [
-            'scan' => DiseaseScanResource::make($diseaseScan->load('farm')),
+            'scan' => DiseaseScanResource::make($diseaseScan->load(['farm:id,name,area_ha', 'recommendation', 'pplValidation.ppl:id,name'])),
         ]);
     }
 
@@ -94,5 +102,89 @@ class DiseaseScanController extends Controller
             'is_learned' => true,
         ]);
     }
-}
 
+    private function createEarlyWarningCandidate(DiseaseScan $scan, AdminNotificationService $notificationService): void
+    {
+        $scan->loadMissing(['farm:id,name,farmer_user_id,latitude,longitude', 'farmer:id,name']);
+
+        if (! $this->isReportableDiseaseScan($scan)) {
+            return;
+        }
+
+        $farm = $scan->farm;
+        if (! $farm || $farm->latitude === null || $farm->longitude === null) {
+            return;
+        }
+
+        $report = CommunityReport::firstOrCreate(
+            ['scan_id' => $scan->id],
+            [
+                'farmer_id' => $scan->farmer_id,
+                'latitude' => $farm->latitude,
+                'longitude' => $farm->longitude,
+                'radius_km' => $this->earlyWarningRadiusKm($scan),
+                'consent_given' => true,
+                'status' => 'pending',
+                'reported_at' => now(),
+            ]
+        );
+
+        if (! $report->wasRecentlyCreated) {
+            return;
+        }
+
+        PadiCacheService::invalidateRadarCache();
+
+        $diseaseName = $scan->predicted_class ?? 'Penyakit Padi';
+        $farmName = $farm->name ?? 'Lahan Sawah';
+        $confidence = round(((float) $scan->confidence) * 100, 1);
+
+        $notificationService->notifyExtensionOfficers(
+            "Kandidat Early Warning: {$diseaseName}",
+            "Scan {$farmName} mendeteksi {$diseaseName} ({$confidence}%). Perlu validasi PPL sebelum status menjadi terverifikasi.",
+            'early_warning_candidate',
+            [
+                'report_id' => $report->id,
+                'scan_id' => $scan->id,
+                'farm_id' => $farm->id,
+                'disease' => $diseaseName,
+                'confidence' => (float) $scan->confidence,
+                'status' => 'pending',
+            ]
+        );
+    }
+
+    private function isReportableDiseaseScan(DiseaseScan $scan): bool
+    {
+        $predictedClass = strtolower(trim((string) $scan->predicted_class));
+        $qualityStatus = strtolower(trim((string) $scan->quality_status));
+        $confidence = (float) $scan->confidence;
+
+        if ($confidence < 0.70) {
+            return false;
+        }
+
+        foreach (['healthy', 'normal', 'sehat', 'invalid', 'unknown'] as $blocked) {
+            if ($predictedClass === $blocked || str_contains($qualityStatus, $blocked)) {
+                return false;
+            }
+        }
+
+        return $predictedClass !== '';
+    }
+
+    private function earlyWarningRadiusKm(DiseaseScan $scan): float
+    {
+        $confidence = (float) $scan->confidence;
+
+        if ($confidence >= 0.90) {
+            return 5.0;
+        }
+
+        if ($confidence >= 0.80) {
+            return 3.0;
+        }
+
+        return 1.5;
+    }
+}

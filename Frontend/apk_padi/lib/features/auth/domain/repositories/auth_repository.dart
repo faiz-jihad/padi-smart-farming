@@ -9,19 +9,23 @@ abstract class AuthRepository {
     required String accountType,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
+    List<double>? faceDescriptor,
+    List<List<double>>? faceDescriptors,
   });
 
-  Future<AuthResult> login({
-    required String email,
-    required String password,
+  Future<AuthResult> login({required String email, required String password});
+
+  Future<AuthResult> faceLogin({
+    String? phone,
+    String? pin,
+    required List<double> faceDescriptor,
   });
 
   Future<AppUser> me();
 
-  Future<AppUser> updateProfile({
-    required String name,
-    required String phone,
-  });
+  Future<AppUser> updateProfile({required String name, required String phone});
 
   Future<void> changePassword({
     required String currentPassword,
@@ -31,16 +35,15 @@ abstract class AuthRepository {
 
   Future<void> forgotPassword(String email);
 
-  Future<bool> verifyResetCode({
-    required String email,
-    required String code,
-  });
+  Future<bool> verifyResetCode({required String email, required String code});
 
   Future<void> resetPassword({
     required String email,
     required String code,
     required String password,
     required String passwordConfirmation,
+    String? pin,
+    String? pinConfirmation,
   });
 
   Future<void> logout();

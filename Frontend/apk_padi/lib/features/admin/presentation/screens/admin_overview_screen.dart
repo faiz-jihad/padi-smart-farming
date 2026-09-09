@@ -4,6 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:padi/core/providers/app_providers.dart';
 import 'package:padi/features/admin/data/models/admin_overview.dart';
 import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
+import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
+
+final adminDiseaseValidationsProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+      final service = ref.read(plantCheckApiServiceProvider);
+      return service.fetchPplValidations();
+    });
 
 class AdminOverviewScreen extends ConsumerWidget {
   const AdminOverviewScreen({super.key});
@@ -11,7 +18,7 @@ class AdminOverviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Admin'),
@@ -31,6 +38,7 @@ class AdminOverviewScreen extends ConsumerWidget {
             isScrollable: true,
             tabs: [
               Tab(icon: Icon(Icons.dashboard_rounded), text: 'Ringkasan'),
+              Tab(icon: Icon(Icons.eco_rounded), text: 'Penyakit'),
               Tab(icon: Icon(Icons.people_alt_rounded), text: 'Pengguna'),
               Tab(icon: Icon(Icons.campaign_rounded), text: 'Broadcast'),
               Tab(icon: Icon(Icons.history_rounded), text: 'Audit'),
@@ -41,12 +49,31 @@ class AdminOverviewScreen extends ConsumerWidget {
           child: TabBarView(
             children: [
               _OverviewTab(),
+              _DiseaseReportsTab(),
               _UsersTab(),
               _BroadcastsTab(),
               _AuditLogsTab(),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DiseaseReportsTab extends ConsumerWidget {
+  const _DiseaseReportsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reports = ref.watch(adminDiseaseValidationsProvider);
+
+    return reports.when(
+      data: (items) => _AdminDiseaseReports(items: items),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _AdminError(
+        message: error.toString(),
+        onRetry: () => ref.invalidate(adminDiseaseValidationsProvider),
       ),
     );
   }
@@ -191,7 +218,8 @@ class _AdminOverviewContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 22),
-        if (data.disasterSummary != null || data.disasterThreats.isNotEmpty) ...[
+        if (data.disasterSummary != null ||
+            data.disasterThreats.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -201,8 +229,8 @@ class _AdminOverviewContent extends StatelessWidget {
                 color: (data.disasterSummary?.systemStatus == 'danger')
                     ? const Color(0xFFFCA5A5)
                     : (data.disasterSummary?.systemStatus == 'warning'
-                        ? const Color(0xFFFED7AA)
-                        : const Color(0xFFBBF7D0)),
+                          ? const Color(0xFFFED7AA)
+                          : const Color(0xFFBBF7D0)),
                 width: 1.5,
               ),
             ),
@@ -238,14 +266,14 @@ class _AdminOverviewContent extends StatelessWidget {
                       data.disasterSummary?.systemStatus == 'danger'
                           ? 'BAHAYA'
                           : (data.disasterSummary?.systemStatus == 'warning'
-                              ? 'SIAGA'
-                              : 'NORMAL'),
+                                ? 'SIAGA'
+                                : 'NORMAL'),
                       style: TextStyle(
                         color: data.disasterSummary?.systemStatus == 'danger'
                             ? const Color(0xFFDC2626)
                             : (data.disasterSummary?.systemStatus == 'warning'
-                                ? const Color(0xFFEA580C)
-                                : padiGreen),
+                                  ? const Color(0xFFEA580C)
+                                  : padiGreen),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                       ),
@@ -263,82 +291,87 @@ class _AdminOverviewContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                ...data.disasterThreats.map((threat) => Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${threat.categoryLabel} • ${threat.severityLabel}',
-                                style: TextStyle(
-                                  color: threat.severity == 'danger'
-                                      ? const Color(0xFFDC2626)
-                                      : (threat.severity == 'warning'
+                ...data.disasterThreats.map(
+                  (threat) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${threat.categoryLabel} • ${threat.severityLabel}',
+                              style: TextStyle(
+                                color: threat.severity == 'danger'
+                                    ? const Color(0xFFDC2626)
+                                    : (threat.severity == 'warning'
                                           ? const Color(0xFFEA580C)
                                           : padiGreen),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
                               ),
-                              Text(
-                                threat.probability,
-                                style: const TextStyle(
-                                  color: padiMuted,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                            ),
+                            Text(
+                              threat.probability,
+                              style: const TextStyle(
+                                color: padiMuted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          threat.title,
+                          style: const TextStyle(
+                            color: padiInk,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.lightbulb_outline_rounded,
+                                size: 14,
+                                color: padiGreen,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  threat.recommendation,
+                                  style: const TextStyle(
+                                    color: padiInk,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            threat.title,
-                            style: const TextStyle(
-                              color: padiInk,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.lightbulb_outline_rounded,
-                                    size: 14, color: padiGreen),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    threat.recommendation,
-                                    style: const TextStyle(
-                                      color: padiInk,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -390,6 +423,382 @@ class _AdminOverviewContent extends StatelessWidget {
   }
 }
 
+class _AdminDiseaseReports extends ConsumerWidget {
+  const _AdminDiseaseReports({required this.items});
+
+  final List<Map<String, dynamic>> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pending = items.where((item) => item['status'] == 'pending').length;
+    final revisit = items
+        .where((item) => item['status'] == 'needs_revisit')
+        .length;
+    final done = items.length - pending - revisit;
+
+    return RefreshIndicator(
+      onRefresh: () async =>
+          ref.refresh(adminDiseaseValidationsProvider.future),
+      color: padiGreen,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            'Laporan Penyakit Petani',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: padiInk,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Pantau laporan masuk, penanganan PPL, dan status akhir yang diterima petani.',
+            style: TextStyle(
+              color: padiMuted,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _StatusCountTile(
+                  label: 'Masuk',
+                  value: pending,
+                  icon: Icons.inbox_rounded,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatusCountTile(
+                  label: 'Tinjauan',
+                  value: revisit,
+                  icon: Icons.route_rounded,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatusCountTile(
+                  label: 'Selesai',
+                  value: done,
+                  icon: Icons.verified_rounded,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (items.isEmpty)
+            const _EmptyState(text: 'Belum ada laporan penyakit petani.')
+          else
+            ...items.map((item) => _AdminDiseaseReportCard(item: item)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusCountTile extends StatelessWidget {
+  const _StatusCountTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final int value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: padiGreen.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: padiGreen, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value.toString(),
+            style: const TextStyle(
+              color: padiInk,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: padiMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AdminDiseaseReportCard extends StatelessWidget {
+  const _AdminDiseaseReportCard({required this.item});
+
+  final Map<String, dynamic> item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scan = item['scan'] as Map<String, dynamic>? ?? {};
+    final farmer = scan['farmer'] as Map<String, dynamic>? ?? {};
+    final farm = scan['farm'] as Map<String, dynamic>? ?? {};
+    final ppl = item['ppl'] as Map?;
+    final status = item['status']?.toString() ?? 'pending';
+    final disease = scan['predicted_class']?.toString() ?? 'Penyakit Tanaman';
+    final confidence = scan['confidence'] != null
+        ? '${((double.tryParse(scan['confidence'].toString()) ?? 0) * 100).toStringAsFixed(1)}%'
+        : '-';
+    final farmerName = farmer['name']?.toString() ?? 'Petani';
+    final farmName = farm['name']?.toString() ?? 'Lahan Petani';
+    final officerName = ppl?['name']?.toString();
+    final statusInfo = _reportStatusInfo(status);
+
+    return InkWell(
+      onTap: () => context.push('/ppl-cases/detail', extra: item),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: padiGreen.withValues(alpha: 0.14)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: padiSoftGreen,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    statusInfo.label,
+                    style: const TextStyle(
+                      color: padiGreen,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Keyakinan $confidence',
+                  style: const TextStyle(
+                    color: padiMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              disease,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: padiInk,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _AdminReportMeta(
+              icon: Icons.person_outline_rounded,
+              label: 'Petani',
+              value: farmerName,
+            ),
+            const SizedBox(height: 5),
+            _AdminReportMeta(
+              icon: Icons.grass_rounded,
+              label: 'Lahan',
+              value: farmName,
+            ),
+            const SizedBox(height: 5),
+            _AdminReportMeta(
+              icon: Icons.badge_outlined,
+              label: 'PPL/Admin',
+              value: officerName == null || officerName.isEmpty
+                  ? 'Belum ditangani'
+                  : officerName,
+            ),
+            const SizedBox(height: 10),
+            _StatusFlow(status: status),
+            const SizedBox(height: 8),
+            Text(
+              statusInfo.description,
+              style: const TextStyle(
+                color: padiMuted,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminReportMeta extends StatelessWidget {
+  const _AdminReportMeta({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: padiGreen, size: 15),
+        const SizedBox(width: 6),
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            color: padiMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: padiInk,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusFlow extends StatelessWidget {
+  const _StatusFlow({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final step = switch (status) {
+      'pending' => 1,
+      'needs_revisit' => 2,
+      'validated' || 'rejected' => 3,
+      _ => 1,
+    };
+
+    return Row(
+      children: [
+        _FlowStep(label: 'Petani', active: step >= 1),
+        _FlowLine(active: step >= 2),
+        _FlowStep(label: 'PPL/Admin', active: step >= 2),
+        _FlowLine(active: step >= 3),
+        _FlowStep(label: 'Petani', active: step >= 3),
+      ],
+    );
+  }
+}
+
+class _FlowStep extends StatelessWidget {
+  const _FlowStep({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(
+          active ? Icons.check_circle_rounded : Icons.circle_outlined,
+          size: 18,
+          color: active ? padiGreen : padiMuted,
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: TextStyle(
+            color: active ? padiGreen : padiMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FlowLine extends StatelessWidget {
+  const _FlowLine({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 18),
+        color: active ? padiGreen : padiGreen.withValues(alpha: 0.15),
+      ),
+    );
+  }
+}
+
+({String label, String description}) _reportStatusInfo(String status) {
+  return switch (status) {
+    'validated' => (
+      label: 'Valid',
+      description: 'PPL/Admin mengonfirmasi penyakit sesuai laporan.',
+    ),
+    'rejected' => (
+      label: 'Tidak Sesuai',
+      description: 'PPL/Admin menolak atau menemukan anomali lain.',
+    ),
+    'needs_revisit' => (
+      label: 'Tinjauan Ulang',
+      description: 'Perlu kunjungan atau foto tambahan dari lapangan.',
+    ),
+    _ => (
+      label: 'Menunggu Petugas',
+      description: 'Laporan petani sudah masuk dan belum diputuskan.',
+    ),
+  };
+}
+
 class _UserCard extends ConsumerWidget {
   const _UserCard({required this.user});
 
@@ -397,12 +806,17 @@ class _UserCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final faceStatus = user.faceAuthEnabled
+        ? 'Wajah aktif (${user.facePoseCount} pose)'
+        : 'Wajah belum aktif';
+
     return _InfoCard(
       title: user.name,
       subtitle: '${user.email}${user.phone == null ? '' : ' • ${user.phone}'}',
-      trailing: '${user.roleLabel}\n${user.statusLabel}',
+      trailing: '${user.roleLabel}\n${user.statusLabel}\n$faceStatus',
       icon: Icons.person_rounded,
       actions: [
+        _FaceAuthBadge(user: user),
         _OptionMenu(
           label: 'Role',
           icon: Icons.badge_rounded,
@@ -417,7 +831,69 @@ class _UserCard extends ConsumerWidget {
           onSelected: (status) =>
               _updateUser(context, ref, user, role: user.role, status: status),
         ),
+        if (user.faceAuthEnabled)
+          OutlinedButton.icon(
+            onPressed: () => _resetUserFaceAuth(context, ref, user),
+            icon: const Icon(Icons.no_accounts_rounded, size: 18),
+            label: const Text('Reset Wajah/PIN'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF047857),
+              side: const BorderSide(color: Color(0xFF86EFAC)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _FaceAuthBadge extends StatelessWidget {
+  const _FaceAuthBadge({required this.user});
+
+  final AdminUserPreview user;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = user.faceAuthEnabled;
+    final label = enabled
+        ? 'Wajah aktif - ${user.facePoseCount} pose'
+        : 'Wajah belum didaftarkan';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: enabled ? const Color(0xFFE8F8F0) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: enabled ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            enabled
+                ? Icons.face_retouching_natural_rounded
+                : Icons.face_retouching_off_rounded,
+            size: 18,
+            color: enabled ? const Color(0xFF047857) : padiMuted,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              user.faceRegisteredAt == null ? label : '$label - terdaftar',
+              style: TextStyle(
+                color: enabled ? const Color(0xFF047857) : padiMuted,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -499,7 +975,7 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +1050,7 @@ class _OptionMenu extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black.withOpacity(0.14)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.14)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -604,7 +1080,7 @@ class _MetricTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,7 +1125,7 @@ class _Section extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,6 +1268,46 @@ Future<void> _updateUser(
     () => ref
         .read(adminApiServiceProvider)
         .updateUser(id: user.id, role: role, status: status),
+    onSuccess: () {
+      ref.invalidate(adminUsersProvider);
+      ref.invalidate(adminOverviewProvider);
+      ref.invalidate(adminAuditLogsProvider);
+    },
+  );
+}
+
+Future<void> _resetUserFaceAuth(
+  BuildContext context,
+  WidgetRef ref,
+  AdminUserPreview user,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Reset wajah dan PIN?'),
+      content: Text(
+        '${user.name} harus daftar wajah dan PIN ulang sebelum bisa login wajah lagi. Login password tetap bisa dipakai.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text('Reset'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+
+  await _runAdminAction(
+    context,
+    () => ref.read(adminApiServiceProvider).resetUserFaceAuth(user.id),
     onSuccess: () {
       ref.invalidate(adminUsersProvider);
       ref.invalidate(adminOverviewProvider);

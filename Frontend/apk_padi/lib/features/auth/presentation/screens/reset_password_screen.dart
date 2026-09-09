@@ -7,10 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
-  const ResetPasswordScreen({
-    super.key,
-    required this.email,
-  });
+  const ResetPasswordScreen({super.key, required this.email});
 
   final String email;
 
@@ -19,8 +16,7 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
       _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState
-    extends ConsumerState<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _codeController = TextEditingController();
 
   @override
@@ -39,19 +35,15 @@ class _ResetPasswordScreenState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AuthHeader(
-            title: 'Verifikasi kode',
-            subtitle:
-                'Masukkan kode 6 digit yang dikirim ke email kamu.',
+            title: 'Masukkan kode',
+            subtitle: 'Cek email lalu masukkan 6 angka kode bantuan.',
           ),
           const SizedBox(height: 24),
 
           if (state.message != null)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: state.isError
                     ? const Color(0xFFFFEAEA)
@@ -91,8 +83,7 @@ class _ResetPasswordScreenState
               ),
             ),
 
-          if (state.message != null)
-            const SizedBox(height: 14),
+          if (state.message != null) const SizedBox(height: 14),
 
           PadiTextField(
             controller: _codeController,
@@ -114,7 +105,7 @@ class _ResetPasswordScreenState
                       color: Colors.white,
                     ),
                   )
-                : const Text('Verifikasi kode'),
+                : const Text('Lanjutkan'),
           ),
 
           const SizedBox(height: 14),
@@ -123,13 +114,11 @@ class _ResetPasswordScreenState
             onPressed: state.isSubmitting
                 ? null
                 : () => context.go('/forgot-password'),
-            child: const Text('Kirim ulang kode'),
+            child: const Text('Kirim ulang kode bantuan'),
           ),
 
           TextButton(
-            onPressed: state.isSubmitting
-                ? null
-                : () => context.go('/login'),
+            onPressed: state.isSubmitting ? null : () => context.go('/login'),
             child: const Text('Kembali masuk'),
           ),
         ],
@@ -146,10 +135,7 @@ class _ResetPasswordScreenState
 
     final success = await ref
         .read(authControllerProvider)
-        .verifyResetCode(
-          email: widget.email,
-          code: code,
-        );
+        .verifyResetCode(email: widget.email, code: code);
 
     if (!mounted || !success) {
       return;
@@ -157,10 +143,7 @@ class _ResetPasswordScreenState
 
     context.go(
       '/reset-password/new',
-      extra: {
-        'email': widget.email,
-        'code': code,
-      },
+      extra: {'email': widget.email, 'code': code},
     );
   }
 }

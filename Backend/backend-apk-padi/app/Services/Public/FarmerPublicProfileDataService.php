@@ -280,8 +280,7 @@ class FarmerPublicProfileDataService
 
         if ($listings->isNotEmpty()) {
             return $listings->map(function (MarketListing $listing) {
-                $imageUrl = $listing->image_url
-                    ?? $listing->images->first()?->image_url
+                $imageUrl = $listing->formatted_image_url
                     ?? self::DEFAULT_PRODUCT_URL;
 
                 return [

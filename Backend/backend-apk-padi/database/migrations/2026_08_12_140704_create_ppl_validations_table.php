@@ -16,8 +16,9 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->foreignId('ppl_id')
+                ->nullable()
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
 
             $table->string('status', 30);
 

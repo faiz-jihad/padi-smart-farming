@@ -364,6 +364,9 @@ class ApiClient {
 
       error.requestOptions
         ..baseUrl = AppConfig.apiBaseUrl
+        ..connectTimeout = AppConfig.apiConnectTimeout
+        ..receiveTimeout = AppConfig.apiReceiveTimeout
+        ..sendTimeout = AppConfig.apiSendTimeout
         ..responseType = ResponseType.json
         ..extra['tried_api_hosts'] =
             triedHosts.toList(

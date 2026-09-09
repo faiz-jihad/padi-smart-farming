@@ -334,3 +334,10 @@ tr:hover td {
     padding: 16px 24px;
     border-top: 1px solid #f1f5f9;
 }
+
+
+/* Fix text color for primary marketplace buttons */
+.btn-market-primary,
+.btn-market-primary span {
+    color: #ffffff !important;
+}

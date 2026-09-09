@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:padi/core/network/reverb_websocket_service.dart';
 import 'package:padi/core/providers/app_providers.dart';
+import 'package:padi/core/widgets/in_app_notification_banner.dart';
 import 'package:padi/features/notifications/data/models/app_notification_model.dart';
 import 'package:padi/features/notifications/data/services/device_notification_service.dart';
 
@@ -34,20 +36,34 @@ class NotificationsState {
 // ── Notifier (Riverpod 3.x Notifier API) ─────────────────────
 class NotificationsNotifier extends Notifier<NotificationsState> {
   Timer? _pollTimer;
+  StreamSubscription<AppNotificationModel>? _reverbSub;
 
   @override
   NotificationsState build() {
-    // Auto-cancel timer when provider is disposed
-    ref.onDispose(() => _pollTimer?.cancel());
+    // Auto-cancel timers & subscriptions when disposed
+    ref.onDispose(() {
+      _pollTimer?.cancel();
+      _reverbSub?.cancel();
+    });
 
+    final auth = ref.watch(authControllerProvider);
     final service = ref.watch(deviceNotificationServiceProvider);
     final isBuyer = ref.watch(isBuyerRoleProvider);
+    final reverb = ref.watch(reverbWebSocketServiceProvider);
 
-    // Start polling
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      _fetchNotifications(service, isBuyer);
+    // Listen to real-time events via Reverb WebSocket
+    _reverbSub?.cancel();
+    _reverbSub = reverb.notificationStream.listen((incoming) {
+      _onRealtimeNotificationReceived(incoming);
     });
+
+    // Start background sync polling fallback every 60s only when user is logged in
+    _pollTimer?.cancel();
+    if (auth.isAuthenticated) {
+      _pollTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+        _fetchNotifications(service, isBuyer);
+      });
+    }
 
     // Request device permission on Android/iOS & fetch immediately on build
     Future.microtask(() async {
@@ -56,6 +72,19 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
     });
 
     return const NotificationsState();
+  }
+
+  void _onRealtimeNotificationReceived(AppNotificationModel item) {
+    // Prevent duplicate entries
+    final exists = state.notifications.any((n) => n.id == item.id);
+    if (!exists) {
+      state = state.copyWith(
+        notifications: [item, ...state.notifications],
+      );
+    }
+
+    // Trigger interactive heads-up banner on mobile screen
+    InAppNotificationBanner.showGlobal(item);
   }
 
   Future<void> _fetchNotifications(

@@ -1,11 +1,15 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as image_lib;
 import 'package:image_picker/image_picker.dart';
+import 'package:padi/core/errors/api_exception.dart';
 import 'package:padi/core/location/location_service.dart';
 import 'package:padi/core/localization/app_language.dart';
 import 'package:padi/core/providers/app_providers.dart';
@@ -13,8 +17,13 @@ import 'package:padi/features/auth/presentation/widgets/padi_theme.dart';
 import 'package:padi/features/farm/data/models/farm_model.dart';
 import 'package:padi/features/farm/data/services/farm_api_service.dart';
 import 'package:padi/features/home/presentation/tokens/home_tokens.dart';
+import 'package:padi/core/voice/voice_command_provider.dart';
+import 'package:padi/core/voice/voice_intent.dart';
+import 'package:padi/core/voice/voice_state.dart';
+import 'package:padi/core/widgets/voice_mic_button.dart';
 import 'package:padi/features/plant_check/data/services/plant_check_api_service.dart';
 import 'package:padi/features/plant_check/data/services/offline_scan_queue_service.dart';
+import 'package:padi/features/plant_check/presentation/screens/ppl_case_list_screen.dart';
 
 class PlantCheckScreen extends ConsumerStatefulWidget {
   const PlantCheckScreen({super.key});
@@ -42,8 +51,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   bool _isScanning = false;
   bool _isClosing = false;
   String? _errorMessage;
-  String? _farmError;
   String? _scanError;
+  String? _nearbyWarningText;
+  String? _nearbyWarningLevel;
 
   late AnimationController _scanAnimController;
 
@@ -81,7 +91,8 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       return;
     }
 
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       _controller = null;
       controller.dispose();
     } else if (state == AppLifecycleState.resumed) {
@@ -101,16 +112,183 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         _farms = farms;
         _selectedFarmId = farms.isNotEmpty ? farms.first.id : null;
         _isLoadingFarms = false;
-        _farmError = null;
       });
+
+      _checkNearbyAlerts(farms);
     } catch (_) {
       if (!mounted) return;
 
       setState(() {
         _isLoadingFarms = false;
-        _farmError = 'Daftar sawah belum dapat dimuat.';
       });
     }
+  }
+
+  Future<void> _checkNearbyAlerts(List<FarmModel> farms) async {
+    try {
+      if (farms.isEmpty) return;
+
+      final apiClient = ref.read(apiClientProvider);
+      final res = await apiClient.dio.get('/community-reports');
+      final data = res.data;
+      if (data is Map &&
+          data['data'] is List &&
+          (data['data'] as List).isNotEmpty) {
+        final reports = (data['data'] as List).whereType<Map>().toList();
+        if (reports.isEmpty) return;
+
+        final risks = <String, _NearbyDiseaseRisk>{};
+
+        for (final rep in reports) {
+          final status = rep['status']?.toString().toLowerCase() ?? 'pending';
+          if (status == 'rejected' || status == 'resolved') continue;
+
+          final reportedAt = DateTime.tryParse(
+            rep['reported_at']?.toString() ?? '',
+          );
+          if (reportedAt != null &&
+              DateTime.now().difference(reportedAt).inDays > 14) {
+            continue;
+          }
+
+          final disease =
+              rep['disease_name']?.toString() ??
+              rep['pest_name']?.toString() ??
+              rep['title']?.toString();
+          if (disease == null || disease.isEmpty) continue;
+
+          final rLat = (rep['latitude'] as num?)?.toDouble();
+          final rLon = (rep['longitude'] as num?)?.toDouble();
+          if (rLat == null || rLon == null) continue;
+
+          double? nearestDistance;
+          for (final farm in farms) {
+            final distance = _calculateDistanceKm(
+              farm.latitude,
+              farm.longitude,
+              rLat,
+              rLon,
+            );
+            if (nearestDistance == null || distance < nearestDistance) {
+              nearestDistance = distance;
+            }
+          }
+          if (nearestDistance == null) continue;
+
+          final radiusKm = ((rep['radius_km'] as num?)?.toDouble() ?? 5.0)
+              .clamp(1.0, 20.0);
+          if (nearestDistance > radiusKm) continue;
+
+          final score = _nearbyDiseaseScore(
+            distanceKm: nearestDistance,
+            radiusKm: radiusKm,
+            status: status,
+          );
+          final key = disease.trim().toLowerCase();
+          final current = risks[key];
+          if (current == null) {
+            risks[key] = _NearbyDiseaseRisk(
+              diseaseName: disease,
+              nearestDistanceKm: nearestDistance,
+              reportCount: 1,
+              score: score,
+              hasVerifiedReport: status == 'verified' || status == 'validated',
+            );
+          } else {
+            risks[key] = current.add(
+              distanceKm: nearestDistance,
+              score: score,
+              isVerified: status == 'verified' || status == 'validated',
+            );
+          }
+        }
+
+        if (risks.isEmpty) return;
+
+        final bestRisk = risks.values.reduce(
+          (a, b) => a.weightedScore >= b.weightedScore ? a : b,
+        );
+        final level = _nearbyRiskLevel(bestRisk);
+
+        if (mounted) {
+          setState(() {
+            _nearbyWarningLevel = level;
+            _nearbyWarningText = _nearbyRiskMessage(bestRisk, level);
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  double _nearbyDiseaseScore({
+    required double distanceKm,
+    required double radiusKm,
+    required String status,
+  }) {
+    final statusWeight = switch (status) {
+      'verified' || 'validated' => 3.0,
+      'needs_revisit' => 1.6,
+      _ => 1.0,
+    };
+    final distanceWeight = switch (distanceKm) {
+      <= 1.0 => 3.0,
+      <= 3.0 => 2.2,
+      <= 5.0 => 1.5,
+      _ => 0.8,
+    };
+    final radiusFit = (1 - (distanceKm / math.max(radiusKm, 1.0))).clamp(
+      0.15,
+      1.0,
+    );
+    return statusWeight * distanceWeight * radiusFit;
+  }
+
+  String _nearbyRiskLevel(_NearbyDiseaseRisk risk) {
+    if (risk.hasVerifiedReport && risk.nearestDistanceKm <= 3.0) {
+      return 'siaga';
+    }
+    if (risk.reportCount >= 3 || risk.weightedScore >= 5.0) {
+      return 'siaga';
+    }
+    if (risk.reportCount >= 2 || risk.nearestDistanceKm <= 5.0) {
+      return 'waspada';
+    }
+    return 'pantau';
+  }
+
+  String _nearbyRiskMessage(_NearbyDiseaseRisk risk, String level) {
+    final distanceText = risk.nearestDistanceKm < 1
+        ? '${(risk.nearestDistanceKm * 1000).round()} m'
+        : '${risk.nearestDistanceKm.toStringAsFixed(1)} km';
+    final reportText = risk.reportCount > 1
+        ? '${risk.reportCount} laporan'
+        : '1 laporan';
+
+    return switch (level) {
+      'siaga' =>
+        'Siaga ${risk.diseaseName}: $reportText terdekat $distanceText dari sawah Anda. Periksa daun hari ini dan batasi penyebaran antarpetak.',
+      'waspada' =>
+        'Waspada ${risk.diseaseName}: $reportText dalam radius sekitar sawah ($distanceText). Pantau gejala pada daun dan drainase.',
+      _ =>
+        'Pantau ${risk.diseaseName}: ada $reportText sekitar $distanceText. Belum darurat, tapi sebaiknya cek daun saat patroli lahan.',
+    };
+  }
+
+  double _calculateDistanceKm(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const p = 0.017453292519943295;
+    final a =
+        0.5 -
+        math.cos((lat2 - lat1) * p) / 2 +
+        math.cos(lat1 * p) *
+            math.cos(lat2 * p) *
+            (1 - math.cos((lon2 - lon1) * p)) /
+            2;
+    return 12742 * math.asin(math.sqrt(math.max(0.0, a)));
   }
 
   Future<void> _initializeCamera() async {
@@ -170,8 +348,8 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       final nextMode = _flashMode == FlashMode.off
           ? FlashMode.torch
           : _flashMode == FlashMode.torch
-              ? FlashMode.auto
-              : FlashMode.off;
+          ? FlashMode.auto
+          : FlashMode.off;
 
       await controller.setFlashMode(nextMode);
       if (mounted) {
@@ -215,7 +393,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto gagal dipotret. Silakan coba lagi.')),
+        const SnackBar(
+          content: Text('Foto gagal dipotret. Silakan coba lagi.'),
+        ),
       );
     }
   }
@@ -261,6 +441,17 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
     if (image == null || _isScanning) return;
 
+    final imageBytes = _imageBytes ?? await image.readAsBytes();
+    final lang = ref.read(languageProvider);
+    if (!_looksLikePaddyLeaf(imageBytes)) {
+      if (!mounted) return;
+      setState(() {
+        _imageBytes = imageBytes;
+        _scanError = _nonLeafPhotoMessage(lang);
+      });
+      return;
+    }
+
     if (farmId == null && _farms.isNotEmpty) {
       farmId = _farms.first.id;
     }
@@ -283,7 +474,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
     try {
       try {
-        final position = await const LocationService().getCurrentPosition();
+        final position = await const LocationService()
+            .getCurrentPosition()
+            .timeout(const Duration(seconds: 2), onTimeout: () => null);
         if (position != null) {
           lat = position.latitude;
           lng = position.longitude;
@@ -293,7 +486,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       final result = await _plantCheckService.scanDisease(
         farmId: farmId,
         imagePath: image.path,
-        imageBytes: _imageBytes,
+        imageBytes: imageBytes,
         fileName: image.name,
         latitude: lat,
         longitude: lng,
@@ -306,18 +499,26 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     } catch (error) {
       if (!mounted) return;
 
-      final lang = ref.read(languageProvider);
       final errMsg = _friendlyError(error, lang);
 
-      // Enqueue to offline scan queue for automatic retry
-      if (farmId != null) {
+      // Only enqueue network / offline errors to retry queue, NOT validation errors (e.g. bukan daun padi / 422)
+      final isValidationError =
+          (error is ApiException && error.statusCode == 422) ||
+          errMsg.toLowerCase().contains('bukan daun') ||
+          errMsg.toLowerCase().contains('belum terlihat') ||
+          errMsg.toLowerCase().contains('tidak terdeteksi');
+      var queuedOffline = false;
+      if (farmId != null && !isValidationError) {
         try {
-          await ref.read(offlineScanQueueServiceProvider).enqueueScan(
+          await ref
+              .read(offlineScanQueueServiceProvider)
+              .enqueueScan(
                 imagePath: image.path,
                 farmId: farmId,
                 latitude: lat,
                 longitude: lng,
               );
+          queuedOffline = true;
         } catch (_) {}
       }
 
@@ -325,37 +526,56 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         _scanError = errMsg;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.cloud_off_rounded, color: Colors.white, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      errMsg,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Tersimpan di antrean offline. Otomatis diproses saat online.',
-                      style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 11),
-                    ),
-                  ],
+      if (!mounted) return;
+
+      if (!isValidationError || queuedOffline) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  color: Colors.white,
+                  size: 24,
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        errMsg,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (queuedOffline) ...[
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Tersimpan di antrean offline. Otomatis diproses saat online.',
+                          style: TextStyle(
+                            color: Color(0xFFE2E8F0),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: padiGreen,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          backgroundColor: const Color(0xFFB45309),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isScanning = false);
@@ -363,7 +583,111 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     }
   }
 
-  Future<void> _showQuickFarmSheet(BuildContext context, AppStrings s, AppLanguage lang) async {
+  bool _looksLikePaddyLeaf(Uint8List bytes) {
+    try {
+      final decoded = image_lib.decodeImage(bytes);
+      if (decoded == null) return true;
+
+      final width = decoded.width;
+      final height = decoded.height;
+      if (width < 60 || height < 60) return true;
+
+      final stepX = math.max(1, width ~/ 100);
+      final stepY = math.max(1, height ~/ 100);
+      var total = 0;
+      var greenPixels = 0;
+      var chloroticPixels = 0;
+      var necroticPixels = 0;
+      var achromaticPixels = 0;
+
+      for (var y = 0; y < height; y += stepY) {
+        for (var x = 0; x < width; x += stepX) {
+          final pixel = decoded.getPixel(x, y);
+          final r = pixel.r.toDouble();
+          final g = pixel.g.toDouble();
+          final b = pixel.b.toDouble();
+          final maxChannel = math.max(r, math.max(g, b));
+          final minChannel = math.min(r, math.min(g, b));
+          final chroma = maxChannel - minChannel;
+          final saturation = maxChannel <= 0 ? 0.0 : chroma / maxChannel;
+          final hue = _rgbHueDegrees(r, g, b);
+          final exg = (2 * g) - r - b;
+
+          final isGreenLeaf =
+              hue >= 45 &&
+              hue <= 180 &&
+              saturation >= 0.10 &&
+              maxChannel >= 25 &&
+              maxChannel <= 250 &&
+              g > b * 0.95;
+          final isChloroticLeaf =
+              hue >= 18 &&
+              hue < 56 &&
+              saturation >= 0.12 &&
+              maxChannel >= 35 &&
+              maxChannel <= 245 &&
+              r > b * 1.05 &&
+              g > b * 0.95;
+          final isNecroticLesion =
+              hue >= 5 &&
+              hue < 48 &&
+              maxChannel >= 20 &&
+              maxChannel <= 225 &&
+              r > b * 1.05 &&
+              r >= g * 0.70;
+
+          if (isGreenLeaf) greenPixels++;
+          if (isChloroticLeaf) chloroticPixels++;
+          if (isNecroticLesion) necroticPixels++;
+          if (saturation < 0.08) achromaticPixels++;
+          total++;
+        }
+      }
+
+      if (total == 0) return true;
+
+      final plantPixels = greenPixels + chloroticPixels + necroticPixels;
+      final plantRatio = plantPixels / total;
+      final achromaticRatio = achromaticPixels / total;
+
+      // Recognize healthy leaves, chlorotic leaves, or diseased leaves with lesions
+      return plantRatio >= 0.04 || (achromaticRatio < 0.88 && plantPixels > 0);
+    } catch (_) {
+      return true;
+    }
+  }
+
+  double _rgbHueDegrees(double r, double g, double b) {
+    final maxChannel = math.max(r, math.max(g, b));
+    final minChannel = math.min(r, math.min(g, b));
+    final chroma = maxChannel - minChannel;
+    if (chroma == 0) return 0;
+
+    final hue = switch (maxChannel) {
+      final value when value == r => 60 * (((g - b) / chroma) % 6),
+      final value when value == g => 60 * (((b - r) / chroma) + 2),
+      _ => 60 * (((r - g) / chroma) + 4),
+    };
+
+    return hue < 0 ? hue + 360 : hue;
+  }
+
+  String _nonLeafPhotoMessage(AppLanguage lang) {
+    return switch (lang) {
+      AppLanguage.id =>
+        'Foto ini belum terdeteksi sebagai daun padi. Ambil ulang foto daun padi dari jarak 10-25 cm dengan daun memenuhi sebagian besar frame.',
+      AppLanguage.jv =>
+        'Foto iki durung katon minangka godhong pari. Foto maneh saka jarak 10-25 cm lan pasna godhong ing tengah.',
+      AppLanguage.en =>
+        'This photo is not detected as a paddy leaf. Retake it from 10-25 cm away with the leaf filling most of the frame.',
+    };
+  }
+
+  Future<void> _showQuickFarmSheet(
+    BuildContext context,
+    AppStrings s,
+    AppLanguage lang,
+  ) async {
     final defaultName = switch (lang) {
       AppLanguage.id => 'Sawah Utama',
       AppLanguage.jv => 'Sawah Utama',
@@ -378,7 +702,12 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Container(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
           decoration: const BoxDecoration(
             color: HomeColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -406,7 +735,11 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                       color: HomeColors.lightGreen,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.grass_rounded, color: HomeColors.primaryGreen, size: 22),
+                    child: const Icon(
+                      Icons.grass_rounded,
+                      color: HomeColors.primaryGreen,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -419,16 +752,26 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                             AppLanguage.jv => 'Daftar Sawah Cepet',
                             AppLanguage.en => 'Quick Farm Registration',
                           },
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: HomeColors.textPrimary),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: HomeColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           switch (lang) {
-                            AppLanguage.id => 'Diperlukan untuk menyimpan rekam jejak penyakit tanaman',
-                            AppLanguage.jv => 'Kanggo nyathet riwayat penyakit ing sawah sampeyan',
-                            AppLanguage.en => 'Required to map and record plant disease history',
+                            AppLanguage.id =>
+                              'Diperlukan untuk menyimpan rekam jejak penyakit tanaman',
+                            AppLanguage.jv =>
+                              'Kanggo nyathet riwayat penyakit ing sawah sampeyan',
+                            AppLanguage.en =>
+                              'Required to map and record plant disease history',
                           },
-                          style: const TextStyle(fontSize: 11.5, color: HomeColors.textSecondary),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: HomeColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -447,8 +790,14 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                   hintText: 'Misal: Sawah Blok Barat',
                   filled: true,
                   fillColor: HomeColors.surfaceMuted,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.edit_location_alt_outlined, color: HomeColors.primaryGreen),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.edit_location_alt_outlined,
+                    color: HomeColors.primaryGreen,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -467,7 +816,8 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                             double lat = -7.250445;
                             double lng = 112.768845;
                             try {
-                              final pos = await const LocationService().getCurrentPosition();
+                              final pos = await const LocationService()
+                                  .getCurrentPosition();
                               if (pos != null) {
                                 lat = pos.latitude;
                                 lng = pos.longitude;
@@ -497,7 +847,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                             setSheetState(() => isSubmitting = false);
                             if (ctx.mounted) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(content: Text('Gagal mendaftarkan lahan: $e')),
+                                SnackBar(
+                                  content: Text('Gagal mendaftarkan lahan: $e'),
+                                ),
                               );
                             }
                           }
@@ -506,7 +858,10 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.check_circle_outline_rounded),
                   label: Text(
@@ -526,7 +881,9 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                   style: FilledButton.styleFrom(
                     backgroundColor: HomeColors.primaryGreen,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -538,29 +895,60 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   }
 
   String _friendlyError(Object error, AppLanguage lang) {
+    if (error is ApiException && error.message.isNotEmpty) {
+      final apiMessage = error.message.toLowerCase();
+      if (apiMessage.contains('bukan daun') ||
+          apiMessage.contains('cakupan tanaman') ||
+          apiMessage.contains('tidak terdeteksi')) {
+        return switch (lang) {
+          AppLanguage.id =>
+            'Foto belum terlihat seperti daun padi. Ambil ulang dari jarak 10-25 cm, fokuskan daun di tengah, dan gunakan cahaya yang cukup.',
+          AppLanguage.jv =>
+            'Foto durung katon kaya godhong pari. Foto maneh saka jarak cedhak lan pasna godhong ing tengah.',
+          AppLanguage.en =>
+            'The photo does not look like a paddy leaf yet. Retake it from 10-25 cm away with the leaf centered and well lit.',
+        };
+      }
+      return error.message;
+    }
     final str = error.toString().toLowerCase();
     if (str.contains('timeout') || str.contains('deadline')) {
       return switch (lang) {
-        AppLanguage.id => 'Waktu koneksi habis. Sinyal internet di sawah sedang lambat, silakan coba lagi.',
-        AppLanguage.jv => 'Wektu sambungan entek. Sinyal ing sawah lagi lemot, mangga dicoba maneh.',
-        AppLanguage.en => 'Connection timed out. Mobile signal is weak, please try again.',
+        AppLanguage.id =>
+          'Waktu koneksi habis. Sinyal internet di sawah sedang lambat, silakan coba lagi.',
+        AppLanguage.jv =>
+          'Wektu sambungan entek. Sinyal ing sawah lagi lemot, mangga dicoba maneh.',
+        AppLanguage.en =>
+          'Connection timed out. Mobile signal is weak, please try again.',
       };
     }
-    if (str.contains('connection refused') || str.contains('socket') || str.contains('network') || str.contains('offline')) {
+    if (str.contains('connection refused') ||
+        str.contains('socket') ||
+        str.contains('network') ||
+        str.contains('offline')) {
       return switch (lang) {
-        AppLanguage.id => 'Tidak dapat terhubung ke server AI. Pastikan ponsel terhubung ke internet.',
-        AppLanguage.jv => 'Ora bisa nyambung neng server AI. Priksa paket data internet sampeyan.',
-        AppLanguage.en => 'Cannot connect to AI server. Please check your internet connection.',
+        AppLanguage.id =>
+          'Tidak dapat terhubung ke server. Pastikan ponsel terhubung ke internet.',
+        AppLanguage.jv =>
+          'Ora bisa nyambung neng server. Priksa paket data internet sampeyan.',
+        AppLanguage.en =>
+          'Cannot connect to the server. Please check your internet connection.',
       };
     }
-    if (str.contains('503') || str.contains('busy') || str.contains('overload')) {
+    if (str.contains('503') ||
+        str.contains('busy') ||
+        str.contains('overload')) {
       return switch (lang) {
-        AppLanguage.id => 'Server Gemini AI sedang sibuk. Silakan coba analisis kembali beberapa saat lagi.',
-        AppLanguage.jv => 'Server Gemini AI lagi repot. Mangga dipriksa sedhela maneh.',
-        AppLanguage.en => 'Gemini AI server is currently busy. Please try again shortly.',
+        AppLanguage.id =>
+          'Server sedang sibuk. Silakan coba periksa kembali beberapa saat lagi.',
+        AppLanguage.jv => 'Server lagi repot. Mangga dipriksa sedhela maneh.',
+        AppLanguage.en =>
+          'The server is currently busy. Please try again shortly.',
       };
     }
-    if (str.contains('5120') || str.contains('too large') || str.contains('ukuran')) {
+    if (str.contains('5120') ||
+        str.contains('too large') ||
+        str.contains('ukuran')) {
       return switch (lang) {
         AppLanguage.id => 'Ukuran foto terlalu besar (maksimal 5 MB).',
         AppLanguage.jv => 'Ukuran foto kegeden (maksimal 5 MB).',
@@ -583,7 +971,6 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         result: result,
         plantCheckService: _plantCheckService,
         onReportAlert: () {
-
           Navigator.of(ctx).pop();
           context.push('/community-alert/report?scan_id=${result.id}');
         },
@@ -620,23 +1007,32 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
   void _showGuidelineDialog(AppStrings s, AppLanguage lang) {
     final guide1 = switch (lang) {
       AppLanguage.id => 'Gunakan pencahayaan cukup dan hindari bayangan tebal.',
-      AppLanguage.jv => 'Gunakake pepadhang sing cukup lan adohi ayang-ayang kandel.',
+      AppLanguage.jv =>
+        'Gunakake pepadhang sing cukup lan adohi ayang-ayang kandel.',
       AppLanguage.en => 'Ensure sufficient lighting and avoid dark shadows.',
     };
     final guide2 = switch (lang) {
-      AppLanguage.id => 'Arahkan kamera tepat ke bercak atau daun padi yang bergejala.',
-      AppLanguage.jv => 'Arahake kamera pas marang bercak utawa godhong pari sing lara.',
-      AppLanguage.en => 'Point camera directly at leaf spots or symptomatic areas.',
+      AppLanguage.id =>
+        'Arahkan kamera tepat ke bercak atau daun padi yang bergejala.',
+      AppLanguage.jv =>
+        'Arahake kamera pas marang bercak utawa godhong pari sing lara.',
+      AppLanguage.en =>
+        'Point camera directly at leaf spots or symptomatic areas.',
     };
     final guide3 = switch (lang) {
-      AppLanguage.id => 'Jaga jarak sekitar 10-25 cm agar tekstur daun terlihat tajam.',
-      AppLanguage.jv => 'Jaga jarak udakara 10-25 cm supaya tekstur godhong cetha.',
+      AppLanguage.id =>
+        'Jaga jarak sekitar 10-25 cm agar tekstur daun terlihat tajam.',
+      AppLanguage.jv =>
+        'Jaga jarak udakara 10-25 cm supaya tekstur godhong cetha.',
       AppLanguage.en => 'Keep distance around 10-25 cm for crisp leaf texture.',
     };
     final guide4 = switch (lang) {
-      AppLanguage.id => 'Anda juga bisa memilih foto daun padi yang sudah tersimpan di Galeri.',
-      AppLanguage.jv => 'Sampeyan uga bisa milih foto godhong pari saka Galeri.',
-      AppLanguage.en => 'You can also select existing paddy leaf photos from Gallery.',
+      AppLanguage.id =>
+        'Anda juga bisa memilih foto daun padi yang sudah tersimpan di Galeri.',
+      AppLanguage.jv =>
+        'Sampeyan uga bisa milih foto godhong pari saka Galeri.',
+      AppLanguage.en =>
+        'You can also select existing paddy leaf photos from Gallery.',
     };
 
     showDialog<void>(
@@ -645,9 +1041,12 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFEAB308)),
+            const Icon(Icons.lightbulb_outline_rounded, color: padiGreen),
             const SizedBox(width: 8),
-            Text(s.photoGuideTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(
+              s.photoGuideTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
           ],
         ),
         content: Column(
@@ -658,7 +1057,10 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
             const SizedBox(height: 10),
             _GuideItem(icon: Icons.center_focus_strong_rounded, text: guide2),
             const SizedBox(height: 10),
-            _GuideItem(icon: Icons.photo_size_select_large_rounded, text: guide3),
+            _GuideItem(
+              icon: Icons.photo_size_select_large_rounded,
+              text: guide3,
+            ),
             const SizedBox(height: 10),
             _GuideItem(icon: Icons.photo_library_outlined, text: guide4),
           ],
@@ -679,18 +1081,33 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     final lang = ref.watch(languageProvider);
     final s = AppStrings(lang);
 
+    ref.listen(voiceCommandProvider, (prev, next) {
+      if (next.uiState == VoiceUiState.executing && next.voiceResult != null) {
+        final intent = next.voiceResult!.intent;
+        if (intent == VoiceIntent.takePlantPhoto) {
+          if (_image == null) {
+            _takePicture();
+          }
+        } else if (intent == VoiceIntent.retakePhoto) {
+          _retakePicture();
+        } else if (intent == VoiceIntent.analyzePlantImage) {
+          if (_image != null && !_isScanning) {
+            _usePicture();
+          }
+        }
+      }
+    });
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) _goHome();
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: _image == null
-              ? _buildModernCameraHUD(s, lang)
-              : _buildModernImagePreview(s, lang),
-        ),
+        backgroundColor: _image == null ? Colors.black : padiField,
+        body: _image == null
+            ? _buildModernCameraHUD(s, lang)
+            : SafeArea(child: _buildModernImagePreview(s, lang)),
       ),
     );
   }
@@ -730,158 +1147,231 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
       );
     }
 
+    final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 1. Camera Viewfinder
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Center(
-            child: CameraPreview(controller),
+        // 1. Edge-to-Edge Camera Viewfinder Preview
+        Positioned.fill(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: controller.value.previewSize?.height ?? 1080,
+              height: controller.value.previewSize?.width ?? 1920,
+              child: CameraPreview(controller),
+            ),
           ),
         ),
 
-        // 2. Futuristic Viewfinder Overlay / Scanner Frame
+        // 2. Futuristic Viewfinder Overlay / Scanner Frame with White Rounded Brackets
         _buildScannerOverlay(),
 
-        // 3. Top Floating Glassmorphism Controls
+        // 3. Top Floating Glassmorphism Controls: Back `<` and Close `✕`
         Positioned(
-          top: 12,
-          left: 16,
-          right: 16,
+          top: topPadding + 14,
+          left: 20,
+          right: 20,
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCircularGlassButton(
-                icon: Icons.arrow_back_rounded,
+              // Left: Frosted circular Back button `<`
+              _buildFrostedCircleButton(
+                icon: Icons.chevron_left_rounded,
                 tooltip: s.back,
                 onTap: _goHome,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildModernFarmSelector(s),
-              ),
-              const SizedBox(width: 8),
-              _buildCircularGlassButton(
-                icon: _flashMode == FlashMode.torch
-                    ? Icons.flash_on_rounded
-                    : _flashMode == FlashMode.auto
-                        ? Icons.flash_auto_rounded
-                        : Icons.flash_off_rounded,
-                iconColor: _flashMode != FlashMode.off
-                    ? const Color(0xFFFACC15)
-                    : Colors.white,
-                tooltip: 'Flash Mode',
-                onTap: _toggleFlash,
-              ),
-              const SizedBox(width: 6),
-              _buildCircularGlassButton(
-                icon: Icons.help_outline_rounded,
-                tooltip: s.photoGuideTitle,
-                onTap: () => _showGuidelineDialog(s, lang),
+
+              // Center: Subtle Glass Farm Pill
+              _buildCompactFarmPill(s),
+
+              // Right: Frosted circular Close button `✕`
+              _buildFrostedCircleButton(
+                icon: Icons.close_rounded,
+                tooltip: 'Tutup',
+                onTap: _goHome,
               ),
             ],
           ),
         ),
 
-        // 4. Floating Guidance Tip
-        Positioned(
-          top: 76,
-          left: 32,
-          right: 32,
-          child: Center(
+        // Early Warning Context Floating Banner (if nearby disease detected)
+        if (_nearbyWarningText != null)
+          Positioned(
+            top: topPadding + 66,
+            left: 20,
+            right: 20,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.55),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.15)),
+                color: _nearbyWarningLevel == 'siaga'
+                    ? const Color(0xEE075C3D)
+                    : const Color(0xF2FFFFFF),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: padiGreen.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4ADE80), size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    s.positionLeafInFrame,
-                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: padiGreen,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.radar_rounded,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _nearbyWarningText!,
+                      style: TextStyle(
+                        color: _nearbyWarningLevel == 'siaga'
+                            ? Colors.white
+                            : padiInk,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+
+        // 4. Secondary Quick Action Bar (Gallery, Flash, Switch Camera)
+        Positioned(
+          bottom: bottomPadding + 104,
+          left: 26,
+          right: 26,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Galeri
+              _buildSecondaryMiniButton(
+                icon: Icons.photo_library_rounded,
+                tooltip: s.galleryLabel,
+                onTap: _pickFromGallery,
+              ),
+
+              // Flash Mode Toggle
+              _buildSecondaryMiniButton(
+                icon: _flashMode == FlashMode.torch
+                    ? Icons.flash_on_rounded
+                    : _flashMode == FlashMode.auto
+                    ? Icons.flash_auto_rounded
+                    : Icons.flash_off_rounded,
+                iconColor: _flashMode != FlashMode.off
+                    ? const Color(0xFFFACC15)
+                    : Colors.white,
+                tooltip: 'Flash',
+                onTap: _toggleFlash,
+              ),
+
+              // Switch Camera
+              _buildSecondaryMiniButton(
+                icon: Icons.cameraswitch_rounded,
+                tooltip: 'Putar Kamera',
+                onTap: _switchCamera,
+              ),
+            ],
+          ),
         ),
 
-        // 5. Bottom Capture Bar
+        // 5. Bottom Hero Floating Padi Card
         Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: _buildBottomCaptureControls(s),
+          bottom: bottomPadding + 18,
+          left: 20,
+          right: 20,
+          child: _buildFloatingPlantCard(s),
         ),
       ],
     );
   }
 
   Widget _buildScannerOverlay() {
-    return AnimatedBuilder(
-      animation: _scanAnimController,
-      builder: (context, child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final reticleWidth = math.min(constraints.maxWidth * 0.78, 290.0);
+        final reticleHeight = math.min(constraints.maxHeight * 0.44, 320.0);
+        const scanBoxHeight = 145.0;
+        final maxTravel = reticleHeight - scanBoxHeight;
+
         return Center(
-          child: Container(
-            width: 270,
-            height: 340,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
-            ),
+          child: SizedBox(
+            width: reticleWidth,
+            height: reticleHeight,
             child: Stack(
               children: [
-                // Top-Left Corner
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: _buildCornerBracket(isTop: true, isLeft: true),
-                ),
-                // Top-Right Corner
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: _buildCornerBracket(isTop: true, isLeft: false),
-                ),
-                // Bottom-Left Corner
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  child: _buildCornerBracket(isTop: false, isLeft: true),
-                ),
-                // Bottom-Right Corner
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: _buildCornerBracket(isTop: false, isLeft: false),
-                ),
-                // Animated Laser Scanner Line
-                Positioned(
-                  top: 10 + (_scanAnimController.value * 300),
-                  left: 12,
-                  right: 12,
-                  child: Container(
-                    height: 2,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF22C55E).withOpacity(0.0),
-                          const Color(0xFF4ADE80),
-                          const Color(0xFF22C55E).withOpacity(0.0),
+                // Animated Shaded Frosted Scan Box with Dashed Leading Line
+                AnimatedBuilder(
+                  animation: _scanAnimController,
+                  builder: (context, child) {
+                    final topPos = _scanAnimController.value * maxTravel;
+
+                    return Positioned(
+                      top: topPos,
+                      left: 6,
+                      right: 6,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Glowing Dashed Scan Line
+                          CustomPaint(
+                            size: Size(reticleWidth - 12, 2.5),
+                            painter: _DashedLinePainter(
+                              color: Colors.white,
+                              strokeWidth: 2.2,
+                              dashWidth: 6.0,
+                              dashSpace: 4.0,
+                            ),
+                          ),
+                          // Translucent Frosted Gradient Beam
+                          Container(
+                            height: scanBoxHeight - 4,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.white.withValues(alpha: 0.34),
+                                  Colors.white.withValues(alpha: 0.12),
+                                  Colors.white.withValues(alpha: 0.0),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF22C55E).withOpacity(0.8),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                    );
+                  },
+                ),
+
+                // White Rounded Corner Reticle Overlay
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _ScannerReticlePainter(
+                      cornerLength: 42.0,
+                      cornerRadius: 22.0,
+                      strokeWidth: 4.0,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -893,61 +1383,99 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     );
   }
 
-  Widget _buildCornerBracket({required bool isTop, required bool isLeft}) {
-    const size = 26.0;
-    const thickness = 3.5;
-    const color = Color(0xFF22C55E);
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        border: Border(
-          top: isTop ? const BorderSide(color: color, width: thickness) : BorderSide.none,
-          bottom: !isTop ? const BorderSide(color: color, width: thickness) : BorderSide.none,
-          left: isLeft ? const BorderSide(color: color, width: thickness) : BorderSide.none,
-          right: !isLeft ? const BorderSide(color: color, width: thickness) : BorderSide.none,
+  Widget _buildFrostedCircleButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.85),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(25),
+              child: Center(
+                child: Icon(icon, color: const Color(0xFF334155), size: 23),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCircularGlassButton({
+  Widget _buildSecondaryMiniButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback onTap,
     Color iconColor = Colors.white,
   }) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.45),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.18)),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: iconColor, size: 20),
-        tooltip: tooltip,
-        onPressed: onTap,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.22),
+              width: 1.2,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(22),
+              child: Center(child: Icon(icon, color: iconColor, size: 20)),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildModernFarmSelector(AppStrings s) {
+  Widget _buildCompactFarmPill(AppStrings s) {
     if (_isLoadingFarms) {
       return Container(
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.45),
+          color: Colors.black.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withOpacity(0.18)),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
         ),
         child: const Center(
-          child: Text(
-            'Memuat sawah...',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+          child: SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              color: Colors.white70,
+              strokeWidth: 2,
+            ),
           ),
         ),
       );
@@ -958,21 +1486,29 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
         onTap: () => context.push('/farms/add'),
         borderRadius: BorderRadius.circular(22),
         child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFB45309).withOpacity(0.7),
+            color: padiGreen.withValues(alpha: 0.75),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFFBBF24)),
+            border: Border.all(color: padiBorder, width: 1),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 16),
+              const Icon(
+                Icons.add_circle_outline_rounded,
+                color: Colors.white,
+                size: 15,
+              ),
               const SizedBox(width: 6),
               Text(
                 s.registerFarmFirst,
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -981,31 +1517,43 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     }
 
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withValues(alpha: 0.50),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.22),
+          width: 1,
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
           value: _selectedFarmId,
-          isExpanded: true,
           dropdownColor: const Color(0xFF1E293B),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Colors.white70,
+            size: 18,
+          ),
           selectedItemBuilder: (context) {
             return _farms.map((farm) {
               return Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.grass_rounded, color: Color(0xFF4ADE80), size: 16),
+                  const Icon(
+                    Icons.grass_rounded,
+                    color: Color(0xFF4ADE80),
+                    size: 15,
+                  ),
                   const SizedBox(width: 6),
-                  Expanded(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 115),
                     child: Text(
                       farm.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -1030,103 +1578,121 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     );
   }
 
-  Widget _buildBottomCaptureControls(AppStrings s) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1. Galeri Button
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: _pickFromGallery,
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.16),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
-                  ),
-                  child: const Icon(
-                    Icons.photo_library_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                s.galleryLabel,
-                style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+  Widget _buildFloatingPlantCard(AppStrings s) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFF143622,
+            ).withValues(alpha: 0.68), // Deep emerald frosted glass
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.32),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-
-          // 2. Big Shutter Button
-          GestureDetector(
-            onTap: _takePicture,
-            child: Container(
-              width: 82,
-              height: 82,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF22C55E), width: 3.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF22C55E).withOpacity(0.4),
-                    blurRadius: 16,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: padiSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Center(
-                  child: Icon(Icons.camera_alt_rounded, color: Color(0xFF0F5132), size: 30),
+                  child: Icon(Icons.eco_rounded, color: padiGreen, size: 30),
                 ),
               ),
-            ),
-          ),
+              const SizedBox(width: 14),
 
-          // 3. Switch Camera Button
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: _switchCamera,
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.16),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.5),
-                  ),
-                  child: const Icon(
-                    Icons.cameraswitch_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+              // Title and 5-star rating
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      'Daun Padi',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Foto daun dari jarak 10-25 cm',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'Putar',
-                style: TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+
+              VoiceMicButton(
+                mini: true,
+                tooltip: 'Bicara ke P.A.D.I. (Ambil foto)',
+                onIntentExecuted: (intent) {
+                  if (intent == VoiceIntent.takePlantPhoto) {
+                    _takePicture();
+                  } else if (intent == VoiceIntent.retakePhoto) {
+                    _retakePicture();
+                  } else if (intent == VoiceIntent.analyzePlantImage) {
+                    _usePicture();
+                  }
+                },
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: _takePicture,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF84CC16),
+                    borderRadius: BorderRadius.circular(13),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF84CC16).withValues(alpha: 0.45),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1136,7 +1702,7 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     final bytes = _imageBytes;
 
     final previewTitle = switch (lang) {
-      AppLanguage.id => 'Pratinjau Daun Padi',
+      AppLanguage.id => 'Cek Foto Daun Padi',
       AppLanguage.jv => 'Pratinjau Godhong Pari',
       AppLanguage.en => 'Paddy Leaf Preview',
     };
@@ -1148,32 +1714,42 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
     };
 
     final analyzingTitle = switch (lang) {
-      AppLanguage.id => 'Menganalisis dengan Gemini AI...',
-      AppLanguage.jv => 'Mriksa nganggo Gemini AI...',
-      AppLanguage.en => 'Analyzing with Gemini AI...',
+      AppLanguage.id => 'Memeriksa foto daun...',
+      AppLanguage.jv => 'Mriksa foto godhong...',
+      AppLanguage.en => 'Checking leaf photo...',
     };
 
     final analyzingDesc = switch (lang) {
-      AppLanguage.id => 'Mendeteksi patogen & menyusun rekomendasi',
+      AppLanguage.id => 'Pastikan foto fokus pada daun padi',
       AppLanguage.jv => 'Mriksa ama & ngrumusake solusi',
-      AppLanguage.en => 'Detecting pathogens & preparing recommendations',
+      AppLanguage.en => 'Make sure the photo focuses on paddy leaves',
     };
 
     final diagnoseLabel = _isScanning
         ? (switch (lang) {
-            AppLanguage.id => 'Mendiagnosa...',
+            AppLanguage.id => 'Memeriksa...',
             AppLanguage.jv => 'Mriksa...',
-            AppLanguage.en => 'Diagnosing...',
+            AppLanguage.en => 'Checking...',
           })
         : (switch (lang) {
-            AppLanguage.id => 'Diagnosa Gemini AI',
-            AppLanguage.jv => 'Priksa Gemini AI',
-            AppLanguage.en => 'Gemini AI Diagnosis',
+            AppLanguage.id => 'Periksa Daun Padi',
+            AppLanguage.jv => 'Priksa Penyakit Pari',
+            AppLanguage.en => 'Check Paddy Leaf',
           });
 
+    String? selectedFarmName;
+    if (_selectedFarmId != null) {
+      for (final farm in _farms) {
+        if (farm.id == _selectedFarmId) {
+          selectedFarmName = farm.name;
+          break;
+        }
+      }
+    }
+
     return Container(
-      color: const Color(0xFF0F172A),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      color: padiField,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1183,37 +1759,59 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
             children: [
               IconButton(
                 onPressed: _retakePicture,
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_rounded, color: padiGreen),
                 tooltip: retakeLabel,
               ),
-              Text(
-                previewTitle,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+              Expanded(
+                child: Text(
+                  previewTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: padiInk,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
-              const SizedBox(width: 48), // Balance spacing
+              IconButton(
+                onPressed: () => _showGuidelineDialog(s, lang),
+                icon: const Icon(Icons.help_outline_rounded, color: padiGreen),
+                tooltip: s.photoGuideTitle,
+              ),
             ],
           ),
 
           const SizedBox(height: 12),
 
           // Selected Farm Badge
-          if (_selectedFarmId != null) ...[
+          if (selectedFarmName != null) ...[
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: padiSoftGreen,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF334155)),
+                  border: Border.all(color: padiBorder),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.grass_rounded, color: Color(0xFF4ADE80), size: 16),
+                    const Icon(Icons.grass_rounded, color: padiGreen, size: 16),
                     const SizedBox(width: 6),
-                    Text(
-                      '${s.navFarms}: ${_farms.firstWhere((f) => f.id == _selectedFarmId, orElse: () => _farms.first).name}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                    Flexible(
+                      child: Text(
+                        '${s.navFarms}: $selectedFarmName',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: padiGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1224,44 +1822,62 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
 
           // Photo Preview with Rounded Glass Border
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  bytes != null
-                      ? Image.memory(bytes, fit: BoxFit.cover)
-                      : Container(color: Colors.black),
-                  if (_isScanning)
-                    Container(
-                      color: Colors.black.withOpacity(0.65),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(
-                              color: Color(0xFF4ADE80),
-                              strokeWidth: 3,
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              analyzingTitle,
-                              style: const TextStyle(
+            child: Container(
+              decoration: BoxDecoration(
+                color: padiSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: padiBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: padiGreen.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(19),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    bytes != null
+                        ? Image.memory(bytes, fit: BoxFit.cover)
+                        : Container(color: padiSoftGreen),
+                    if (_isScanning)
+                      Container(
+                        color: padiGreen.withValues(alpha: 0.72),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(
                                 color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
+                                strokeWidth: 3,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              analyzingDesc,
-                              style: const TextStyle(color: Colors.white70, fontSize: 12),
-                            ),
-                          ],
+                              const SizedBox(height: 20),
+                              Text(
+                                analyzingTitle,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                analyzingDesc,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1270,20 +1886,52 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
           if (_scanError != null) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF7F1D1D).withOpacity(0.85),
+                color: padiSurface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFEF4444), width: 1.2),
+                border: Border.all(color: padiBorder, width: 1.2),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFFCA5A5), size: 22),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: padiSoftGreen,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.photo_camera_back_outlined,
+                      color: padiGreen,
+                      size: 20,
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      _scanError!,
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Foto belum bisa diperiksa',
+                          style: TextStyle(
+                            color: padiInk,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _scanError!,
+                          style: const TextStyle(
+                            color: padiMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1296,6 +1944,18 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
           // Action Buttons
           Row(
             children: [
+              VoiceMicButton(
+                tooltip: 'Bicara ke P.A.D.I. (Foto ulang / Analisis)',
+                onIntentExecuted: (intent) {
+                  if (intent == VoiceIntent.retakePhoto ||
+                      intent == VoiceIntent.takePlantPhoto) {
+                    _retakePicture();
+                  } else if (intent == VoiceIntent.analyzePlantImage) {
+                    if (!_isScanning) _usePicture();
+                  }
+                },
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 flex: 1,
                 child: OutlinedButton.icon(
@@ -1303,58 +1963,127 @@ class _PlantCheckScreenState extends ConsumerState<PlantCheckScreen>
                   icon: const Icon(Icons.refresh_rounded, size: 18),
                   label: Text(retakeLabel),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    foregroundColor: padiGreen,
+                    side: const BorderSide(color: padiBorder),
+                    backgroundColor: padiSurface,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: FilledButton.icon(
-                  onPressed: _isScanning
-                      ? null
-                      : (_selectedFarmId == null
-                          ? () => _showQuickFarmSheet(context, s, lang)
-                          : _usePicture),
-                  icon: Icon(
-                    _selectedFarmId == null
-                        ? Icons.add_location_alt_rounded
-                        : (_scanError != null ? Icons.refresh_rounded : Icons.auto_awesome_rounded),
-                    size: 18,
-                  ),
-                  label: Text(
-                    _isScanning
-                        ? diagnoseLabel
-                        : (_selectedFarmId == null
-                            ? (switch (lang) {
-                                AppLanguage.id => 'Daftar Sawah & Diagnosa',
-                                AppLanguage.jv => 'Daftar Sawah & Priksa',
-                                AppLanguage.en => 'Register Farm & Diagnose',
-                              })
-                            : (_scanError != null
-                                ? (switch (lang) {
-                                    AppLanguage.id => 'Coba Analisis Lagi',
-                                    AppLanguage.jv => 'Coba Priksa Maneh',
-                                    AppLanguage.en => 'Retry Diagnosis',
-                                  })
-                                : diagnoseLabel)),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _selectedFarmId == null
-                        ? const Color(0xFFD97706)
-                        : (_scanError != null ? const Color(0xFF0284C7) : const Color(0xFF16A34A)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final isNonLeafError =
+                        _scanError != null &&
+                        (_scanError!.toLowerCase().contains('bukan daun') ||
+                            _scanError!.toLowerCase().contains(
+                              'belum terlihat',
+                            ) ||
+                            _scanError!.toLowerCase().contains(
+                              'tidak terdeteksi',
+                            ));
+
+                    return FilledButton.icon(
+                      onPressed: _isScanning
+                          ? null
+                          : (_selectedFarmId == null
+                                ? () => _showQuickFarmSheet(context, s, lang)
+                                : (isNonLeafError
+                                      ? _retakePicture
+                                      : _usePicture)),
+                      icon: Icon(
+                        _selectedFarmId == null
+                            ? Icons.add_location_alt_rounded
+                            : (isNonLeafError
+                                  ? Icons.camera_alt_rounded
+                                  : (_scanError != null
+                                        ? Icons.refresh_rounded
+                                        : Icons.eco_rounded)),
+                        size: 18,
+                      ),
+                      label: Text(
+                        _isScanning
+                            ? diagnoseLabel
+                            : (_selectedFarmId == null
+                                  ? (switch (lang) {
+                                      AppLanguage.id => 'Pilih Sawah',
+                                      AppLanguage.jv => 'Daftar Sawah & Priksa',
+                                      AppLanguage.en =>
+                                        'Register Farm & Diagnose',
+                                    })
+                                  : (isNonLeafError
+                                        ? (switch (lang) {
+                                            AppLanguage.id =>
+                                              'Foto Ulang Daun Padi',
+                                            AppLanguage.jv =>
+                                              'Foto Maneh Godhong Pari',
+                                            AppLanguage.en =>
+                                              'Retake Leaf Photo',
+                                          })
+                                        : (_scanError != null
+                                              ? (switch (lang) {
+                                                  AppLanguage.id =>
+                                                    'Periksa Lagi',
+                                                  AppLanguage.jv =>
+                                                    'Coba Priksa Maneh',
+                                                  AppLanguage.en =>
+                                                    'Retry Diagnosis',
+                                                })
+                                              : diagnoseLabel))),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: padiGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NearbyDiseaseRisk {
+  const _NearbyDiseaseRisk({
+    required this.diseaseName,
+    required this.nearestDistanceKm,
+    required this.reportCount,
+    required this.score,
+    required this.hasVerifiedReport,
+  });
+
+  final String diseaseName;
+  final double nearestDistanceKm;
+  final int reportCount;
+  final double score;
+  final bool hasVerifiedReport;
+
+  double get weightedScore => score + (reportCount - 1) * 1.2;
+
+  _NearbyDiseaseRisk add({
+    required double distanceKm,
+    required double score,
+    required bool isVerified,
+  }) {
+    return _NearbyDiseaseRisk(
+      diseaseName: diseaseName,
+      nearestDistanceKm: math.min(nearestDistanceKm, distanceKm),
+      reportCount: reportCount + 1,
+      score: this.score + score,
+      hasVerifiedReport: hasVerifiedReport || isVerified,
     );
   }
 }
@@ -1373,7 +2102,14 @@ class _GuideItem extends StatelessWidget {
         Icon(icon, size: 18, color: const Color(0xFF16A34A)),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF374151))),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: Color(0xFF374151),
+            ),
+          ),
         ),
       ],
     );
@@ -1402,21 +2138,33 @@ class _CameraErrorState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.12),
+                color: Colors.red.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.no_photography_outlined, size: 48, color: Color(0xFFEF4444)),
+              child: const Icon(
+                Icons.no_photography_outlined,
+                size: 48,
+                color: Color(0xFFEF4444),
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
               'Kamera Tidak Tersedia',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -1425,7 +2173,10 @@ class _CameraErrorState extends StatelessWidget {
               label: const Text('Ambil Foto dari Galeri'),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -1435,7 +2186,7 @@ class _CameraErrorState extends StatelessWidget {
               label: const Text('Coba Akses Kamera Lagi'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
             ),
           ],
@@ -1443,6 +2194,107 @@ class _CameraErrorState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ================= CUSTOM PAINTERS FOR SCANNER UI =================
+
+class _ScannerReticlePainter extends CustomPainter {
+  final double cornerLength;
+  final double cornerRadius;
+  final double strokeWidth;
+  final Color color;
+
+  const _ScannerReticlePainter({
+    this.cornerLength = 42.0,
+    this.cornerRadius = 22.0,
+    this.strokeWidth = 4.0,
+    this.color = Colors.white,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final w = size.width;
+    final h = size.height;
+    final r = cornerRadius;
+    final l = cornerLength;
+
+    // Top-Left Corner
+    final pathTL = Path()
+      ..moveTo(0, l)
+      ..lineTo(0, r)
+      ..arcToPoint(Offset(r, 0), radius: Radius.circular(r))
+      ..lineTo(l, 0);
+    canvas.drawPath(pathTL, paint);
+
+    // Top-Right Corner
+    final pathTR = Path()
+      ..moveTo(w - l, 0)
+      ..lineTo(w - r, 0)
+      ..arcToPoint(Offset(w, r), radius: Radius.circular(r))
+      ..lineTo(w, l);
+    canvas.drawPath(pathTR, paint);
+
+    // Bottom-Left Corner
+    final pathBL = Path()
+      ..moveTo(0, h - l)
+      ..lineTo(0, h - r)
+      ..arcToPoint(Offset(r, h), radius: Radius.circular(r))
+      ..lineTo(l, h);
+    canvas.drawPath(pathBL, paint);
+
+    // Bottom-Right Corner
+    final pathBR = Path()
+      ..moveTo(w - l, h)
+      ..lineTo(w - r, h)
+      ..arcToPoint(Offset(w, h - r), radius: Radius.circular(r))
+      ..lineTo(w, h - l);
+    canvas.drawPath(pathBR, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DashedLinePainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+
+  const _DashedLinePainter({
+    this.color = Colors.white,
+    this.strokeWidth = 2.2,
+    this.dashWidth = 6.0,
+    this.dashSpace = 4.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    double startX = 0;
+    while (startX < size.width) {
+      canvas.drawLine(
+        Offset(startX, 0),
+        Offset(math.min(startX + dashWidth, size.width), 0),
+        paint,
+      );
+      startX += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class PadiDiseaseProfile {
@@ -1491,7 +2343,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Padi Sehat / Normal',
         scientificName: 'Oryza sativa L. (Bebas Penyakit)',
         badgeText: 'Kondisi Daun Prima',
-        laypersonSummary: 'Alhamdulillah! Bilah daun tampak hijau segar merata tanpa bercak jamur atau klorosis. Pertumbuhan tanaman sangat optimal.',
+        laypersonSummary:
+            'Alhamdulillah! Bilah daun tampak hijau segar merata tanpa bercak jamur atau klorosis. Pertumbuhan tanaman sangat optimal.',
         severity: 'SEHAT',
         badgeColor: Color(0xFF10B981),
         gradientColors: _greenAurora,
@@ -1502,13 +2355,16 @@ class PadiDiseaseHelper {
       );
     }
 
-    if (clean.contains('blast') || clean.contains('blas') || clean.contains('patah_leher')) {
+    if (clean.contains('blast') ||
+        clean.contains('blas') ||
+        clean.contains('patah_leher')) {
       return const PadiDiseaseProfile(
         code: 'blast',
         indonesianName: 'Penyakit Blas Daun (Patah Leher)',
         scientificName: 'Magnaporthe oryzae',
         badgeText: 'Perlu Penanganan Cepat',
-        laypersonSummary: 'Terdeteksi bercak belah ketupat kelabu-kecokelatan. Jamur blas dapat menular dengan cepat saat udara lembap dan berangin kencang.',
+        laypersonSummary:
+            'Terdeteksi bercak belah ketupat kelabu-kecokelatan. Jamur blas dapat menular dengan cepat saat udara lembap dan berangin kencang.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1519,13 +2375,16 @@ class PadiDiseaseHelper {
       );
     }
 
-    if (clean.contains('downy') || clean.contains('mildew') || clean.contains('bulai')) {
+    if (clean.contains('downy') ||
+        clean.contains('mildew') ||
+        clean.contains('bulai')) {
       return const PadiDiseaseProfile(
         code: 'downy_mildew',
         indonesianName: 'Penyakit Bulai Daun Padi',
         scientificName: 'Sclerophthora macrospora',
         badgeText: 'Waspada Kelembapan Tinggi',
-        laypersonSummary: 'Bilah daun bergaris kuning keputihan dan mengeriting kerdil akibat jamur air saat petak sawah tergenang berlebih.',
+        laypersonSummary:
+            'Bilah daun bergaris kuning keputihan dan mengeriting kerdil akibat jamur air saat petak sawah tergenang berlebih.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1542,7 +2401,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Penyakit Tungro (Kerdil Kuning)',
         scientificName: 'Rice Tungro Bacilliform Virus (RTBV)',
         badgeText: 'Waspada Virus Wereng',
-        laypersonSummary: 'Ujung bilah daun menguning jingga dan anakan padi kerdil. Penyakit ini disebarkan oleh hama vektor Wereng Hijau.',
+        laypersonSummary:
+            'Ujung bilah daun menguning jingga dan anakan padi kerdil. Penyakit ini disebarkan oleh hama vektor Wereng Hijau.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1553,13 +2413,17 @@ class PadiDiseaseHelper {
       );
     }
 
-    if ((clean.contains('blight') && clean.contains('leaf') && clean.contains('bacterial')) || clean.contains('kresek')) {
+    if ((clean.contains('blight') &&
+            clean.contains('leaf') &&
+            clean.contains('bacterial')) ||
+        clean.contains('kresek')) {
       return const PadiDiseaseProfile(
         code: 'bacterial_leaf_blight',
         indonesianName: 'Hawar Daun Bakteri (Kresek)',
         scientificName: 'Xanthomonas oryzae pv. oryzae',
         badgeText: 'Infeksi Bakteri Daun',
-        laypersonSummary: 'Bercak basah memanjang dari tepi daun mengering kuning keabu-abuan menyerupai jerami terbakar matahari.',
+        laypersonSummary:
+            'Bercak basah memanjang dari tepi daun mengering kuning keabu-abuan menyerupai jerami terbakar matahari.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1576,7 +2440,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Penyakit Bercak Cokelat Daun',
         scientificName: 'Bipolaris oryzae',
         badgeText: 'Perlu Nutrisi Kalium',
-        laypersonSummary: 'Bercak bulat-oval kecil cokelat merata pada daun. Kerap timbul jika tanaman kekurangan hara Kalium atau tanah masam.',
+        laypersonSummary:
+            'Bercak bulat-oval kecil cokelat merata pada daun. Kerap timbul jika tanaman kekurangan hara Kalium atau tanah masam.',
         severity: 'SEDANG',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1593,7 +2458,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Garis Daun Bakteri (BLS)',
         scientificName: 'Xanthomonas oryzae pv. oryzicola',
         badgeText: 'Infeksi Bakteri Daun',
-        laypersonSummary: 'Garis sempit tembus cahaya di sela pertulangan daun yang berubah kecokelatan dan mengeluarkan tetes lendir bakteri.',
+        laypersonSummary:
+            'Garis sempit tembus cahaya di sela pertulangan daun yang berubah kecokelatan dan mengeluarkan tetes lendir bakteri.',
         severity: 'SEDANG',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1610,7 +2476,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Hawar Malai Bakteri',
         scientificName: 'Burkholderia glumae',
         badgeText: 'Ancaman Bulir Gabah',
-        laypersonSummary: 'Bulir padi hampa dan berubah warna kemerahan saat fase bunting dan pengisian malai di cuaca panas lembap.',
+        laypersonSummary:
+            'Bulir padi hampa dan berubah warna kemerahan saat fase bunting dan pengisian malai di cuaca panas lembap.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1621,13 +2488,16 @@ class PadiDiseaseHelper {
       );
     }
 
-    if (clean.contains('dead_heart') || clean.contains('sundep') || clean.contains('beluk')) {
+    if (clean.contains('dead_heart') ||
+        clean.contains('sundep') ||
+        clean.contains('beluk')) {
       return const PadiDiseaseProfile(
         code: 'dead_heart',
         indonesianName: 'Sundep / Beluk (Penggerek Batang)',
         scientificName: 'Scirpophaga innotata',
         badgeText: 'Serangan Hama Batang',
-        laypersonSummary: 'Pucuk daun padi mengering dan mudah dicabut karena ulat penggerek memotong jaringan di dalam pangkal batang.',
+        laypersonSummary:
+            'Pucuk daun padi mengering dan mudah dicabut karena ulat penggerek memotong jaringan di dalam pangkal batang.',
         severity: 'BERAT',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1644,7 +2514,8 @@ class PadiDiseaseHelper {
         indonesianName: 'Hama Kumbang Hispa Daun',
         scientificName: 'Dicladispa armigera',
         badgeText: 'Serangan Hama Daun',
-        laypersonSummary: 'Bilah daun tampak memutih bergaris karena jaringan hijau dikikis kumbang berduri hitam dan larvanya.',
+        laypersonSummary:
+            'Bilah daun tampak memutih bergaris karena jaringan hijau dikikis kumbang berduri hitam dan larvanya.',
         severity: 'SEDANG',
         badgeColor: Color(0xFF34D399),
         gradientColors: _greenAurora,
@@ -1655,13 +2526,20 @@ class PadiDiseaseHelper {
       );
     }
 
-    final formattedName = rawCode.replaceAll('_', ' ').split(' ').map((s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1)}' : '').join(' ');
+    final formattedName = rawCode
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map(
+          (s) => s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1)}' : '',
+        )
+        .join(' ');
     return PadiDiseaseProfile(
       code: rawCode,
       indonesianName: formattedName,
       scientificName: 'Penyakit Tanaman Padi',
       badgeText: 'Perlu Perhatian Tani',
-      laypersonSummary: 'Terdeteksi gejala visual pada bilah daun padi. Silakan ikuti rekomendasi obat dan langkah pencegahan di bawah.',
+      laypersonSummary:
+          'Terdeteksi gejala visual pada bilah daun padi. Silakan ikuti rekomendasi obat dan langkah pencegahan di bawah.',
       severity: 'SEDANG',
       badgeColor: const Color(0xFF34D399),
       gradientColors: _greenAurora,
@@ -1673,7 +2551,7 @@ class PadiDiseaseHelper {
   }
 }
 
-class _GeminiScanResultSheet extends StatefulWidget {
+class _GeminiScanResultSheet extends ConsumerStatefulWidget {
   const _GeminiScanResultSheet({
     required this.result,
     required this.onReportAlert,
@@ -1689,12 +2567,14 @@ class _GeminiScanResultSheet extends StatefulWidget {
   final PlantCheckApiService? plantCheckService;
 
   @override
-  State<_GeminiScanResultSheet> createState() => _GeminiScanResultSheetState();
+  ConsumerState<_GeminiScanResultSheet> createState() =>
+      _GeminiScanResultSheetState();
 }
 
-
-class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
-  int _selectedTab = 0; // 0: Analisis, 1: Pencegahan, 2: Obat, 3: Produk, 4: DIY
+class _GeminiScanResultSheetState
+    extends ConsumerState<_GeminiScanResultSheet> {
+  int _selectedTab =
+      0; // 0: Analisis, 1: Pencegahan, 2: Obat, 3: Produk, 4: DIY
   final FlutterTts _flutterTts = FlutterTts();
   bool _isPlayingVoice = false;
   bool _isSubmittingFeedback = false;
@@ -1711,25 +2591,64 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     _initTts();
     if (widget.result.isLearned || widget.result.userFeedback != null) {
       _feedbackSent = true;
-      _feedbackMessage = 'Foto daun ini telah tercatat dalam memori pembelajaran AI.';
+      _feedbackMessage =
+          'Foto daun ini telah tercatat dalam memori pembelajaran AI.';
     }
     if (widget.result.isSubmittedToPpl || widget.result.pplValidation != null) {
       _pplSubmitted = true;
       final status = widget.result.pplValidation?['status']?.toString();
+      final pplName = widget.result.pplValidation?['ppl_name']?.toString();
+      final byText = (pplName != null && pplName.isNotEmpty)
+          ? ' ($pplName)'
+          : '';
       if (status == 'validated') {
-        _pplMessage = 'Kasus telah Divalidasi oleh Penyuluh (PPL).';
+        _pplMessage = 'Kasus telah Divalidasi oleh Petugas$byText.';
       } else if (status == 'rejected') {
-        _pplMessage = 'Kasus telah Diperiksa: Tidak Terkonfirmasi.';
+        _pplMessage = 'Kasus telah Diperiksa: Gejala / anomali berbeda$byText.';
       } else if (status == 'needs_revisit') {
-        _pplMessage = 'Penyuluh menjadwalkan kunjungan ulang lapangan.';
+        _pplMessage = 'Petugas menjadwalkan kunjungan ulang lapangan$byText.';
       } else {
-        _pplMessage = 'Kasus telah dikirim ke Penyuluh (PPL) untuk validasi lapangan.';
+        _pplMessage =
+            'Kasus telah dikirim ke Penyuluh (PPL) untuk validasi lapangan.';
       }
     }
+
+    // Auto-trigger TTS summary untuk petani (Section 63)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (mounted && !_isPlayingVoice) {
+          final profile =
+              PadiDiseaseHelper.getProfile(widget.result.predictedClass);
+          final conf = widget.result.confidence ?? 0.0;
+          final confLabel =
+              conf >= 0.8 ? 'keyakinan tinggi' : 'perlu pemeriksaan lanjut';
+          final summary = profile.code == 'normal'
+              ? 'Daun padi terindikasi sehat dan prima.'
+              : 'Daun terindikasi ${profile.indonesianName}, $confLabel.';
+          _flutterTts.speak(summary);
+        }
+      });
+    });
   }
 
   void _openPplReportModal() {
     if (_isSubmittingPpl || _pplSubmitted) return;
+
+    final predLower = widget.result.predictedClass.toLowerCase();
+    final isHealthy =
+        predLower.contains('normal') || predLower.contains('sehat');
+    if (isHealthy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tanaman padi terindikasi sehat. Laporan ke penyuluh dikhususkan untuk kasus tanaman bergejala penyakit atau anomali.',
+          ),
+          backgroundColor: Color(0xFF065F46),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     final notesCtrl = TextEditingController();
     final profile = PadiDiseaseHelper.getProfile(widget.result.predictedClass);
@@ -1818,10 +2737,21 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Penyakit Terdeteksi:', style: TextStyle(fontSize: 12.5, color: Color(0xFF475569), fontWeight: FontWeight.w600)),
+                          const Text(
+                            'Penyakit Terdeteksi:',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           Text(
                             profile.indonesianName,
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: Color(0xFF065F46)),
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF065F46),
+                            ),
                           ),
                         ],
                       ),
@@ -1829,12 +2759,23 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Keyakinan Model AI:', style: TextStyle(fontSize: 12.5, color: Color(0xFF475569), fontWeight: FontWeight.w600)),
+                          const Text(
+                            'Keyakinan Model AI:',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           Text(
                             widget.result.confidence != null
                                 ? '${(widget.result.confidence! * 100).toStringAsFixed(1)}%'
                                 : '92.1%',
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: Color(0xFF047857)),
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF047857),
+                            ),
                           ),
                         ],
                       ),
@@ -1843,10 +2784,21 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Lahan Pertanian:', style: TextStyle(fontSize: 12.5, color: Color(0xFF475569), fontWeight: FontWeight.w600)),
+                            const Text(
+                              'Lahan Pertanian:',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: Color(0xFF475569),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             Text(
                               widget.result.farmName!,
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
                             ),
                           ],
                         ),
@@ -1861,7 +2813,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.info_outline_rounded, color: Color(0xFF059669), size: 18),
+                            Icon(
+                              Icons.info_outline_rounded,
+                              color: Color(0xFF059669),
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -1883,16 +2839,27 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 const SizedBox(height: 16),
                 const Text(
                   'Catatan Lapangan untuk Penyuluh (Opsional):',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1E293B),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: notesCtrl,
                   maxLines: 3,
-                  style: const TextStyle(fontSize: 13.5, color: Color(0xFF1E293B)),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF1E293B),
+                  ),
                   decoration: InputDecoration(
-                    hintText: 'Contoh: Gejala mulai terlihat merata di petak barat setelah hujan deras...',
-                    hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                    hintText:
+                        'Contoh: Gejala mulai terlihat merata di petak barat setelah hujan deras...',
+                    hintStyle: const TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF94A3B8),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
                     contentPadding: const EdgeInsets.all(14),
@@ -1902,7 +2869,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF059669), width: 1.8),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF059669),
+                        width: 1.8,
+                      ),
                     ),
                   ),
                 ),
@@ -1916,13 +2886,18 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   icon: const Icon(Icons.send_rounded, size: 20),
                   label: const Text(
                     'Kirim Laporan ke PPL',
-                    style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF065F46),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     elevation: 1.5,
                   ),
                 ),
@@ -1940,12 +2915,17 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
 
     setState(() => _isSubmittingPpl = true);
     try {
-      await widget.plantCheckService!.submitToPpl(widget.result.id, notes: notes);
+      await widget.plantCheckService!.submitToPpl(
+        widget.result.id,
+        notes: notes,
+      );
       if (!mounted) return;
+      ref.invalidate(pplValidationsProvider);
       setState(() {
         _isSubmittingPpl = false;
         _pplSubmitted = true;
-        _pplMessage = 'Kasus berhasil dikirim ke Penyuluh (PPL). Laporan hanya dapat diajukan 1 kali per tes.';
+        _pplMessage =
+            'Kasus berhasil dikirim ke Penyuluh (PPL). Laporan hanya dapat diajukan 1 kali per tes.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1956,48 +2936,76 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               Expanded(
                 child: Text(
                   'Kasus berhasil dikirim ke Penyuluh (PPL).',
-                  style: TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
           backgroundColor: const Color(0xFF065F46),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmittingPpl = false);
-      final errStr = e.toString().toLowerCase();
-      if (errStr.contains('1 kali') || errStr.contains('pernah dikirim') || errStr.contains('sudah') || errStr.contains('duplicate')) {
+      final errMsg = e is ApiException ? e.message : e.toString();
+      final errLower = errMsg.toLowerCase();
+      final isRedundantOrDuplicate =
+          (e is ApiException && e.statusCode == 422) ||
+          errLower.contains('1 kali') ||
+          errLower.contains('pernah') ||
+          errLower.contains('sudah') ||
+          errLower.contains('duplicate') ||
+          errLower.contains('redudansi') ||
+          errLower.contains('sehat');
+
+      if (isRedundantOrDuplicate) {
         setState(() {
           _pplSubmitted = true;
-          _pplMessage = 'Kasus ini sudah pernah dilaporkan ke Penyuluh (PPL) sebelumnya (Maksimal 1 kali per tes).';
+          _pplMessage = errMsg.isNotEmpty
+              ? errMsg
+              : 'Kasus ini sudah pernah dilaporkan ke Penyuluh (PPL) sebelumnya.';
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.info_outline_rounded, color: Colors.white, size: 22),
-                SizedBox(width: 10),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Laporan hanya dapat dilakukan 1 kali untuk setiap hasil tes diagnosa.',
-                    style: TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w700),
+                    _pplMessage!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
             backgroundColor: const Color(0xFF065F46),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal mengirim ke penyuluh: $e'),
+            content: Text('Gagal mengirim ke penyuluh: $errMsg'),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -2032,19 +3040,29 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   _feedbackMessage!,
-                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
           backgroundColor: const Color(0xFF059669),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -2079,7 +3097,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             children: [
               const Text(
                 'Pilih Diagnosa Daun yang Tepat',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
               ),
               const SizedBox(height: 6),
               const Text(
@@ -2090,13 +3112,23 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               Expanded(
                 child: ListView.separated(
                   itemCount: diseases.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, index) {
                     final d = diseases[index];
                     return ListTile(
                       dense: true,
-                      title: Text(d, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8)),
+                      title: Text(
+                        d,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: Color(0xFF94A3B8),
+                      ),
                       onTap: () {
                         Navigator.of(ctx).pop();
                         _submitFeedback('corrected', d);
@@ -2129,10 +3161,14 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F766E).withOpacity(0.12),
+                  color: const Color(0xFF0F766E).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.psychology_alt_rounded, color: Color(0xFF0F766E), size: 20),
+                child: const Icon(
+                  Icons.psychology_alt_rounded,
+                  color: Color(0xFF0F766E),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -2141,7 +3177,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   children: [
                     Text(
                       'Pembelajaran AI Berkelanjutan',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                     Text(
                       'Sistem belajar dari setiap daun yang Anda scan',
@@ -2163,12 +3203,21 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFF059669),
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _feedbackMessage ?? 'Foto daun ini telah dipelajari oleh AI!',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF065F46)),
+                      _feedbackMessage ??
+                          'Foto daun ini telah dipelajari oleh AI!',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF065F46),
+                      ),
                     ),
                   ),
                 ],
@@ -2179,29 +3228,49 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isSubmittingFeedback ? null : () => _submitFeedback('confirmed'),
+                    onPressed: _isSubmittingFeedback
+                        ? null
+                        : () => _submitFeedback('confirmed'),
                     icon: const Icon(Icons.thumb_up_alt_rounded, size: 15),
-                    label: const Text('Diagnosa Tepat', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'Diagnosa Tepat',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF059669),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isSubmittingFeedback ? null : _showCorrectionDialog,
+                    onPressed: _isSubmittingFeedback
+                        ? null
+                        : _showCorrectionDialog,
                     icon: const Icon(Icons.edit_note_rounded, size: 16),
-                    label: const Text('Koreksi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'Koreksi',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF475569),
                       side: const BorderSide(color: Color(0xFFCBD5E1)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -2225,7 +3294,6 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
       });
     } catch (_) {}
   }
-
 
   @override
   void dispose() {
@@ -2253,6 +3321,30 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     }
   }
 
+  Future<void> _speakRecommendationVoice() async {
+    setState(() => _selectedTab = 1);
+    final rec = widget.result.recommendation;
+    final profile = PadiDiseaseHelper.getProfile(widget.result.predictedClass);
+    final buffer = StringBuffer();
+    buffer.write('Rekomendasi penanganan: ');
+    if (rec != null && rec.langkahPreventif.isNotEmpty) {
+      buffer.write('${rec.langkahPreventif}. ');
+    } else {
+      buffer.write('${profile.quickWaterAction}. ');
+    }
+    if (rec != null && rec.rekomendasiObat.isNotEmpty) {
+      buffer.write('Obat: ${rec.rekomendasiObat}.');
+    } else {
+      buffer.write('${profile.quickPesticideAction}.');
+    }
+    try {
+      if (mounted) setState(() => _isPlayingVoice = true);
+      await _flutterTts.speak(buffer.toString());
+    } catch (_) {
+      if (mounted) setState(() => _isPlayingVoice = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = widget.result;
@@ -2267,11 +3359,18 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
         : '96.9';
 
     final stages = widget.result.pipelineStages;
-    final seg = widget.result.segmentation ?? stages?['stage_2_segmentation'] as Map<String, dynamic>?;
+    final seg =
+        widget.result.segmentation ??
+        stages?['stage_2_segmentation'] as Map<String, dynamic>?;
 
-    final leafPct = seg?['leaf_coverage_pct'] != null ? '${seg!['leaf_coverage_pct']}%' : '96.5%';
-    final lesionPct = seg?['lesion_area_pct'] != null ? '${seg!['lesion_area_pct']}%' : '50.1%';
-    final severity = (seg?['severity_level']?.toString() ?? profile.severity).toUpperCase();
+    final leafPct = seg?['leaf_coverage_pct'] != null
+        ? '${seg!['leaf_coverage_pct']}%'
+        : '96.5%';
+    final lesionPct = seg?['lesion_area_pct'] != null
+        ? '${seg!['lesion_area_pct']}%'
+        : '50.1%';
+    final severity = (seg?['severity_level']?.toString() ?? profile.severity)
+        .toUpperCase();
 
     return Container(
       constraints: BoxConstraints(
@@ -2344,60 +3443,102 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                             children: [
                               // Top Badges Row (Responsive)
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(profile.icon, color: Colors.white, size: 16),
-                                        const SizedBox(width: 6),
-                                        const Text(
-                                          'P.A.D.I. AI Vision',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.3,
+                                  Flexible(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 11,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
                                           ),
                                         ),
-                                      ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            profile.icon,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Flexible(
+                                            child: Text(
+                                              'P.A.D.I. Vision',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 0.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
 
+                                  const SizedBox(width: 8),
+
                                   // Status Kondisi Pill
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF34D399),
-                                            shape: BoxShape.circle,
+                                  Flexible(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.35,
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          profile.badgeText,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFF34D399),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Flexible(
+                                              child: Text(
+                                                profile.badgeText,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -2440,16 +3581,25 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
 
                               // Farmer Friendly Summary Box (Teks Besar & Nyaman)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.22),
+                                  ),
                                 ),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
+                                    const Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
@@ -2473,20 +3623,26 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        'Keyakinan Diagnosa AI',
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.9),
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w800,
+                                      Expanded(
+                                        child: Text(
+                                          'Keyakinan Analisis',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.9,
+                                            ),
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                         ),
                                       ),
+                                      const SizedBox(width: 10),
                                       Text(
                                         confidencePercent != null
-                                            ? '$confidencePercent% Sangat Yakin'
-                                            : '92.1% Yakin',
+                                            ? '$confidencePercent% terdeteksi'
+                                            : 'Belum tersedia',
                                         style: const TextStyle(
                                           color: Color(0xFF6EE7B7),
                                           fontSize: 13,
@@ -2499,10 +3655,15 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(99),
                                     child: LinearProgressIndicator(
-                                      value: (confidence ?? 0.92).clamp(0.0, 1.0),
+                                      value: (confidence ?? 0).clamp(0.0, 1.0),
                                       minHeight: 8,
-                                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34D399)),
+                                      backgroundColor: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            Color(0xFF34D399),
+                                          ),
                                     ),
                                   ),
                                 ],
@@ -2512,26 +3673,32 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
 
                               // Metadata & Voice Button (Besar & Mudah Ditekan)
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         if (result.farmName != null)
                                           Text(
                                             'Sawah: ${result.farmName}',
                                             style: TextStyle(
-                                              color: Colors.white.withValues(alpha: 0.95),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.95,
+                                              ),
                                               fontSize: 12.5,
                                               fontWeight: FontWeight.w700,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         Text(
-                                          'Akurasi: $modelAccuracyPercent% | P.A.D.I. AI',
+                                          'Akurasi: $modelAccuracyPercent% | P.A.D.I.',
                                           style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.75),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.75,
+                                            ),
                                             fontSize: 11.5,
                                           ),
                                         ),
@@ -2539,45 +3706,84 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                                     ),
                                   ),
 
-                                  // Voice Button (Besar, Jelas, & Kontras)
-                                  InkWell(
-                                    onTap: _toggleVoiceGuidance,
-                                    borderRadius: BorderRadius.circular(18),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: _isPlayingVoice
-                                            ? const Color(0xFF059669)
-                                            : Colors.white.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(18),
-                                        border: Border.all(
-                                          color: _isPlayingVoice
-                                              ? const Color(0xFF6EE7B7)
-                                              : Colors.white.withValues(alpha: 0.35),
-                                        ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Voice Command Mic Button
+                                      VoiceMicButton(
+                                        mini: true,
+                                        tooltip:
+                                            'Bicara ke P.A.D.I. (Tanya hasil / PPL)',
+                                        onIntentExecuted: (intent) {
+                                          if (intent ==
+                                              VoiceIntent.readDiagnosis) {
+                                            _toggleVoiceGuidance();
+                                          } else if (intent ==
+                                              VoiceIntent.readRecommendation) {
+                                            _speakRecommendationVoice();
+                                          } else if (intent ==
+                                              VoiceIntent.escalateToPpl) {
+                                            _openPplReportModal();
+                                          } else if (intent ==
+                                              VoiceIntent.retakePhoto) {
+                                            Navigator.of(context).pop();
+                                            widget.onRetake();
+                                          }
+                                        },
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _isPlayingVoice
-                                                ? Icons.stop_circle_rounded
-                                                : Icons.volume_up_rounded,
-                                            color: Colors.white,
-                                            size: 18,
+                                      const SizedBox(width: 8),
+
+                                      // Voice Button (Besar, Jelas, & Kontras)
+                                      InkWell(
+                                        onTap: _toggleVoiceGuidance,
+                                        borderRadius: BorderRadius.circular(18),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 13,
+                                            vertical: 8,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            _isPlayingVoice ? 'Stop Audio' : 'Dengar Suara',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w800,
+                                          decoration: BoxDecoration(
+                                            color: _isPlayingVoice
+                                                ? const Color(0xFF059669)
+                                                : Colors.white.withValues(
+                                                    alpha: 0.2,
+                                                  ),
+                                            borderRadius:
+                                                BorderRadius.circular(18),
+                                            border: Border.all(
+                                              color: _isPlayingVoice
+                                                  ? const Color(0xFF6EE7B7)
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.35,
+                                                    ),
                                             ),
                                           ),
-                                        ],
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                _isPlayingVoice
+                                                    ? Icons.stop_circle_rounded
+                                                    : Icons.volume_up_rounded,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                _isPlayingVoice
+                                                    ? 'Stop Audio'
+                                                    : 'Dengar Suara',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -2616,10 +3822,26 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildLuxuryTabChip(0, 'Analisis AI', Icons.biotech_rounded),
-                        _buildLuxuryTabChip(1, 'Pencegahan', Icons.shield_outlined),
-                        _buildLuxuryTabChip(2, 'Dosis Obat', Icons.medication_outlined),
-                        _buildLuxuryTabChip(3, 'Produk Toko (${rec?.produk.length ?? 0})', Icons.shopping_bag_outlined),
+                        _buildLuxuryTabChip(
+                          0,
+                          'Analisis AI',
+                          Icons.biotech_rounded,
+                        ),
+                        _buildLuxuryTabChip(
+                          1,
+                          'Pencegahan',
+                          Icons.shield_outlined,
+                        ),
+                        _buildLuxuryTabChip(
+                          2,
+                          'Dosis Obat',
+                          Icons.medication_outlined,
+                        ),
+                        _buildLuxuryTabChip(
+                          3,
+                          'Produk Toko (${rec?.produk.length ?? 0})',
+                          Icons.shopping_bag_outlined,
+                        ),
                         _buildLuxuryTabChip(4, 'Resep DIY', Icons.eco_outlined),
                       ],
                     ),
@@ -2636,11 +3858,13 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   const SizedBox(height: 18),
 
                   // ================= I. ACTION BUTTONS (KONSISTEN HIJAU & PUTIH) =================
-
                   if (_pplSubmitted)
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF0FDF4),
                         borderRadius: BorderRadius.circular(16),
@@ -2651,28 +3875,90 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 22),
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: Color(0xFF059669),
+                                size: 22,
+                              ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  _pplMessage ?? 'Kasus telah dikirim ke Penyuluh (PPL).',
-                                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
+                                  _pplMessage ??
+                                      'Kasus telah dikirim ke Penyuluh (PPL).',
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF065F46),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
+                          if (widget.result.pplValidation?['notes'] != null &&
+                              widget.result.pplValidation!['notes']
+                                  .toString()
+                                  .trim()
+                                  .isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFA7F3D0),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.notes_rounded,
+                                    size: 16,
+                                    color: Color(0xFF059669),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Catatan Petugas: ${widget.result.pplValidation!['notes']}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF065F46),
+                                        fontStyle: FontStyle.italic,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton.icon(
                               onPressed: () => context.push('/ppl-cases'),
-                              icon: const Icon(Icons.open_in_new_rounded, size: 16, color: Color(0xFF059669)),
+                              icon: const Icon(
+                                Icons.open_in_new_rounded,
+                                size: 16,
+                                color: Color(0xFF059669),
+                              ),
                               label: const Text(
                                 'Pantau Kasus di Menu PPL',
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF059669),
+                                ),
                               ),
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 visualDensity: VisualDensity.compact,
                               ),
                             ),
@@ -2684,17 +3970,27 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: FilledButton.icon(
-                        onPressed: _isSubmittingPpl ? null : _openPplReportModal,
+                        onPressed: _isSubmittingPpl
+                            ? null
+                            : _openPplReportModal,
                         icon: _isSubmittingPpl
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.verified_user_rounded, size: 21),
                         label: Text(
-                          _isSubmittingPpl ? 'Mengirim ke Penyuluh...' : 'Lapor ke Penyuluh (PPL)',
-                          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                          _isSubmittingPpl
+                              ? 'Mengirim ke Penyuluh...'
+                              : 'Lapor ke Penyuluh (PPL)',
+                          style: const TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF065F46),
@@ -2713,7 +4009,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     icon: const Icon(Icons.cell_tower_rounded, size: 21),
                     label: const Text(
                       'Siarkan ke Radar Komunitas',
-                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF059669),
@@ -2731,11 +4030,17 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     icon: const Icon(Icons.camera_alt_rounded, size: 20),
                     label: const Text(
                       'Periksa Daun Lain',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF064E3B),
-                      side: const BorderSide(color: Color(0xFFA7F3D0), width: 1.2),
+                      side: const BorderSide(
+                        color: Color(0xFFA7F3D0),
+                        width: 1.2,
+                      ),
                       backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -2766,7 +4071,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             color: isSelected ? const Color(0xFF065F46) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? const Color(0xFF059669) : const Color(0xFFA7F3D0),
+              color: isSelected
+                  ? const Color(0xFF059669)
+                  : const Color(0xFFA7F3D0),
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: isSelected
@@ -2835,15 +4142,23 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.analytics_outlined, color: Color(0xFF059669), size: 20),
+                child: const Icon(
+                  Icons.analytics_outlined,
+                  color: Color(0xFF059669),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Ringkasan Kondisi Daun Padi',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+              const Expanded(
+                child: Text(
+                  'Ringkasan Kondisi Daun Padi',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
               ),
             ],
@@ -2893,21 +4208,33 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w700,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900, color: Color(0xFF064E3B)),
+            style: const TextStyle(
+              fontSize: 16.5,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF064E3B),
+            ),
             textAlign: TextAlign.center,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 3),
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 11.5, color: Color(0xFF047857), fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Color(0xFF047857),
+              fontWeight: FontWeight.w800,
+            ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -2944,7 +4271,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                   color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.bolt_rounded, color: Color(0xFF059669), size: 20),
+                child: const Icon(
+                  Icons.bolt_rounded,
+                  color: Color(0xFF059669),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -3069,17 +4400,30 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
 
   Widget _buildPipelineStagesCard() {
     final stages = widget.result.pipelineStages;
-    final seg = widget.result.segmentation ?? stages?['stage_2_segmentation'] as Map<String, dynamic>?;
-    final feat = widget.result.features ?? stages?['stage_3_feature_extraction'] as Map<String, dynamic>?;
+    final seg =
+        widget.result.segmentation ??
+        stages?['stage_2_segmentation'] as Map<String, dynamic>?;
+    final feat =
+        widget.result.features ??
+        stages?['stage_3_feature_extraction'] as Map<String, dynamic>?;
     final profile = PadiDiseaseHelper.getProfile(widget.result.predictedClass);
 
-    final leafPct = seg?['leaf_coverage_pct'] != null ? '${seg!['leaf_coverage_pct']}%' : '96.5%';
-    final lesionPct = seg?['lesion_area_pct'] != null ? '${seg!['lesion_area_pct']}%' : '50.1%';
-    final severity = (seg?['severity_level']?.toString() ?? profile.severity).toUpperCase();
+    final leafPct = seg?['leaf_coverage_pct'] != null
+        ? '${seg!['leaf_coverage_pct']}%'
+        : '96.5%';
+    final lesionPct = seg?['lesion_area_pct'] != null
+        ? '${seg!['lesion_area_pct']}%'
+        : '50.1%';
+    final severity = (seg?['severity_level']?.toString() ?? profile.severity)
+        .toUpperCase();
     final colorFeat = feat?['color_features'] as Map<String, dynamic>?;
     final textureFeat = feat?['texture_features'] as Map<String, dynamic>?;
-    final exg = colorFeat?['greenness_exg'] != null ? '${colorFeat!['greenness_exg']}' : '+47.6';
-    final roughness = textureFeat?['roughness_laplacian'] != null ? '${textureFeat!['roughness_laplacian']}' : '346.7';
+    final exg = colorFeat?['greenness_exg'] != null
+        ? '${colorFeat!['greenness_exg']}'
+        : '+47.6';
+    final roughness = textureFeat?['roughness_laplacian'] != null
+        ? '${textureFeat!['roughness_laplacian']}'
+        : '346.7';
     final spots = seg?['spot_count']?.toString() ?? '3';
 
     return _buildModernCard(
@@ -3102,13 +4446,41 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildStageChip('1. Input', 'Foto Daun', Icons.photo_camera_rounded),
-                  const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF6EE7B7)),
-                  _buildStageChip('2. Segmentasi', 'Cakupan $leafPct', Icons.crop_free_rounded),
-                  const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF6EE7B7)),
-                  _buildStageChip('3. Fitur', 'Warna & Tekstur', Icons.palette_rounded),
-                  const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF6EE7B7)),
-                  _buildStageChip('4. Klasifikasi', profile.indonesianName, Icons.psychology_rounded),
+                  _buildStageChip(
+                    '1. Input',
+                    'Foto Daun',
+                    Icons.photo_camera_rounded,
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF6EE7B7),
+                  ),
+                  _buildStageChip(
+                    '2. Segmentasi',
+                    'Cakupan $leafPct',
+                    Icons.crop_free_rounded,
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF6EE7B7),
+                  ),
+                  _buildStageChip(
+                    '3. Fitur',
+                    'Warna & Tekstur',
+                    Icons.palette_rounded,
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF6EE7B7),
+                  ),
+                  _buildStageChip(
+                    '4. Klasifikasi',
+                    profile.indonesianName,
+                    Icons.psychology_rounded,
+                  ),
                 ],
               ),
             ),
@@ -3150,7 +4522,8 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
 
           // Toggle Technical Data
           InkWell(
-            onTap: () => setState(() => _showTechnicalDetails = !_showTechnicalDetails),
+            onTap: () =>
+                setState(() => _showTechnicalDetails = !_showTechnicalDetails),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -3163,7 +4536,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    _showTechnicalDetails ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    _showTechnicalDetails
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
                     size: 18,
                     color: const Color(0xFF065F46),
                   ),
@@ -3196,10 +4571,26 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               ),
               child: Column(
                 children: [
-                  _buildTechnicalRow('Indeks Kehijauan Daun (ExG):', exg, '2G - R - B'),
-                  _buildTechnicalRow('Kekasaran Tekstur (Laplacian Var):', roughness, 'Variansi turunan kedua'),
-                  _buildTechnicalRow('Jumlah Kluster Bercak:', spots, 'Kontur lesi morfologi'),
-                  _buildTechnicalRow('Resolusi Tensor Input:', '384 x 384 px', 'Kanonis Ultralytics'),
+                  _buildTechnicalRow(
+                    'Indeks Kehijauan Daun (ExG):',
+                    exg,
+                    '2G - R - B',
+                  ),
+                  _buildTechnicalRow(
+                    'Kekasaran Tekstur (Laplacian Var):',
+                    roughness,
+                    'Variansi turunan kedua',
+                  ),
+                  _buildTechnicalRow(
+                    'Jumlah Kluster Bercak:',
+                    spots,
+                    'Kontur lesi morfologi',
+                  ),
+                  _buildTechnicalRow(
+                    'Resolusi Tensor Input:',
+                    '384 x 384 px',
+                    'Kanonis Ultralytics',
+                  ),
                 ],
               ),
             ),
@@ -3231,12 +4622,20 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF475569),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(fontSize: 13.5, color: Color(0xFF0F172A), fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  color: Color(0xFF0F172A),
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
@@ -3254,11 +4653,24 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFA7F3D0))),
-              Text(note, style: const TextStyle(fontSize: 10, color: Color(0xFF6EE7B7))),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Color(0xFFA7F3D0)),
+              ),
+              Text(
+                note,
+                style: const TextStyle(fontSize: 10, color: Color(0xFF6EE7B7)),
+              ),
             ],
           ),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
         ],
       ),
     );
@@ -3282,8 +4694,22 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(step, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF059669))),
-              Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+              Text(
+                step,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF059669),
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
             ],
           ),
         ],
@@ -3317,7 +4743,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: Color(0xFF059669), size: 18),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: Color(0xFF059669),
+                    size: 18,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -3339,18 +4769,25 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
     );
   }
 
-  Widget _buildPredictionCandidateRow(PredictionCandidate candidate, int index) {
+  Widget _buildPredictionCandidateRow(
+    PredictionCandidate candidate,
+    int index,
+  ) {
     final percent = (candidate.confidence * 100).toStringAsFixed(1);
     final isTop = index == 0;
     final profile = PadiDiseaseHelper.getProfile(candidate.diseaseCode);
 
     return Container(
-      margin: EdgeInsets.only(bottom: index == widget.result.topPredictions.length - 1 ? 0 : 8),
+      margin: EdgeInsets.only(
+        bottom: index == widget.result.topPredictions.length - 1 ? 0 : 8,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isTop ? const Color(0xFFF0FDF4) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isTop ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isTop ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Row(
         children: [
@@ -3407,7 +4844,9 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
             child: Text(
               '$percent%',
               style: TextStyle(
-                color: isTop ? const Color(0xFF15803D) : const Color(0xFF475569),
+                color: isTop
+                    ? const Color(0xFF15803D)
+                    : const Color(0xFF475569),
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
               ),
@@ -3425,7 +4864,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
         icon: Icons.hourglass_top_rounded,
         iconColor: const Color(0xFF059669),
         child: const Text(
-          'Gemini AI sedang mengompilasi rekomendasi pencegahan dan obat berdasarkan data klinis daun.',
+          ' AI sedang mengompilasi rekomendasi pencegahan dan obat berdasarkan data klinis daun.',
           style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
         ),
       );
@@ -3445,7 +4884,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 rec.analisis.isNotEmpty
                     ? rec.analisis
                     : 'Terdeteksi gejala ${rec.penyakit}. Gejala pada daun menunjukkan infeksi patogen aktif yang perlu segera ditangani agar tidak menyebar ke seluruh hamparan.',
-                style: const TextStyle(fontSize: 14.5, color: Color(0xFF1E293B), height: 1.6),
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  color: Color(0xFF1E293B),
+                  height: 1.6,
+                ),
               ),
               const SizedBox(height: 14),
               Container(
@@ -3457,12 +4900,20 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, color: Color(0xFF059669), size: 20),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFF059669),
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Penyemprotan paling efektif dilakukan sebelum infeksi mencapai lebih dari 20% luas daun.',
-                        style: TextStyle(fontSize: 12.5, color: Color(0xFF065F46), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF065F46),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -3480,9 +4931,7 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
           subtitle: 'Tindakan sanitasi & pola budidaya praktis',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStepList(rec.langkahPreventif),
-            ],
+            children: [_buildStepList(rec.langkahPreventif)],
           ),
         );
 
@@ -3506,12 +4955,20 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.wb_twilight_rounded, color: Color(0xFF059669), size: 20),
+                    Icon(
+                      Icons.wb_twilight_rounded,
+                      color: Color(0xFF059669),
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Waktu semprot ideal: Pukul 06.00 - 09.00 pagi atau 15.30 - 17.30 sore (hindari terik matahari langsung).',
-                        style: TextStyle(fontSize: 12.5, color: Color(0xFF065F46), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF065F46),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -3538,7 +4995,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 rec.diy.isNotEmpty
                     ? rec.diy
                     : '1. Ekstrak Bawang Putih & Kunyit: Bahan 250g bawang putih, 250g kunyit, 1 sdm sabun cair. Cara buat: Haluskan dengan 1 liter air, saring. Gunakan 100ml per tangki 14 liter.\n2. Kapur Sirih & Abu Sekam: Taburkan di tanah rumpun padi.',
-                style: const TextStyle(fontSize: 14.5, color: Color(0xFF1E293B), height: 1.6),
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  color: Color(0xFF1E293B),
+                  height: 1.6,
+                ),
               ),
               const SizedBox(height: 14),
               Container(
@@ -3550,12 +5011,20 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.savings_outlined, color: Color(0xFF059669), size: 20),
+                    Icon(
+                      Icons.savings_outlined,
+                      color: Color(0xFF059669),
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Pestisida nabati efektif menekan jamur & bakteri awal sekaligus menghemat biaya obat hingga 60%.',
-                        style: TextStyle(fontSize: 12.5, color: Color(0xFF065F46), fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF065F46),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -3618,7 +5087,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ],
@@ -3641,11 +5114,16 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
       );
     }
 
-    final lines = rawText.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    final lines = rawText
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
 
     return Column(
       children: lines.map((line) {
-        final cleanLine = line.replaceFirst(RegExp(r'^\d+[\.\)]\s*'), '').replaceFirst(RegExp(r'^[-*•]\s*'), '');
+        final cleanLine = line
+            .replaceFirst(RegExp(r'^\d+[\.\)]\s*'), '')
+            .replaceFirst(RegExp(r'^[-*•]\s*'), '');
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -3659,7 +5137,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFECFDF5),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF10B981), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFF10B981),
+                    width: 1.2,
+                  ),
                 ),
                 child: const Center(
                   child: Icon(Icons.check, size: 14, color: Color(0xFF059669)),
@@ -3738,7 +5219,11 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.shopping_bag_outlined, color: Color(0xFF059669), size: 24),
+                  child: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: Color(0xFF059669),
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -3756,7 +5241,10 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                       const SizedBox(height: 2),
                       Text(
                         'Bahan Aktif: ${prod.bahanAktif}',
-                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -3773,11 +5261,17 @@ class _GeminiScanResultSheetState extends State<_GeminiScanResultSheet> {
                 ElevatedButton.icon(
                   onPressed: () => widget.onSearchProduct(prod.keyword),
                   icon: const Icon(Icons.search_rounded, size: 16),
-                  label: const Text('Beli', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+                  label: const Text(
+                    'Beli',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF059669),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

@@ -82,4 +82,24 @@ class MarketListing extends Model
             'listing_id'
         );
     }
+
+    public function getFormattedImageUrlAttribute(): ?string
+    {
+        $raw = $this->image_url ?? $this->images->first()?->image_url;
+
+        if (blank($raw)) {
+            return null;
+        }
+
+        if (preg_match('/^(?:https?:|\/\/|data:)/i', $raw)) {
+            return $raw;
+        }
+
+        $cleaned = ltrim($raw, '/');
+        if (str_starts_with($cleaned, 'storage/')) {
+            $cleaned = substr($cleaned, 8);
+        }
+
+        return asset('storage/' . $cleaned);
+    }
 }

@@ -12,7 +12,7 @@ class ListingImageResource extends JsonResource
         return [
             'id' => $this->id,
             'listing_id' => $this->listing_id,
-            'image_url' => $this->image_url,
+            'image_url' => $this->formatted_image_url ?? $this->image_url,
             'sort_order' => $this->sort_order,
         ];
     }

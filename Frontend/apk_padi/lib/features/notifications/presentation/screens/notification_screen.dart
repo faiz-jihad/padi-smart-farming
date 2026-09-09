@@ -161,8 +161,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   }
 
   void _navigateSafely(AppNotificationModel item) {
-    final targetUrl = item.data['url']?.toString();
+    final actionUrl = item.data['action_url']?.toString();
+    final targetUrl = (actionUrl != null && actionUrl.isNotEmpty)
+        ? actionUrl
+        : item.data['url']?.toString();
+
     if (targetUrl != null && targetUrl.isNotEmpty) {
+      if (targetUrl.startsWith('/ppl-cases')) {
+        context.push('/ppl-cases');
+        return;
+      }
       if (targetUrl == '/' || targetUrl == '/home') {
         context.go('/home');
         return;
@@ -173,6 +181,15 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
 
     switch (item.type) {
+      case 'ppl_case':
+      case 'ppl_result':
+      case 'ppl_case_new':
+      case 'ppl_case_update':
+      case 'ppl_assignment':
+      case 'ppl_validation':
+      case 'field_verification':
+        context.push('/ppl-cases');
+        break;
       case 'crop_alert':
       case 'planting_reminder':
       case 'cultivation':
@@ -187,10 +204,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       case 'market_offer':
       case 'marketplace':
         context.push('/marketplace');
-        break;
-      case 'ppl_validation':
-      case 'field_verification':
-        context.push('/community-alert');
         break;
       default:
         context.go('/home');
@@ -208,6 +221,18 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }
     if (_selectedCategory == 'rights') {
       return notifications.where((n) => n.type == 'role_rights').toList();
+    }
+    if (_selectedCategory == 'ppl') {
+      return notifications
+          .where((n) =>
+              n.type == 'ppl_case' ||
+              n.type == 'ppl_result' ||
+              n.type == 'ppl_case_new' ||
+              n.type == 'ppl_case_update' ||
+              n.type == 'ppl_assignment' ||
+              n.type == 'ppl_validation' ||
+              n.type == 'field_verification')
+          .toList();
     }
 
     if (isBuyer) {
@@ -297,95 +322,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669),
       child: Column(
         children: [
-          // 1. Role Rights & Facilities Notice Banner (Pure Green and White)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isBuyer ? const Color(0xFF6EE7B7) : const Color(0xFFA7F3D0),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669)).withOpacity(0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isBuyer ? const Color(0xFFD1FAE5) : const Color(0xFFECFDF5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.verified_user_rounded,
-                    size: 20,
-                    color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF059669),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              isBuyer
-                                  ? 'Hak & Legalitas Pembeli B2B'
-                                  : 'Hak & Fasilitas Resmi Petani',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: isBuyer ? const Color(0xFFD1FAE5) : const Color(0xFFDCFCE7),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'HAK AKTIF',
-                              style: TextStyle(
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                                color: isBuyer ? const Color(0xFF0F5132) : const Color(0xFF047857),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        isBuyer
-                            ? 'Dilindungi jaminan timbangan tera resmi, armada logistik truk, & kontrak sah.'
-                            : 'Bebas diagnosa AI agronomi gratis, kalender pupuk, & jual gabah tanpa calo.',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           // 2. Filter tabs
           Container(
@@ -405,6 +341,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       if (unread > 0)
                         _buildFilterChip('unread', 'Belum Dibaca ($unread)'),
                       _buildFilterChip('rights', 'Hak Akun'),
+                      _buildFilterChip('ppl', 'Kasus PPL'),
                       if (isBuyerRole) ...[
                         _buildFilterChip('order', 'Pesanan & Timbang'),
                         _buildFilterChip('logistics', 'Logistik Truk'),
@@ -483,6 +420,17 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         iconData = Icons.shield_outlined;
         iconColor = const Color(0xFF059669);
         iconBg = const Color(0xFFECFDF5);
+        break;
+      case 'ppl_case':
+      case 'ppl_result':
+      case 'ppl_case_new':
+      case 'ppl_case_update':
+      case 'ppl_assignment':
+      case 'ppl_validation':
+      case 'field_verification':
+        iconData = Icons.assignment_turned_in_rounded;
+        iconColor = const Color(0xFF0284C7);
+        iconBg = const Color(0xFFE0F2FE);
         break;
       case 'order_status':
         iconData = Icons.scale_rounded;

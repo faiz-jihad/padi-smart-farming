@@ -72,15 +72,21 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('villages', [MapController::class, 'villages']);
     });
 
+    Route::get('events', [EventController::class, 'index']);
+    Route::get('events/{event}', [EventController::class, 'show']);
+    Route::get('notifications', [NotificationController::class, 'index']);
+
     Route::prefix('auth')->middleware('throttle:auth-strict')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
+        Route::post('face-login', [AuthController::class, 'faceLogin']);
         Route::post('/forgot-password', [PasswordResetController::class, 'forgot']);
         Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify']);
         Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 
         Route::middleware(['auth:sanctum', 'account.active'])->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
+            Route::post('face-enroll', [AuthController::class, 'faceEnroll']);
             Route::post('logout', [AuthController::class, 'logout']);
             Route::post('logout-all', [AuthController::class, 'logoutAll']);
         });
@@ -225,7 +231,6 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             [ContractPaymentController::class, 'index']
         );
         Route::get('admin-broadcasts', [AdminBroadcastController::class, 'index']);
-        Route::get('notifications', [NotificationController::class, 'index']);
         Route::post('notifications/send-push', [NotificationController::class, 'sendPush'])
             ->middleware(['role:extension_officer|admin', 'throttle:push-notifications']);
         Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
@@ -252,11 +257,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware('role:admin');
         Route::post('device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy']);
-        Route::get('events', [EventController::class, 'index']);
         Route::get('events/my-submissions', [EventController::class, 'mySubmissions']);
         Route::post('events', [EventController::class, 'store'])
             ->middleware('role:farmer|extension_officer|admin');
-        Route::get('events/{event}', [EventController::class, 'show']);
         Route::post('events/{event}/register', [EventController::class, 'register']);
 
         Route::prefix('admin/events')->middleware('role:admin')->group(function (): void {

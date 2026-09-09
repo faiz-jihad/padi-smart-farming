@@ -88,6 +88,7 @@ Route::middleware(['auth', 'admin.web'])
 
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
+        Route::patch('/disease/ppl-validations/{pplValidation}', [DiseaseController::class, 'updatePplValidation'])->name('disease.ppl-validations.update');
 
         // Weather Management Routes
         Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');

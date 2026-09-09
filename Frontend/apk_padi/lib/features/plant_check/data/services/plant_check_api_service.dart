@@ -133,6 +133,22 @@ class PlantCheckApiService {
     }
   }
 
+  Future<Map<String, dynamic>?> fetchPplValidationDetail(int validationId) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/ppl-validations/$validationId');
+      final data = response.data?['data'];
+      if (data is Map && data['validation'] is Map) {
+        return Map<String, dynamic>.from(data['validation'] as Map);
+      }
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> updatePplValidation({
     required int validationId,
     required String status,

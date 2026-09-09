@@ -8,11 +8,16 @@ import 'package:padi/features/admin/data/models/admin_overview.dart';
 import 'package:padi/features/admin/data/services/admin_api_service.dart';
 import 'package:padi/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:padi/features/auth/data/services/auth_api_service.dart';
+import 'package:padi/features/auth/data/services/local_face_auth_store.dart';
 import 'package:padi/features/auth/domain/repositories/auth_repository.dart';
 import 'package:padi/features/auth/presentation/controllers/auth_controller.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>(
   (ref) => const SecureTokenStorage(),
+);
+
+final localFaceAuthStoreProvider = Provider<LocalFaceAuthStore>(
+  (ref) => const LocalFaceAuthStore(),
 );
 
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -53,6 +58,7 @@ final authControllerProvider = ChangeNotifierProvider<AuthController>((ref) {
   final controller = AuthController(
     ref.read(authRepositoryProvider),
     ref.read(tokenStorageProvider),
+    ref.read(localFaceAuthStoreProvider),
   );
 
   unawaited(controller.restoreSession());
@@ -75,4 +81,19 @@ final isBuyerRoleProvider = Provider<bool>((ref) {
       roleLabel.contains('beli') ||
       roleLabel.contains('mitra') ||
       roleLabel.contains('buyer');
+});
+
+final isOfficerRoleProvider = Provider<bool>((ref) {
+  final user = ref.watch(authControllerProvider).state.user;
+  if (user == null) return false;
+  final role = user.role.toLowerCase().trim();
+  final roleLabel = (user.roleLabel ?? '').toLowerCase().trim();
+  return role == 'extension_officer' ||
+      role == 'ppl' ||
+      role == 'penyuluh' ||
+      role == 'admin' ||
+      roleLabel.contains('penyuluh') ||
+      roleLabel.contains('ppl') ||
+      roleLabel.contains('petugas') ||
+      roleLabel.contains('admin');
 });
