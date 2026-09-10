@@ -83,6 +83,22 @@
                     <span>Pertanian</span>
 
                 </a>
+
+                <a href="{{ route('admin.government-data.index') }}"
+                    class="admin-sidebar__link {{ request()->routeIs('admin.government-data.*') ? 'is-active' : '' }}">
+
+                    <svg class="admin-sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M3 21h18"/>
+                        <path d="M5 21V7l7-4 7 4v14"/>
+                        <path d="M9 10h6"/>
+                        <path d="M9 14h6"/>
+                        <path d="M9 18h6"/>
+                    </svg>
+
+                    <span>Government Data Center</span>
+
+                </a>
             @endcan
 
             @can('view_weather')

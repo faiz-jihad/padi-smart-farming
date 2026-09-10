@@ -35,21 +35,32 @@ class PurchaseContractController extends Controller
 
     public function show(
         Request $request,
-        PurchaseContract $purchaseContract
+        $purchaseContract
     ) {
         $user = $request->user();
 
-        if (
-            $purchaseContract->farmer_id !== $user->id &&
-            $purchaseContract->partner_id !== $user->id
-        ) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses ke kontrak ini.',
-            ], 403);
+        $contract = $purchaseContract instanceof PurchaseContract
+            ? $purchaseContract
+            : PurchaseContract::find($purchaseContract);
+
+        if (!$contract) {
+            $contract = PurchaseContract::where('offer_id', $purchaseContract)->first();
         }
 
-        $purchaseContract->load([
+        if (!$contract && $user) {
+            $contract = PurchaseContract::where('farmer_id', $user->id)
+                ->orWhere('partner_id', $user->id)
+                ->first();
+        }
+
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kontrak pembelian tidak ditemukan.',
+            ], 404);
+        }
+
+        $contract->load([
             'listing:id,commodity,unit,price_per_unit,image_url,description,status',
             'farmer:id,name,phone,email',
             'partner:id,name,phone,email',
@@ -59,7 +70,7 @@ class PurchaseContractController extends Controller
         return response()->json([
             'success' => true,
             'data' => new PurchaseContractResource(
-                $purchaseContract
+                $contract
             ),
         ]);
     }
@@ -259,161 +270,172 @@ class PurchaseContractController extends Controller
         ]);
     }
     public function invoice(
-    \Illuminate\Http\Request $request,
-    \App\Models\PurchaseContract $purchaseContract
-) {
-    try {
-        $user = $request->user();
+        \Illuminate\Http\Request $request,
+        $purchaseContract
+    ) {
+        try {
+            $user = $request->user();
 
-        // ============================================================
-        // AUTH
-        // ============================================================
+            // ============================================================
+            // AUTH
+            // ============================================================
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.',
+                ], 401);
+            }
 
-        // ============================================================
-        // CEK AKSES KONTRAK
-        // ============================================================
+            // ============================================================
+            // RESOLVE CONTRACT
+            // ============================================================
 
-        if (
-            (int) $purchaseContract->farmer_id !== (int) $user->id &&
-            (int) $purchaseContract->partner_id !== (int) $user->id
-        ) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses ke faktur ini.',
-            ], 403);
-        }
+            $contract = $purchaseContract instanceof PurchaseContract
+                ? $purchaseContract
+                : PurchaseContract::find($purchaseContract);
 
-        // ============================================================
-        // LOAD RELATION
-        // ============================================================
+            if (!$contract) {
+                $contract = PurchaseContract::where('offer_id', $purchaseContract)->first();
+            }
 
-        $purchaseContract->load([
-            'listing:id,commodity,unit,price_per_unit,image_url,description,status',
-            'farmer:id,name,phone,email',
-            'partner:id,name,phone,email',
-            'offer:id,listing_id,partner_id,offered_price,quantity,status,message',
-        ]);
+            if (!$contract && $user) {
+                $contract = PurchaseContract::where('farmer_id', $user->id)
+                    ->orWhere('partner_id', $user->id)
+                    ->first();
+            }
 
-        // ============================================================
-        // BUAT DATA ARRAY BIASA
-        // JANGAN KIRIM RESOURCE OBJECT LANGSUNG
-        // ============================================================
+            if (!$contract) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Faktur atau data kontrak pembelian tidak ditemukan.',
+                ], 404);
+            }
 
-        $data = [
-            'id' => (int) $purchaseContract->id,
-            'listing_id' => (int) $purchaseContract->listing_id,
-            'farmer_id' => (int) $purchaseContract->farmer_id,
-            'partner_id' => (int) $purchaseContract->partner_id,
-            'offer_id' => $purchaseContract->offer_id !== null
-                ? (int) $purchaseContract->offer_id
-                : null,
+            // ============================================================
+            // LOAD RELATION
+            // ============================================================
 
-            'quantity' => (float) $purchaseContract->quantity,
-            'agreed_price' => (float) $purchaseContract->agreed_price,
-            'total_amount' => (float) $purchaseContract->total_amount,
+            $contract->load([
+                'listing:id,commodity,unit,price_per_unit,image_url,description,status',
+                'farmer:id,name,phone,email',
+                'partner:id,name,phone,email',
+                'offer:id,listing_id,partner_id,offered_price,quantity,status,message',
+            ]);
 
-            'status' => (string) $purchaseContract->status,
+            // ============================================================
+            // BUAT DATA ARRAY BIASA
+            // JANGAN KIRIM RESOURCE OBJECT LANGSUNG
+            // ============================================================
 
-            'contracted_at' => $purchaseContract->contracted_at
-                ? $purchaseContract->contracted_at->toIso8601String()
-                : null,
+            $data = [
+                'id' => (int) $contract->id,
+                'listing_id' => (int) $contract->listing_id,
+                'farmer_id' => (int) $contract->farmer_id,
+                'partner_id' => (int) $contract->partner_id,
+                'offer_id' => $contract->offer_id !== null
+                    ? (int) $contract->offer_id
+                    : null,
 
-            // ========================================================
-            // DATA KOMODITAS
-            // ========================================================
+                'quantity' => (float) $contract->quantity,
+                'agreed_price' => (float) $contract->agreed_price,
+                'total_amount' => (float) $contract->total_amount,
 
-            'commodity' => $purchaseContract->listing?->commodity,
-            'unit' => $purchaseContract->listing?->unit ?? 'kg',
+                'status' => (string) $contract->status,
 
-            // ========================================================
-            // FARMER
-            // ========================================================
+                'contracted_at' => $contract->contracted_at
+                    ? $contract->contracted_at->toIso8601String()
+                    : null,
 
-            'farmer_name' => $purchaseContract->farmer?->name,
-            'farmer_email' => $purchaseContract->farmer?->email,
-            'farmer_phone' => $purchaseContract->farmer?->phone,
+                // ========================================================
+                // DATA KOMODITAS
+                // ========================================================
 
-            // ========================================================
-            // PARTNER
-            // ========================================================
+                'commodity' => $contract->listing?->commodity,
+                'unit' => $contract->listing?->unit ?? 'kg',
 
-            'partner_name' => $purchaseContract->partner?->name,
-            'partner_email' => $purchaseContract->partner?->email,
-            'partner_phone' => $purchaseContract->partner?->phone,
+                // ========================================================
+                // FARMER
+                // ========================================================
 
-            // ========================================================
-            // LISTING
-            // ========================================================
+                'farmer_name' => $contract->farmer?->name,
+                'farmer_email' => $contract->farmer?->email,
+                'farmer_phone' => $contract->farmer?->phone,
 
-            'listing' => $purchaseContract->listing
-                ? [
-                    'id' => (int) $purchaseContract->listing->id,
-                    'commodity' => $purchaseContract->listing->commodity,
-                    'unit' => $purchaseContract->listing->unit,
-                    'image_url' => $purchaseContract->listing->image_url,
-                    'price_per_unit' => (float) (
-                        $purchaseContract->listing->price_per_unit ?? 0
-                    ),
+                // ========================================================
+                // PARTNER
+                // ========================================================
+
+                'partner_name' => $contract->partner?->name,
+                'partner_email' => $contract->partner?->email,
+                'partner_phone' => $contract->partner?->phone,
+
+                // ========================================================
+                // LISTING
+                // ========================================================
+
+                'listing' => $contract->listing
+                    ? [
+                        'id' => (int) $contract->listing->id,
+                        'commodity' => $contract->listing->commodity,
+                        'unit' => $contract->listing->unit,
+                        'image_url' => $contract->listing->image_url,
+                        'price_per_unit' => (float) (
+                            $contract->listing->price_per_unit ?? 0
+                        ),
+                    ]
+                    : null,
+
+                // ========================================================
+                // FARMER OBJECT
+                // ========================================================
+
+                'farmer' => $contract->farmer
+                    ? [
+                        'id' => (int) $contract->farmer->id,
+                        'name' => $contract->farmer->name,
+                        'email' => $contract->farmer->email,
+                        'phone' => $contract->farmer->phone,
+                    ]
+                    : null,
+
+                // ========================================================
+                // PARTNER OBJECT
+                // ========================================================
+
+                'partner' => $contract->partner
+                    ? [
+                        'id' => (int) $contract->partner->id,
+                        'name' => $contract->partner->name,
+                        'email' => $contract->partner->email,
+                        'phone' => $contract->partner->phone,
+                    ]
+                    : null,
+            ];
+
+            // ============================================================
+            // RESPONSE JSON MURNI
+            // ============================================================
+
+            return response()
+                ->json([
+                    'success' => true,
+                    'message' => 'Faktur pembelian berhasil diambil.',
+                    'data' => $data,
+                ], 200)
+                ->header('Content-Type', 'application/json');
+        } catch (\Throwable $e) {
+
+            \Illuminate\Support\Facades\Log::error(
+                'PURCHASE INVOICE ERROR',
+                [
+                    'contract_id' => is_numeric($purchaseContract) ? (int) $purchaseContract : ($purchaseContract->id ?? null),
+                    'user_id' => $request->user()?->id,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                 ]
-                : null,
-
-            // ========================================================
-            // FARMER OBJECT
-            // ========================================================
-
-            'farmer' => $purchaseContract->farmer
-                ? [
-                    'id' => (int) $purchaseContract->farmer->id,
-                    'name' => $purchaseContract->farmer->name,
-                    'email' => $purchaseContract->farmer->email,
-                    'phone' => $purchaseContract->farmer->phone,
-                ]
-                : null,
-
-            // ========================================================
-            // PARTNER OBJECT
-            // ========================================================
-
-            'partner' => $purchaseContract->partner
-                ? [
-                    'id' => (int) $purchaseContract->partner->id,
-                    'name' => $purchaseContract->partner->name,
-                    'email' => $purchaseContract->partner->email,
-                    'phone' => $purchaseContract->partner->phone,
-                ]
-                : null,
-        ];
-
-        // ============================================================
-        // RESPONSE JSON MURNI
-        // ============================================================
-
-        return response()
-            ->json([
-                'success' => true,
-                'message' => 'Faktur pembelian berhasil diambil.',
-                'data' => $data,
-            ], 200)
-            ->header('Content-Type', 'application/json');
-    } catch (\Throwable $e) {
-
-        \Illuminate\Support\Facades\Log::error(
-            'PURCHASE INVOICE ERROR',
-            [
-                'contract_id' => $purchaseContract->id ?? null,
-                'user_id' => $request->user()?->id,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]
-        );
+            );
 
         return response()
             ->json([

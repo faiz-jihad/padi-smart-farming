@@ -37,11 +37,17 @@ use App\Http\Controllers\PurchaseContractController;
 use App\Http\Controllers\RiceVarietyController;
 use App\Http\Controllers\WeatherSnapshotController;
 use App\Http\Controllers\AdminBroadcastController;
+use App\Http\Controllers\Api\Payment\MidtransNotificationController;
+use App\Http\Controllers\Api\V1\Government\GovernmentApiController;
+use App\Http\Middleware\GovernmentTokenMiddleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Broadcast::routes(['prefix' => 'v1', 'middleware' => ['auth:sanctum', 'throttle:ws-auth']]);
+
+// Midtrans Payment Notification Webhook (Root API path fallback)
+Route::post('payment/midtrans/notification', [MidtransNotificationController::class, 'handle']);
 
 Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::get('health', function (): JsonResponse {
@@ -53,6 +59,18 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             'version' => '1.0.0',
             'timestamp' => now()->toIso8601String(),
         ]);
+    });
+
+    // Midtrans Payment Notification Webhook (v1 path)
+    Route::post('payment/midtrans/notification', [MidtransNotificationController::class, 'handle']);
+
+    // ─── B2G Government API (Protected by 6-Digit Bearer Token) ────────────────
+    Route::prefix('government')->middleware([GovernmentTokenMiddleware::class, 'throttle:60,1'])->group(function (): void {
+        Route::get('overview', [GovernmentApiController::class, 'overview']);
+        Route::get('activities', [GovernmentApiController::class, 'activities']);
+        Route::get('diseases', [GovernmentApiController::class, 'diseases']);
+        Route::get('productivity', [GovernmentApiController::class, 'productivity']);
+        Route::get('insights', [GovernmentApiController::class, 'insights']);
     });
 
     Route::prefix('regions')->group(function (): void {

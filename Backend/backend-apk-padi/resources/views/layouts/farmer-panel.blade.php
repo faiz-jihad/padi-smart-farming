@@ -36,6 +36,10 @@
 
                 {{-- Nav items --}}
                 <nav class="hidden md:flex items-center gap-6">
+                    <a href="{{ route('farmer.overview.index') }}"
+                        class="text-sm font-medium {{ request()->routeIs('farmer.overview.*') ? 'text-white font-bold' : 'text-green-200 hover:text-white' }} transition-colors">
+                        Ringkasan Pertanian
+                    </a>
                     <a href="{{ route('farmer.website.index') }}"
                         class="text-sm font-medium {{ request()->routeIs('farmer.website.index') ? 'text-white' : 'text-green-200 hover:text-white' }} transition-colors">
                         Website Saya

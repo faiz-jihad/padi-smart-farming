@@ -9,6 +9,8 @@ use App\Models\District;
 use App\Models\Farm;
 use App\Models\Harvest;
 use App\Models\MarketListing;
+use App\Models\MarketOffer;
+use App\Models\PurchaseContract;
 use App\Models\RiceVariety;
 use App\Models\User;
 use App\Models\Village;
@@ -280,6 +282,56 @@ class MarketListingSeeder extends Seeder
                     'commodity' => $data['commodity'],
                 ],
                 $data
+            );
+        }
+
+        // 4. Create Buyer and Sample Purchase Contracts
+        $buyer = User::firstOrCreate(
+            ['email' => 'buyer@padi.test'],
+            [
+                'name' => 'PT Pangan Nusantara (Mitra Pembeli)',
+                'phone' => '081234567899',
+                'password' => Hash::make('password'),
+                'role' => UserRole::Buyer->value,
+                'status' => UserStatus::Active->value,
+            ]
+        );
+        $buyer->assignRole(UserRole::Buyer->value);
+
+        $testUser = User::where('phone', '081234567890')->first();
+        $buyerId = $testUser?->id ?? $buyer->id;
+
+        $firstListing = MarketListing::first();
+        if ($firstListing) {
+            $offer1 = MarketOffer::updateOrCreate(
+                [
+                    'listing_id' => $firstListing->id,
+                    'partner_id' => $buyerId,
+                ],
+                [
+                    'offered_price' => $firstListing->price_per_unit,
+                    'quantity' => min(1000, (float) $firstListing->quantity),
+                    'message' => 'Penawaran pembelian partai besar untuk pasokan beras RMU.',
+                    'status' => 'accepted',
+                    'last_offer_by' => 'farmer',
+                ]
+            );
+
+            PurchaseContract::updateOrCreate(
+                [
+                    'id' => 1,
+                ],
+                [
+                    'listing_id' => $firstListing->id,
+                    'farmer_id' => $firstListing->farmer_id,
+                    'partner_id' => $buyerId,
+                    'offer_id' => $offer1->id,
+                    'quantity' => min(1000, (float) $firstListing->quantity),
+                    'agreed_price' => $firstListing->price_per_unit,
+                    'total_amount' => min(1000, (float) $firstListing->quantity) * (float) $firstListing->price_per_unit,
+                    'status' => 'active',
+                    'contracted_at' => now(),
+                ]
             );
         }
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiseaseController;
+use App\Http\Controllers\Admin\GovernmentDataCenterController;
 use App\Http\Controllers\Admin\IrrigationTypeAdminController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\FarmerPublicProfileAdminController;
@@ -14,9 +15,11 @@ use App\Http\Controllers\Admin\SoilController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminMapController;
 use App\Http\Controllers\Admin\WeatherController;
+use App\Http\Controllers\Farmer\AgricultureOverviewController;
 use App\Http\Controllers\Farmer\AuthController as FarmerAuthController;
 use App\Http\Controllers\Farmer\ProfileWebsiteController;
 use App\Http\Controllers\Public\FarmerPublicProfileController;
+use App\Http\Controllers\Public\GovernmentPortalController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Subdomain Routes ─────────────────────────────────────────────────
@@ -36,6 +39,15 @@ Route::get('/profile/{subdomain}', [FarmerPublicProfileController::class, 'show'
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// ─── Public B2G Government Routes ───────────────────────────────────────────
+Route::prefix('government')->name('government.')->group(function (): void {
+    Route::get('/', [GovernmentPortalController::class, 'index'])->name('index');
+    Route::post('/subscribe', [GovernmentPortalController::class, 'subscribe'])->name('subscribe');
+    Route::get('/checkout/{subscription}', [GovernmentPortalController::class, 'checkout'])->name('checkout');
+    Route::get('/status/{subscription}', [GovernmentPortalController::class, 'status'])->name('status');
+    Route::get('/docs', [GovernmentPortalController::class, 'docs'])->name('docs');
+});
 
 Route::redirect('/login', '/admin/login')->name('login');
 Route::get('/reset-password/{token}', function (string $token) {
@@ -89,6 +101,14 @@ Route::middleware(['auth', 'admin.web'])
         Route::get('/disease', [DiseaseController::class, 'index'])->name('disease.index');
         Route::patch('/disease/reports/{report}', [DiseaseController::class, 'updateReport'])->name('disease.reports.update');
         Route::patch('/disease/ppl-validations/{pplValidation}', [DiseaseController::class, 'updatePplValidation'])->name('disease.ppl-validations.update');
+
+        // Government Data Center (B2G)
+        Route::get('/government-data', [GovernmentDataCenterController::class, 'index'])->name('government-data.index');
+        Route::get('/government-data/{subscription}', [GovernmentDataCenterController::class, 'show'])->name('government-data.show');
+        Route::post('/government-data/{subscription}/confirm-payment', [GovernmentDataCenterController::class, 'confirmPayment'])->name('government-data.confirm-payment');
+        Route::post('/government-data/{subscription}/approve', [GovernmentDataCenterController::class, 'approve'])->name('government-data.approve');
+        Route::post('/government-data/{subscription}/revoke', [GovernmentDataCenterController::class, 'revoke'])->name('government-data.revoke');
+        Route::post('/government-data/{subscription}/reject', [GovernmentDataCenterController::class, 'reject'])->name('government-data.reject');
 
         // Weather Management Routes
         Route::get('/weather', [WeatherController::class, 'index'])->name('weather.index');
@@ -239,6 +259,9 @@ Route::middleware(['auth:farmer', 'farmer.web'])
     ->prefix('farmer')
     ->name('farmer.')
     ->group(function (): void {
+        // "Ringkasan Pertanian" Overview
+        Route::get('/ringkasan-pertanian', [AgricultureOverviewController::class, 'index'])->name('overview.index');
+
         // "Website Saya" dashboard
         Route::get('/website', [ProfileWebsiteController::class, 'index'])->name('website.index');
 

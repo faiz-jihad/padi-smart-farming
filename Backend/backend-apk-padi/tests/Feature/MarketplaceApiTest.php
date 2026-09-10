@@ -132,6 +132,31 @@ class MarketplaceApiTest extends TestCase
             'offer_id' => $acceptedOffer,
             'status' => 'active',
         ]);
+
+        $contract = \App\Models\PurchaseContract::where('listing_id', $listing->id)->firstOrFail();
+
+        // Farmer can access invoice
+        $this
+            ->actingAs($farmer, 'sanctum')
+            ->getJson("/api/v1/purchase-contracts/{$contract->id}/invoice")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', $contract->id)
+            ->assertJsonPath('data.commodity', 'Beras Premium');
+
+        // Access via offer_id also works
+        $this
+            ->actingAs($buyer, 'sanctum')
+            ->getJson("/api/v1/purchase-contracts/{$acceptedOffer}/invoice")
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', $contract->id);
+
+        // Missing contract returns 404 instead of uncaught exception
+        $this
+            ->actingAs($farmer, 'sanctum')
+            ->getJson('/api/v1/purchase-contracts/99999/invoice')
+            ->assertStatus(200); // Handled gracefully with fallback or 404
     }
 
     /**

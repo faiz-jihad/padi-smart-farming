@@ -46,6 +46,13 @@ export const LightNavbar: React.FC = () => {
           <a href="#penyuluh" className="hover:text-gray-900 transition-colors">
             Penyuluh PPL
           </a>
+          <a
+            href="/government"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 hover:text-emerald-950 border border-emerald-200/80 hover:bg-emerald-100 font-bold transition-all shadow-xs text-xs sm:text-sm"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" />
+            <span>Berlangganan</span>
+          </a>
         </nav>
 
         {/* Right: Join / Download Pill CTA */}
@@ -101,6 +108,17 @@ export const LightNavbar: React.FC = () => {
               className="px-3 py-2 rounded-xl hover:bg-gray-50"
             >
               Penyuluh PPL
+            </a>
+            <a
+              href="/government"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold hover:bg-emerald-100/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
+                <span>Berlangganan (B2G)</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-[#16A34A]" />
             </a>
           </nav>
         </div>
