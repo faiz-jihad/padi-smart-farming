@@ -20,7 +20,7 @@ class GovernmentSubscriptionService
     public function registerSubscription(array $data): GovernmentSubscription
     {
         $planDays = (int) ($data['plan_days'] ?? config('b2g.plan_days', 30));
-        $planPrice = (float) ($data['amount'] ?? config('b2g.plan_price', 20000));
+        $planPrice = (float) ($data['amount'] ?? config('b2g.plan_price', 600000));
         $planName = (string) ($data['plan_name'] ?? config('b2g.plan_name', 'Government Data Access'));
 
         $subscription = GovernmentSubscription::create([

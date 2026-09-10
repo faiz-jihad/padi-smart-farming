@@ -50,7 +50,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'    => '081234567890',
             'plan_name'    => 'B2G Access 30 Hari',
             'plan_days'    => 30,
-            'amount'       => 20000,
+            'amount'       => 600000,
             'status'       => 'PENDING_APPROVAL',
         ]);
 
@@ -79,14 +79,14 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'    => '081987654321',
             'plan_name'    => 'B2G Access 30 Hari',
             'plan_days'    => 30,
-            'amount'       => 20000,
+            'amount'       => 600000,
             'status'       => 'PENDING_PAYMENT',
         ]);
 
         $payment = GovernmentPayment::create([
             'government_subscription_id' => $sub->id,
             'order_id'                   => 'B2G-ORDER-999',
-            'amount'                     => 20000,
+            'amount'                     => 600000,
             'transaction_status'         => 'pending',
             'payment_method'             => 'qris',
         ]);
@@ -99,7 +99,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             ->assertSee('Dinas Tanaman Pangan Prov. Jabar')
             ->assertSee('css/admin/government-data.css', false)
             ->assertSee('B2G-ORDER-999')
-            ->assertSee('Rp 20.000');
+            ->assertSee('Rp 600.000');
     }
 
     public function test_admin_can_approve_subscription_and_generate_token(): void
@@ -113,7 +113,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'    => '081234567899',
             'plan_name'    => 'B2G Access 30 Hari',
             'plan_days'    => 30,
-            'amount'       => 20000,
+            'amount'       => 600000,
             'status'       => 'PENDING_APPROVAL',
         ]);
 
@@ -142,7 +142,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'     => '081234567888',
             'plan_name'     => 'B2G Access 30 Hari',
             'plan_days'     => 30,
-            'amount'        => 20000,
+            'amount'        => 600000,
             'token_hash'    => hash('sha256', '123456'),
             'token_preview' => '12****',
             'status'        => 'ACTIVE',
@@ -171,14 +171,14 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'     => '081234567877',
             'plan_name'     => 'B2G Access 30 Hari',
             'plan_days'     => 30,
-            'amount'        => 20000,
+            'amount'        => 600000,
             'status'        => 'PENDING_PAYMENT',
         ]);
 
         $payment = GovernmentPayment::create([
             'government_subscription_id' => $sub->id,
             'order_id'                   => 'B2G-WA-TEST-01',
-            'amount'                     => 20000,
+            'amount'                     => 600000,
             'transaction_status'         => 'pending',
             'payment_method'             => 'whatsapp_manual',
         ]);
@@ -206,7 +206,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             'pic_phone'     => '081234567777',
             'plan_name'     => 'B2G Access 30 Hari',
             'plan_days'     => 30,
-            'amount'        => 20000,
+            'amount'        => 600000,
             'status'        => 'PENDING_PAYMENT',
         ]);
 
@@ -215,7 +215,7 @@ class GovernmentDataCenterAdminTest extends TestCase
         $response->assertOk()
             ->assertSee('Billing &amp; Konfirmasi Pembayaran B2G', false)
             ->assertSee('Dinas Pertanian Kab. Cirebon')
-            ->assertSee('Rp 20.000')
+            ->assertSee('Rp 600.000')
             ->assertSee('Hubungi Admin via WhatsApp')
             ->assertSee('https://wa.me/', false)
             ->assertSee(config('b2g.whatsapp_number'));

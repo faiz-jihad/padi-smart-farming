@@ -375,7 +375,9 @@
             <p class="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-6">Mendukung integrasi sistem Satu Data Indonesia, Command Center, dan dashboard dinas pertanian daerah.</p>
 
             <div class="flex items-baseline justify-center gap-2 mb-8 bg-[#F8FAF8] py-5 px-6 rounded-2xl border border-gray-200/90 max-w-sm mx-auto">
-                <span class="text-3xl sm:text-5xl font-black text-gray-950 tracking-tight">Rp {{ number_format($planPrice, 0, ',', '.') }}</span>
+                <span class="text-3xl sm:text-3xl font-black text-gray-900 tracking-tight">
+    Rp {{ number_format($planPrice, 0, ',', '.') }}
+</span>
                 <span class="text-xs sm:text-sm font-bold text-gray-500">/ {{ $planDays }} Hari</span>
             </div>
 
