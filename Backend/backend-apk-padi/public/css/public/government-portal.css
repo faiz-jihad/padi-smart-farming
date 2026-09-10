@@ -1,0 +1,222 @@
+/* ==========================================================================
+   P.A.D.I. Government Data Portal (B2G) Stylesheet & Print Engine
+   High-Aesthetic, Official Institutional Reporting Platform
+   ========================================================================== */
+
+/* ── Screen UI Enhancements ─────────────────────────────────────────────── */
+.portal-card {
+    background-color: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(51, 65, 85, 0.8);
+    border-radius: 1rem;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.portal-table th {
+    background-color: rgba(15, 23, 42, 0.8);
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+    white-space: nowrap;
+}
+
+.portal-table td {
+    padding: 0.875rem 1rem;
+    font-size: 0.8125rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    color: #cbd5e1;
+}
+
+.portal-table tr:hover td {
+    background-color: rgba(51, 65, 85, 0.3);
+}
+
+/* Hidden by default on screen */
+.print-only-header,
+.print-only-footer {
+    display: none !important;
+}
+
+/* ── Print Stylesheet (@media print) ─────────────────────────────────────── */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 1.5cm 1.2cm 1.5cm 1.2cm;
+    }
+
+    /* Hide screen-only interactive elements */
+    header,
+    nav,
+    aside,
+    .no-print,
+    .btn-print,
+    .portal-filter-box,
+    .screen-only-actions,
+    .pagination-wrapper,
+    form,
+    button {
+        display: none !important;
+    }
+
+    body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        font-family: 'Times New Roman', 'Liberation Serif', serif, sans-serif !important;
+        font-size: 11pt !important;
+        line-height: 1.4 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .portal-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Show formal institutional kop on print */
+    .print-only-header {
+        display: block !important;
+        margin-bottom: 20pt !important;
+        padding-bottom: 10pt !important;
+        border-bottom: 3px double #000000 !important;
+        text-align: center !important;
+    }
+
+    .print-header-title {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        margin: 0 0 4pt 0 !important;
+        color: #000000 !important;
+    }
+
+    .print-header-subtitle {
+        font-size: 13pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        margin: 0 0 6pt 0 !important;
+        color: #15803d !important;
+    }
+
+    .print-header-meta {
+        font-size: 9.5pt !important;
+        color: #333333 !important;
+        margin: 0 !important;
+    }
+
+    .print-only-footer {
+        display: block !important;
+        margin-top: 25pt !important;
+        padding-top: 8pt !important;
+        border-top: 1px solid #666666 !important;
+        font-size: 8.5pt !important;
+        color: #555555 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+
+    /* Print card formatting */
+    .portal-card {
+        background: transparent !important;
+        border: 1px solid #999999 !important;
+        border-radius: 4pt !important;
+        margin-bottom: 14pt !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        page-break-inside: avoid !important;
+    }
+
+    .portal-card-header {
+        background-color: #f1f5f9 !important;
+        border-bottom: 1px solid #999999 !important;
+        padding: 6pt 10pt !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+    }
+
+    .portal-card-title {
+        color: #000000 !important;
+        font-size: 11pt !important;
+        font-weight: bold !important;
+    }
+
+    /* Print tables */
+    .portal-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 4pt !important;
+    }
+
+    .portal-table th {
+        background-color: #e2e8f0 !important;
+        color: #000000 !important;
+        border: 1px solid #64748b !important;
+        font-size: 9pt !important;
+        padding: 5pt 6pt !important;
+        font-weight: bold !important;
+        text-align: left !important;
+    }
+
+    .portal-table td {
+        border: 1px solid #cbd5e1 !important;
+        color: #000000 !important;
+        font-size: 8.5pt !important;
+        padding: 4.5pt 6pt !important;
+    }
+
+    .portal-table tr {
+        page-break-inside: avoid !important;
+    }
+
+    /* KPIs in Print */
+    .print-kpi-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8pt !important;
+        margin-bottom: 14pt !important;
+    }
+
+    .print-kpi-box {
+        border: 1px solid #94a3b8 !important;
+        padding: 6pt !important;
+        text-align: center !important;
+        background-color: #f8fafc !important;
+        border-radius: 4pt !important;
+    }
+
+    .print-kpi-label {
+        font-size: 8pt !important;
+        color: #475569 !important;
+        text-transform: uppercase !important;
+        font-weight: bold !important;
+    }
+
+    .print-kpi-val {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+        margin-top: 2pt !important;
+    }
+
+    /* Badges in Print */
+    .portal-badge {
+        border: 1px solid #666666 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 7.5pt !important;
+        padding: 1pt 4pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+    }
+}

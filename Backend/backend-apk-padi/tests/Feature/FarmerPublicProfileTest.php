@@ -72,7 +72,7 @@ class FarmerPublicProfileTest extends TestCase
                 'business_name'  => 'Berkah Tani Organik',
                 'headline'       => 'Padi Unggul Indramayu',
                 'description'    => 'Petani padi berpengalaman lebih dari 10 tahun.',
-                'whatsapp'       => '081234567890',
+                'whatsapp'       => '085321163909',
                 'public_email'   => 'berkah@tani.com',
                 'public_address' => 'Kec. Kandanghaur, Kab. Indramayu',
                 'logo'           => UploadedFile::fake()->image('logo.jpg', 200, 200),
@@ -83,7 +83,7 @@ class FarmerPublicProfileTest extends TestCase
         $this->assertDatabaseHas('farmer_public_profiles', [
             'farmer_id'     => $farmer->id,
             'business_name' => 'Berkah Tani Organik',
-            'whatsapp'      => '6281234567890', // Normalized
+            'whatsapp'      => '6285321163909', // Normalized
         ]);
 
         $profile = FarmerPublicProfile::where('farmer_id', $farmer->id)->first();

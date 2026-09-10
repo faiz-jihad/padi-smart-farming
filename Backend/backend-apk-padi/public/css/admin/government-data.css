@@ -324,6 +324,31 @@
     background: rgba(255, 255, 255, 0.22);
     border-color: #ffffff;
 }
+.b2g-token-wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.b2g-token-wa-btn:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.45);
+    color: #ffffff;
+}
+.b2g-token-wa-btn svg {
+    flex-shrink: 0;
+}
 .b2g-token-warning {
     font-size: 12px;
     color: #fcd34d;

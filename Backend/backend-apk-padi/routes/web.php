@@ -19,6 +19,7 @@ use App\Http\Controllers\Farmer\AgricultureOverviewController;
 use App\Http\Controllers\Farmer\AuthController as FarmerAuthController;
 use App\Http\Controllers\Farmer\ProfileWebsiteController;
 use App\Http\Controllers\Public\FarmerPublicProfileController;
+use App\Http\Controllers\Public\GovernmentDataPortalController;
 use App\Http\Controllers\Public\GovernmentPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,13 @@ Route::prefix('government')->name('government.')->group(function (): void {
     Route::get('/checkout/{subscription}', [GovernmentPortalController::class, 'checkout'])->name('checkout');
     Route::get('/status/{subscription}', [GovernmentPortalController::class, 'status'])->name('status');
     Route::get('/docs', [GovernmentPortalController::class, 'docs'])->name('docs');
+
+    // ─── Government Data Portal (B2G Access Token Protected) ───────────────────
+    Route::get('/portal', [GovernmentDataPortalController::class, 'portal'])->name('portal.index');
+    Route::post('/portal/access', [GovernmentDataPortalController::class, 'access'])->name('portal.access');
+    Route::get('/portal/dashboard', [GovernmentDataPortalController::class, 'dashboard'])->name('portal.dashboard');
+    Route::get('/portal/report', [GovernmentDataPortalController::class, 'report'])->name('portal.report');
+    Route::post('/portal/logout', [GovernmentDataPortalController::class, 'logout'])->name('portal.logout');
 });
 
 Route::redirect('/login', '/admin/login')->name('login');

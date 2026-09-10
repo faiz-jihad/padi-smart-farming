@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GovernmentSubscription;
 use App\Services\Government\GovernmentDataService;
+use App\Services\Government\GovernmentNotificationService;
 use App\Services\Government\GovernmentSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ class GovernmentDataCenterController extends Controller
 {
     public function __construct(
         protected GovernmentSubscriptionService $subscriptionService,
-        protected GovernmentDataService $dataService
+        protected GovernmentDataService $dataService,
+        protected GovernmentNotificationService $notificationService
     ) {}
 
     public function index(Request $request): View
@@ -73,13 +75,21 @@ class GovernmentDataCenterController extends Controller
         $result = $this->subscriptionService->approveAndGenerateToken($subscription);
         $rawToken = $result['raw_token'];
 
-        return back()
+        $whatsappUrl = $this->notificationService->generateWhatsAppUrl($subscription, $rawToken);
+
+        $response = back()
             ->with('status', "Subscription instansi {$subscription->agency_name} berhasil disetujui & diaktifkan selama {$subscription->plan_days} hari.")
             ->with('generated_token', $rawToken)
             ->with('generated_agency', $subscription->agency_name)
             ->with('generated_plan', $subscription->plan_name)
             ->with('generated_days', $subscription->plan_days)
             ->with('generated_expiry', $subscription->expires_at?->isoFormat('D MMMM Y'));
+
+        if ($whatsappUrl) {
+            $response->with('whatsapp_url', $whatsappUrl);
+        }
+
+        return $response;
     }
 
     public function revoke(Request $request, GovernmentSubscription $subscription): RedirectResponse

@@ -5,8 +5,9 @@ return [
     'plan_days' => (int) env('GOVERNMENT_SUBSCRIPTION_DAYS', 30),
     'plan_price' => (float) env('GOVERNMENT_SUBSCRIPTION_PRICE', 600000),
     'currency' => 'IDR',
-    'whatsapp_number' => env('B2G_WHATSAPP_NUMBER', '6281234567890'),
+    'whatsapp_number' => env('B2G_WHATSAPP_NUMBER', '628321163909'),
     'base_api_url' => env('APP_URL', 'http://127.0.0.1:8000') . '/api/v1/government',
+
     'plans' => [
         'payg' => [
             'code' => 'payg',
@@ -23,6 +24,7 @@ return [
                 'Admin P.A.D.I. menetapkan tagihan final setelah cakupan data disepakati.',
             ],
         ],
+
         'package_600' => [
             'code' => 'package_600',
             'name' => 'Paket 600',
@@ -39,4 +41,6 @@ return [
             ],
         ],
     ],
+
+    'documentation_url' => env('B2G_DOCS_URL'),
 ];

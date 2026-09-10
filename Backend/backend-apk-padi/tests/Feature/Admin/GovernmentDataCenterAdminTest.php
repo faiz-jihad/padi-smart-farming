@@ -47,7 +47,7 @@ class GovernmentDataCenterAdminTest extends TestCase
             'agency_name'  => 'Dinas Pertanian Kab. Indramayu',
             'agency_email' => 'dinas@indramayukab.go.id',
             'pic_name'     => 'Ir. H. Budi',
-            'pic_phone'    => '081234567890',
+            'pic_phone'    => '085321163909',
             'plan_name'    => 'B2G Access 30 Hari',
             'plan_days'    => 30,
             'amount'       => 600000,

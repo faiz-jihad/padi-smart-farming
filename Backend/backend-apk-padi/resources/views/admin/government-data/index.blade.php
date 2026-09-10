@@ -53,29 +53,71 @@
 
     {{-- Flash & Generated Token Modal/Banner --}}
     @if (session('generated_token'))
-        <div class="b2g-token-banner">
-            <div class="b2g-token-banner__header">
-                <div class="b2g-token-badge">
-                    <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    TOKEN AKSES 6 DIGIT DIAKTIFKAN
-                </div>
-                <h3 class="b2g-token-title">Persetujuan Berhasil untuk {{ session('generated_agency') }}</h3>
-                <p class="b2g-token-desc">Berikan token akses 6 digit berikut kepada perwakilan resmi instansi kedinasan. Paket <strong>{{ session('generated_plan') }}</strong> aktif selama {{ session('generated_days') }} hari (berlaku hingga <strong>{{ session('generated_expiry') }}</strong>).</p>
+    <div class="b2g-token-banner">
+        <div class="b2g-token-banner__header">
+            <div class="b2g-token-badge">
+                <svg class="w-3.5 h-3.5 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                TOKEN AKSES 6 DIGIT DIAKTIFKAN
             </div>
-            <div class="b2g-token-display">
-                <div class="b2g-token-code-wrap">
-                    <span class="b2g-token-code">{{ session('generated_token') }}</span>
-                    <button type="button" class="b2g-token-copy-btn" onclick="navigator.clipboard.writeText('{{ session('generated_token') }}'); this.innerText = '✓ Tersalin!'; setTimeout(() => this.innerText = 'Salin Token', 2000);">
-                        <svg class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        Salin Token
-                    </button>
-                </div>
-                <div class="b2g-token-warning">
-                    ⚠️ Harap catat atau salin token ini sekarang. Demi privasi dan keamanan sistem, kode lengkap tidak akan ditampilkan kembali.
-                </div>
-            </div>
+
+            <h3 class="b2g-token-title">
+                Persetujuan Berhasil untuk {{ session('generated_agency') }}
+            </h3>
+
+            <p class="b2g-token-desc">
+                Berikan token akses 6 digit berikut kepada perwakilan resmi instansi kedinasan.
+                Paket <strong>{{ session('generated_plan') }}</strong>
+                aktif selama {{ session('generated_days') }} hari
+                (berlaku hingga <strong>{{ session('generated_expiry') }}</strong>).
+            </p>
         </div>
-    @endif
+
+        <div class="b2g-token-display">
+
+            <div class="b2g-token-code-wrap">
+                <span class="b2g-token-code">
+                    {{ session('generated_token') }}
+                </span>
+
+                <button
+                    type="button"
+                    class="b2g-token-copy-btn"
+                    onclick="navigator.clipboard.writeText('{{ session('generated_token') }}'); this.innerText = '✓ Tersalin!'; setTimeout(() => this.innerText = 'Salin Token', 2000);"
+                >
+                    <svg class="w-4 h-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Salin Token
+                </button>
+            </div>
+
+            @if (session('whatsapp_url'))
+                <a
+                    href="{{ session('whatsapp_url') }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="b2g-token-wa-btn"
+                    id="btn-whatsapp-credential"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372.025-.521-.075-.149-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
+                        <path d="M20.52 3.449A11.815 11.815 0 0012.04 0C5.495 0 .16 5.335.16 11.88c0 2.092.546 4.134 1.583 5.93L.055 24l6.335-1.662a11.865 11.865 0 005.65 1.438h.005c6.542 0 11.879-5.335 11.879-11.88a11.83 11.83 0 00-3.404-8.447zM12.045 21.785h-.004a9.855 9.855 0 01-5.026-1.378l-.36-.214-3.758.986 1.003-3.666-.235-.375a9.863 9.863 0 01-1.511-5.258c.001-5.45 4.436-9.884 9.89-9.884a9.83 9.83 0 017.002 2.903 9.85 9.85 0 012.898 7.006c-.002 5.45-4.437 9.88-9.899 9.88z"/>
+                    </svg>
+                    <span>Kirim Credential via WhatsApp</span>
+                </a>
+            @endif
+
+            <div class="b2g-token-warning">
+                ⚠️ Harap catat atau salin token ini sekarang.
+                Demi privasi dan keamanan sistem, kode lengkap tidak akan ditampilkan kembali.
+            </div>
+
+        </div>
+    </div>
+@endif
 
     @if (session('status'))
         <div class="b2g-alert b2g-alert--success">

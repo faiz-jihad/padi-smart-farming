@@ -20,4 +20,20 @@ class DiseaseRecommendation extends Model
     {
         return $this->belongsTo(DiseaseScan::class, 'scan_id');
     }
+
+    /**
+     * Backward-compatibility accessor for treatment_title.
+     */
+    public function getTreatmentTitleAttribute(): ?string
+    {
+        return $this->action;
+    }
+
+    /**
+     * Backward-compatibility accessor for action_summary.
+     */
+    public function getActionSummaryAttribute(): ?string
+    {
+        return $this->action;
+    }
 }

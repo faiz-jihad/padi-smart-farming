@@ -19,6 +19,11 @@ class Harvest extends Model
         'verification_status',
     ];
 
+    protected $casts = [
+        'harvest_date' => 'date',
+        'quantity'     => 'decimal:2',
+    ];
+
     public function cropSeason(): BelongsTo
     {
         return $this->belongsTo(CropSeason::class);

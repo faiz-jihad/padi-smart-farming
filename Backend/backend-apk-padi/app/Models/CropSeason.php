@@ -19,6 +19,12 @@ class CropSeason extends Model
         'status',
     ];
 
+    protected $casts = [
+        'planned_planting_date'  => 'date',
+        'planting_date'          => 'date',
+        'estimated_harvest_date' => 'date',
+    ];
+
     public function farm(): BelongsTo
     {
         return $this->belongsTo(Farm::class);

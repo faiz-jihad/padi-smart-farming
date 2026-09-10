@@ -83,7 +83,7 @@ class GovernmentB2GApiTest extends TestCase
             'agency_name'  => 'Dinas Pertanian Kab. Indramayu',
             'agency_email' => 'distan@indramayukab.go.id',
             'pic_name'     => 'Ir. H. Budi Santoso',
-            'pic_phone'    => '081234567890',
+            'pic_phone'    => '085321163909',
             'purpose'      => 'Monitoring ketahanan pangan dan sebaran penyakit tanaman padi.',
             'plan_code'    => 'package_600',
         ]);

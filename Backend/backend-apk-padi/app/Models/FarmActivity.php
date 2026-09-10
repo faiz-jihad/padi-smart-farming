@@ -18,6 +18,10 @@ class FarmActivity extends Model
         'sync_status',
     ];
 
+    protected $casts = [
+        'occurred_at' => 'datetime',
+    ];
+
     public function cropSeason(): BelongsTo
     {
         return $this->belongsTo(CropSeason::class);

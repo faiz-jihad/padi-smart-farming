@@ -49,7 +49,7 @@ class EventCreationAuthorizationTest extends TestCase
             'speaker' => 'Ir. Hendra Pratama, M.P.',
             'quota' => 50,
             'price_type' => 'free',
-            'contact_person' => '081234567890',
+            'contact_person' => '085321163909',
         ], $overrides);
     }
 
