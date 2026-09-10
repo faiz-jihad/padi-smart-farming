@@ -64,6 +64,53 @@
             background-color: #E2E8F0;
             color: #0F172A;
         }
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 1.5rem;
+        }
+        .flow-step {
+            border: 1px solid #D1FAE5;
+            background: #F0FDF4;
+            border-radius: 0.95rem;
+            padding: 0.85rem;
+            font-size: 0.72rem;
+            line-height: 1.45;
+            color: #166534;
+            font-weight: 700;
+        }
+        .flow-step strong {
+            display: block;
+            color: #064E3B;
+            font-size: 0.76rem;
+            margin-bottom: 0.2rem;
+        }
+        .access-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 0.55rem;
+        }
+        .access-list li {
+            display: grid;
+            grid-template-columns: 1rem 1fr;
+            gap: 0.45rem;
+            font-size: 0.78rem;
+            color: #475569;
+            line-height: 1.5;
+        }
+        .access-list li:before {
+            content: '✓';
+            color: #16A34A;
+            font-weight: 900;
+        }
+        @media (max-width: 640px) {
+            .flow-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -105,6 +152,13 @@
                 </div>
             @endif
 
+            <div class="flow-grid">
+                <div class="flow-step"><strong>1. Registrasi</strong>Data instansi sudah masuk.</div>
+                <div class="flow-step"><strong>2. Billing</strong>PIC menghubungi admin resmi.</div>
+                <div class="flow-step"><strong>3. Verifikasi</strong>Admin cek pembayaran dan instansi.</div>
+                <div class="flow-step"><strong>4. Akses Aktif</strong>Token API diberikan ke instansi.</div>
+            </div>
+
             {{-- Summary Box --}}
             <div style="background-color: #F8FAFC; border-radius: 1.25rem; padding: 1.5rem; border: 1px solid #E2E8F0; margin-bottom: 1.5rem; font-size: 0.875rem;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; padding-bottom: 0.85rem; border-bottom: 1px solid #F1F5F9;">
@@ -114,6 +168,10 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                     <span style="color: #64748B;">Paket Langganan:</span>
                     <span style="font-weight: 700; color: #0F172A;">{{ $subscription->plan_name }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 1rem;">
+                    <span style="color: #64748B;">Skema Tagihan:</span>
+                    <span style="font-weight: 700; color: #0F172A; text-align: right;">{{ $plan['billing_label'] ?? 'Tagihan sesuai paket' }}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                     <span style="color: #64748B;">Durasi Akses:</span>
@@ -135,6 +193,16 @@
                     <span style="font-weight: 800; color: #0F172A; font-size: 0.95rem;">Total Tagihan:</span>
                     <span style="font-size: 1.6rem; font-weight: 900; color: #15803D; letter-spacing: -0.02em;">Rp {{ number_format($subscription->amount, 0, ',', '.') }}</span>
                 </div>
+            </div>
+
+            <div style="background-color: #ffffff; border: 1px solid #D1FAE5; border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; font-weight: 900; color: #064E3B;">Hak akses setelah admin menyetujui</h3>
+                <ul class="access-list">
+                    @foreach (($plan['features'] ?? []) as $feature)
+                        <li>{{ $feature }}</li>
+                    @endforeach
+                    <li>Instansi mendapat halaman status dan dokumentasi untuk memakai endpoint B2G.</li>
+                </ul>
             </div>
 
             {{-- WhatsApp Instruction Box --}}

@@ -23,26 +23,39 @@ class VoiceCommandOverlay extends ConsumerStatefulWidget {
 class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+  late VoiceCommandNotifier _voiceNotifier;
+  final FocusNode _overlayFocusNode = FocusNode(
+    debugLabel: 'VoiceCommandOverlay',
+  );
 
   @override
   void initState() {
     super.initState();
+    _voiceNotifier = ref.read(voiceCommandProvider.notifier);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
 
-    // Auto-mulai mendengarkan saat overlay dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(voiceCommandProvider.notifier).showOverlay();
-      ref.read(voiceCommandProvider.notifier).startListening();
+      _startListeningAfterOpen();
     });
+  }
+
+  Future<void> _startListeningAfterOpen() async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    if (!mounted) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    FocusScope.of(context).requestFocus(_overlayFocusNode);
+    _voiceNotifier.showOverlay();
+    await _voiceNotifier.startListening();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
-    ref.read(voiceCommandProvider.notifier).hideOverlay();
+    _overlayFocusNode.dispose();
+    _voiceNotifier.hideOverlay();
     super.dispose();
   }
 
@@ -51,9 +64,9 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
     // Dengarkan perubahan state dan handle navigasi
     ref.listen(voiceCommandProvider, (prev, next) {
       if (next.uiState == VoiceUiState.executing) {
-        final result = ref.read(voiceCommandProvider.notifier).pendingResult;
+        final result = _voiceNotifier.pendingResult;
         if (result != null) {
-          ref.read(voiceCommandProvider.notifier).clearPendingResult();
+          _voiceNotifier.clearPendingResult();
           _handleExecution(result);
         }
       }
@@ -61,51 +74,55 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
 
     final state = ref.watch(voiceCommandProvider);
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F2419),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFF22C55E).withValues(alpha: 0.3),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 30,
-            offset: const Offset(0, -4),
+    return Focus(
+      focusNode: _overlayFocusNode,
+      autofocus: true,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F2419),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+            width: 1.2,
           ),
-        ],
-      ),
-      padding: EdgeInsets.fromLTRB(
-        24,
-        20,
-        24,
-        24 + MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 30,
+              offset: const Offset(0, -4),
             ),
-          ),
-          const SizedBox(height: 20),
+          ],
+        ),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          20,
+          24,
+          24 + MediaQuery.of(context).padding.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
 
-          // Content berganti sesuai state
-          _buildContent(state),
+            // Content berganti sesuai state
+            _buildContent(state),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Action buttons bawah
-          _buildActionButtons(state),
-        ],
+            // Action buttons bawah
+            _buildActionButtons(state),
+          ],
+        ),
       ),
     );
   }
@@ -287,8 +304,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
                 label: 'Ya, Lanjutkan',
                 icon: Icons.check_rounded,
                 color: const Color(0xFF16A34A),
-                onTap: () =>
-                    ref.read(voiceCommandProvider.notifier).confirmIntent(),
+                onTap: () => _voiceNotifier.confirmIntent(),
               ),
             ),
             const SizedBox(width: 10),
@@ -297,8 +313,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
                 label: 'Coba Lagi',
                 icon: Icons.replay_rounded,
                 color: const Color(0xFF475569),
-                onTap: () =>
-                    ref.read(voiceCommandProvider.notifier).retryListening(),
+                onTap: () => _voiceNotifier.retryListening(),
               ),
             ),
           ],
@@ -371,8 +386,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
               label: 'Coba Lagi',
               icon: Icons.replay_rounded,
               color: const Color(0xFF16A34A),
-              onTap: () =>
-                  ref.read(voiceCommandProvider.notifier).startListening(),
+              onTap: () => _startListeningAfterOpen(),
             ),
           ),
           const SizedBox(width: 10),
@@ -388,7 +402,32 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
       );
     }
 
-    // IDLE / LISTENING / TRANSCRIBING
+    if (state.uiState == VoiceUiState.idle) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: _buildActionBtn(
+              label: 'Mulai Bicara',
+              icon: Icons.mic_rounded,
+              color: const Color(0xFF16A34A),
+              onTap: () => _startListeningAfterOpen(),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildActionBtn(
+              label: 'Tutup',
+              icon: Icons.close_rounded,
+              color: const Color(0xFF475569),
+              onTap: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // LISTENING / TRANSCRIBING
     return SizedBox(
       width: double.infinity,
       child: _buildActionBtn(
@@ -525,11 +564,9 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
   // ─── Navigation Execution ─────────────────────────────────────
 
   void _handleExecution(VoiceResult result) async {
-    final notifier = ref.read(voiceCommandProvider.notifier);
-
     // TTS acknowledgement dulu
     try {
-      await notifier.speak(_acknowledgeText(result.intent));
+      await _voiceNotifier.speak(_acknowledgeText(result.intent));
     } catch (_) {}
 
     if (!mounted) return;

@@ -71,7 +71,7 @@ class GovernmentB2GApiTest extends TestCase
     {
         $response = $this->post('/government/subscribe', []);
 
-        $response->assertSessionHasErrors(['agency_name', 'agency_email', 'pic_name', 'pic_phone']);
+        $response->assertSessionHasErrors(['agency_name', 'agency_email', 'pic_name', 'pic_phone', 'plan_code']);
     }
 
     /**
@@ -85,6 +85,7 @@ class GovernmentB2GApiTest extends TestCase
             'pic_name'     => 'Ir. H. Budi Santoso',
             'pic_phone'    => '081234567890',
             'purpose'      => 'Monitoring ketahanan pangan dan sebaran penyakit tanaman padi.',
+            'plan_code'    => 'package_600',
         ]);
 
         $this->assertDatabaseHas('government_subscriptions', [
@@ -92,6 +93,8 @@ class GovernmentB2GApiTest extends TestCase
             'agency_email' => 'distan@indramayukab.go.id',
             'status'       => 'PENDING_PAYMENT',
             'plan_days'    => 30,
+            'plan_name'    => 'Paket 600',
+            'amount'       => 600000,
         ]);
 
         $subscription = GovernmentSubscription::first();
@@ -100,6 +103,31 @@ class GovernmentB2GApiTest extends TestCase
         $this->assertDatabaseHas('government_payments', [
             'government_subscription_id' => $subscription->id,
             'transaction_status'         => 'pending',
+        ]);
+
+        $response->assertRedirect(route('government.checkout', ['subscription' => $subscription->id]));
+    }
+
+    public function test_subscription_registration_supports_pay_as_you_go_plan(): void
+    {
+        $response = $this->post('/government/subscribe', [
+            'agency_name'  => 'Dinas Pertanian Pilot Kecamatan',
+            'agency_email' => 'pilot@distan.go.id',
+            'pic_name'     => 'Siti Aminah',
+            'pic_phone'    => '081234567899',
+            'purpose'      => 'Uji coba integrasi dashboard kecamatan.',
+            'plan_code'    => 'payg',
+        ]);
+
+        $subscription = GovernmentSubscription::first();
+        $this->assertNotNull($subscription);
+
+        $this->assertDatabaseHas('government_subscriptions', [
+            'agency_name' => 'Dinas Pertanian Pilot Kecamatan',
+            'plan_name'   => 'Pay As You Go',
+            'plan_days'   => 7,
+            'amount'      => 0,
+            'status'      => GovernmentSubscription::STATUS_PENDING_PAYMENT,
         ]);
 
         $response->assertRedirect(route('government.checkout', ['subscription' => $subscription->id]));

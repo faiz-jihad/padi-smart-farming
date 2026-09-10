@@ -90,30 +90,43 @@ class VoiceMicButton extends ConsumerWidget {
   }
 
   Future<void> _openOverlay(BuildContext context, WidgetRef ref) async {
-    ref.read(voiceCommandProvider.notifier).hideOverlay();
-    await Future<void>.delayed(const Duration(milliseconds: 40));
+    FocusManager.instance.primaryFocus?.unfocus();
 
     if (!context.mounted) return;
 
-    final targetRoute = await showModalBottomSheet<String>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (ctx) => VoiceCommandOverlay(onIntentExecuted: onIntentExecuted),
-    );
+    String? targetRoute;
+    try {
+      targetRoute = await showModalBottomSheet<String>(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: Colors.black.withValues(alpha: 0.5),
+        builder: (ctx) =>
+            VoiceCommandOverlay(onIntentExecuted: onIntentExecuted),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bantuan suara belum bisa dibuka: $error'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     if (context.mounted) {
       ref.read(voiceCommandProvider.notifier).hideOverlay();
       if (targetRoute != null && targetRoute.isNotEmpty) {
+        final route = targetRoute;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
-          if (targetRoute == '/home') {
-            context.go(targetRoute);
+          if (route == '/home') {
+            context.go(route);
           } else {
-            context.push(targetRoute);
+            context.push(route);
           }
         });
       }

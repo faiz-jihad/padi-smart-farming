@@ -57,6 +57,7 @@ class GovernmentDataCenterController extends Controller
         return view('admin.government-data.show', [
             'title'        => 'Detail Subscription Government - ' . $subscription->agency_name,
             'subscription' => $subscription,
+            'plan'         => $this->subscriptionService->getPlanForSubscription($subscription),
         ]);
     }
 
@@ -76,6 +77,8 @@ class GovernmentDataCenterController extends Controller
             ->with('status', "Subscription instansi {$subscription->agency_name} berhasil disetujui & diaktifkan selama {$subscription->plan_days} hari.")
             ->with('generated_token', $rawToken)
             ->with('generated_agency', $subscription->agency_name)
+            ->with('generated_plan', $subscription->plan_name)
+            ->with('generated_days', $subscription->plan_days)
             ->with('generated_expiry', $subscription->expires_at?->isoFormat('D MMMM Y'));
     }
 

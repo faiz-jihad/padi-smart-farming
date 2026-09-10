@@ -13,15 +13,80 @@ use Illuminate\Support\Str;
 class GovernmentSubscriptionService
 {
     /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function getPlans(): array
+    {
+        $plans = config('b2g.plans', []);
+
+        return is_array($plans) ? $plans : [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function resolvePlan(?string $planCode): array
+    {
+        $plans = $this->getPlans();
+        $defaultCode = array_key_exists('package_600', $plans) ? 'package_600' : array_key_first($plans);
+        $selectedCode = $planCode && array_key_exists($planCode, $plans) ? $planCode : $defaultCode;
+
+        if ($selectedCode !== null && isset($plans[$selectedCode]) && is_array($plans[$selectedCode])) {
+            return $plans[$selectedCode];
+        }
+
+        return [
+            'code' => 'legacy',
+            'name' => config('b2g.plan_name', 'Government Data Access'),
+            'days' => (int) config('b2g.plan_days', 30),
+            'price' => (float) config('b2g.plan_price', 600000),
+            'features' => [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getPlanForSubscription(GovernmentSubscription $subscription): array
+    {
+        foreach ($this->getPlans() as $plan) {
+            if (! is_array($plan)) {
+                continue;
+            }
+
+            $sameName = ($plan['name'] ?? null) === $subscription->plan_name;
+            $sameAmount = (float) ($plan['price'] ?? -1) === (float) $subscription->amount;
+
+            if ($sameName && $sameAmount) {
+                return $plan;
+            }
+        }
+
+        return [
+            'code' => 'custom',
+            'name' => $subscription->plan_name,
+            'days' => $subscription->plan_days,
+            'price' => (float) $subscription->amount,
+            'billing_label' => 'Tagihan sesuai paket yang disetujui',
+            'quota_label' => 'Cakupan data mengikuti kesepakatan administrasi.',
+            'features' => [
+                'Akses endpoint B2G sesuai persetujuan admin.',
+                'Token API diterbitkan setelah pembayaran dan verifikasi selesai.',
+            ],
+        ];
+    }
+
+    /**
      * Create a new subscription registration
      *
      * @param array<string, mixed> $data
      */
     public function registerSubscription(array $data): GovernmentSubscription
     {
-        $planDays = (int) ($data['plan_days'] ?? config('b2g.plan_days', 30));
-        $planPrice = (float) ($data['amount'] ?? config('b2g.plan_price', 600000));
-        $planName = (string) ($data['plan_name'] ?? config('b2g.plan_name', 'Government Data Access'));
+        $plan = $this->resolvePlan($data['plan_code'] ?? null);
+        $planDays = (int) ($plan['days'] ?? config('b2g.plan_days', 30));
+        $planPrice = (float) ($plan['price'] ?? config('b2g.plan_price', 600000));
+        $planName = (string) ($plan['name'] ?? config('b2g.plan_name', 'Government Data Access'));
 
         $subscription = GovernmentSubscription::create([
             'agency_name'  => $data['agency_name'],

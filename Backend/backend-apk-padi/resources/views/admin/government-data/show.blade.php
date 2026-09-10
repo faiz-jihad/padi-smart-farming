@@ -148,6 +148,17 @@
                         <dt class="b2g-info-dt">Paket Layanan</dt>
                         <dd class="b2g-info-dd" style="font-weight:700; color:#0f172a;">{{ $subscription->plan_name }} ({{ $subscription->plan_days }} Hari)</dd>
                     </div>
+                    <div>
+                        <dt class="b2g-info-dt" style="margin-bottom:6px;">Hak Akses Paket</dt>
+                        <dd class="b2g-info-box">
+                            <div style="font-weight:800;color:#064e3b;margin-bottom:8px;">{{ $plan['billing_label'] ?? 'Tagihan sesuai paket yang disetujui' }}</div>
+                            <ul style="margin:0;padding-left:18px;color:#475569;font-size:12.5px;line-height:1.7;">
+                                @foreach (($plan['features'] ?? []) as $feature)
+                                    <li>{{ $feature }}</li>
+                                @endforeach
+                            </ul>
+                        </dd>
+                    </div>
                     <div class="b2g-info-row">
                         <dt class="b2g-info-dt">Biaya Akses Langganan</dt>
                         <dd class="b2g-info-dd" style="font-size:16px; font-weight:900; color:#166534;">Rp {{ number_format($subscription->amount, 0, ',', '.') }}</dd>

@@ -60,7 +60,7 @@
                     TOKEN AKSES 6 DIGIT DIAKTIFKAN
                 </div>
                 <h3 class="b2g-token-title">Persetujuan Berhasil untuk {{ session('generated_agency') }}</h3>
-                <p class="b2g-token-desc">Berikan token akses 6 digit berikut kepada perwakilan resmi instansi kedinasan. Token ini aktif selama 30 hari (berlaku hingga <strong>{{ session('generated_expiry') }}</strong>).</p>
+                <p class="b2g-token-desc">Berikan token akses 6 digit berikut kepada perwakilan resmi instansi kedinasan. Paket <strong>{{ session('generated_plan') }}</strong> aktif selama {{ session('generated_days') }} hari (berlaku hingga <strong>{{ session('generated_expiry') }}</strong>).</p>
             </div>
             <div class="b2g-token-display">
                 <div class="b2g-token-code-wrap">

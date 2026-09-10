@@ -16,6 +16,7 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
   final VoiceCommandService _service = VoiceCommandService.instance;
   bool _initialized = false;
   bool _isDisposed = false;
+  bool _isStartingListening = false;
 
   @override
   VoiceCommandState build() {
@@ -45,53 +46,85 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
   }
 
   void hideOverlay() {
-    _service.stopListening();
-    _service.stopSpeaking();
+    Future.microtask(() async {
+      await _service.stopListening();
+      await _service.stopSpeaking();
+    });
     state = const VoiceCommandState(isOverlayVisible: false);
+  }
+
+  Future<void> resetAudioSession() async {
+    _isStartingListening = false;
+    _pendingResult = null;
+    await _service.stopListening();
+    await _service.stopSpeaking();
   }
 
   // ─── Main Flow ────────────────────────────────────────────────
 
   /// Push-to-talk: mulai sesi mendengarkan.
   Future<void> startListening() async {
-    state = const VoiceCommandState(
-      uiState: VoiceUiState.transcribing,
-      isOverlayVisible: true,
-      statusMessage: 'Menyiapkan mikrofon...',
-    );
+    if (_isStartingListening) return;
+    _isStartingListening = true;
 
-    // 1. Cek izin microphone
-    final micStatus = await Permission.microphone.request();
-    if (!micStatus.isGranted) {
-      state = state.copyWith(
-        uiState: VoiceUiState.error,
-        errorMessage:
-            'Izin mikrofon ditolak. Aktifkan izin di Pengaturan > P.A.D.I. > Mikrofon.',
+    try {
+      state = const VoiceCommandState(
+        uiState: VoiceUiState.transcribing,
+        isOverlayVisible: true,
+        statusMessage: 'Menyiapkan mikrofon...',
       );
-      return;
-    }
 
-    // 2. Pastikan STT siap
-    final ready = await ensureInitialized();
-    if (!ready) {
-      state = state.copyWith(
-        uiState: VoiceUiState.error,
-        errorMessage: 'Fitur suara tidak tersedia di perangkat ini.',
+      // 1. Cek izin microphone. Di web, izin diminta oleh browser saat STT mulai.
+      if (!kIsWeb) {
+        final micStatus = await Permission.microphone.request();
+        if (!micStatus.isGranted) {
+          state = state.copyWith(
+            uiState: VoiceUiState.error,
+            errorMessage:
+                'Izin mikrofon ditolak. Aktifkan izin di Pengaturan > P.A.D.I. > Mikrofon.',
+          );
+          return;
+        }
+      }
+
+      // 2. Pastikan STT siap
+      final ready = await ensureInitialized();
+      if (!ready) {
+        state = state.copyWith(
+          uiState: VoiceUiState.error,
+          errorMessage: 'Fitur suara tidak tersedia di perangkat ini.',
+        );
+        return;
+      }
+
+      // 3. Mulai listening
+      state = const VoiceCommandState(
+        uiState: VoiceUiState.listening,
+        isOverlayVisible: true,
+        statusMessage: 'Mendengarkan...',
       );
-      return;
+
+      await _service.startListening(
+        onResult: _onSpeechResult,
+        onPartialResult: _onSpeechPartialResult,
+        onDone: _onSpeechDone,
+      );
+    } finally {
+      _isStartingListening = false;
     }
+  }
 
-    // 3. Mulai listening
-    state = const VoiceCommandState(
-      uiState: VoiceUiState.listening,
-      isOverlayVisible: true,
-      statusMessage: 'Mendengarkan...',
-    );
+  void _onSpeechPartialResult(String transcript) {
+    if (_isDisposed || transcript.trim().isEmpty) return;
 
-    await _service.startListening(
-      onResult: _onSpeechResult,
-      onDone: _onSpeechDone,
-    );
+    if (state.uiState == VoiceUiState.listening ||
+        state.uiState == VoiceUiState.transcribing) {
+      state = state.copyWith(
+        uiState: VoiceUiState.listening,
+        transcript: transcript.trim(),
+        statusMessage: 'Suara terbaca...',
+      );
+    }
   }
 
   void _onSpeechResult(String transcript, double confidence) {
@@ -142,9 +175,16 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
     // Kalau sudah di state lain (confirmation/executing/error), jangan override
     if (state.uiState == VoiceUiState.listening ||
         state.uiState == VoiceUiState.transcribing) {
+      final transcript = state.transcript?.trim();
+      if (transcript != null && transcript.isNotEmpty) {
+        _onSpeechResult(transcript, 0.72);
+        return;
+      }
+
       state = state.copyWith(
         uiState: VoiceUiState.error,
-        errorMessage: 'Tidak ada suara yang terdeteksi.\nCoba lagi.',
+        errorMessage:
+            'Suara belum terbaca. Dekatkan HP, bicara lebih jelas, lalu coba lagi.',
       );
     }
   }
@@ -160,6 +200,8 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
 
   /// Pengguna menolak — kembali ke listening.
   Future<void> retryListening() async {
+    await _service.stopListening();
+    await Future<void>.delayed(const Duration(milliseconds: 350));
     await startListening();
   }
 

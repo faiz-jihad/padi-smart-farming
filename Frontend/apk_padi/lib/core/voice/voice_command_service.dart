@@ -27,6 +27,8 @@ class VoiceCommandService {
   double _lastConfidence = 0.0;
   bool _hasDeliveredResult = false;
   Timer? _listenWatchdog;
+  int _listenSessionId = 0;
+  DateTime? _ignoreStatusUntil;
 
   // ─── Initialization ───────────────────────────────────────────
 
@@ -50,6 +52,10 @@ class VoiceCommandService {
         onStatus: (status) {
           debugPrint('[VoiceCmd] STT status: $status');
           if (status == 'done' || status == 'notListening') {
+            final ignoreUntil = _ignoreStatusUntil;
+            if (ignoreUntil != null && DateTime.now().isBefore(ignoreUntil)) {
+              return;
+            }
             _finishListening();
           }
         },
@@ -86,10 +92,13 @@ class VoiceCommandService {
 
     if (_stt.isListening) {
       await stopListening();
+      await Future<void>.delayed(const Duration(milliseconds: 250));
     }
 
     // Hentikan TTS jika sedang berjalan
     await _tts.stop();
+    _listenSessionId = _listenSessionId + 1;
+    final sessionId = _listenSessionId;
     _onDone = onDone;
     _onResult = onResult;
     _onPartialResult = onPartialResult;
@@ -97,13 +106,20 @@ class VoiceCommandService {
     _lastConfidence = 0.0;
     _hasDeliveredResult = false;
     _listenWatchdog?.cancel();
-    _listenWatchdog = Timer(const Duration(seconds: 14), _finishListening);
+    _listenWatchdog = Timer(
+      const Duration(seconds: 14),
+      () => _finishListening(sessionId: sessionId),
+    );
 
     try {
       final systemLocale = await _stt.systemLocale();
       final localeId = systemLocale?.localeId ?? 'id_ID';
       await _stt.listen(
         onResult: (result) {
+          if (sessionId != _listenSessionId) {
+            return;
+          }
+
           final transcript = result.recognizedWords.trim();
           if (transcript.isEmpty) {
             return;
@@ -114,7 +130,7 @@ class VoiceCommandService {
           _onPartialResult?.call(transcript);
 
           if (result.finalResult) {
-            _deliverResult();
+            _deliverResult(sessionId: sessionId);
           }
         },
         onSoundLevelChange: null,
@@ -128,6 +144,9 @@ class VoiceCommandService {
       );
     } catch (e) {
       debugPrint('[VoiceCmd] Listen failed: $e');
+      if (sessionId != _listenSessionId) {
+        return;
+      }
       final callback = _onDone;
       _clearCurrentSession();
       callback?.call();
@@ -136,9 +155,15 @@ class VoiceCommandService {
 
   /// Hentikan STT.
   Future<void> stopListening() async {
+    _listenSessionId = _listenSessionId + 1;
+    _ignoreStatusUntil = DateTime.now().add(const Duration(milliseconds: 650));
     _clearCurrentSession();
-    if (_stt.isListening) {
-      await _stt.stop();
+    try {
+      if (_stt.isListening) {
+        await _stt.cancel();
+      }
+    } catch (e) {
+      debugPrint('[VoiceCmd] Cancel listening warning: $e');
     }
   }
 
@@ -230,12 +255,16 @@ class VoiceCommandService {
 
   /// Dispose — panggil saat app ditutup.
   Future<void> dispose() async {
-    await _stt.stop();
+    await stopListening();
     await _tts.stop();
     _clearCurrentSession();
   }
 
-  void _finishListening() {
+  void _finishListening({int? sessionId}) {
+    if (sessionId != null && sessionId != _listenSessionId) {
+      return;
+    }
+
     if (_stt.isListening) {
       unawaited(_stt.stop());
     }
@@ -247,7 +276,7 @@ class VoiceCommandService {
 
     final transcript = _lastTranscript;
     if (transcript != null && transcript.isNotEmpty) {
-      _deliverResult();
+      _deliverResult(sessionId: sessionId);
       return;
     }
 
@@ -256,7 +285,11 @@ class VoiceCommandService {
     callback?.call();
   }
 
-  void _deliverResult() {
+  void _deliverResult({int? sessionId}) {
+    if (sessionId != null && sessionId != _listenSessionId) {
+      return;
+    }
+
     if (_hasDeliveredResult) {
       return;
     }

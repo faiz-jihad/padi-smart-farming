@@ -41,6 +41,83 @@
             background-color: #15803D;
             transform: translateY(-1px);
         }
+        .status-flow {
+            display: grid;
+            gap: 0.65rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .status-step {
+            display: grid;
+            grid-template-columns: 1.8rem 1fr;
+            gap: 0.75rem;
+            align-items: start;
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            padding: 0.85rem;
+            background: #F8FAFC;
+        }
+        .status-step.is-done {
+            border-color: #BBF7D0;
+            background: #F0FDF4;
+        }
+        .status-step.is-current {
+            border-color: #FDE68A;
+            background: #FFFBEB;
+        }
+        .status-dot {
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #E2E8F0;
+            color: #475569;
+            font-size: 0.76rem;
+            font-weight: 900;
+        }
+        .status-step.is-done .status-dot {
+            background: #16A34A;
+            color: #ffffff;
+        }
+        .status-step.is-current .status-dot {
+            background: #D97706;
+            color: #ffffff;
+        }
+        .status-step strong {
+            display: block;
+            color: #0F172A;
+            font-size: 0.84rem;
+        }
+        .status-step span {
+            display: block;
+            color: #64748B;
+            font-size: 0.76rem;
+            line-height: 1.45;
+            margin-top: 0.15rem;
+        }
+        .access-box {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        .access-box h3 {
+            margin: 0 0 0.65rem;
+            color: #064E3B;
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
+        .access-box ul {
+            margin: 0;
+            padding-left: 1.1rem;
+            color: #166534;
+            font-size: 0.77rem;
+            line-height: 1.55;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -64,9 +141,31 @@
             @php
                 $payment = $subscription->latestPayment;
                 $isPaid = in_array($payment?->transaction_status, ['settlement', 'capture']);
+                $isActive = $subscription->isActive();
+                $stepPaymentDone = $isPaid || $subscription->status === 'PENDING_APPROVAL' || $isActive;
+                $stepApproved = $isActive;
             @endphp
 
-            @if ($subscription->isActive())
+            <div class="status-flow">
+                <div class="status-step is-done">
+                    <div class="status-dot">1</div>
+                    <div><strong>Registrasi masuk</strong><span>Data instansi dan PIC sudah tersimpan di sistem P.A.D.I.</span></div>
+                </div>
+                <div class="status-step {{ $stepPaymentDone ? 'is-done' : 'is-current' }}">
+                    <div class="status-dot">2</div>
+                    <div><strong>Pembayaran / tagihan</strong><span>{{ $stepPaymentDone ? 'Pembayaran sudah dikonfirmasi.' : 'PIC perlu membuka billing dan menghubungi admin resmi.' }}</span></div>
+                </div>
+                <div class="status-step {{ $stepApproved ? 'is-done' : ($stepPaymentDone ? 'is-current' : '') }}">
+                    <div class="status-dot">3</div>
+                    <div><strong>Verifikasi admin</strong><span>{{ $stepApproved ? 'Admin sudah menyetujui akses instansi.' : 'Admin memeriksa bukti pembayaran dan kebutuhan data.' }}</span></div>
+                </div>
+                <div class="status-step {{ $stepApproved ? 'is-done' : '' }}">
+                    <div class="status-dot">4</div>
+                    <div><strong>Token dan API aktif</strong><span>{{ $stepApproved ? 'Instansi dapat memakai endpoint B2G sesuai masa berlaku.' : 'Token API diberikan setelah verifikasi selesai.' }}</span></div>
+                </div>
+            </div>
+
+            @if ($isActive)
                 {{-- Active State --}}
                 <div style="width: 4rem; height: 4rem; border-radius: 1.25rem; background-color: #ECFDF5; color: #16A34A; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 1px solid #A7F3D0; box-shadow: 0 8px 20px rgba(22, 163, 74, 0.15);">
                     <svg style="width: 2rem; height: 2rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -94,6 +193,15 @@
                     <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </a>
 
+                <div class="access-box" style="margin-top:1rem;margin-bottom:0;">
+                    <h3>Data yang dapat diakses instansi</h3>
+                    <ul>
+                        <li>Ringkasan petani, lahan, aktivitas budidaya, penyakit, produktivitas, dan insight wilayah.</li>
+                        <li>Endpoint API dengan header Authorization: Bearer token.</li>
+                        <li>Masa akses {{ $subscription->plan_days }} hari sejak admin menyetujui token.</li>
+                    </ul>
+                </div>
+
             @elseif ($isPaid || $subscription->status === 'PENDING_APPROVAL')
                 {{-- Pending Approval State --}}
                 <div style="width: 4rem; height: 4rem; border-radius: 1.25rem; background-color: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 1px solid #FDE68A;">
@@ -120,6 +228,15 @@
                         <span style="color: #64748B;">Status Pembayaran:</span>
                         <span style="font-weight: 700; color: #15803D;">Dikonfirmasi (Lunas)</span>
                     </div>
+                </div>
+
+                <div class="access-box">
+                    <h3>Setelah disetujui, instansi mendapat</h3>
+                    <ul>
+                        @foreach (($plan['features'] ?? []) as $feature)
+                            <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
                 </div>
 
                 <button onclick="window.location.reload();" style="width: 100%; box-sizing: border-box; padding: 0.875rem; border-radius: 0.75rem; font-weight: 700; color: #1F2937; background-color: #F3F4F6; border: 1px solid #E5E7EB; cursor: pointer; font-size: 0.875rem;">

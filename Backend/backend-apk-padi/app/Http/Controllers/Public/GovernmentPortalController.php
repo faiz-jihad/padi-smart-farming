@@ -9,6 +9,7 @@ use App\Services\Government\GovernmentPaymentService;
 use App\Services\Government\GovernmentSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class GovernmentPortalController extends Controller
@@ -26,14 +27,17 @@ class GovernmentPortalController extends Controller
     {
         $overview = $this->dataService->getOverviewData();
         $insights = $this->dataService->getInsightsData();
+        $plans = $this->subscriptionService->getPlans();
+        $featuredPlan = $this->subscriptionService->resolvePlan('package_600');
 
         return view('public.government.index', [
             'title'     => 'Akses Data Pertanian Pemerintah (B2G)',
             'overview'  => $overview,
             'insights'  => $insights,
-            'planName'  => config('b2g.plan_name', 'Government Data Access'),
-            'planDays'  => config('b2g.plan_days', 30),
-            'planPrice' => config('b2g.plan_price', 2500000),
+            'plans'     => $plans,
+            'planName'  => $featuredPlan['name'] ?? config('b2g.plan_name', 'Government Data Access'),
+            'planDays'  => $featuredPlan['days'] ?? config('b2g.plan_days', 30),
+            'planPrice' => $featuredPlan['price'] ?? config('b2g.plan_price', 600000),
         ]);
     }
 
@@ -48,6 +52,7 @@ class GovernmentPortalController extends Controller
             'pic_name'     => ['required', 'string', 'max:255'],
             'pic_phone'    => ['required', 'string', 'max:30'],
             'purpose'      => ['nullable', 'string', 'max:1000'],
+            'plan_code'    => ['required', 'string', Rule::in(array_keys($this->subscriptionService->getPlans()))],
         ]);
 
         $subscription = $this->subscriptionService->registerSubscription($validated);
@@ -85,6 +90,7 @@ class GovernmentPortalController extends Controller
             'title'        => 'Billing & Konfirmasi Pembayaran B2G - P.A.D.I.',
             'subscription' => $subscription,
             'payment'      => $latestPayment,
+            'plan'         => $this->subscriptionService->getPlanForSubscription($subscription),
             'whatsappUrl'  => $whatsappUrl,
             'adminPhone'   => $adminPhone,
         ]);
@@ -100,6 +106,7 @@ class GovernmentPortalController extends Controller
         return view('public.government.status', [
             'title'        => 'Status Langganan Data Pemerintah - ' . $subscription->agency_name,
             'subscription' => $subscription,
+            'plan'         => $this->subscriptionService->getPlanForSubscription($subscription),
         ]);
     }
 
