@@ -140,9 +140,15 @@ class AppConfig {
       return _dedupe(overrideHosts);
     }
 
+    final discoveredLanHosts = _discoverLanHosts();
+
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return _dedupe([
         if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
+        ...discoveredLanHosts,
+        '192.168.100.10',
+        '192.168.1.10',
+        '192.168.0.10',
         '192.168.1.7',
         '10.0.2.2',
         '127.0.0.1',
@@ -152,9 +158,12 @@ class AppConfig {
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return _dedupe([
+        if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
+        '192.168.100.10',
+        '192.168.1.10',
+        '192.168.0.10',
         '127.0.0.1',
         'localhost',
-        if (_apiLanHost.trim().isNotEmpty) _apiLanHost.trim(),
       ]);
     }
 
@@ -173,6 +182,10 @@ class AppConfig {
         yield trimmedHost;
       }
     }
+  }
+
+  static List<String> _discoverLanHosts() {
+    return const [];
   }
 
   static List<String> _dedupe(Iterable<String> hosts) {

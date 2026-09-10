@@ -71,49 +71,6 @@ class _AddLandScreenState extends State<AddLandScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF5EF),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.grass_rounded,
-                    color: addLandGreen,
-                    size: 42,
-                  ),
-                  SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tambah sawah Anda',
-                          style: TextStyle(
-                            color: addLandText,
-                            fontSize: 19,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Isi informasi sederhana tentang lahan yang ingin dikelola.',
-                          style: TextStyle(
-                            color: Color(0xFF69766F),
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 26),
 
             const _FieldLabel(
               title: 'Nama lahan',
@@ -211,39 +168,6 @@ class _AddLandScreenState extends State<AddLandScreen> {
               },
             ),
 
-            const SizedBox(height: 28),
-
-            Container(
-              padding: const EdgeInsets.all(17),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF8DF),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline_rounded,
-                    color: Color(0xFF946E00),
-                    size: 28,
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Tidak perlu bingung. Isi saja sesuai informasi sawah Anda.',
-                      style: TextStyle(
-                        color: Color(0xFF5B4808),
-                        fontSize: 14,
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
 
             SizedBox(
               width: double.infinity,

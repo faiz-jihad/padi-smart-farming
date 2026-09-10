@@ -40,8 +40,8 @@ class FarmTimelineController extends Controller
             ->latest('id')
             ->first();
 
-        $seasonStartDate = $activeSeason?->planting_date 
-            ? Carbon::parse($activeSeason->planting_date) 
+        $seasonStartDate = $activeSeason?->planting_date
+            ? Carbon::parse($activeSeason->planting_date)
             : ($activeSeason?->planned_planting_date ? Carbon::parse($activeSeason->planned_planting_date) : now()->subMonths(4));
 
         $timelineEvents = collect();
@@ -59,12 +59,17 @@ class FarmTimelineController extends Controller
                 'description' => $act->notes ?: 'Pencatatan kegiatan budidaya lahan.',
                 'occurred_at' => $date->toIso8601String(),
                 'date_human'  => $date->translatedFormat('d M Y, H:i'),
-                'status'      => 'completed',
+                'status'      => $act->status ?? 'COMPLETED',
                 'icon'        => 'activity',
                 'cost'        => $act->cost ? (double) $act->cost : null,
+                'source'      => $act->source ?? 'MANUAL',
+                'sync_status' => $act->sync_status ?? 'pending',
                 'extra'       => [
                     'activity_id' => $act->id,
                     'type'        => $act->type,
+                    'source'      => $act->source ?? 'MANUAL',
+                    'status'      => $act->status ?? 'COMPLETED',
+                    'sync_status' => $act->sync_status ?? 'pending',
                 ],
             ]);
         }

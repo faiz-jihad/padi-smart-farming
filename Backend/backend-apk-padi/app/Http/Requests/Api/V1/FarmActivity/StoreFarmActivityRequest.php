@@ -22,6 +22,9 @@ class StoreFarmActivityRequest extends FormRequest
             'occurred_at'    => ['required', 'date'],
             'notes'          => ['nullable', 'string'],
             'cost'           => ['nullable', 'integer', 'min:0'],
+            'source'         => ['nullable', 'string', 'in:VOICE,MANUAL,AI_RECOMMENDATION'],
+            'status'         => ['nullable', 'string', 'in:COMPLETED,PENDING,CANCELLED'],
+            'sync_status'    => ['nullable', 'string', 'in:pending,synced,failed'],
         ];
     }
 }
