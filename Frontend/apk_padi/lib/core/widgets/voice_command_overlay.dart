@@ -115,7 +115,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
   Widget _buildContent(VoiceCommandState state) {
     return switch (state.uiState) {
       VoiceUiState.idle => _buildIdleContent(),
-      VoiceUiState.listening => _buildListeningContent(),
+      VoiceUiState.listening => _buildListeningContent(state.transcript),
       VoiceUiState.transcribing => _buildTranscribingContent(
         state.transcript,
         state.statusMessage,
@@ -148,7 +148,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
   }
 
   // ── LISTENING ─────────────────────────────────────────────────
-  Widget _buildListeningContent() {
+  Widget _buildListeningContent(String? transcript) {
+    final heardText = transcript?.trim();
     return Column(
       children: [
         AnimatedBuilder(
@@ -169,13 +170,44 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          'Bicaralah sekarang',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.55),
-            fontSize: 13,
+        if (heardText != null && heardText.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: Text(
+              heardText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.45,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            'Lanjut bicara atau diam sebentar untuk diproses',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.55),
+              fontSize: 12,
+            ),
+          ),
+        ] else
+          Text(
+            'Bicaralah sekarang',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.55),
+              fontSize: 13,
+            ),
+          ),
       ],
     );
   }
@@ -494,49 +526,41 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
 
   void _handleExecution(VoiceResult result) async {
     final notifier = ref.read(voiceCommandProvider.notifier);
-    final router = GoRouter.of(context);
 
     // TTS acknowledgement dulu
-    await notifier.speak(_acknowledgeText(result.intent));
+    try {
+      await notifier.speak(_acknowledgeText(result.intent));
+    } catch (_) {}
 
     if (!mounted) return;
 
     switch (result.intent) {
       case VoiceIntent.startPlantCheck:
-        if (mounted) Navigator.of(context).pop();
-        router.push('/plant-check');
+        Navigator.of(context).pop('/plant-check');
         break;
 
       case VoiceIntent.checkDiseaseWarning:
-        if (mounted) Navigator.of(context).pop();
-        router.push('/community-alert');
+        Navigator.of(context).pop('/community-alert');
         break;
 
       case VoiceIntent.getDailyPriority:
-        if (mounted) Navigator.of(context).pop();
-        router.go('/home');
+        Navigator.of(context).pop('/home');
         break;
 
       case VoiceIntent.getFarmWeather:
-        if (mounted) Navigator.of(context).pop();
-        router.push('/planting-calendar');
+        Navigator.of(context).pop('/planting-calendar');
         break;
 
       case VoiceIntent.openMarketplace:
-        if (mounted) Navigator.of(context).pop();
-        router.push('/marketplace');
+        Navigator.of(context).pop('/marketplace');
         break;
 
       case VoiceIntent.recordActivity:
-        if (mounted) Navigator.of(context).pop();
-        router.push('/land/activity/add');
+        Navigator.of(context).pop('/land/activity/add');
         break;
 
       case VoiceIntent.escalateToPpl:
-        // Tunjukkan dialog konfirmasi PPL — jangan langsung kirim
-        if (mounted) {
-          await _showPplConfirmation();
-        }
+        await _showPplConfirmation();
         break;
 
       case VoiceIntent.takePlantPhoto:
@@ -544,13 +568,23 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
       case VoiceIntent.analyzePlantImage:
       case VoiceIntent.readDiagnosis:
       case VoiceIntent.readRecommendation:
-        if (mounted) Navigator.of(context).pop();
-        widget.onIntentExecuted?.call(result.intent);
+        final cb = widget.onIntentExecuted;
+        Navigator.of(context).pop();
+        if (cb != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            cb(result.intent);
+          });
+        }
         break;
 
       default:
-        if (mounted) Navigator.of(context).pop();
-        widget.onIntentExecuted?.call(result.intent);
+        final cb = widget.onIntentExecuted;
+        Navigator.of(context).pop();
+        if (cb != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            cb(result.intent);
+          });
+        }
     }
   }
 
@@ -584,10 +618,10 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
         ],
       ),
     );
-    if (confirmed == true && mounted) {
-      Navigator.of(context).pop();
-      GoRouter.of(context).push('/ppl-cases');
-    } else if (mounted) {
+    if (!mounted) return;
+    if (confirmed == true) {
+      Navigator.of(context).pop('/ppl-cases');
+    } else {
       Navigator.of(context).pop();
     }
   }

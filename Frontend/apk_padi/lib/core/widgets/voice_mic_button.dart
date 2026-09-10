@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../voice/voice_command_provider.dart';
 import '../voice/voice_intent.dart';
@@ -94,7 +95,7 @@ class VoiceMicButton extends ConsumerWidget {
 
     if (!context.mounted) return;
 
-    await showModalBottomSheet<void>(
+    final targetRoute = await showModalBottomSheet<String>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -106,6 +107,16 @@ class VoiceMicButton extends ConsumerWidget {
 
     if (context.mounted) {
       ref.read(voiceCommandProvider.notifier).hideOverlay();
+      if (targetRoute != null && targetRoute.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          if (targetRoute == '/home') {
+            context.go(targetRoute);
+          } else {
+            context.push(targetRoute);
+          }
+        });
+      }
     }
   }
 }

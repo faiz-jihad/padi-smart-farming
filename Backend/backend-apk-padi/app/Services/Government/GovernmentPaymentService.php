@@ -5,25 +5,30 @@ namespace App\Services\Government;
 use App\Models\GovernmentPayment;
 use App\Models\GovernmentSubscription;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Support\Facades\Log;
-use Midtrans\Config;
-use Midtrans\Notification;
-use Midtrans\Snap;
+use Throwable;
 
 class GovernmentPaymentService
 {
     public function __construct()
-    {
-        $this->configureMidtrans();
-    }
+    {}
 
     protected function configureMidtrans(): void
     {
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = (bool) config('midtrans.is_production');
-        Config::$isSanitized = (bool) config('midtrans.is_sanitized', true);
-        Config::$is3ds = (bool) config('midtrans.is_3ds', true);
+        if (! class_exists(\Midtrans\Config::class)) {
+            return;
+        }
+
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = (bool) config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized', true);
+        \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds', true);
+    }
+
+    protected function midtransSdkAvailable(): bool
+    {
+        return class_exists(\Midtrans\Config::class)
+            && class_exists(\Midtrans\Snap::class);
     }
 
     /**
@@ -59,15 +64,22 @@ class GovernmentPaymentService
         $snapToken = '';
         $redirectUrl = '';
 
-        try {
-            $snapResponse = Snap::createTransaction($params);
-            $snapToken = $snapResponse->token ?? '';
-            $redirectUrl = $snapResponse->redirect_url ?? '';
-        } catch (Exception $e) {
-            Log::warning('Midtrans Snap creation error: ' . $e->getMessage());
-            // Fallback mock Snap Token for testing environment if Midtrans connection is unreachable
+        if ($this->midtransSdkAvailable()) {
+            try {
+                $this->configureMidtrans();
+                $snapResponse = \Midtrans\Snap::createTransaction($params);
+                $snapToken = $snapResponse->token ?? '';
+                $redirectUrl = $snapResponse->redirect_url ?? '';
+            } catch (Throwable $e) {
+                Log::warning('Midtrans Snap creation error: ' . $e->getMessage());
+            }
+        } else {
+            Log::warning('Midtrans SDK is not installed. Using local payment fallback.');
+        }
+
+        if ($snapToken === '' || $redirectUrl === '') {
             $snapToken = 'snap-mock-' . md5($orderId);
-            $redirectUrl = 'https://app.sandbox.midtrans.com/snap/v2/vtweb/' . $snapToken;
+            $redirectUrl = route('government.checkout', ['subscription' => $subscription->id]);
         }
 
         $payment = GovernmentPayment::create([

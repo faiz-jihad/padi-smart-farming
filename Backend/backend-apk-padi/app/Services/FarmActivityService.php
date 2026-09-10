@@ -6,6 +6,7 @@ use App\Models\CropSeason;
 use App\Models\FarmActivity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class FarmActivityService
 {
@@ -33,16 +34,18 @@ class FarmActivityService
         User $user,
         array $data
     ): FarmActivity {
-        $cropSeason = $this->getAuthorizedCropSeason(
+        $this->getAuthorizedCropSeason(
             $user,
             (int) $data['crop_season_id']
         );
 
-        $activity = FarmActivity::query()->create(array_merge([
-            'source' => 'MANUAL',
-            'status' => 'COMPLETED',
-            'sync_status' => 'pending',
-        ], $data));
+        $activity = FarmActivity::query()->create(
+            $this->filterWritableColumns(array_merge([
+                'source' => 'MANUAL',
+                'status' => 'COMPLETED',
+                'sync_status' => 'pending',
+            ], $data))
+        );
 
         return $activity->load(['cropSeason.farm']);
     }
@@ -73,7 +76,7 @@ class FarmActivityService
             );
         }
 
-        $activity->update($data);
+        $activity->update($this->filterWritableColumns($data));
 
         return $activity->load(['cropSeason.farm']);
     }
@@ -119,5 +122,17 @@ class FarmActivityService
         }
 
         abort(403, 'Anda tidak memiliki akses ke aktivitas pertanian ini');
+    }
+
+    private function filterWritableColumns(array $data): array
+    {
+        return collect($data)
+            ->filter(
+                fn ($value, string $key): bool => Schema::hasColumn(
+                    'farm_activities',
+                    $key
+                )
+            )
+            ->all();
     }
 }

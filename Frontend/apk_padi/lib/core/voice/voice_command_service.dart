@@ -22,6 +22,7 @@ class VoiceCommandService {
   bool _sttAvailable = false;
   VoidCallback? _onDone;
   void Function(String transcript, double confidence)? _onResult;
+  void Function(String transcript)? _onPartialResult;
   String? _lastTranscript;
   double _lastConfidence = 0.0;
   bool _hasDeliveredResult = false;
@@ -29,8 +30,20 @@ class VoiceCommandService {
 
   // ─── Initialization ───────────────────────────────────────────
 
-  /// Inisialisasi STT. Dipanggil sekali saat app start.
+  /// Inisialisasi STT dan TTS. Dipanggil sekali saat app start.
   Future<bool> initialize() async {
+    // 1. Konfigurasi TTS terlebih dahulu (tetap siap meski STT / mic gagal)
+    try {
+      await _tts.awaitSpeakCompletion(true);
+      await _tts.setLanguage('id-ID');
+      await _tts.setSpeechRate(0.48); // Sedikit lebih lambat untuk petani
+      await _tts.setVolume(1.0);
+      await _tts.setPitch(1.0);
+    } catch (e) {
+      debugPrint('[VoiceCmd] TTS configuration warning: $e');
+    }
+
+    // 2. Inisialisasi STT
     try {
       _sttAvailable = await _stt.initialize(
         onError: (error) => debugPrint('[VoiceCmd] STT error: $error'),
@@ -43,16 +56,12 @@ class VoiceCommandService {
       );
       _sttInitialized = true;
 
-      // Konfigurasi TTS untuk Bahasa Indonesia
-      await _tts.setLanguage('id-ID');
-      await _tts.setSpeechRate(0.48); // Sedikit lebih lambat untuk petani
-      await _tts.setVolume(1.0);
-      await _tts.setPitch(1.0);
-
       debugPrint('[VoiceCmd] Initialized. STT available: $_sttAvailable');
       return _sttAvailable;
     } catch (e) {
-      debugPrint('[VoiceCmd] Init failed: $e');
+      _sttInitialized = true;
+      _sttAvailable = false;
+      debugPrint('[VoiceCmd] STT Init failed: $e');
       return false;
     }
   }
@@ -66,6 +75,7 @@ class VoiceCommandService {
   /// [onDone] dipanggil saat sesi selesai.
   Future<void> startListening({
     required void Function(String transcript, double confidence) onResult,
+    void Function(String transcript)? onPartialResult,
     VoidCallback? onDone,
   }) async {
     if (!isAvailable) {
@@ -82,6 +92,7 @@ class VoiceCommandService {
     await _tts.stop();
     _onDone = onDone;
     _onResult = onResult;
+    _onPartialResult = onPartialResult;
     _lastTranscript = null;
     _lastConfidence = 0.0;
     _hasDeliveredResult = false;
@@ -89,6 +100,8 @@ class VoiceCommandService {
     _listenWatchdog = Timer(const Duration(seconds: 14), _finishListening);
 
     try {
+      final systemLocale = await _stt.systemLocale();
+      final localeId = systemLocale?.localeId ?? 'id_ID';
       await _stt.listen(
         onResult: (result) {
           final transcript = result.recognizedWords.trim();
@@ -98,6 +111,7 @@ class VoiceCommandService {
 
           _lastTranscript = transcript;
           _lastConfidence = result.confidence > 0 ? result.confidence : 0.72;
+          _onPartialResult?.call(transcript);
 
           if (result.finalResult) {
             _deliverResult();
@@ -107,7 +121,7 @@ class VoiceCommandService {
         listenOptions: SpeechListenOptions(
           listenFor: const Duration(seconds: 12),
           pauseFor: const Duration(seconds: 4),
-          localeId: 'id_ID',
+          localeId: localeId,
           listenMode: ListenMode.confirmation,
           partialResults: true,
         ),
@@ -132,13 +146,21 @@ class VoiceCommandService {
 
   /// Bacakan teks menggunakan TTS.
   Future<void> speak(String text) async {
-    await _tts.stop();
-    await _tts.speak(text);
+    try {
+      await _tts.stop();
+      await _tts.speak(text);
+    } catch (e) {
+      debugPrint('[VoiceCmd] Speak error: $e');
+    }
   }
 
   /// Hentikan TTS.
   Future<void> stopSpeaking() async {
-    await _tts.stop();
+    try {
+      await _tts.stop();
+    } catch (e) {
+      debugPrint('[VoiceCmd] Stop speaking error: $e');
+    }
   }
 
   // ─── Intent Resolution ────────────────────────────────────────
@@ -259,6 +281,7 @@ class VoiceCommandService {
     _listenWatchdog = null;
     _onDone = null;
     _onResult = null;
+    _onPartialResult = null;
     _lastTranscript = null;
     _lastConfidence = 0.0;
     if (!keepDeliveredFlag) {

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -806,6 +807,47 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
     }
   }
 
+  String _saveErrorMessage(Object error) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      final data = error.response?.data;
+      final message = data is Map ? data['message']?.toString().trim() : null;
+
+      if (statusCode == 422 && message != null && message.isNotEmpty) {
+        return message;
+      }
+
+      if (statusCode == 401) {
+        return 'Sesi masuk sudah habis. Silakan masuk ulang.';
+      }
+
+      if (statusCode == 403) {
+        return 'Lahan ini belum bisa Anda ubah.';
+      }
+
+      if (statusCode != null && statusCode >= 500) {
+        return 'Kegiatan belum tersimpan karena server sedang bermasalah. Coba tekan simpan lagi sebentar lagi.';
+      }
+
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return 'Koneksi sedang kurang baik. Periksa internet lalu coba lagi.';
+      }
+
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    final text = error.toString().replaceFirst('Exception: ', '').trim();
+    if (text.isEmpty || text.contains('DioException')) {
+      return 'Kegiatan belum berhasil disimpan. Coba lagi sebentar lagi.';
+    }
+    return text;
+  }
+
   Future<void> _saveActivity() async {
     FocusScope.of(context).unfocus();
 
@@ -882,12 +924,13 @@ class _AddActivityScreenState extends ConsumerState<AddActivityScreen> {
       throw Exception('Gagal menyimpan data aktivitas.');
     } catch (e) {
       if (!mounted) return;
+      final message = _saveErrorMessage(e);
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = message;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mencatat kegiatan: $_errorMessage'),
+          content: Text(message),
           backgroundColor: HomeColors.danger,
           behavior: SnackBarBehavior.floating,
         ),

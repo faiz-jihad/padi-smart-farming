@@ -149,6 +149,7 @@ class _CultivationTimelineScreenState
                     'id': 'activity_${act['id']}',
                     'category': 'activity',
                     'title': act['type']?.toString() ?? 'Aktivitas',
+                    'type': act['type']?.toString() ?? '',
                     'description': act['notes']?.toString() ?? '',
                     'occurred_at': act['occurred_at']?.toString(),
                     'status': 'completed',
@@ -159,6 +160,8 @@ class _CultivationTimelineScreenState
           } catch (_) {}
         }
       }
+
+      events.sort(_compareNewestFirst);
 
       // Load Farm details
       Map<String, dynamic>? farm;
@@ -207,13 +210,119 @@ class _CultivationTimelineScreenState
     }
   }
 
+  int _compareNewestFirst(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final dateA = _eventSortDate(a);
+    final dateB = _eventSortDate(b);
+
+    if (dateA != null && dateB != null) {
+      final dateCompare = dateB.compareTo(dateA);
+      if (dateCompare != 0) return dateCompare;
+    } else if (dateA != null) {
+      return -1;
+    } else if (dateB != null) {
+      return 1;
+    }
+
+    return _eventSortId(b).compareTo(_eventSortId(a));
+  }
+
+  DateTime? _eventSortDate(Map<String, dynamic> event) {
+    for (final key in ['occurred_at', 'created_at', 'updated_at', 'date']) {
+      final value = event[key]?.toString();
+      if (value == null || value.trim().isEmpty) continue;
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
+  int _eventSortId(Map<String, dynamic> event) {
+    final value = event['id']?.toString() ?? '';
+    return int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
+
+  String _formatEventDate(Map<String, dynamic> event) {
+    final rawDate = event['occurred_at']?.toString();
+    final date = rawDate == null ? null : DateTime.tryParse(rawDate);
+    if (date != null) {
+      return DateFormat('d MMM yyyy', 'id_ID').format(date);
+    }
+
+    final humanDate = event['date_human']?.toString().trim() ?? '';
+    if (humanDate.isEmpty) return '-';
+
+    return humanDate
+        .replaceFirst(RegExp(r',?\s*00:00$'), '')
+        .replaceFirst(RegExp(r',?\s*00\.00$'), '')
+        .trim();
+  }
+
+  String _cleanVisibleText(String value) {
+    return value
+        .replaceAll('â€¢', '-')
+        .replaceAll('•', '-')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  String _activityTitle(String value) {
+    final normalized = value.trim().toLowerCase().replaceAll(' ', '_');
+    return switch (normalized) {
+      'planting' => 'Tanam',
+      'fertilizing' => 'Pemupukan',
+      'spraying' => 'Semprot',
+      'irrigation' => 'Pengairan',
+      'land_preparation' => 'Olah Lahan',
+      'other' => 'Perawatan Lahan',
+      _ => value
+          .trim()
+          .replaceAll('_', ' ')
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .map((word) => word[0].toUpperCase() + word.substring(1))
+          .join(' '),
+    };
+  }
+
+  String _eventTitle(Map<String, dynamic> event) {
+    final category = event['category']?.toString() ?? 'activity';
+    final rawTitle = _cleanVisibleText(event['title']?.toString() ?? '');
+    final rawType = _cleanVisibleText(event['type']?.toString() ?? '');
+
+    if (category == 'activity') {
+      return _activityTitle(rawType.isNotEmpty ? rawType : rawTitle);
+    }
+
+    return rawTitle
+        .replaceFirst(RegExp(r'^Diagnosa AI:\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'^AI Diagnosis:\s*', caseSensitive: false), '')
+        .trim();
+  }
+
+  String _eventDescription(Map<String, dynamic> event, String displayTitle) {
+    final category = event['category']?.toString() ?? 'activity';
+    final description = _cleanVisibleText(
+      event['description']?.toString() ?? '',
+    );
+    if (description.isNotEmpty) {
+      return description;
+    }
+
+    if (category == 'activity') {
+      return 'Kegiatan $displayTitle sudah dicatat untuk lahan ini.';
+    }
+
+    return '';
+  }
+
   List<Map<String, dynamic>> get _filteredEvents {
     if (_selectedFilter == 'all') {
-      return _timelineEvents;
+      return [..._timelineEvents]..sort(_compareNewestFirst);
     }
-    return _timelineEvents
+    return (_timelineEvents
         .where((e) => e['category'] == _selectedFilter)
-        .toList();
+        .toList())
+      ..sort(_compareNewestFirst);
   }
 
   Future<void> _openAddActivity() async {
@@ -243,7 +352,7 @@ class _CultivationTimelineScreenState
           onPressed: () => context.pop(),
         ),
         title: const Text(
-          'Perjalanan Lahan & Budidaya',
+          'Riwayat Lahan',
           style: TextStyle(
             color: _TimelinePalette.white,
             fontSize: 16,
@@ -318,7 +427,7 @@ class _CultivationTimelineScreenState
               ),
               const SizedBox(height: 12),
               const Text(
-                'Gagal Memuat Timeline',
+                'Gagal Memuat Riwayat',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
@@ -363,7 +472,7 @@ class _CultivationTimelineScreenState
               ),
               const SizedBox(height: 8),
               const Text(
-                'Mulai musim tanam untuk melihat timeline terpadu perawatan dan diagnosa.',
+                'Mulai musim tanam untuk melihat riwayat perawatan dan diagnosis tanaman.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _TimelinePalette.green700,
@@ -494,7 +603,7 @@ class _CultivationTimelineScreenState
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Hari ke-$hst HST',
+                        'Hari ke-$hst',
                         style: const TextStyle(
                           color: _TimelinePalette.white,
                           fontSize: 11.5,
@@ -534,7 +643,7 @@ class _CultivationTimelineScreenState
             child: Row(
               children: [
                 _buildFilterChip('all', 'Semua ($allCount)'),
-                _buildFilterChip('activity', 'Aktivitas Tani ($activityCount)'),
+                _buildFilterChip('activity', 'Kegiatan Lahan ($activityCount)'),
                 _buildFilterChip('diagnosis', 'Analisis Tanaman ($diagCount)'),
                 _buildFilterChip('ppl_visit', 'Verifikasi PPL ($pplCount)'),
                 _buildFilterChip('irrigation', 'Irigasi Air ($irrCount)'),
@@ -563,7 +672,7 @@ class _CultivationTimelineScreenState
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Belum Ada Peristiwa',
+                    'Belum Ada Riwayat',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -572,7 +681,7 @@ class _CultivationTimelineScreenState
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Peristiwa budidaya, diagnosa, dan kunjungan PPL akan muncul di sini.',
+                    'Kegiatan lahan, diagnosis tanaman, dan verifikasi PPL akan muncul di sini.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: _TimelinePalette.green700,
@@ -668,7 +777,7 @@ class _CultivationTimelineScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Data ${startIndex + 1}–$endIndex dari $totalItems riwayat',
+                'Data ${startIndex + 1}-$endIndex dari $totalItems riwayat',
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -825,13 +934,9 @@ class _CultivationTimelineScreenState
 
   Widget _buildTimelineCard(Map<String, dynamic> event) {
     final category = event['category']?.toString() ?? 'activity';
-    final title = event['title']?.toString() ?? 'Peristiwa';
-    final displayTitle = title
-        .replaceFirst(RegExp(r'^Diagnosa AI:\s*', caseSensitive: false), '')
-        .trim();
-    final description = event['description']?.toString() ?? '';
-    final dateHuman =
-        event['date_human']?.toString() ?? _formatDate(event['occurred_at']);
+    final displayTitle = _eventTitle(event);
+    final description = _eventDescription(event, displayTitle);
+    final dateHuman = _formatEventDate(event);
 
     final Color badgeColor;
     final Color badgeBg;
@@ -868,7 +973,7 @@ class _CultivationTimelineScreenState
         badgeColor = _TimelinePalette.green700;
         badgeBg = _TimelinePalette.green50;
         iconData = Icons.spa_rounded;
-        categoryBadge = 'Aktivitas';
+        categoryBadge = 'Kegiatan';
         break;
     }
 
@@ -942,7 +1047,7 @@ class _CultivationTimelineScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  displayTitle.isEmpty ? title : displayTitle,
+                  displayTitle.isEmpty ? 'Riwayat Lahan' : displayTitle,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
