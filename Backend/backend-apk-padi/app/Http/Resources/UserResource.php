@@ -38,7 +38,7 @@ class UserResource extends JsonResource
             'role_label' => (string) $roleLabel,
             'status' => $this->status,
             'status_label' => UserStatus::tryFrom($this->status)?->label() ?? $this->status,
-            'face_auth_enabled' => $facePoseCount > 0 && filled($this->pin_hash),
+            'face_auth_enabled' => $facePoseCount > 0,
             'face_pose_count' => $facePoseCount,
             'face_registered_at' => $this->face_registered_at ? (is_string($this->face_registered_at) ? $this->face_registered_at : $this->face_registered_at->toIso8601String()) : null,
             'pin_enabled' => filled($this->pin_hash),

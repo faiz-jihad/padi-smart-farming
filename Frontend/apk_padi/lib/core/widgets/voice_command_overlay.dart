@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,10 +11,7 @@ import '../voice/voice_state.dart';
 /// Menampilkan 6 state: idle → listening → transcribing → confirmation → executing → error.
 /// Merespons pendingResult dari [VoiceCommandNotifier] untuk navigasi.
 class VoiceCommandOverlay extends ConsumerStatefulWidget {
-  const VoiceCommandOverlay({
-    super.key,
-    this.onIntentExecuted,
-  });
+  const VoiceCommandOverlay({super.key, this.onIntentExecuted});
 
   final void Function(VoiceIntent intent)? onIntentExecuted;
 
@@ -84,7 +79,9 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
         ],
       ),
       padding: EdgeInsets.fromLTRB(
-        24, 20, 24,
+        24,
+        20,
+        24,
         24 + MediaQuery.of(context).padding.bottom,
       ),
       child: Column(
@@ -119,7 +116,10 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
     return switch (state.uiState) {
       VoiceUiState.idle => _buildIdleContent(),
       VoiceUiState.listening => _buildListeningContent(),
-      VoiceUiState.transcribing => _buildTranscribingContent(state.transcript),
+      VoiceUiState.transcribing => _buildTranscribingContent(
+        state.transcript,
+        state.statusMessage,
+      ),
       VoiceUiState.confirmation => _buildConfirmationContent(state),
       VoiceUiState.executing => _buildExecutingContent(state.statusMessage),
       VoiceUiState.error => _buildErrorContent(state.errorMessage),
@@ -181,7 +181,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
   }
 
   // ── TRANSCRIBING ──────────────────────────────────────────────
-  Widget _buildTranscribingContent(String? transcript) {
+  Widget _buildTranscribingContent(String? transcript, String? statusMessage) {
     return Column(
       children: [
         const CircularProgressIndicator(
@@ -189,8 +189,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
           strokeWidth: 2.5,
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Memahami ucapan...',
+        Text(
+          statusMessage ?? 'Memahami ucapan...',
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -222,11 +222,17 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
           decoration: BoxDecoration(
             color: const Color(0xFF16A34A).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.3)),
+            border: Border.all(
+              color: const Color(0xFF16A34A).withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             children: [
-              const Icon(Icons.hearing_rounded, color: Color(0xFF4ADE80), size: 22),
+              const Icon(
+                Icons.hearing_rounded,
+                color: Color(0xFF4ADE80),
+                size: 22,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -249,7 +255,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
                 label: 'Ya, Lanjutkan',
                 icon: Icons.check_rounded,
                 color: const Color(0xFF16A34A),
-                onTap: () => ref.read(voiceCommandProvider.notifier).confirmIntent(),
+                onTap: () =>
+                    ref.read(voiceCommandProvider.notifier).confirmIntent(),
               ),
             ),
             const SizedBox(width: 10),
@@ -258,7 +265,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
                 label: 'Coba Lagi',
                 icon: Icons.replay_rounded,
                 color: const Color(0xFF475569),
-                onTap: () => ref.read(voiceCommandProvider.notifier).retryListening(),
+                onTap: () =>
+                    ref.read(voiceCommandProvider.notifier).retryListening(),
               ),
             ),
           ],
@@ -331,7 +339,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
               label: 'Coba Lagi',
               icon: Icons.replay_rounded,
               color: const Color(0xFF16A34A),
-              onTap: () => ref.read(voiceCommandProvider.notifier).startListening(),
+              onTap: () =>
+                  ref.read(voiceCommandProvider.notifier).startListening(),
             ),
           ),
           const SizedBox(width: 10),
@@ -370,8 +379,8 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
         color: isError
             ? const Color(0xFFEF4444).withValues(alpha: 0.15)
             : isListening
-                ? const Color(0xFF16A34A).withValues(alpha: 0.2)
-                : const Color(0xFF16A34A).withValues(alpha: 0.1),
+            ? const Color(0xFF16A34A).withValues(alpha: 0.2)
+            : const Color(0xFF16A34A).withValues(alpha: 0.1),
         border: Border.all(
           color: isError
               ? const Color(0xFFEF4444).withValues(alpha: 0.5)
@@ -384,11 +393,9 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
           isError
               ? Icons.mic_off_rounded
               : isListening
-                  ? Icons.mic_rounded
-                  : Icons.mic_none_rounded,
-          color: isError
-              ? const Color(0xFFEF4444)
-              : const Color(0xFF4ADE80),
+              ? Icons.mic_rounded
+              : Icons.mic_none_rounded,
+          color: isError ? const Color(0xFFEF4444) : const Color(0xFF4ADE80),
           size: 32,
         ),
       ),
@@ -490,9 +497,7 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
     final router = GoRouter.of(context);
 
     // TTS acknowledgement dulu
-    await notifier.speak(
-      _acknowledgeText(result.intent),
-    );
+    await notifier.speak(_acknowledgeText(result.intent));
 
     if (!mounted) return;
 
@@ -571,7 +576,9 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF16A34A),
+            ),
             child: const Text('Kirim ke PPL'),
           ),
         ],
@@ -592,12 +599,15 @@ class _VoiceCommandOverlayState extends ConsumerState<VoiceCommandOverlay>
     VoiceIntent.analyzePlantImage => 'Memproses diagnosa tanaman.',
     VoiceIntent.readDiagnosis => 'Membacakan hasil diagnosa.',
     VoiceIntent.readRecommendation => 'Membacakan rekomendasi pengobatan.',
-    VoiceIntent.checkDiseaseWarning => 'Membuka radar penyakit di sekitar lahan Anda.',
-    VoiceIntent.getDailyPriority => 'Ini prioritas kegiatan sawah Anda hari ini.',
+    VoiceIntent.checkDiseaseWarning =>
+      'Membuka radar penyakit di sekitar lahan Anda.',
+    VoiceIntent.getDailyPriority =>
+      'Ini prioritas kegiatan sawah Anda hari ini.',
     VoiceIntent.getFarmWeather => 'Mengambil informasi cuaca untuk lahan Anda.',
     VoiceIntent.openMarketplace => 'Membuka halaman pasar gabah.',
     VoiceIntent.recordActivity => 'Baik, saya buka form catatan aktivitas.',
-    VoiceIntent.escalateToPpl => 'Apakah Anda ingin mengirim hasil ini ke penyuluh?',
+    VoiceIntent.escalateToPpl =>
+      'Apakah Anda ingin mengirim hasil ini ke penyuluh?',
     _ => 'Baik.',
   };
 }

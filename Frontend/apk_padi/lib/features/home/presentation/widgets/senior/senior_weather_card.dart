@@ -100,6 +100,15 @@ class _SeniorWeatherCardState extends ConsumerState<SeniorWeatherCard> {
     final voiceText =
         advisoryData?['voice_text']?.toString() ??
         'Cuaca di ${widget.locationName} $tempVal, $conditionDesc.';
+    final hasWeatherData = weather != null;
+    final displayTempVal = hasWeatherData ? tempVal : '--°C';
+    final displayConditionDesc = hasWeatherData
+        ? conditionDesc
+        : switch (lang) {
+            AppLanguage.id => 'Data cuaca belum tersedia',
+            AppLanguage.jv => 'Data hawa durung ana',
+            AppLanguage.en => 'Weather data unavailable',
+          };
 
     // Menentukan apakah cuaca cocok untuk bertani
     final isRainy =
@@ -114,9 +123,18 @@ class _SeniorWeatherCardState extends ConsumerState<SeniorWeatherCard> {
             AppLanguage.en => 'Rain Expected: Delay Spraying / Fertilizer',
           }
         : switch (lang) {
-            AppLanguage.id => 'Cuaca Baik: Cocok untuk Bertani Hari Ini',
-            AppLanguage.jv => 'Hawa Sae: Cocok Kanggo Makarya Ing Sawah',
-            AppLanguage.en => 'Good Weather: Suitable for Field Work',
+            AppLanguage.id =>
+              hasWeatherData
+                  ? 'Cuaca Baik: Cocok untuk Bertani Hari Ini'
+                  : 'Cuaca Belum Terbaca',
+            AppLanguage.jv =>
+              hasWeatherData
+                  ? 'Hawa Sae: Cocok Kanggo Makarya Ing Sawah'
+                  : 'Hawa Durung Kebaca',
+            AppLanguage.en =>
+              hasWeatherData
+                  ? 'Good Weather: Suitable for Field Work'
+                  : 'Weather Not Loaded',
           };
 
     final adviceDesc =
@@ -132,11 +150,17 @@ class _SeniorWeatherCardState extends ConsumerState<SeniorWeatherCard> {
               }
             : switch (lang) {
                 AppLanguage.id =>
-                  'Kondisi cuaca mendukung penyemprotan hama atau pemupukan tanaman padi.',
+                  hasWeatherData
+                      ? 'Kondisi cuaca mendukung penyemprotan hama atau pemupukan tanaman padi.'
+                      : 'Tarik halaman ke bawah untuk memuat ulang, atau buka kalender tanam untuk melihat prakiraan terbaru.',
                 AppLanguage.jv =>
-                  'Hawa padhang sae kanggo nyemprot omo utawa ngrabuk pari.',
+                  hasWeatherData
+                      ? 'Hawa padhang sae kanggo nyemprot omo utawa ngrabuk pari.'
+                      : 'Geser kaca mudhun kanggo muat ulang, utawa buka tanggalan tanam.',
                 AppLanguage.en =>
-                  'Favorable weather for fertilization and crop spraying.',
+                  hasWeatherData
+                      ? 'Favorable weather for fertilization and crop spraying.'
+                      : 'Pull down to refresh, or open the planting calendar for the latest forecast.',
               });
 
     final displayLoc = widget.locationName.isNotEmpty
@@ -316,14 +340,14 @@ class _SeniorWeatherCardState extends ConsumerState<SeniorWeatherCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tempVal,
+                      displayTempVal,
                       style: SeniorTypography.display.copyWith(
                         color: SeniorColors.textPrimary,
                         fontSize: 32,
                       ),
                     ),
                     Text(
-                      conditionDesc,
+                      displayConditionDesc,
                       style: SeniorTypography.subtitle.copyWith(
                         color: SeniorColors.textPrimary,
                         fontSize: 18,

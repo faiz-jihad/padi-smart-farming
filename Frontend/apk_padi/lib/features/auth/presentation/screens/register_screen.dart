@@ -139,17 +139,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    if (isFarmer && pin.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Buat PIN 4 sampai 6 angka.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
     if (password.isNotEmpty && password.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -172,9 +161,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    if (pin.isNotEmpty ||
-        pinConfirmation.isNotEmpty ||
-        _faceDescriptors != null) {
+    if (pin.isNotEmpty || pinConfirmation.isNotEmpty) {
       if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -984,7 +971,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
           const SizedBox(height: 18),
           const Text(
-            '4. Buat PIN Masuk',
+            '4. PIN Cadangan (Boleh Dikosongkan)',
             style: TextStyle(
               color: Color(0xFF052E25),
               fontSize: 18,
@@ -993,7 +980,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'PIN dipakai kalau wajah sulit terbaca. Gunakan 4 sampai 6 angka.',
+            'Isi PIN hanya kalau ingin punya cara masuk cadangan.',
             style: TextStyle(
               color: Color(0xFF3F6F63),
               fontSize: 15,
@@ -1013,7 +1000,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 FocusScope.of(context).requestFocus(_pinConfirmationFocus),
             style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
             decoration: _inputDecoration(
-              hintText: 'Buat PIN',
+              hintText: 'PIN cadangan',
               prefixIcon: Icons.pin_rounded,
               errorText: stateFieldError('pin'),
               counterText: '',
@@ -1041,7 +1028,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             onSubmitted: (_) => _submit(),
             style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
             decoration: _inputDecoration(
-              hintText: 'Ulangi PIN',
+              hintText: 'Ulangi PIN cadangan',
               prefixIcon: Icons.lock_reset_rounded,
               counterText: '',
               suffixIcon: IconButton(

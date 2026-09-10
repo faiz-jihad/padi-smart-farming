@@ -34,7 +34,7 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'email:rfc', 'max:255', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()],
-            'pin' => ['nullable', 'required_with:face_descriptor,face_descriptors', 'confirmed', 'digits_between:4,6'],
+            'pin' => ['nullable', 'confirmed', 'digits_between:4,6'],
             'face_descriptor' => ['nullable', 'array', 'size:128'],
             'face_descriptor.*' => ['numeric', 'between:-2,2'],
             'face_descriptors' => ['nullable', 'array', 'min:3', 'max:5'],
@@ -56,9 +56,6 @@ class RegisterRequest extends FormRequest
                     $validator->errors()->add('face_descriptor', 'Daftarkan wajah untuk mengaktifkan login wajah.');
                 }
 
-                if ($hasFace && ! $hasPin) {
-                    $validator->errors()->add('pin', 'Buat PIN 4-6 angka untuk mengaktifkan login wajah.');
-                }
             },
         ];
     }

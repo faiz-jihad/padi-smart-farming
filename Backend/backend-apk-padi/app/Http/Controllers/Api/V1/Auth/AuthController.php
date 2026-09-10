@@ -22,8 +22,8 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     private const FACE_LOGIN_THRESHOLD = 0.46;
-    private const FACE_ONLY_LOGIN_THRESHOLD = 0.40;
-    private const FACE_ONLY_MARGIN = 0.08;
+    private const FACE_ONLY_LOGIN_THRESHOLD = 0.44;
+    private const FACE_ONLY_MARGIN = 0.10;
     private const FACE_LOGIN_MARGIN = 0.05;
 
     public function register(RegisterRequest $request, RegisterUserAction $action): JsonResponse
@@ -98,7 +98,7 @@ class AuthController extends Controller
         $request->user()->forceFill([
             'face_descriptor' => $data['face_descriptors'] ?? [$data['face_descriptor']],
             'face_registered_at' => now(),
-            'pin_hash' => Hash::make($data['pin']),
+            'pin_hash' => ! empty($data['pin']) ? Hash::make($data['pin']) : $request->user()->pin_hash,
         ])->save();
 
         return ApiResponse::success('Wajah dan PIN berhasil didaftarkan.', [

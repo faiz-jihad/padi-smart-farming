@@ -111,7 +111,7 @@
     const verticalOffset = (noseTip.y - jawTop) / faceHeight;
 
     return {
-      horizontal: horizontalOffset < -0.14 ? 'left' : horizontalOffset > 0.14 ? 'right' : 'front',
+      horizontal: horizontalOffset < -0.11 ? 'left' : horizontalOffset > 0.11 ? 'right' : 'front',
       vertical: verticalOffset < 0.46 ? 'up' : verticalOffset > 0.62 ? 'down' : 'middle'
     };
   }
@@ -235,8 +235,8 @@
 
     const poses = [
       { text: 'Lihat lurus ke kamera.', pose: 'front' },
-      { text: 'Putar wajah sedikit ke kiri.', pose: 'left' },
       { text: 'Putar wajah sedikit ke kanan.', pose: 'right' },
+      { text: 'Putar wajah sedikit ke kiri.', pose: 'left' },
       { text: 'Kembali lihat lurus ke kamera.', pose: 'front' }
     ];
 

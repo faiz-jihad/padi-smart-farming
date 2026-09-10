@@ -9,8 +9,8 @@ import 'voice_state.dart';
 /// Riverpod provider untuk state machine Voice Command.
 final voiceCommandProvider =
     NotifierProvider<VoiceCommandNotifier, VoiceCommandState>(
-  VoiceCommandNotifier.new,
-);
+      VoiceCommandNotifier.new,
+    );
 
 class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
   final VoiceCommandService _service = VoiceCommandService.instance;
@@ -29,7 +29,7 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
   // ─── Initialization ───────────────────────────────────────────
 
   Future<bool> ensureInitialized() async {
-    if (_initialized) return _service.isAvailable;
+    if (_initialized && _service.isAvailable) return true;
     _initialized = true;
     return await _service.initialize();
   }
@@ -54,6 +54,12 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
 
   /// Push-to-talk: mulai sesi mendengarkan.
   Future<void> startListening() async {
+    state = const VoiceCommandState(
+      uiState: VoiceUiState.transcribing,
+      isOverlayVisible: true,
+      statusMessage: 'Menyiapkan mikrofon...',
+    );
+
     // 1. Cek izin microphone
     final micStatus = await Permission.microphone.request();
     if (!micStatus.isGranted) {
@@ -70,19 +76,16 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
     if (!ready) {
       state = state.copyWith(
         uiState: VoiceUiState.error,
-        errorMessage:
-            'Fitur suara tidak tersedia di perangkat ini.',
+        errorMessage: 'Fitur suara tidak tersedia di perangkat ini.',
       );
       return;
     }
 
     // 3. Mulai listening
-    state = state.copyWith(
+    state = const VoiceCommandState(
       uiState: VoiceUiState.listening,
+      isOverlayVisible: true,
       statusMessage: 'Mendengarkan...',
-      transcript: null,
-      voiceResult: null,
-      errorMessage: null,
     );
 
     await _service.startListening(
@@ -107,16 +110,6 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
     final result = _service.resolve(transcript, confidence: confidence);
 
     // Confidence sangat rendah → ERROR
-    if (confidence < 0.55 && confidence > 0.0) {
-      state = state.copyWith(
-        uiState: VoiceUiState.error,
-        voiceResult: result,
-        errorMessage:
-            'Suaranya belum terdengar jelas.\nCoba bicara lebih dekat ke ponsel.',
-      );
-      return;
-    }
-
     // Unknown intent → ERROR dengan contoh
     if (result.intent == VoiceIntent.unknown) {
       state = state.copyWith(
@@ -129,13 +122,13 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
     }
 
     // Confidence sedang (0.55–0.79) → CONFIRMATION
-    if (result.requiresConfirmation) {
+    if (confidence < 0.80 || result.requiresConfirmation) {
       final intentLabel = _intentLabel(result.intent);
       state = state.copyWith(
         uiState: VoiceUiState.confirmation,
         voiceResult: result,
         statusMessage:
-            'Saya mendengar:\n"$transcript"\n\nApakah maksud Anda:\n$intentLabel?',
+            'Saya mendengar:\n"$transcript"\n\nLanjut ke:\n$intentLabel?',
       );
       return;
     }
@@ -214,9 +207,9 @@ class VoiceCommandNotifier extends Notifier<VoiceCommandState> {
     required String diseaseName,
     required String confidenceLabel,
   }) => _service.speakDiagnosisSummary(
-        diseaseName: diseaseName,
-        confidenceLabel: confidenceLabel,
-      );
+    diseaseName: diseaseName,
+    confidenceLabel: confidenceLabel,
+  );
 
   Future<void> speakRecommendation(List<String> steps) =>
       _service.speakRecommendation(steps);

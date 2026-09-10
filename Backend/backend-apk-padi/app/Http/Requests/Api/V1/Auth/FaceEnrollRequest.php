@@ -14,7 +14,7 @@ class FaceEnrollRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pin' => ['required', 'confirmed', 'digits_between:4,6'],
+            'pin' => ['nullable', 'confirmed', 'digits_between:4,6'],
             'face_descriptor' => ['nullable', 'required_without:face_descriptors', 'array', 'size:128'],
             'face_descriptor.*' => ['numeric', 'between:-2,2'],
             'face_descriptors' => ['nullable', 'required_without:face_descriptor', 'array', 'min:3', 'max:5'],

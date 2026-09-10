@@ -569,10 +569,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final dailyPriorityAsync = ref.watch(
       _dailyPriorityFamilyProvider(selectedFarm?.id),
     );
+    final summary = _buildHomeSummary(data, selectedFarm, activeSeason);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _HomeTodaySummaryCard(
+          farmName: selectedFarm?.name,
+          farmCount: data.farms.length,
+          activeSeasonStatus: activeSeason?.statusLabel,
+          hst: summary.hst,
+          lastActivityText: summary.lastActivityText,
+          warningText: summary.warningText,
+          onFarmTap: () =>
+              hasFarms ? context.go('/farms') : context.push('/farms/add'),
+          onWarningTap: () => data.nearbyDiseaseName != null
+              ? context.push('/community-alert')
+              : context.push('/plant-check'),
+        ),
+
+        const SizedBox(height: SeniorSpacing.sectionGap),
+
         // 1. Peringatan Penyakit Sekitar (Jika Ada Laporan Terdeteksi)
         if (data.nearbyDiseaseName != null) ...[
           SeniorWarningBanner(
@@ -721,5 +738,293 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (harvestDate == null) return false;
     final diff = harvestDate.difference(DateTime.now()).inDays;
     return diff <= 14;
+  }
+
+  _HomeSummaryInfo _buildHomeSummary(
+    _HomeDashboardData data,
+    FarmModel? selectedFarm,
+    CropSeasonModel? activeSeason,
+  ) {
+    final hst = activeSeason?.dayNumber;
+    final lastActivityText = _latestActivityText(data.activities);
+    final warningText = data.nearbyDiseaseName != null
+        ? '${data.nearbyDiseaseName} terpantau dekat'
+        : data.farms.isEmpty
+        ? 'Tambahkan lahan dahulu'
+        : 'Belum ada laporan penyakit dekat';
+
+    return _HomeSummaryInfo(
+      hst: hst,
+      lastActivityText: lastActivityText,
+      warningText: warningText,
+    );
+  }
+
+  String _latestActivityText(List<dynamic> activities) {
+    if (activities.isEmpty) return 'Belum ada catatan';
+    final first = activities.first;
+    if (first is! Map) return 'Ada catatan sawah';
+
+    final title =
+        first['title'] ?? first['activity_type'] ?? first['type'] ?? 'Kegiatan';
+    final date =
+        first['activity_date'] ?? first['created_at'] ?? first['updated_at'];
+
+    final titleText = title.toString().trim();
+    final dateText = _shortDate(date?.toString());
+    if (dateText == null) {
+      return titleText.isEmpty ? 'Ada catatan sawah' : titleText;
+    }
+    return '${titleText.isEmpty ? 'Kegiatan sawah' : titleText} - $dateText';
+  }
+
+  String? _shortDate(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return raw;
+    return DateFormat('d MMM', 'id_ID').format(parsed);
+  }
+}
+
+class _HomeSummaryInfo {
+  const _HomeSummaryInfo({
+    required this.hst,
+    required this.lastActivityText,
+    required this.warningText,
+  });
+
+  final int? hst;
+  final String lastActivityText;
+  final String warningText;
+}
+
+class _HomeTodaySummaryCard extends StatelessWidget {
+  const _HomeTodaySummaryCard({
+    required this.farmName,
+    required this.farmCount,
+    required this.activeSeasonStatus,
+    required this.hst,
+    required this.lastActivityText,
+    required this.warningText,
+    required this.onFarmTap,
+    required this.onWarningTap,
+  });
+
+  final String? farmName;
+  final int farmCount;
+  final String? activeSeasonStatus;
+  final int? hst;
+  final String lastActivityText;
+  final String warningText;
+  final VoidCallback onFarmTap;
+  final VoidCallback onWarningTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFarm = farmName != null && farmName!.trim().isNotEmpty;
+    final hstText = hst != null ? 'Hari ke-$hst' : 'Belum mulai tanam';
+    final seasonText = activeSeasonStatus != null
+        ? 'Musim ${activeSeasonStatus!.toLowerCase()}'
+        : 'Musim belum dicatat';
+
+    return Container(
+      padding: const EdgeInsets.all(SeniorSpacing.cardPadding),
+      decoration: BoxDecoration(
+        color: SeniorColors.surface,
+        borderRadius: BorderRadius.circular(SeniorDimensions.cardRadius),
+        border: Border.all(color: SeniorColors.border, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: SeniorColors.primaryGreen.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  color: SeniorColors.lightGreenBg,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.eco_rounded,
+                  color: SeniorColors.primaryGreen,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasFarm ? farmName!.trim() : 'Belum ada lahan',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: SeniorTypography.title.copyWith(fontSize: 23),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasFarm
+                          ? '$farmCount lahan tersimpan - $seasonText'
+                          : 'Tambahkan lahan agar beranda berisi kondisi sawah Anda.',
+                      style: SeniorTypography.bodySecondary.copyWith(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SeniorSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryTile(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Umur Tanam',
+                  value: hstText,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SummaryTile(
+                  icon: Icons.assignment_turned_in_rounded,
+                  label: 'Catatan Terakhir',
+                  value: lastActivityText,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: onWarningTap,
+            borderRadius: BorderRadius.circular(SeniorDimensions.buttonRadius),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: SeniorColors.paleGreenBg,
+                borderRadius: BorderRadius.circular(
+                  SeniorDimensions.buttonRadius,
+                ),
+                border: Border.all(color: SeniorColors.greenBorder, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.health_and_safety_rounded,
+                    color: SeniorColors.primaryGreen,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      warningText,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: SeniorTypography.subtitle.copyWith(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: SeniorColors.primaryGreen,
+                    size: 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: SeniorSpacing.md),
+          SizedBox(
+            height: SeniorDimensions.buttonHeight,
+            child: OutlinedButton.icon(
+              onPressed: onFarmTap,
+              icon: Icon(
+                hasFarm ? Icons.map_rounded : Icons.add_location_alt_rounded,
+                size: 24,
+              ),
+              label: Text(
+                hasFarm ? 'Lihat detail lahan' : 'Tambah lahan pertama',
+                style: SeniorTypography.button.copyWith(
+                  color: SeniorColors.primaryGreen,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: SeniorColors.primaryGreen,
+                side: const BorderSide(
+                  color: SeniorColors.borderStrong,
+                  width: 1.6,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    SeniorDimensions.buttonRadius,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryTile extends StatelessWidget {
+  const _SummaryTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 118),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: SeniorColors.paleGreenBg,
+        borderRadius: BorderRadius.circular(SeniorDimensions.buttonRadius),
+        border: Border.all(color: SeniorColors.greenBorder, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: SeniorColors.primaryGreen, size: 28),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: SeniorTypography.caption.copyWith(fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: SeniorTypography.subtitle.copyWith(
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

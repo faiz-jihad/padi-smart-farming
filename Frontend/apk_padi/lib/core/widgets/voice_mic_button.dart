@@ -35,38 +35,52 @@ class VoiceMicButton extends ConsumerWidget {
     final voiceState = ref.watch(voiceCommandProvider);
     final isListening = voiceState.uiState == VoiceUiState.listening;
 
-    final effectiveSize = mini ? 38.0 : size;
-    final iconSize = mini ? 18.0 : 26.0;
+    final effectiveSize = mini ? 48.0 : size;
+    final iconSize = mini ? 22.0 : 28.0;
+    final buttonColor = isListening
+        ? const Color(0xFF047857)
+        : const Color(0xFF059669);
 
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: () => _openOverlay(context, ref),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: effectiveSize,
-          height: effectiveSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isListening
-                ? const Color(0xFFEF4444)   // merah saat aktif
-                : const Color(0xFF16A34A),   // hijau default
-            boxShadow: [
-              BoxShadow(
-                color: (isListening
-                    ? const Color(0xFFEF4444)
-                    : const Color(0xFF16A34A)).withValues(alpha: 0.4),
-                blurRadius: isListening ? 18 : 10,
-                spreadRadius: isListening ? 3 : 0,
-                offset: const Offset(0, 3),
+    return Semantics(
+      button: true,
+      label: 'Buka bantuan suara',
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => _openOverlay(context, ref),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: effectiveSize,
+              height: effectiveSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: buttonColor,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  width: mini ? 1.4 : 2.4,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(
+                      0xFF059669,
+                    ).withValues(alpha: isListening ? 0.36 : 0.22),
+                    blurRadius: isListening ? 22 : 14,
+                    spreadRadius: isListening ? 2 : 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Center(
-            child: Icon(
-              isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
-              color: Colors.white,
-              size: iconSize,
+              child: Center(
+                child: Icon(
+                  isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
+              ),
             ),
           ),
         ),
@@ -74,15 +88,24 @@ class VoiceMicButton extends ConsumerWidget {
     );
   }
 
-  void _openOverlay(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+  Future<void> _openOverlay(BuildContext context, WidgetRef ref) async {
+    ref.read(voiceCommandProvider.notifier).hideOverlay();
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+
+    if (!context.mounted) return;
+
+    await showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (ctx) => VoiceCommandOverlay(
-        onIntentExecuted: onIntentExecuted,
-      ),
+      builder: (ctx) => VoiceCommandOverlay(onIntentExecuted: onIntentExecuted),
     );
+
+    if (context.mounted) {
+      ref.read(voiceCommandProvider.notifier).hideOverlay();
+    }
   }
 }

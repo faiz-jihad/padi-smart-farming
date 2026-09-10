@@ -148,10 +148,7 @@ class AuthController extends ChangeNotifier {
       onSuccess: (result) async {
         final descriptors = faceDescriptors;
         final enteredPin = pin?.trim();
-        if (enteredPin != null &&
-            enteredPin.isNotEmpty &&
-            descriptors != null &&
-            descriptors.isNotEmpty) {
+        if (descriptors != null && descriptors.isNotEmpty) {
           await _localFaceAuthStore.saveEnrollment(
             phone: phone,
             pin: enteredPin,
@@ -187,14 +184,12 @@ class AuthController extends ChangeNotifier {
         await _tokenStorage.saveToken(result.token!);
       }
 
-      if ((phone ?? '').trim().isNotEmpty && (pin ?? '').trim().isNotEmpty) {
-        await _localFaceAuthStore.saveEnrollment(
-          phone: phone!,
-          pin: pin!,
-          user: result.user,
-          descriptors: [faceDescriptor],
-        );
-      }
+      await _localFaceAuthStore.saveEnrollment(
+        phone: phone,
+        pin: pin,
+        user: result.user,
+        descriptors: [faceDescriptor],
+      );
 
       _setState(AuthState.authenticated(result.user));
       return true;

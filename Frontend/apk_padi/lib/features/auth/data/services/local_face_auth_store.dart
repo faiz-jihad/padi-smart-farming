@@ -10,17 +10,17 @@ class LocalFaceAuthStore {
 
   static const _profileKey = 'padi_face_local_profile';
   static const _threshold = 0.46;
-  static const _faceOnlyThreshold = 0.40;
+  static const _faceOnlyThreshold = 0.44;
 
   final FlutterSecureStorage _storage;
 
   Future<void> saveEnrollment({
-    required String phone,
-    required String pin,
+    String? phone,
+    String? pin,
     required AppUser user,
     required List<List<double>> descriptors,
   }) async {
-    if (phone.trim().isEmpty || pin.trim().isEmpty || descriptors.isEmpty) {
+    if (descriptors.isEmpty) {
       return;
     }
 
@@ -36,8 +36,8 @@ class LocalFaceAuthStore {
     await _storage.write(
       key: _profileKey,
       value: jsonEncode({
-        'phone': _normalizePhone(phone),
-        'pin': pin.trim(),
+        'phone': _normalizePhone(phone ?? user.phone ?? ''),
+        'pin': pin?.trim() ?? '',
         'descriptors': cleanedDescriptors,
         'user': {
           'id': user.id,
@@ -61,8 +61,10 @@ class LocalFaceAuthStore {
   }) async {
     final profile = await _readProfile();
     if (profile == null || descriptor.length != 128) return null;
-    if (profile.phone != _normalizePhone(phone)) return null;
-    if (profile.pin != pin.trim()) return null;
+    if (profile.phone.isNotEmpty && profile.phone != _normalizePhone(phone)) {
+      return null;
+    }
+    if (profile.pin.isNotEmpty && profile.pin != pin.trim()) return null;
 
     var bestDistance = double.infinity;
     for (final savedDescriptor in profile.descriptors) {

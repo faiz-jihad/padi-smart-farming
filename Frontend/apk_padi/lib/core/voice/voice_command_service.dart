@@ -20,6 +20,12 @@ class VoiceCommandService {
 
   bool _sttInitialized = false;
   bool _sttAvailable = false;
+  VoidCallback? _onDone;
+  void Function(String transcript, double confidence)? _onResult;
+  String? _lastTranscript;
+  double _lastConfidence = 0.0;
+  bool _hasDeliveredResult = false;
+  Timer? _listenWatchdog;
 
   // ─── Initialization ───────────────────────────────────────────
 
@@ -28,13 +34,18 @@ class VoiceCommandService {
     try {
       _sttAvailable = await _stt.initialize(
         onError: (error) => debugPrint('[VoiceCmd] STT error: $error'),
-        onStatus: (status) => debugPrint('[VoiceCmd] STT status: $status'),
+        onStatus: (status) {
+          debugPrint('[VoiceCmd] STT status: $status');
+          if (status == 'done' || status == 'notListening') {
+            _finishListening();
+          }
+        },
       );
       _sttInitialized = true;
 
       // Konfigurasi TTS untuk Bahasa Indonesia
       await _tts.setLanguage('id-ID');
-      await _tts.setSpeechRate(0.48);   // Sedikit lebih lambat untuk petani
+      await _tts.setSpeechRate(0.48); // Sedikit lebih lambat untuk petani
       await _tts.setVolume(1.0);
       await _tts.setPitch(1.0);
 
@@ -59,6 +70,7 @@ class VoiceCommandService {
   }) async {
     if (!isAvailable) {
       debugPrint('[VoiceCmd] STT tidak tersedia.');
+      onDone?.call();
       return;
     }
 
@@ -68,29 +80,49 @@ class VoiceCommandService {
 
     // Hentikan TTS jika sedang berjalan
     await _tts.stop();
+    _onDone = onDone;
+    _onResult = onResult;
+    _lastTranscript = null;
+    _lastConfidence = 0.0;
+    _hasDeliveredResult = false;
+    _listenWatchdog?.cancel();
+    _listenWatchdog = Timer(const Duration(seconds: 14), _finishListening);
 
-    await _stt.listen(
-      onResult: (result) {
-        if (result.hasConfidenceRating && result.alternates.isNotEmpty) {
-          final transcript = result.recognizedWords;
-          final confidence = result.confidence;
-          if (transcript.isNotEmpty) {
-            onResult(transcript, confidence);
+    try {
+      await _stt.listen(
+        onResult: (result) {
+          final transcript = result.recognizedWords.trim();
+          if (transcript.isEmpty) {
+            return;
           }
-        } else if (result.recognizedWords.isNotEmpty) {
-          onResult(result.recognizedWords, result.confidence > 0 ? result.confidence : 0.7);
-        }
-      },
-      listenFor: const Duration(seconds: 10),
-      pauseFor: const Duration(seconds: 3),
-      localeId: 'id_ID',
-      listenMode: ListenMode.confirmation,
-      onSoundLevelChange: null,
-    );
+
+          _lastTranscript = transcript;
+          _lastConfidence = result.confidence > 0 ? result.confidence : 0.72;
+
+          if (result.finalResult) {
+            _deliverResult();
+          }
+        },
+        onSoundLevelChange: null,
+        listenOptions: SpeechListenOptions(
+          listenFor: const Duration(seconds: 12),
+          pauseFor: const Duration(seconds: 4),
+          localeId: 'id_ID',
+          listenMode: ListenMode.confirmation,
+          partialResults: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[VoiceCmd] Listen failed: $e');
+      final callback = _onDone;
+      _clearCurrentSession();
+      callback?.call();
+    }
   }
 
   /// Hentikan STT.
   Future<void> stopListening() async {
+    _clearCurrentSession();
     if (_stt.isListening) {
       await _stt.stop();
     }
@@ -123,14 +155,10 @@ class VoiceCommandService {
     final text = switch (intent) {
       VoiceIntent.startPlantCheck =>
         'Baik, saya buka kamera untuk memeriksa daun padi.',
-      VoiceIntent.takePlantPhoto =>
-        'Mengambil foto sekarang.',
-      VoiceIntent.retakePhoto =>
-        'Baik, silakan ambil foto ulang.',
-      VoiceIntent.analyzePlantImage =>
-        'Foto sedang diperiksa oleh AI.',
-      VoiceIntent.readDiagnosis =>
-        'Baik, saya bacakan hasil pemeriksaan.',
+      VoiceIntent.takePlantPhoto => 'Mengambil foto sekarang.',
+      VoiceIntent.retakePhoto => 'Baik, silakan ambil foto ulang.',
+      VoiceIntent.analyzePlantImage => 'Foto sedang diperiksa oleh AI.',
+      VoiceIntent.readDiagnosis => 'Baik, saya bacakan hasil pemeriksaan.',
       VoiceIntent.readRecommendation =>
         'Saya akan bacakan tiga langkah penanganan yang disarankan.',
       VoiceIntent.escalateToPpl =>
@@ -143,8 +171,7 @@ class VoiceCommandService {
         'Mengambil informasi cuaca untuk lahan Anda.',
       VoiceIntent.recordActivity =>
         'Baik, saya catat aktivitas tersebut. Mohon konfirmasi sebelum disimpan.',
-      VoiceIntent.openMarketplace =>
-        'Membuka halaman pasar gabah.',
+      VoiceIntent.openMarketplace => 'Membuka halaman pasar gabah.',
       VoiceIntent.unknown =>
         'Saya belum memahami perintah itu. Coba katakan: Periksa tanaman.',
     };
@@ -170,7 +197,9 @@ class VoiceCommandService {
       return;
     }
     final limited = steps.take(3).toList();
-    final buffer = StringBuffer('Hari ini ada ${limited.length} hal yang disarankan. ');
+    final buffer = StringBuffer(
+      'Hari ini ada ${limited.length} hal yang disarankan. ',
+    );
     for (int i = 0; i < limited.length; i++) {
       buffer.write('Langkah ${i + 1}: ${limited[i]}. ');
     }
@@ -181,5 +210,59 @@ class VoiceCommandService {
   Future<void> dispose() async {
     await _stt.stop();
     await _tts.stop();
+    _clearCurrentSession();
+  }
+
+  void _finishListening() {
+    if (_stt.isListening) {
+      unawaited(_stt.stop());
+    }
+
+    if (_hasDeliveredResult) {
+      _clearCurrentSession();
+      return;
+    }
+
+    final transcript = _lastTranscript;
+    if (transcript != null && transcript.isNotEmpty) {
+      _deliverResult();
+      return;
+    }
+
+    final callback = _onDone;
+    _clearCurrentSession();
+    callback?.call();
+  }
+
+  void _deliverResult() {
+    if (_hasDeliveredResult) {
+      return;
+    }
+
+    final transcript = _lastTranscript;
+    final callback = _onResult;
+    if (transcript == null || transcript.isEmpty || callback == null) {
+      return;
+    }
+
+    _hasDeliveredResult = true;
+    if (_stt.isListening) {
+      unawaited(_stt.stop());
+    }
+    final confidence = _lastConfidence > 0 ? _lastConfidence : 0.72;
+    _clearCurrentSession(keepDeliveredFlag: true);
+    callback(transcript, confidence);
+  }
+
+  void _clearCurrentSession({bool keepDeliveredFlag = false}) {
+    _listenWatchdog?.cancel();
+    _listenWatchdog = null;
+    _onDone = null;
+    _onResult = null;
+    _lastTranscript = null;
+    _lastConfidence = 0.0;
+    if (!keepDeliveredFlag) {
+      _hasDeliveredResult = false;
+    }
   }
 }
